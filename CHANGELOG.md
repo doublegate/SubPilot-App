@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### CI/CD Pipeline Fixes & Infrastructure Updates - 2025-06-21
+## [0.1.0] - 2025-06-21
+
+### 🎉 Initial Release - Project Foundation & CI/CD Infrastructure
+
+This is the first official release of SubPilot, marking the completion of Phase 0 (Project Initialization) and significant progress on Phase 1 (MVP Development). This release establishes the complete project foundation with comprehensive documentation, CI/CD pipeline, and initial authentication implementation.
+
+### CI/CD Pipeline & Infrastructure Updates - 2025-06-21
 
 #### Major CI/CD Pipeline Overhaul
 
@@ -48,7 +54,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Added**: Future test job structure (commented for when tests are implemented)
   - **Improved**: Security audit output with actionable recommendations
 
-### Phase 1 MVP Implementation Continues - 2025-06-21
+#### Docker & Container Infrastructure
+
+- **Docker Build Environment**
+  - **Fixed**: Missing environment variables during Docker build (DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL)
+  - **Added**: SKIP_ENV_VALIDATION=true with placeholder values for build-time environment
+  - **Fixed**: npm version mismatch - updated package.json to require npm >=10.8.0 (from >=10.9.0)
+  - **Fixed**: Docker build using full lint checks - changed to `npm run build:ci` (no-lint build)
+  - **Fixed**: Legacy ENV format warnings - updated all ENV declarations to key=value format
+  - **Added**: Next.js standalone output mode for optimized container size
+  - **Enhanced**: Docker health check with retry logic and proper environment variables
+
+### Phase 1 MVP Implementation Progress - 2025-06-21
 
 #### Enhanced Authentication & UI Implementation
 
@@ -296,29 +313,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-### [0.1.0-dev] - 2025-06-21 (Current)
+### [0.1.0] - 2025-06-21
 
-- Initial development version
-- Project scaffolding complete
-- Documentation framework established
-- Database schema designed
-- No functional implementation yet
+- Initial release with complete project foundation
+- Comprehensive CI/CD pipeline with Docker support
+- Authentication system implementation (Auth.js v5)
+- UI component library integration (shadcn/ui)
+- Database schema and Prisma ORM setup
+- tRPC API layer implementation
+- Dashboard foundation with protected routes
+- Complete documentation framework
+- GitHub repository with all standard files
 
 ---
 
 ## Upcoming Releases
 
-### [0.1.0] - Target: End of Phase 1 (4 weeks)
+### [0.2.0] - Target: End of Phase 1 (3 weeks remaining)
 
 Planned features:
 
-- User authentication (email/password + OAuth)
+- Complete OAuth integration (Google & GitHub)
 - Bank account connection via Plaid
 - Automatic subscription detection
 - Basic subscription management
-- Initial dashboard implementation
+- Full dashboard implementation with metrics
 
-### [0.2.0] - Target: End of Phase 2
+### [0.3.0] - Target: End of Phase 2
 
 Planned features:
 
@@ -328,7 +349,7 @@ Planned features:
 - Bulk subscription management
 - Email notifications
 
-### [0.3.0] - Target: End of Phase 3
+### [0.4.0] - Target: End of Phase 3
 
 Planned features:
 

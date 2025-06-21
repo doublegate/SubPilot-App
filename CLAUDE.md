@@ -279,6 +279,38 @@ npm run test:watch  # Watch mode
 npm run test:e2e    # E2E tests
 ```
 
+## 🚀 CI/CD Pipeline
+
+The project has a comprehensive GitHub Actions CI/CD pipeline configured in `.github/workflows/ci.yml` that includes:
+
+### Pipeline Features
+
+- **Code Quality Checks**: ESLint, Prettier, TypeScript validation (non-blocking in dev mode)
+- **Security Audit**: npm audit for dependency vulnerabilities
+- **Docker Build**: Builds and tests Docker images with health checks
+- **Release Management**: Automated GitHub releases for version tags
+
+### Important CI/CD Notes
+
+1. **Build Command**: Use `npm run build:ci` (no-lint build) for CI/CD and Docker builds
+2. **Environment Variables**: Set `SKIP_ENV_VALIDATION=true` for build-time to bypass env validation
+3. **Docker Configuration**: Uses Next.js standalone output mode for optimized container size
+4. **npm Version**: Package.json requires npm >=10.8.0 to match GitHub Actions environment
+5. **Health Check**: API health endpoint at `/api/health` for Docker container validation
+
+### Monitoring CI/CD
+
+```bash
+# Check recent workflow runs
+gh run list --workflow=ci.yml
+
+# View detailed logs for a specific run
+gh run view <run-id> --log
+
+# Watch a running workflow
+gh run watch <run-id>
+```
+
 ---
 
 **Remember**: This is a T3 Stack project. When in doubt, refer to the T3 Stack documentation and best practices. The project follows standard T3 conventions with some customizations for the subscription management domain.
