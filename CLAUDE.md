@@ -217,6 +217,8 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 
 5. **Testing**: Write tests as you implement features. Don't leave testing until the end.
 
+6. **Edge Runtime Compatibility**: Middleware runs in Edge Runtime. Use `auth-edge.ts` for auth checks instead of importing the full auth config.
+
 ## 🚦 Next Steps
 
 1. **Set up App Router structure** in `src/app/`
