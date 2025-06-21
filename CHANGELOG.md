@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Edge Runtime Compatibility** - 2025-06-21
+  - Fixed middleware incompatibility with Edge Runtime due to Nodemailer imports
+  - Created Edge-compatible authentication check (`auth-edge.ts`)
+  - Refactored middleware to use lightweight JWT-based auth verification
+  - Resolved "The edge runtime does not support Node.js 'stream' module" error
+  - Improved middleware performance by running in Edge Runtime
+
 ## [0.1.0] - 2025-06-21
 
 ### 🎉 Initial Release - Project Foundation & CI/CD Infrastructure

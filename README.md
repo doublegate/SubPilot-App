@@ -255,7 +255,7 @@ Comprehensive documentation is available in the [`docs/`](./docs) directory:
 - ✅ UI component library (shadcn/ui - 13 components)
 - ✅ User profile and settings pages
 - ✅ Navigation with user dropdown
-- ✅ Middleware route protection
+- ✅ Middleware route protection (Edge Runtime compatible)
 - ✅ tRPC API configuration
 - ✅ Dashboard foundation
 - [ ] Database migration (PostgreSQL server required)

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/server/auth"
+import type { NextRequest } from "next/server"
+import { getAuthForEdge } from "@/server/auth-edge"
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth
+export async function middleware(req: NextRequest) {
+  const { auth } = await getAuthForEdge(req)
+  const isLoggedIn = !!auth
   const { pathname } = req.nextUrl
 
   // Define protected routes
@@ -29,7 +31,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: [
