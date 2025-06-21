@@ -8,7 +8,7 @@
 
 When running the application with `npm run dev`, the following error occurred:
 
-```
+```sh
 Error: The edge runtime does not support Node.js 'stream' module.
 Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
 ```
@@ -16,6 +16,7 @@ Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
 ### Root Cause
 
 The middleware was importing the full Auth.js configuration which included:
+
 1. Nodemailer for email sending functionality
 2. Prisma adapter with database connections
 3. Other Node.js-specific modules
@@ -52,11 +53,13 @@ export async function getAuthForEdge(req: NextRequest) {
 ### 2. Updated Middleware
 
 Modified `src/middleware.ts` to:
+
 - Remove the Auth.js auth wrapper function
 - Use the new Edge-compatible auth check
 - Convert to standard async middleware function
 
 **Before:**
+
 ```typescript
 import { auth } from "@/server/auth"
 
@@ -67,6 +70,7 @@ export default auth((req) => {
 ```
 
 **After:**
+
 ```typescript
 import { getAuthForEdge } from "@/server/auth-edge"
 
@@ -82,6 +86,7 @@ export async function middleware(req: NextRequest) {
 ### Edge Runtime Limitations
 
 The Edge Runtime has the following restrictions:
+
 - No native Node.js APIs (fs, stream, crypto, etc.)
 - Limited to Web Standard APIs
 - No access to Node modules that use native APIs
