@@ -24,6 +24,7 @@ import { db } from "@/server/db";
 
 interface CreateContextOptions {
   session: Session | null;
+  headers?: Headers;
 }
 
 /**
@@ -49,13 +50,14 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = async (_opts: {
+export const createTRPCContext = async (opts: {
   headers: Headers;
 }) => {
   const session = await auth();
 
   return createInnerTRPCContext({
     session,
+    headers: opts.headers,
   });
 };
 

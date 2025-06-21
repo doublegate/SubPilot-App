@@ -33,14 +33,39 @@ declare module "next-auth" {
  * @see https://authjs.dev/reference/configuration/auth-config
  */
 export const authConfig: NextAuthConfig = {
+  session: {
+    // Use JWT strategy in development for credentials provider
+    strategy: env.NODE_ENV === "development" ? "jwt" : "database",
+  },
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    session: ({ session, token, user }) => {
+      // Handle both JWT (dev) and database (prod) sessions
+      if (token) {
+        // JWT session (development with credentials)
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            id: token.sub!,
+          },
+        };
+      }
+      // Database session (production with OAuth)
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+        },
+      };
+    },
+    jwt: ({ token, user }) => {
+      // Add user ID to JWT token
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
   },
   adapter: PrismaAdapter(db),
   providers: [

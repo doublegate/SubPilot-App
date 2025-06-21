@@ -3,7 +3,8 @@ import "server-only"
 import { headers } from "next/headers"
 
 import { appRouter } from "@/server/api/root"
-import { createTRPCContext } from "@/server/api/trpc"
+import { createInnerTRPCContext } from "@/server/api/trpc"
+import { auth } from "@/server/auth"
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
@@ -14,10 +15,13 @@ import { createTRPCContext } from "@/server/api/trpc"
  * @example const hello = await api.example.hello({ text: "from tRPC" });
  */
 export const api = appRouter.createCaller(async () => {
+  // Get the session in the server component context where auth() works properly
+  const session = await auth()
   const heads = new Headers(await headers())
   heads.set("x-trpc-source", "rsc")
 
-  return createTRPCContext({
+  return createInnerTRPCContext({
+    session,
     headers: heads,
   })
 })

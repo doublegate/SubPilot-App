@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Authentication Redirect Loop Fix** - 2025-06-21 02:00 - 02:34 PM
+  - Fixed root cause: NextAuth CredentialsProvider incompatibility with database sessions
+  - Implemented dynamic session strategy (JWT for dev, database for prod)
+  - Updated session callbacks to handle both JWT and database sessions
+  - Added JWT callback to properly store user ID
+  - Dashboard now loads successfully after login
+
 - **Plaid Integration Implementation** - 2025-06-21 08:00 AM - 01:56 PM
   - Created complete Plaid client setup with singleton pattern
   - Implemented all Plaid router endpoints:
