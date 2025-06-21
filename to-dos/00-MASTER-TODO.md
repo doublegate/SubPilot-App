@@ -10,6 +10,7 @@
 - **Phase 3**: 📋 Planned (Automation)
 - **Phase 4**: 📋 Planned (Launch)
 - **Current Version**: v0.1.0 (Released 2025-06-21)
+- **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)
 
 ## 🎯 Current Sprint Focus
 
@@ -48,6 +49,8 @@
 - [x] 13 shadcn/ui components integrated
 - [x] CI/CD pipeline with Docker support
 - [x] v0.1.0 release with artifacts
+- [x] Edge Runtime compatibility fix
+- [x] Vercel deployment with Neon PostgreSQL
 
 ## 🐛 Known Issues & Blockers
 
@@ -75,7 +78,7 @@
 
 ### Weekly Velocity
 - **Target**: 20 story points/week
-- **Week 1 Actual**: 25+ story points (exceeded target)
+- **Week 1 Actual**: 35+ story points (significantly exceeded target)
 - **Week 2 Progress**: Starting
 
 ## 🔄 Regular Tasks
@@ -120,5 +123,5 @@
 
 ---
 
-Last Updated: 2025-06-21 04:40 AM EDT
+Last Updated: 2025-06-21 06:10 AM EDT
 Next Review: 2025-06-28

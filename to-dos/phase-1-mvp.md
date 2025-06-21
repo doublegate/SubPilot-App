@@ -4,6 +4,7 @@
 **Duration**: 4 weeks  
 **Current Date**: 2025-06-21
 **Progress**: 25% Complete
+**Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)
 
 ## Goals
 
@@ -19,6 +20,8 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - ✅ User profile and settings pages
 - ✅ CI/CD pipeline with Docker support
 - ✅ v0.1.0 released with artifacts
+- ✅ Edge Runtime compatibility resolved
+- ✅ Vercel deployment with Neon PostgreSQL
 
 ### Setup Tasks ✅
 

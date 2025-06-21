@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Vercel Deployment** - 2025-06-21
+  - Successfully deployed to Vercel test environment
+  - Configured Neon PostgreSQL serverless database
+  - Set up all environment variables properly
+  - Created comprehensive deployment documentation
+  - Application live at https://subpilot-test.vercel.app
+  - Created automated deployment testing script
+  - Added Vercel-specific .gitignore patterns
+
 ### Fixed
 
 - **Edge Runtime Compatibility** - 2025-06-21
@@ -15,6 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Refactored middleware to use lightweight JWT-based auth verification
   - Resolved "The edge runtime does not support Node.js 'stream' module" error
   - Improved middleware performance by running in Edge Runtime
+
+### Changed
+
+- **Project Organization** - 2025-06-21
+  - Moved Vercel documentation to docs/ directory
+  - Moved Vercel scripts to scripts/ directory
+  - Updated documentation index with new files
 
 ## [0.1.0] - 2025-06-21
 
@@ -339,7 +357,7 @@ This is the first official release of SubPilot, marking the completion of Phase 
 
 ## Version History
 
-### [0.1.0] - 2025-06-21
+### [0.1.0] - 2025-06-21 (Released)
 
 - Initial release with complete project foundation
 - Comprehensive CI/CD pipeline with Docker support
