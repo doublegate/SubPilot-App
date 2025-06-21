@@ -1,7 +1,6 @@
 import "server-only"
 
 import { headers } from "next/headers"
-import { cache } from "react"
 
 import { appRouter } from "@/server/api/root"
 import { createTRPCContext } from "@/server/api/trpc"
@@ -14,13 +13,11 @@ import { createTRPCContext } from "@/server/api/trpc"
  * The server-side tRPC API.
  * @example const hello = await api.example.hello({ text: "from tRPC" });
  */
-export const api = appRouter.createCaller(
-  cache(async () => {
-    const heads = new Headers(await headers())
-    heads.set("x-trpc-source", "rsc")
+export const api = appRouter.createCaller(async () => {
+  const heads = new Headers(await headers())
+  heads.set("x-trpc-source", "rsc")
 
-    return createTRPCContext({
-      headers: heads,
-    })
+  return createTRPCContext({
+    headers: heads,
   })
-)
+})
