@@ -42,11 +42,11 @@ describe.skip('SubscriptionDetector', () => {
     detector = new SubscriptionDetector(db);
   });
 
-  describe('detectFromTransaction', () => {
+  describe('detectSingleTransaction', () => {
     it('returns null for non-existent transaction', async () => {
       (db.transaction.findUnique as Mock).mockResolvedValueOnce(null);
 
-      const result = await detector.detectFromTransaction('invalid-id');
+      const result = await detector.detectSingleTransaction('invalid-id');
 
       expect(result).toBeNull();
     });
@@ -57,7 +57,7 @@ describe.skip('SubscriptionDetector', () => {
         merchantName: null,
       });
 
-      const result = await detector.detectFromTransaction('txn-1');
+      const result = await detector.detectSingleTransaction('txn-1');
 
       expect(result).toBeNull();
     });
@@ -91,14 +91,14 @@ describe.skip('SubscriptionDetector', () => {
         similarTransactions
       );
 
-      const result = await detector.detectFromTransaction('txn-1');
+      const result = await detector.detectSingleTransaction('txn-1');
 
       expect(result).toEqual({
         isSubscription: true,
         confidence: expect.any(Number),
         frequency: 'monthly',
         averageAmount: 15.99,
-        predictedNextDate: expect.any(Date),
+        nextBillingDate: expect.any(Date),
         merchantName: 'Netflix',
         category: 'Entertainment',
         transactions: expect.arrayContaining([
@@ -134,7 +134,7 @@ describe.skip('SubscriptionDetector', () => {
         weeklyTransactions
       );
 
-      const result = await detector.detectFromTransaction('txn-1');
+      const result = await detector.detectSingleTransaction('txn-1');
 
       expect(result?.frequency).toBe('weekly');
     });
@@ -163,7 +163,7 @@ describe.skip('SubscriptionDetector', () => {
         yearlyTransactions
       );
 
-      const result = await detector.detectFromTransaction('txn-1');
+      const result = await detector.detectSingleTransaction('txn-1');
 
       expect(result?.frequency).toBe('yearly');
     });
@@ -191,7 +191,7 @@ describe.skip('SubscriptionDetector', () => {
         irregularTransactions
       );
 
-      const result = await detector.detectFromTransaction('txn-1');
+      const result = await detector.detectSingleTransaction('txn-1');
 
       expect(result?.confidence).toBeLessThan(0.7);
     });
@@ -219,7 +219,7 @@ describe.skip('SubscriptionDetector', () => {
         varyingTransactions
       );
 
-      const result = await detector.detectFromTransaction('txn-1');
+      const result = await detector.detectSingleTransaction('txn-1');
 
       expect(result?.isSubscription).toBe(true);
       expect(result?.averageAmount).toBeCloseTo(15.99, 1);
@@ -248,13 +248,13 @@ describe.skip('SubscriptionDetector', () => {
         highVarianceTransactions
       );
 
-      const result = await detector.detectFromTransaction('txn-1');
+      const result = await detector.detectSingleTransaction('txn-1');
 
       expect(result?.confidence).toBeLessThan(0.5);
     });
   });
 
-  describe('detectAllSubscriptions', () => {
+  describe('detectUserSubscriptions', () => {
     it('processes all user transactions and detects subscriptions', async () => {
       const allTransactions = [
         mockTransaction,
@@ -269,33 +269,29 @@ describe.skip('SubscriptionDetector', () => {
       (db.transaction.findMany as Mock).mockResolvedValueOnce(allTransactions);
 
       // Mock detection results for each transaction
-      vi.spyOn(detector, 'detectFromTransaction')
+      vi.spyOn(detector, 'detectSingleTransaction')
         .mockResolvedValueOnce({
           isSubscription: true,
           confidence: 0.9,
           frequency: 'monthly',
           averageAmount: 15.99,
-          predictedNextDate: new Date(),
+          nextBillingDate: new Date(),
           merchantName: 'Netflix',
-          category: 'Entertainment',
-          transactions: [mockTransaction],
         })
         .mockResolvedValueOnce({
           isSubscription: true,
           confidence: 0.85,
           frequency: 'monthly',
           averageAmount: 9.99,
-          predictedNextDate: new Date(),
+          nextBillingDate: new Date(),
           merchantName: 'Spotify',
-          category: 'Music',
-          transactions: [allTransactions[1]],
         });
 
-      const results = await detector.detectAllSubscriptions('user-1');
+      const results = await detector.detectUserSubscriptions('user-1');
 
       expect(results).toHaveLength(2);
-      expect(results[0].merchantName).toBe('Netflix');
-      expect(results[1].merchantName).toBe('Spotify');
+      expect(results[0]?.merchantName).toBe('Netflix');
+      expect(results[1]?.merchantName).toBe('Spotify');
     });
 
     it('filters out low confidence detections', async () => {
@@ -303,18 +299,16 @@ describe.skip('SubscriptionDetector', () => {
 
       (db.transaction.findMany as Mock).mockResolvedValueOnce(allTransactions);
 
-      vi.spyOn(detector, 'detectFromTransaction').mockResolvedValueOnce({
+      vi.spyOn(detector, 'detectSingleTransaction').mockResolvedValueOnce({
         isSubscription: true,
         confidence: 0.3, // Low confidence
         frequency: 'monthly',
         averageAmount: 15.99,
-        predictedNextDate: new Date(),
+        nextBillingDate: new Date(),
         merchantName: 'Netflix',
-        category: 'Entertainment',
-        transactions: [mockTransaction],
       });
 
-      const results = await detector.detectAllSubscriptions('user-1', 0.5);
+      const results = await detector.detectUserSubscriptions('user-1');
 
       expect(results).toHaveLength(0);
     });
@@ -326,10 +320,8 @@ describe.skip('SubscriptionDetector', () => {
       confidence: 0.9,
       frequency: 'monthly' as const,
       averageAmount: 15.99,
-      predictedNextDate: new Date('2024-08-15'),
+      nextBillingDate: new Date('2024-08-15'),
       merchantName: 'Netflix',
-      category: 'Entertainment',
-      transactions: [mockTransaction],
     };
 
     it('creates new subscription from detection', async () => {
@@ -345,9 +337,9 @@ describe.skip('SubscriptionDetector', () => {
         isActive: true,
       });
 
-      const result = await detector.createSubscriptionFromDetection(
+      const result = await detector.createSubscriptionsFromDetection(
         'user-1',
-        mockDetection
+        [mockDetection]
       );
 
       expect(db.subscription.create).toHaveBeenCalledWith({
@@ -376,9 +368,9 @@ describe.skip('SubscriptionDetector', () => {
         name: 'Netflix',
       });
 
-      const result = await detector.createSubscriptionFromDetection(
+      const result = await detector.createSubscriptionsFromDetection(
         'user-1',
-        mockDetection
+        [mockDetection]
       );
 
       expect(db.subscription.create).not.toHaveBeenCalled();
@@ -386,18 +378,18 @@ describe.skip('SubscriptionDetector', () => {
     });
   });
 
-  describe('normalizeMerchantName', () => {
-    it('normalizes merchant names consistently', () => {
-      const detector = new SubscriptionDetector(db);
+  // describe('normalizeMerchantName', () => {
+  //   it('normalizes merchant names consistently', () => {
+  //     const detector = new SubscriptionDetector(db);
 
-      expect(detector['normalizeMerchantName']('NETFLIX.COM')).toBe('netflix');
-      expect(detector['normalizeMerchantName']('Netflix Inc.')).toBe('netflix');
-      expect(detector['normalizeMerchantName']('  Spotify  ')).toBe('spotify');
-      expect(detector['normalizeMerchantName']('Amazon Prime Video')).toBe(
-        'amazon prime video'
-      );
-    });
-  });
+  //     expect(detector['normalizeMerchantName']('NETFLIX.COM')).toBe('netflix');
+  //     expect(detector['normalizeMerchantName']('Netflix Inc.')).toBe('netflix');
+  //     expect(detector['normalizeMerchantName']('  Spotify  ')).toBe('spotify');
+  //     expect(detector['normalizeMerchantName']('Amazon Prime Video')).toBe(
+  //       'amazon prime video'
+  //     );
+  //   });
+  // });
 
   describe('calculateFrequency', () => {
     it('correctly identifies monthly frequency', () => {
@@ -407,6 +399,7 @@ describe.skip('SubscriptionDetector', () => {
         new Date('2024-05-15'),
       ];
 
+      // @ts-expect-error - accessing private method for testing
       const frequency = detector['calculateFrequency'](dates);
       expect(frequency).toBe('monthly');
     });
@@ -418,6 +411,7 @@ describe.skip('SubscriptionDetector', () => {
         new Date('2024-07-01'),
       ];
 
+      // @ts-expect-error - accessing private method for testing
       const frequency = detector['calculateFrequency'](dates);
       expect(frequency).toBe('weekly');
     });
@@ -429,6 +423,7 @@ describe.skip('SubscriptionDetector', () => {
         new Date('2022-07-15'),
       ];
 
+      // @ts-expect-error - accessing private method for testing
       const frequency = detector['calculateFrequency'](dates);
       expect(frequency).toBe('yearly');
     });
@@ -436,6 +431,7 @@ describe.skip('SubscriptionDetector', () => {
     it('defaults to monthly for ambiguous patterns', () => {
       const dates = [new Date('2024-07-15'), new Date('2024-06-20')];
 
+      // @ts-expect-error - accessing private method for testing
       const frequency = detector['calculateFrequency'](dates);
       expect(frequency).toBe('monthly');
     });

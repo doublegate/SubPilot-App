@@ -10,8 +10,8 @@ describe('Auth Router Logic', () => {
     // Test matching emails
     expect(userEmail === confirmationEmail).toBe(true);
 
-    // Test non-matching emails
-    expect(userEmail === wrongEmail).toBe(false);
+    // Test non-matching emails - use type assertion to avoid TS literal comparison error
+    expect(userEmail === (wrongEmail as string)).toBe(false);
   });
 
   it('should validate notification preferences structure', () => {

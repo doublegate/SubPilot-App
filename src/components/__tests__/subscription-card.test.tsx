@@ -49,9 +49,11 @@ describe('SubscriptionCard', () => {
       />
     );
 
-    // Open dropdown menu
-    const menuButton = screen.getByRole('button', { name: /open menu/i });
-    fireEvent.click(menuButton);
+    // Open dropdown menu - find button by class since it has no aria-label
+    const menuButtons = screen.getAllByRole('button');
+    const menuButton = menuButtons.find(btn => btn.className.includes('h-8 w-8'));
+    expect(menuButton).toBeDefined();
+    fireEvent.click(menuButton!);
 
     // Click cancel option
     const cancelButton = screen.getByText('Cancel Subscription');
@@ -69,9 +71,11 @@ describe('SubscriptionCard', () => {
       />
     );
 
-    // Open dropdown menu
-    const menuButton = screen.getByRole('button', { name: /open menu/i });
-    fireEvent.click(menuButton);
+    // Open dropdown menu - find button by class since it has no aria-label
+    const menuButtons = screen.getAllByRole('button');
+    const menuButton = menuButtons.find(btn => btn.className.includes('h-8 w-8'));
+    expect(menuButton).toBeDefined();
+    fireEvent.click(menuButton!);
 
     // Click edit option
     const editButton = screen.getByText('Edit Subscription');
