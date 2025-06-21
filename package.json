@@ -10,6 +10,7 @@
     "dev": "next dev",
     "dev:all": "concurrently \"npm run dev\" \"npm run db:studio\" \"mailhog\"",
     "postinstall": "prisma generate",
+    "setup": "./scripts/setup-env.sh",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "start": "next start",

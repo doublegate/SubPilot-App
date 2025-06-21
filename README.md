@@ -121,10 +121,10 @@ SubPilot is a modern, intelligent subscription management platform that automati
 3. **Set up environment variables**
 
    ```bash
-   cp .env.example .env.local
+   cp config/env/.env.template .env.local
    ```
 
-   Edit `.env.local` and add your credentials:
+   Edit `.env.local` and add your credentials (see [Environment Setup Guide](./config/ENV_SETUP.md) for details):
 
    ```env
    # Database
@@ -180,16 +180,20 @@ SubPilot is a modern, intelligent subscription management platform that automati
 
 ### Docker Setup (Alternative)
 
+Use our organized Docker configuration for containerized development:
+
 ```bash
-# Build and run with Docker Compose
-docker-compose up -d
+# Build and run with Docker Compose (includes database & mailhog)
+docker-compose -f config/docker/docker-compose.yml up -d
 
 # View logs
-docker-compose logs -f
+docker-compose -f config/docker/docker-compose.yml logs -f
 
 # Stop containers
-docker-compose down
+docker-compose -f config/docker/docker-compose.yml down
 ```
+
+See [Docker Configuration Guide](./config/docker/README.md) for more details.
 
 ## 🎉 Latest Release
 
