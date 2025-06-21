@@ -203,3 +203,11 @@ workflow-artifacts/
 # Docker build cache
 docker-cache/
 .dockerignore.local
+
+# Vercel
+.vercel/
+.env.vercel
+.env.production.local
+*.vercel.app
+
+# Temporary scripts (moved to scripts/)
