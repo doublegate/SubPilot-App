@@ -297,7 +297,7 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
 
       {/* Cancellation Info */}
       {(() => {
-        const cancelInfo = subscription.cancelationInfo as CancellationInfoData | null;
+        const cancelInfo = subscription.cancellationInfo as CancellationInfoData | null;
         return cancelInfo ? (
         <Card>
           <CardHeader>

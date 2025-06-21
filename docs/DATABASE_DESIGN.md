@@ -14,15 +14,15 @@ erDiagram
     User ||--o{ Transaction : has
     User ||--o{ Notification : receives
     User ||--o{ UserPreferences : has
-    
+
     Account ||--o{ Transaction : contains
     Account ||--|| PlaidItem : belongs_to
-    
+
     Subscription ||--o{ Transaction : tracks
     Subscription ||--o{ SubscriptionHistory : has_history
-    
+
     Transaction ||--o{ TransactionCategory : categorized_as
-    
+
     User {
         string id PK
         string email UK
@@ -33,7 +33,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Account {
         string id PK
         string userId FK
@@ -51,7 +51,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     PlaidItem {
         string id PK
         string userId FK
@@ -67,7 +67,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Transaction {
         string id PK
         string accountId FK
@@ -88,7 +88,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Subscription {
         string id PK
         string userId FK
@@ -103,13 +103,13 @@ erDiagram
         string status
         boolean isActive
         json provider
-        json cancelationInfo
+        json cancellationInfo
         decimal detectionConfidence
         datetime detectedAt
         datetime createdAt
         datetime updatedAt
     }
-    
+
     SubscriptionHistory {
         string id PK
         string subscriptionId FK
@@ -119,7 +119,7 @@ erDiagram
         string transactionId
         datetime createdAt
     }
-    
+
     Notification {
         string id PK
         string userId FK
@@ -134,7 +134,7 @@ erDiagram
         datetime sentAt
         datetime createdAt
     }
-    
+
     Session {
         string id PK
         string sessionToken UK
@@ -143,7 +143,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     VerificationToken {
         string identifier
         string token
@@ -163,14 +163,14 @@ model User {
   emailVerified DateTime?
   name          String?
   image         String?
-  
+
   // Notification preferences stored as JSON
   notificationPreferences Json @default("{\"emailAlerts\":true,\"pushNotifications\":true,\"weeklyReports\":true}")
-  
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   accounts      Account[]
   sessions      Session[]
@@ -178,7 +178,7 @@ model User {
   subscriptions Subscription[]
   transactions  Transaction[]
   notifications Notification[]
-  
+
   @@map("users")
 }
 
@@ -188,31 +188,31 @@ model Account {
   userId            String
   plaidAccountId    String  @unique
   plaidItemId       String
-  
+
   // Account Details
   name              String
   officialName      String?
   type              String  // depository, credit, loan, investment
   subtype           String  // checking, savings, credit card, etc.
-  
+
   // Balance Information
   availableBalance  Decimal?
   currentBalance    Decimal
   isoCurrencyCode   String  @default("USD")
-  
+
   // Status
   isActive          Boolean @default(true)
   lastSync          DateTime @default(now())
-  
+
   // Timestamps
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  
+
   // Relations
   user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
   plaidItem         PlaidItem @relation(fields: [plaidItemId], references: [id], onDelete: Cascade)
   transactions      Transaction[]
-  
+
   @@index([userId])
   @@index([plaidAccountId])
   @@map("accounts")
@@ -224,28 +224,28 @@ model PlaidItem {
   userId            String
   plaidItemId       String   @unique
   accessToken       String   // Encrypted in application layer
-  
+
   // Institution Information
   institutionId     String
   institutionName   String
   institutionLogo   String?
-  
+
   // Plaid Product Information
   availableProducts Json     @default("[]")
   billedProducts    Json     @default("[]")
-  
+
   // Connection Status
   status            String   @default("good") // good, bad, requires_update
   lastWebhook       DateTime?
-  
+
   // Timestamps
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  
+
   // Relations
   user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
   accounts          Account[]
-  
+
   @@index([userId])
   @@index([plaidItemId])
   @@map("plaid_items")
@@ -257,35 +257,35 @@ model Transaction {
   accountId             String
   plaidTransactionId    String   @unique
   subscriptionId        String?
-  
+
   // Transaction Details
   amount                Decimal
   description           String
   merchantName          String?
   category              Json     @default("[]") // Plaid categories array
   subcategory           String?
-  
+
   // Dates
   date                  DateTime
   authorizedDate        DateTime?
   pending               Boolean  @default(false)
-  
+
   // Additional Information
   paymentChannel        String?  // online, in store, etc.
   location              Json?    // Geographic data
-  
+
   // Subscription Detection
   confidence            Decimal  @default(0) // 0-1 confidence score
   isSubscription        Boolean  @default(false)
-  
+
   // Timestamps
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
-  
+
   // Relations
   account               Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
   subscription          Subscription? @relation(fields: [subscriptionId], references: [id])
-  
+
   @@index([accountId])
   @@index([date])
   @@index([isSubscription])
@@ -297,7 +297,7 @@ model Transaction {
 model Subscription {
   id                    String   @id @default(cuid())
   userId                String
-  
+
   // Subscription Details
   name                  String
   description           String?
@@ -305,33 +305,33 @@ model Subscription {
   amount                Decimal
   currency              String   @default("USD")
   frequency             String   // monthly, yearly, weekly, quarterly
-  
+
   // Billing Information
   nextBilling           DateTime?
   lastBilling           DateTime?
-  
+
   // Status
   status                String   @default("active") // active, cancelled, paused
   isActive              Boolean  @default(true)
-  
+
   // Provider Information (JSON)
   provider              Json     @default("{}")
-  cancelationInfo       Json     @default("{}")
-  
+  cancellationInfo       Json     @default("{}")
+
   // Detection Metadata
   detectionConfidence   Decimal  @default(0)
   detectedAt            DateTime @default(now())
-  
+
   // Timestamps
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
-  
+
   // Relations
   user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions          Transaction[]
   history               SubscriptionHistory[]
   notifications         Notification[]
-  
+
   @@index([userId])
   @@index([status])
   @@index([nextBilling])
@@ -346,13 +346,13 @@ model SubscriptionHistory {
   billingDate     DateTime
   status          String   // charged, failed, refunded
   transactionId   String?
-  
+
   // Timestamps
   createdAt       DateTime @default(now())
-  
+
   // Relations
   subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  
+
   @@index([subscriptionId])
   @@index([billingDate])
   @@map("subscription_history")
@@ -363,28 +363,28 @@ model Notification {
   id              String    @id @default(cuid())
   userId          String
   subscriptionId  String?
-  
+
   // Notification Content
   type            String    // renewal_reminder, price_change, trial_ending, new_subscription
   title           String
   message         String
   data            Json      @default("{}")
-  
+
   // Status
   read            Boolean   @default(false)
   readAt          DateTime?
-  
+
   // Scheduling
   scheduledFor    DateTime
   sentAt          DateTime?
-  
+
   // Timestamps
   createdAt       DateTime  @default(now())
-  
+
   // Relations
   user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
   subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
-  
+
   @@index([userId])
   @@index([read])
   @@index([scheduledFor])
@@ -397,14 +397,14 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  
+
   // Timestamps
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   // Relations
   user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@map("sessions")
 }
 
@@ -412,7 +412,7 @@ model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
-  
+
   @@unique([identifier, token])
   @@map("verification_tokens")
 }
@@ -463,7 +463,7 @@ CREATE INDEX idx_notification_scheduling ON notifications(scheduled_for, sent_at
 
 ### Migration Files Structure
 
-```
+```ascii
 prisma/migrations/
 ├── 001_init/
 │   └── migration.sql
@@ -481,15 +481,15 @@ prisma/migrations/
 -- Migration: Add subscription detection confidence
 -- Date: 2024-01-15
 
-ALTER TABLE subscriptions 
+ALTER TABLE subscriptions
 ADD COLUMN detection_confidence DECIMAL DEFAULT 0;
 
-ALTER TABLE subscriptions 
+ALTER TABLE subscriptions
 ADD COLUMN detected_at TIMESTAMP DEFAULT NOW();
 
 -- Update existing records
-UPDATE subscriptions 
-SET detection_confidence = 0.8, detected_at = created_at 
+UPDATE subscriptions
+SET detection_confidence = 0.8, detected_at = created_at
 WHERE detection_confidence IS NULL;
 
 -- Add index for confidence-based queries

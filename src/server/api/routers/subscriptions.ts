@@ -172,26 +172,26 @@ export const subscriptionsRouter = createTRPCRouter({
               }))
             : [],
         priceHistory,
-        cancelationInfo: {
+        cancellationInfo: {
           canCancel:
-            subscription.cancelationInfo &&
-            typeof subscription.cancelationInfo === 'object' &&
-            'cancelUrl' in subscription.cancelationInfo &&
-            subscription.cancelationInfo.cancelUrl !== null,
-          cancelationUrl:
-            subscription.cancelationInfo &&
-            typeof subscription.cancelationInfo === 'object' &&
-            'cancelUrl' in subscription.cancelationInfo &&
-            typeof (subscription.cancelationInfo as any).cancelUrl === 'string'
-              ? (subscription.cancelationInfo as any).cancelUrl
+            subscription.cancellationInfo &&
+            typeof subscription.cancellationInfo === 'object' &&
+            'cancelUrl' in subscription.cancellationInfo &&
+            subscription.cancellationInfo.cancelUrl !== null,
+          cancellationUrl:
+            subscription.cancellationInfo &&
+            typeof subscription.cancellationInfo === 'object' &&
+            'cancelUrl' in subscription.cancellationInfo &&
+            typeof (subscription.cancellationInfo as any).cancelUrl === 'string'
+              ? (subscription.cancellationInfo as any).cancelUrl
               : null,
           supportInfo:
-            subscription.cancelationInfo &&
-            typeof subscription.cancelationInfo === 'object' &&
-            'supportInfo' in subscription.cancelationInfo &&
-            typeof (subscription.cancelationInfo as any).supportInfo ===
+            subscription.cancellationInfo &&
+            typeof subscription.cancellationInfo === 'object' &&
+            'supportInfo' in subscription.cancellationInfo &&
+            typeof (subscription.cancellationInfo as any).supportInfo ===
               'string'
-              ? (subscription.cancelationInfo as any).supportInfo
+              ? (subscription.cancellationInfo as any).supportInfo
               : null,
         },
       };
@@ -276,7 +276,7 @@ export const subscriptionsRouter = createTRPCRouter({
         data: {
           status: 'cancelled',
           isActive: false,
-          cancelationInfo: {
+          cancellationInfo: {
             cancelledAt: input.cancellationDate,
             reason: input.reason,
           },

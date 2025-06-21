@@ -33,7 +33,7 @@ const { mutate: logout } = api.auth.logout.useMutation();
 
 ## Router Structure
 
-```
+```ascii
 api/
 ├── auth           # Authentication & user management
 ├── plaid          # Bank integration endpoints
@@ -48,6 +48,7 @@ api/
 ## Auth Router (`/api/trpc/auth`)
 
 ### `auth.getUser`
+
 Get current authenticated user information.
 
 ```typescript
@@ -67,6 +68,7 @@ type User = {
 ```
 
 ### `auth.updateProfile`
+
 Update user profile information.
 
 ```typescript
@@ -96,6 +98,7 @@ updateProfile.mutate({
 ```
 
 ### `auth.deleteAccount`
+
 Permanently delete user account and all associated data.
 
 ```typescript
@@ -113,6 +116,7 @@ type DeleteAccountInput = {
 ## Plaid Router (`/api/trpc/plaid`)
 
 ### `plaid.createLinkToken`
+
 Generate Plaid Link token for bank connection.
 
 ```typescript
@@ -127,6 +131,7 @@ type LinkTokenResponse = {
 ```
 
 ### `plaid.exchangePublicToken`
+
 Exchange public token for access token after Link flow.
 
 ```typescript
@@ -152,6 +157,7 @@ type ExchangeTokenInput = {
 ```
 
 ### `plaid.getAccounts`
+
 Fetch all connected bank accounts.
 
 ```typescript
@@ -178,6 +184,7 @@ type Account = {
 ```
 
 ### `plaid.syncTransactions`
+
 Manually trigger transaction synchronization.
 
 ```typescript
@@ -204,6 +211,7 @@ type SyncResponse = {
 ## Subscriptions Router (`/api/trpc/subscriptions`)
 
 ### `subscriptions.getAll`
+
 Get all user subscriptions with filtering and pagination.
 
 ```typescript
@@ -251,6 +259,7 @@ type Subscription = {
 ```
 
 ### `subscriptions.getById`
+
 Get detailed subscription information.
 
 ```typescript
@@ -264,15 +273,16 @@ type SubscriptionDetails = Subscription & {
     amount: number;
     date: Date;
   }>;
-  cancelationInfo: {
+  cancellationInfo: {
     canCancel: boolean;
-    cancelationUrl: string | null;
+    cancellationUrl: string | null;
     supportInfo: string | null;
   };
 }
 ```
 
 ### `subscriptions.update`
+
 Update subscription information.
 
 ```typescript
@@ -291,6 +301,7 @@ type UpdateSubscriptionInput = {
 ```
 
 ### `subscriptions.markCancelled`
+
 Mark subscription as cancelled by user.
 
 ```typescript
@@ -307,6 +318,7 @@ type MarkCancelledInput = {
 ```
 
 ### `subscriptions.getCategories`
+
 Get available subscription categories with counts.
 
 ```typescript
@@ -327,6 +339,7 @@ type Category = {
 ## Transactions Router (`/api/trpc/transactions`)
 
 ### `transactions.getAll`
+
 Get transactions with filtering and search.
 
 ```typescript
@@ -373,7 +386,8 @@ type Transaction = {
 ```
 
 ### `transactions.categorize`
-Manually categorize or recategorize transactions.
+
+Manually categorize or re-categorize transactions.
 
 ```typescript
 // Mutation
@@ -389,6 +403,7 @@ type CategorizeInput = {
 ```
 
 ### `transactions.export`
+
 Export transactions to CSV/JSON.
 
 ```typescript
@@ -413,6 +428,7 @@ type ExportResponse = {
 ## Notifications Router (`/api/trpc/notifications`)
 
 ### `notifications.getAll`
+
 Get user notifications with pagination.
 
 ```typescript
@@ -439,6 +455,7 @@ type Notification = {
 ```
 
 ### `notifications.markAsRead`
+
 Mark notifications as read.
 
 ```typescript
@@ -452,6 +469,7 @@ type MarkAsReadInput = {
 ```
 
 ### `notifications.updatePreferences`
+
 Update notification preferences.
 
 ```typescript
@@ -477,6 +495,7 @@ type NotificationPreferences = {
 ## Analytics Router (`/api/trpc/analytics`)
 
 ### `analytics.getOverview`
+
 Get dashboard overview statistics.
 
 ```typescript
@@ -505,6 +524,7 @@ type AnalyticsOverview = {
 ```
 
 ### `analytics.getSpendingReport`
+
 Get detailed spending analysis.
 
 ```typescript
@@ -537,6 +557,7 @@ type SpendingReport = {
 ```
 
 ### `analytics.getCostPrediction`
+
 Get future cost predictions based on current subscriptions.
 
 ```typescript
@@ -590,6 +611,7 @@ if (error) {
 ## Rate Limiting
 
 API endpoints are rate limited:
+
 - **Authentication**: 10 requests per minute
 - **Plaid operations**: 5 requests per minute
 - **General queries**: 100 requests per minute
@@ -598,6 +620,7 @@ API endpoints are rate limited:
 ## Webhooks
 
 ### Plaid Webhooks
+
 Handle real-time transaction updates:
 
 ```typescript
@@ -619,10 +642,10 @@ type PlaidWebhook = {
 ```typescript
 // Component usage
 function SubscriptionsList() {
-  const { 
-    data: subscriptions, 
-    isLoading, 
-    error 
+  const {
+    data: subscriptions,
+    isLoading,
+    error
   } = api.subscriptions.getAll.useQuery({
     status: 'active',
     sortBy: 'nextBilling'
@@ -641,12 +664,12 @@ function SubscriptionsList() {
   return (
     <div>
       {subscriptions?.map(sub => (
-        <SubscriptionCard 
-          key={sub.id} 
+        <SubscriptionCard
+          key={sub.id}
           subscription={sub}
-          onCancel={(id) => cancelSubscription.mutate({ 
-            id, 
-            cancellationDate: new Date() 
+          onCancel={(id) => cancelSubscription.mutate({
+            id,
+            cancellationDate: new Date()
           })}
         />
       ))}

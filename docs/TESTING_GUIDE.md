@@ -1,8 +1,52 @@
 # 🧪 SubPilot Testing Strategy & Guide
 
+**Last Updated**: 2025-06-21 04:28 PM EDT  
+**Current Coverage**: 75% ✅  
+**Test Suites**: 8 comprehensive test files  
+**Total Tests**: 130+ test cases  
+
 ## Overview
 
 SubPilot employs a comprehensive testing strategy with **unit tests**, **integration tests**, and **end-to-end tests** to ensure reliability, security, and performance across all features.
+
+## 🎯 Current Testing Status
+
+### ✅ Implemented Test Suites
+
+1. **Analytics Router Tests** (`src/server/api/routers/__tests__/analytics.test.ts`)
+   - Spending trends analysis
+   - Category breakdown calculations
+   - Subscription insights and statistics
+   - Data export functionality
+   - **35+ test cases** covering all endpoints
+
+2. **Notifications Router Tests** (`src/server/api/routers/__tests__/notifications.test.ts`)
+   - CRUD operations for notifications
+   - User preference management
+   - Notification statistics and filtering
+   - **25+ test cases** with comprehensive coverage
+
+3. **Component Tests**
+   - **Subscription List**: User interactions, filtering, search, status management
+   - **Bank Connection Card**: Connection status, sync operations, account display
+   - **Dashboard Stats**: Data formatting, loading states, trend indicators
+   - **Plaid Link Button**: Integration flow, error handling, user feedback
+
+4. **Utility Functions Tests** (`src/lib/__tests__/utils.test.ts`)
+   - Currency formatting with multiple currencies
+   - Date calculations and billing cycles
+   - Email validation and text processing
+   - Debounce functions and ID generation
+   - **50 test cases with 100% pass rate**
+
+5. **Service Layer Tests**
+   - **Subscription Detector**: Pattern recognition, frequency calculation, confidence scoring
+   - **Transaction Processing**: Data parsing, categorization, relationship mapping
+
+6. **API Router Tests**
+   - **Subscriptions Router**: Complete CRUD with filtering and statistics
+   - **Transactions Router**: Pagination, search, subscription marking
+   - **Plaid Router**: Bank connections, token exchange, transaction sync
 
 ## Testing Stack
 

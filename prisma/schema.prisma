@@ -181,7 +181,7 @@ model Subscription {
 
   // Provider Information (JSON)
   provider              Json     @default("{}")
-  cancelationInfo       Json     @default("{}")
+  cancellationInfo       Json     @default("{}")
 
   // Detection Metadata
   detectionConfidence   Decimal  @default(0)

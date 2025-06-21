@@ -4,3 +4,142 @@ import { twMerge } from 'tailwind-merge';
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Format currency with proper locale and symbol
+ */
+export function formatCurrency(
+  amount: number | null | undefined,
+  currency: string = 'USD'
+): string {
+  if (amount == null || isNaN(amount)) return '$0.00';
+  
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+/**
+ * Format subscription frequency for display
+ */
+export function formatFrequency(frequency: string): string {
+  if (frequency == null) return String(frequency);
+  
+  const frequencies: Record<string, string> = {
+    monthly: 'month',
+    yearly: 'year',
+    weekly: 'week',
+    daily: 'day',
+  };
+  
+  return frequencies[frequency] || frequency;
+}
+
+/**
+ * Calculate next billing date based on current date and frequency
+ */
+export function calculateNextBilling(date: Date, frequency: string): Date {
+  const nextDate = new Date(date);
+  
+  switch (frequency) {
+    case 'daily':
+      nextDate.setDate(nextDate.getDate() + 1);
+      break;
+    case 'weekly':
+      nextDate.setDate(nextDate.getDate() + 7);
+      break;
+    case 'monthly':
+      nextDate.setMonth(nextDate.getMonth() + 1);
+      break;
+    case 'yearly':
+      nextDate.setFullYear(nextDate.getFullYear() + 1);
+      break;
+    default:
+      nextDate.setMonth(nextDate.getMonth() + 1); // Default to monthly
+  }
+  
+  return nextDate;
+}
+
+/**
+ * Check if a renewal date is upcoming within threshold days
+ */
+export function isUpcomingRenewal(renewalDate: Date, thresholdDays: number = 7): boolean {
+  const now = new Date();
+  const timeDiff = renewalDate.getTime() - now.getTime();
+  const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+  
+  return daysDiff >= 0 && daysDiff <= thresholdDays;
+}
+
+/**
+ * Get subscription status based on active state and next billing
+ */
+export function getSubscriptionStatus(isActive: boolean, nextBilling: Date): string {
+  if (!isActive) return 'canceled';
+  
+  const now = new Date();
+  if (nextBilling < now) return 'expired';
+  
+  return 'active';
+}
+
+/**
+ * Validate email address format
+ */
+export function validateEmail(email: string | null | undefined): boolean {
+  if (!email || typeof email !== 'string') return false;
+  
+  // More permissive regex that allows localhost and simple domains
+  const emailRegex = /^[^\s@]+@[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
+ * Truncate text to specified length with suffix
+ */
+export function truncateText(text: string, maxLength: number, suffix: string = '...'): string {
+  if (!text || maxLength < 0) return text || '';
+  if (text.length <= maxLength) return text;
+  
+  const truncateLength = Math.max(0, maxLength - suffix.length);
+  return text.substring(0, truncateLength) + suffix;
+}
+
+/**
+ * Debounce function calls
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  
+  return function executedFunction(this: any, ...args: Parameters<T>) {
+    const context = this;
+    const later = () => {
+      timeout = null;
+      func.apply(context, args);
+    };
+    
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+/**
+ * Generate unique ID with optional prefix
+ */
+export function generateId(prefix?: string, length: number = 12): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return prefix ? `${prefix}-${result}` : result;
+}
