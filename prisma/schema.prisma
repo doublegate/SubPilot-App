@@ -1,0 +1,275 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+
+  // Notification preferences stored as JSON
+  notificationPreferences Json @default("{\"emailAlerts\":true,\"pushNotifications\":true,\"weeklyReports\":true}")
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  plaidItems    PlaidItem[]
+  subscriptions Subscription[]
+  transactions  Transaction[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+// Bank Account Information
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  plaidAccountId    String  @unique
+  plaidItemId       String
+
+  // Account Details
+  name              String
+  officialName      String?
+  type              String  // depository, credit, loan, investment
+  subtype           String  // checking, savings, credit card, etc.
+
+  // Balance Information
+  availableBalance  Decimal?
+  currentBalance    Decimal
+  isoCurrencyCode   String  @default("USD")
+
+  // Status
+  isActive          Boolean @default(true)
+  lastSync          DateTime @default(now())
+
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plaidItem         PlaidItem @relation(fields: [plaidItemId], references: [id], onDelete: Cascade)
+  transactions      Transaction[]
+
+  @@index([userId])
+  @@index([plaidAccountId])
+  @@map("accounts")
+}
+
+// Plaid Item (Bank Connection)
+model PlaidItem {
+  id                String   @id @default(cuid())
+  userId            String
+  plaidItemId       String   @unique
+  accessToken       String   // Encrypted in application layer
+
+  // Institution Information
+  institutionId     String
+  institutionName   String
+  institutionLogo   String?
+
+  // Plaid Product Information
+  availableProducts Json     @default("[]")
+  billedProducts    Json     @default("[]")
+
+  // Connection Status
+  status            String   @default("good") // good, bad, requires_update
+  lastWebhook       DateTime?
+
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts          Account[]
+
+  @@index([userId])
+  @@index([plaidItemId])
+  @@map("plaid_items")
+}
+
+// Financial Transactions
+model Transaction {
+  id                    String   @id @default(cuid())
+  userId                String
+  accountId             String
+  plaidTransactionId    String   @unique
+  subscriptionId        String?
+
+  // Transaction Details
+  amount                Decimal
+  description           String
+  merchantName          String?
+  category              Json     @default("[]") // Plaid categories array
+  subcategory           String?
+
+  // Dates
+  date                  DateTime
+  authorizedDate        DateTime?
+  pending               Boolean  @default(false)
+
+  // Additional Information
+  paymentChannel        String?  // online, in store, etc.
+  location              Json?    // Geographic data
+
+  // Subscription Detection
+  confidence            Decimal  @default(0) // 0-1 confidence score
+  isSubscription        Boolean  @default(false)
+
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account               Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  subscription          Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([date])
+  @@index([isSubscription])
+  @@index([plaidTransactionId])
+  @@map("transactions")
+}
+
+// Subscription Management
+model Subscription {
+  id                    String   @id @default(cuid())
+  userId                String
+
+  // Subscription Details
+  name                  String
+  description           String?
+  category              String
+  amount                Decimal
+  currency              String   @default("USD")
+  frequency             String   // monthly, yearly, weekly, quarterly
+
+  // Billing Information
+  nextBilling           DateTime?
+  lastBilling           DateTime?
+
+  // Status
+  status                String   @default("active") // active, cancelled, paused
+  isActive              Boolean  @default(true)
+
+  // Provider Information (JSON)
+  provider              Json     @default("{}")
+  cancelationInfo       Json     @default("{}")
+
+  // Detection Metadata
+  detectionConfidence   Decimal  @default(0)
+  detectedAt            DateTime @default(now())
+
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions          Transaction[]
+  history               SubscriptionHistory[]
+  notifications         Notification[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([nextBilling])
+  @@map("subscriptions")
+}
+
+// Subscription Billing History
+model SubscriptionHistory {
+  id              String   @id @default(cuid())
+  subscriptionId  String
+  amount          Decimal
+  billingDate     DateTime
+  status          String   // charged, failed, refunded
+  transactionId   String?
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+
+  // Relations
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([billingDate])
+  @@map("subscription_history")
+}
+
+// Notification System
+model Notification {
+  id              String    @id @default(cuid())
+  userId          String
+  subscriptionId  String?
+
+  // Notification Content
+  type            String    // renewal_reminder, price_change, trial_ending, new_subscription
+  title           String
+  message         String
+  data            Json      @default("{}")
+
+  // Status
+  read            Boolean   @default(false)
+  readAt          DateTime?
+
+  // Scheduling
+  scheduledFor    DateTime
+  sentAt          DateTime?
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([userId])
+  @@index([read])
+  @@index([scheduledFor])
+  @@map("notifications")
+}
+
+// Authentication (Auth.js)
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
