@@ -1,9 +1,12 @@
 import Link from "next/link"
-import { headers } from "next/headers"
 
-export default function AuthErrorPage() {
-  const headersList = headers()
-  const error = headersList.get("x-auth-error") ?? "Unknown error"
+type AuthErrorPageProps = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps) {
+  const params = await searchParams
+  const error = (params.error as string) ?? "Unknown error"
   
   const errorMessages: Record<string, string> = {
     Configuration: "There is a problem with the server configuration.",

@@ -80,15 +80,17 @@ export const authConfig: NextAuthConfig = {
       // Track new user signup
       if (isNewUser && user.email) {
         // Create welcome notification
-        await db.notification.create({
-          data: {
-            userId: user.id,
-            type: "GENERAL",
-            title: "Welcome to SubPilot! 🎉",
-            message: "Get started by connecting your first bank account.",
-            scheduledFor: new Date(),
-          },
-        })
+        if (user.id) {
+          await db.notification.create({
+            data: {
+              userId: user.id,
+              type: "GENERAL",
+              title: "Welcome to SubPilot! 🎉",
+              message: "Get started by connecting your first bank account.",
+              scheduledFor: new Date(),
+            },
+          })
+        }
       }
     },
   },

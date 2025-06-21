@@ -1,6 +1,18 @@
 import nodemailer from "nodemailer"
-import type { SendVerificationRequestParams } from "next-auth/providers/email"
 import { env } from "@/env.js"
+
+type SendVerificationRequestParams = {
+  identifier: string
+  url: string
+  expires: Date
+  provider: {
+    server?: any
+    from?: string
+  }
+  token: string
+  theme: any
+  request: Request
+}
 
 // Create transporter based on environment
 const createTransporter = () => {
