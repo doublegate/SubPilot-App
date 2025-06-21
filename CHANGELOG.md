@@ -65,6 +65,23 @@ This is the first official release of SubPilot, marking the completion of Phase 
   - **Added**: Next.js standalone output mode for optimized container size
   - **Enhanced**: Docker health check with retry logic and proper environment variables
 
+#### Release Automation & Artifacts
+
+- **Automated Artifact Generation**
+  - **Added**: Automatic creation of source code archive (tar.gz) for each release
+  - **Added**: Production build artifact with all necessary files for deployment
+  - **Added**: Docker image export as downloadable artifact (106MB)
+  - **Added**: Docker Compose configuration for easy deployment
+  - **Added**: SHA256 checksums for all artifacts for integrity verification
+  - **Added**: Comprehensive README for Docker deployment instructions
+
+- **CI/CD Release Improvements**
+  - **Enhanced**: Release workflow to check for existing releases before creating new ones
+  - **Added**: Conditional logic to preserve manually edited release notes
+  - **Added**: Artifact upload to existing releases using gh CLI
+  - **Fixed**: Release notes being overwritten by automated workflow
+  - **Added**: Automated artifact attachment to GitHub releases
+
 ### Phase 1 MVP Implementation Progress - 2025-06-21
 
 #### Enhanced Authentication & UI Implementation

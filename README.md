@@ -188,8 +188,15 @@ This initial release establishes the complete project foundation with:
 - ✅ **Database Schema** - Complete Prisma models for all features
 - ✅ **Docker Support** - Production-ready containerization
 - ✅ **Developer Experience** - Hot reload, TypeScript, ESLint, Prettier
+- ✅ **Release Artifacts** - Pre-built binaries, Docker images, and checksums
 
-[View Full Changelog](./CHANGELOG.md) | [Download Release](https://github.com/doublegate/SubPilot-App/releases/tag/v0.1.0)
+### 📦 Download Options
+
+- **Source Code**: [`subpilot-v0.1.0-source.tar.gz`](https://github.com/doublegate/SubPilot-App/releases/download/v0.1.0/subpilot-v0.1.0-source.tar.gz) (1.8 MB)
+- **Production Build**: [`subpilot-v0.1.0-build.tar.gz`](https://github.com/doublegate/SubPilot-App/releases/download/v0.1.0/subpilot-v0.1.0-build.tar.gz) (50.7 MB)
+- **Docker Image**: [`subpilot-v0.1.0-docker.tar.gz`](https://github.com/doublegate/SubPilot-App/releases/download/v0.1.0/subpilot-v0.1.0-docker.tar.gz) (106.1 MB)
+
+[View Full Changelog](./CHANGELOG.md) | [Browse All Downloads](https://github.com/doublegate/SubPilot-App/releases/tag/v0.1.0)
 
 ## 📚 Documentation
 

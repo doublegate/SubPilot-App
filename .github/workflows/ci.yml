@@ -364,7 +364,21 @@ jobs:
           path: docker-artifacts/
         continue-on-error: true
 
+      - name: Check if release exists
+        id: check_release
+        run: |
+          if gh release view ${{ github.ref_name }} &>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "📋 Release already exists, will only upload artifacts"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "🆕 Release does not exist, will create new release"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create GitHub Release
+        if: steps.check_release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           body: |
@@ -372,6 +386,11 @@ jobs:
             
             ## What's Changed
             This release includes the latest features and improvements to SubPilot.
+            
+            ## 📦 Release Assets
+            - Source code archives (tar.gz and zip)
+            - Build artifacts (if applicable)
+            - Docker images (if applicable)
             
             ## Installation
             ```bash
@@ -382,6 +401,9 @@ jobs:
             ```
             
             See the [README](https://github.com/doublegate/SubPilot-App#readme) for full setup instructions.
+            
+            ---
+            *Note: This is an automated release. For detailed release notes, please check the [CHANGELOG](https://github.com/doublegate/SubPilot-App/blob/main/CHANGELOG.md).*
           draft: false
           prerelease: ${{ contains(github.ref, '-') }}
           files: |
@@ -391,5 +413,30 @@ jobs:
             docker-artifacts/subpilot-${{ github.ref_name }}-docker.tar.gz
             docker-artifacts/docker-compose.yml
             docker-artifacts/README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts to existing release
+        if: steps.check_release.outputs.exists == 'true'
+        run: |
+          echo "📤 Uploading artifacts to existing release..."
+          
+          # Upload build artifacts
+          gh release upload ${{ github.ref_name }} \
+            artifacts/subpilot-${{ github.ref_name }}-build.tar.gz \
+            artifacts/subpilot-${{ github.ref_name }}-source.tar.gz \
+            artifacts/checksums.sha256 \
+            --clobber || true
+          
+          # Upload Docker artifacts if they exist
+          if [ -d "docker-artifacts" ]; then
+            gh release upload ${{ github.ref_name }} \
+              docker-artifacts/subpilot-${{ github.ref_name }}-docker.tar.gz \
+              docker-artifacts/docker-compose.yml \
+              docker-artifacts/README.md \
+              --clobber || true
+          fi
+          
+          echo "✅ Artifacts uploaded successfully"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
