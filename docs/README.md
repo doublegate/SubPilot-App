@@ -97,6 +97,8 @@ subpilot-app/
 - **[Development Setup](./DEVELOPMENT_SETUP.md)** - Complete local environment setup
 - **[Architecture](./ARCHITECTURE.md)** - System design and T3 Stack integration
 - **[API Reference](./API_REFERENCE.md)** - tRPC endpoints and schemas
+- **[Vercel Deployment](./VERCEL-DEPLOYMENT.md)** - Deploy to Vercel (production/testing)
+- **[Vercel Environment Setup](./VERCEL-ENV-SETUP.md)** - Configure Vercel environment variables
 - **[Database Design](./DATABASE_DESIGN.md)** - Prisma models and relationships
 - **[Authentication Guide](./AUTHENTICATION.md)** - Auth.js implementation
 - **[Bank Integration](./BANK_INTEGRATION.md)** - Plaid API setup
