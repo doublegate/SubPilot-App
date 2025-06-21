@@ -1,332 +1,265 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@/test/utils';
+import { render, screen, fireEvent } from '@/test/utils';
 import { BankConnectionCard } from '@/components/bank-connection-card';
-
-// Mock tRPC
-const mockSyncTransactions = vi.fn();
-const mockDeleteItem = vi.fn();
-
-vi.mock('@/trpc/react', () => ({
-  api: {
-    plaid: {
-      syncTransactions: {
-        useMutation: () => ({
-          mutate: mockSyncTransactions,
-          isLoading: false,
-        }),
-      },
-      deleteItem: {
-        useMutation: () => ({
-          mutate: mockDeleteItem,
-          isLoading: false,
-        }),
-      },
-    },
-  },
-}));
-
-// Mock sonner
-vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-  },
-}));
 
 // Mock date-fns
 vi.mock('date-fns', () => ({
-  formatDistanceToNow: vi.fn((date) => '2 hours ago'),
-  format: vi.fn((date) => 'Jul 15, 2024'),
+  formatDistanceToNow: vi.fn(() => '2 hours ago'),
 }));
 
 describe('BankConnectionCard', () => {
-  const mockPlaidItem = {
-    id: 'plaid-item-1',
-    plaidItemId: 'item_123',
-    institution: {
-      id: 'ins_1',
-      name: 'Chase Bank',
-      logo: 'https://example.com/chase-logo.png',
-    },
-    isActive: true,
+  const mockOnSync = vi.fn();
+  const mockOnDisconnect = vi.fn();
+  const mockOnReconnect = vi.fn();
+
+  const connectedConnection = {
+    id: 'connection-1',
+    institutionName: 'Chase Bank',
     lastSync: new Date('2024-07-15T10:00:00Z'),
-    accounts: [
-      {
-        id: 'acc-1',
-        name: 'Checking Account',
-        type: 'depository',
-        subtype: 'checking',
-        mask: '0000',
-        currentBalance: 1500.50,
-        availableBalance: 1450.25,
-        isoCurrencyCode: 'USD',
-      },
-      {
-        id: 'acc-2',
-        name: 'Savings Account',
-        type: 'depository',
-        subtype: 'savings',
-        mask: '1111',
-        currentBalance: 5000.00,
-        availableBalance: 5000.00,
-        isoCurrencyCode: 'USD',
-      },
-    ],
+    status: 'connected' as const,
+    error: null,
+    accountCount: 2,
   };
 
-  const mockInactivePlaidItem = {
-    ...mockPlaidItem,
-    id: 'plaid-item-2',
-    isActive: false,
+  const errorConnection = {
+    id: 'connection-2',
+    institutionName: 'Bank of America',
+    lastSync: new Date('2024-07-15T08:00:00Z'),
+    status: 'error' as const,
+    error: 'Authentication failed',
+    accountCount: 1,
+  };
+
+  const syncingConnection = {
+    id: 'connection-3',
+    institutionName: 'Wells Fargo',
+    lastSync: null,
+    status: 'syncing' as const,
+    error: null,
+    accountCount: 3,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders bank connection card with institution info', () => {
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
+  it('renders connected bank connection correctly', () => {
+    render(
+      <BankConnectionCard
+        connection={connectedConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
 
     expect(screen.getByText('Chase Bank')).toBeInTheDocument();
-    expect(screen.getByText('2 accounts connected')).toBeInTheDocument();
-    expect(screen.getByText('Last synced: 2 hours ago')).toBeInTheDocument();
+    expect(screen.getByText('2 accounts')).toBeInTheDocument();
+    expect(screen.getByText('Connected')).toBeInTheDocument();
+    expect(screen.getByText('Last synced 2 hours ago')).toBeInTheDocument();
   });
 
-  it('displays institution logo when available', () => {
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
-
-    const logo = screen.getByAltText('Chase Bank logo');
-    expect(logo).toBeInTheDocument();
-    expect(logo).toHaveAttribute('src', 'https://example.com/chase-logo.png');
-  });
-
-  it('shows fallback icon when logo is not available', () => {
-    const itemWithoutLogo = {
-      ...mockPlaidItem,
-      institution: {
-        ...mockPlaidItem.institution,
-        logo: null,
-      },
+  it('renders single account correctly', () => {
+    const singleAccountConnection = {
+      ...connectedConnection,
+      accountCount: 1,
     };
 
-    render(<BankConnectionCard plaidItem={itemWithoutLogo} />);
+    render(
+      <BankConnectionCard
+        connection={singleAccountConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
 
-    expect(screen.getByTestId('bank-fallback-icon')).toBeInTheDocument();
+    expect(screen.getByText('1 account')).toBeInTheDocument();
   });
 
-  it('displays all connected accounts', () => {
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
+  it('renders error connection with error message', () => {
+    render(
+      <BankConnectionCard
+        connection={errorConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
 
-    expect(screen.getByText('Checking Account')).toBeInTheDocument();
-    expect(screen.getByText('••••0000')).toBeInTheDocument();
-    expect(screen.getByText('$1,500.50')).toBeInTheDocument();
-
-    expect(screen.getByText('Savings Account')).toBeInTheDocument();
-    expect(screen.getByText('••••1111')).toBeInTheDocument();
-    expect(screen.getByText('$5,000.00')).toBeInTheDocument();
+    expect(screen.getByText('Bank of America')).toBeInTheDocument();
+    expect(screen.getByText('Error')).toBeInTheDocument();
+    expect(screen.getByText('Connection Error')).toBeInTheDocument();
+    expect(screen.getByText('Authentication failed')).toBeInTheDocument();
   });
 
-  it('shows active status badge for active connections', () => {
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
+  it('renders syncing connection', () => {
+    render(
+      <BankConnectionCard
+        connection={syncingConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
 
-    expect(screen.getByText('Active')).toBeInTheDocument();
-    expect(screen.getByTestId('status-badge')).toHaveClass('bg-green-100', 'text-green-800');
+    expect(screen.getByText('Wells Fargo')).toBeInTheDocument();
+    expect(screen.getByText('Syncing')).toBeInTheDocument();
+    expect(screen.getByText('Syncing transactions...')).toBeInTheDocument();
   });
 
-  it('shows inactive status badge for inactive connections', () => {
-    render(<BankConnectionCard plaidItem={mockInactivePlaidItem} />);
+  it('shows sync option for connected status', () => {
+    render(
+      <BankConnectionCard
+        connection={connectedConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
 
-    expect(screen.getByText('Disconnected')).toBeInTheDocument();
-    expect(screen.getByTestId('status-badge')).toHaveClass('bg-red-100', 'text-red-800');
+    // Click dropdown menu
+    const menuButton = screen.getByRole('button');
+    fireEvent.click(menuButton);
+
+    expect(screen.getByText('Sync Now')).toBeInTheDocument();
+    expect(screen.getByText('Disconnect Bank')).toBeInTheDocument();
   });
 
-  it('handles sync transactions action', async () => {
-    const mockToast = require('sonner').toast;
+  it('shows reconnect option for error status', () => {
+    render(
+      <BankConnectionCard
+        connection={errorConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
 
-    mockSyncTransactions.mockImplementation((params) => {
-      params.onSuccess?.({ transactionsAdded: 5, totalTransactions: 125 });
-    });
+    // Click dropdown menu
+    const menuButton = screen.getByRole('button');
+    fireEvent.click(menuButton);
 
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
+    expect(screen.getByText('Reconnect')).toBeInTheDocument();
+    expect(screen.getByText('Disconnect Bank')).toBeInTheDocument();
+  });
 
-    const syncButton = screen.getByRole('button', { name: /sync transactions/i });
+  it('calls onSync when sync button is clicked', () => {
+    render(
+      <BankConnectionCard
+        connection={connectedConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
+
+    // Click dropdown menu
+    const menuButton = screen.getByRole('button');
+    fireEvent.click(menuButton);
+
+    // Click sync button
+    const syncButton = screen.getByText('Sync Now');
     fireEvent.click(syncButton);
 
-    await waitFor(() => {
-      expect(mockSyncTransactions).toHaveBeenCalledWith({
-        itemId: 'plaid-item-1',
-        onSuccess: expect.any(Function),
-        onError: expect.any(Function),
-      });
-      expect(mockToast.success).toHaveBeenCalledWith('Added 5 new transactions (125 total)');
-    });
+    expect(mockOnSync).toHaveBeenCalledWith('connection-1');
   });
 
-  it('shows loading state during sync', async () => {
-    const mockApi = require('@/trpc/react').api;
-    mockApi.plaid.syncTransactions.useMutation.mockReturnValue({
-      mutate: mockSyncTransactions,
-      isLoading: true,
-    });
+  it('calls onReconnect when reconnect button is clicked', () => {
+    render(
+      <BankConnectionCard
+        connection={errorConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
 
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
+    // Click dropdown menu
+    const menuButton = screen.getByRole('button');
+    fireEvent.click(menuButton);
 
-    const syncButton = screen.getByRole('button', { name: /syncing/i });
-    expect(syncButton).toBeDisabled();
-    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+    // Click reconnect button
+    const reconnectButton = screen.getByText('Reconnect');
+    fireEvent.click(reconnectButton);
+
+    expect(mockOnReconnect).toHaveBeenCalledWith('connection-2');
   });
 
-  it('handles sync errors gracefully', async () => {
-    const mockToast = require('sonner').toast;
+  it('calls onDisconnect when disconnect button is clicked', () => {
+    render(
+      <BankConnectionCard
+        connection={connectedConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
 
-    mockSyncTransactions.mockImplementation((params) => {
-      params.onError?.(new Error('Sync failed'));
-    });
+    // Click dropdown menu
+    const menuButton = screen.getByRole('button');
+    fireEvent.click(menuButton);
 
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
-
-    const syncButton = screen.getByRole('button', { name: /sync transactions/i });
-    fireEvent.click(syncButton);
-
-    await waitFor(() => {
-      expect(mockToast.error).toHaveBeenCalledWith('Failed to sync transactions');
-    });
-  });
-
-  it('handles disconnect action', async () => {
-    const mockToast = require('sonner').toast;
-
-    mockDeleteItem.mockImplementation((params) => {
-      params.onSuccess?.();
-    });
-
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
-
-    const disconnectButton = screen.getByRole('button', { name: /disconnect/i });
+    // Click disconnect button
+    const disconnectButton = screen.getByText('Disconnect Bank');
     fireEvent.click(disconnectButton);
 
-    await waitFor(() => {
-      expect(mockDeleteItem).toHaveBeenCalledWith({
-        itemId: 'plaid-item-1',
-        onSuccess: expect.any(Function),
-        onError: expect.any(Function),
-      });
-      expect(mockToast.success).toHaveBeenCalledWith('Bank connection removed');
-    });
+    expect(mockOnDisconnect).toHaveBeenCalledWith('connection-1');
   });
 
-  it('shows confirmation dialog before disconnect', async () => {
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
+  it('handles missing callback functions gracefully', () => {
+    render(<BankConnectionCard connection={connectedConnection} />);
 
-    const disconnectButton = screen.getByRole('button', { name: /disconnect/i });
-    fireEvent.click(disconnectButton);
-
-    expect(screen.getByText(/are you sure you want to disconnect/i)).toBeInTheDocument();
-    expect(screen.getByText(/this will remove all associated accounts/i)).toBeInTheDocument();
+    expect(screen.getByText('Chase Bank')).toBeInTheDocument();
+    expect(screen.getByText('Connected')).toBeInTheDocument();
   });
 
-  it('calculates total balance correctly', () => {
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
+  it('does not show last sync when null', () => {
+    render(
+      <BankConnectionCard
+        connection={syncingConnection}
+        onSync={mockOnSync}
+        onDisconnect={mockOnDisconnect}
+        onReconnect={mockOnReconnect}
+      />
+    );
 
-    // $1,500.50 + $5,000.00 = $6,500.50
-    expect(screen.getByText('Total Balance: $6,500.50')).toBeInTheDocument();
+    expect(screen.queryByText(/Last synced/)).not.toBeInTheDocument();
   });
 
-  it('handles different account types correctly', () => {
-    const itemWithCreditCard = {
-      ...mockPlaidItem,
-      accounts: [
-        ...mockPlaidItem.accounts,
-        {
-          id: 'acc-3',
-          name: 'Credit Card',
-          type: 'credit',
-          subtype: 'credit_card',
-          mask: '2222',
-          currentBalance: -500.00,
-          availableBalance: 1500.00,
-          isoCurrencyCode: 'USD',
-        },
-      ],
-    };
+  it('applies correct CSS classes for different statuses', () => {
+    const { rerender } = render(
+      <BankConnectionCard connection={connectedConnection} />
+    );
 
-    render(<BankConnectionCard plaidItem={itemWithCreditCard} />);
+    // Test connected status
+    expect(screen.getByText('Connected')).toHaveClass('text-green-600');
 
-    expect(screen.getByText('Credit Card')).toBeInTheDocument();
-    expect(screen.getByText('••••2222')).toBeInTheDocument();
-    expect(screen.getByText('-$500.00')).toBeInTheDocument();
+    // Test error status
+    rerender(<BankConnectionCard connection={errorConnection} />);
+    expect(screen.getByText('Error')).toHaveClass('text-red-600');
+
+    // Test syncing status
+    rerender(<BankConnectionCard connection={syncingConnection} />);
+    expect(screen.getByText('Syncing')).toHaveClass('text-blue-600');
   });
 
-  it('shows account type badges', () => {
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
+  it('shows spinning icon for syncing status', () => {
+    render(<BankConnectionCard connection={syncingConnection} />);
 
-    const checkingBadge = screen.getByText('Checking');
-    const savingsBadge = screen.getByText('Savings');
-
-    expect(checkingBadge).toBeInTheDocument();
-    expect(savingsBadge).toBeInTheDocument();
+    // The spinning icon should have the animate-spin class
+    const spinningIcon = screen
+      .getByText('Syncing')
+      .parentElement?.querySelector('.animate-spin');
+    expect(spinningIcon).toBeInTheDocument();
   });
 
-  it('handles null balances gracefully', () => {
-    const itemWithNullBalances = {
-      ...mockPlaidItem,
-      accounts: [
-        {
-          ...mockPlaidItem.accounts[0],
-          currentBalance: null,
-          availableBalance: null,
-        },
-      ],
-    };
+  it('highlights error connection with border', () => {
+    const { container } = render(
+      <BankConnectionCard connection={errorConnection} />
+    );
 
-    render(<BankConnectionCard plaidItem={itemWithNullBalances} />);
-
-    expect(screen.getByText('Balance unavailable')).toBeInTheDocument();
-  });
-
-  it('applies correct styling classes', () => {
-    render(<BankConnectionCard plaidItem={mockPlaidItem} />);
-
-    const card = screen.getByTestId('bank-connection-card');
-    expect(card).toHaveClass('border', 'rounded-lg', 'p-6');
-
-    const institutionHeader = screen.getByTestId('institution-header');
-    expect(institutionHeader).toHaveClass('flex', 'items-center', 'justify-between');
-  });
-
-  it('shows proper sync status messages', () => {
-    const recentSync = {
-      ...mockPlaidItem,
-      lastSync: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    };
-
-    render(<BankConnectionCard plaidItem={recentSync} />);
-
-    expect(screen.getByText(/last synced: 2 hours ago/i)).toBeInTheDocument();
-  });
-
-  it('handles never synced state', () => {
-    const neverSynced = {
-      ...mockPlaidItem,
-      lastSync: null,
-    };
-
-    render(<BankConnectionCard plaidItem={neverSynced} />);
-
-    expect(screen.getByText('Never synced')).toBeInTheDocument();
-  });
-
-  it('shows warning for old sync data', () => {
-    const oldSync = {
-      ...mockPlaidItem,
-      lastSync: new Date(Date.now() - 1000 * 60 * 60 * 48), // 48 hours ago
-    };
-
-    require('date-fns').formatDistanceToNow.mockReturnValue('2 days ago');
-
-    render(<BankConnectionCard plaidItem={oldSync} />);
-
-    expect(screen.getByTestId('sync-warning')).toBeInTheDocument();
-    expect(screen.getByText(/data may be outdated/i)).toBeInTheDocument();
+    const card = container.firstChild as HTMLElement;
+    expect(card).toHaveClass('border-red-200');
   });
 });

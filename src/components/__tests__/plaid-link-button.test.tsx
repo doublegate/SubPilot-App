@@ -67,7 +67,7 @@ describe('PlaidLinkButton', () => {
   it('shows loading state when link token is loading', () => {
     const { usePlaidLink } = require('react-plaid-link');
     const mockApi = require('@/trpc/react').api;
-    
+
     mockApi.plaid.createLinkToken.useQuery.mockReturnValue({
       data: null,
       isLoading: true,
@@ -103,7 +103,7 @@ describe('PlaidLinkButton', () => {
     const mockRouter = require('next/navigation').useRouter();
 
     // Simulate successful public token exchange
-    mockExchangePublicToken.mockImplementation((params) => {
+    mockExchangePublicToken.mockImplementation(params => {
       params.onSuccess?.();
     });
 
@@ -113,7 +113,9 @@ describe('PlaidLinkButton', () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(mockToast.success).toHaveBeenCalledWith('Bank account connected successfully!');
+      expect(mockToast.success).toHaveBeenCalledWith(
+        'Bank account connected successfully!'
+      );
       expect(mockRouter().refresh).toHaveBeenCalled();
     });
   });
@@ -121,7 +123,7 @@ describe('PlaidLinkButton', () => {
   it('handles connection errors', async () => {
     const mockToast = require('sonner').toast;
 
-    mockExchangePublicToken.mockImplementation((params) => {
+    mockExchangePublicToken.mockImplementation(params => {
       params.onError?.(new Error('Connection failed'));
     });
 
@@ -143,7 +145,7 @@ describe('PlaidLinkButton', () => {
     render(<PlaidLinkButton onSuccess={mockOnSuccess} />);
 
     // Simulate successful connection
-    mockExchangePublicToken.mockImplementation((params) => {
+    mockExchangePublicToken.mockImplementation(params => {
       params.onSuccess?.();
     });
 
@@ -164,7 +166,7 @@ describe('PlaidLinkButton', () => {
 
   it('shows different text based on state', () => {
     const mockApi = require('@/trpc/react').api;
-    
+
     // Test loading state
     mockApi.plaid.createLinkToken.useQuery.mockReturnValue({
       data: null,
@@ -186,7 +188,7 @@ describe('PlaidLinkButton', () => {
 
   it('handles Plaid Link configuration properly', () => {
     const { usePlaidLink } = require('react-plaid-link');
-    
+
     render(<PlaidLinkButton />);
 
     expect(usePlaidLink).toHaveBeenCalledWith({
@@ -214,7 +216,10 @@ describe('PlaidLinkButton', () => {
     };
 
     const { usePlaidLink } = require('react-plaid-link');
-    let onSuccessCallback: (publicToken: string, metadata: any) => void;
+    let onSuccessCallback: (
+      publicToken: string,
+      metadata: any
+    ) => void = () => {};
 
     usePlaidLink.mockImplementation((config: any) => {
       onSuccessCallback = config.onSuccess;
@@ -242,7 +247,7 @@ describe('PlaidLinkButton', () => {
 
   it('handles Plaid Link exit gracefully', () => {
     const { usePlaidLink } = require('react-plaid-link');
-    let onExitCallback: (error: any) => void;
+    let onExitCallback: (error: any) => void = () => {};
 
     usePlaidLink.mockImplementation((config: any) => {
       onExitCallback = config.onExit;
@@ -261,7 +266,7 @@ describe('PlaidLinkButton', () => {
   it('logs Plaid Link errors on exit', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { usePlaidLink } = require('react-plaid-link');
-    let onExitCallback: (error: any) => void;
+    let onExitCallback: (error: any) => void = () => {};
 
     usePlaidLink.mockImplementation((config: any) => {
       onExitCallback = config.onExit;
@@ -274,7 +279,7 @@ describe('PlaidLinkButton', () => {
     onExitCallback(mockError);
 
     expect(consoleSpy).toHaveBeenCalledWith('Plaid Link error:', mockError);
-    
+
     consoleSpy.mockRestore();
   });
 });

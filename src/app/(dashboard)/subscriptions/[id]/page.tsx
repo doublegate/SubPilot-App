@@ -117,12 +117,13 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
                 className="h-16 w-16 rounded-lg object-contain"
               />
             ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600">
-              <span className="text-2xl font-bold text-white">
-                {subscription.name.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            )})()}
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600">
+                <span className="text-2xl font-bold text-white">
+                  {subscription.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            );
+          })()}
           <div>
             <h1 className="text-3xl font-bold">{subscription.name}</h1>
             <p className="text-muted-foreground">{subscription.description}</p>
@@ -229,29 +230,31 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
             {subscription.transactions &&
             subscription.transactions.length > 0 ? (
               <div className="space-y-4">
-                {(subscription.transactions as TransactionData[]).slice(0, 6).map(transaction => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-full bg-muted p-2">
-                        <CreditCard className="h-4 w-4" />
+                {(subscription.transactions as TransactionData[])
+                  .slice(0, 6)
+                  .map(transaction => (
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-muted p-2">
+                          <CreditCard className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            {format(new Date(transaction.date), 'MMM d, yyyy')}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {transaction.description ?? 'Payment'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {format(new Date(transaction.date), 'MMM d, yyyy')}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {transaction.description ?? 'Payment'}
-                        </p>
-                      </div>
+                      <p className="font-medium">
+                        {formatCurrency(transaction.amount)}
+                      </p>
                     </div>
-                    <p className="font-medium">
-                      {formatCurrency(transaction.amount)}
-                    </p>
-                  </div>
-                ))}
+                  ))}
               </div>
             ) : (
               <p className="text-muted-foreground">
@@ -274,19 +277,21 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
                   <TrendingUp className="h-4 w-4" />
                   <span>Price changes over time</span>
                 </div>
-                {(subscription.priceHistory as PriceHistoryData[]).map((price, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-sm">
-                      {format(new Date(price.date), 'MMM yyyy')}
-                    </span>
-                    <span className="font-medium">
-                      {formatCurrency(price.amount)}
-                    </span>
-                  </div>
-                ))}
+                {(subscription.priceHistory as PriceHistoryData[]).map(
+                  (price, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-sm">
+                        {format(new Date(price.date), 'MMM yyyy')}
+                      </span>
+                      <span className="font-medium">
+                        {formatCurrency(price.amount)}
+                      </span>
+                    </div>
+                  )
+                )}
               </div>
             ) : (
               <p className="text-muted-foreground">No price changes detected</p>
@@ -297,52 +302,53 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
 
       {/* Cancellation Info */}
       {(() => {
-        const cancelInfo = subscription.cancellationInfo as CancellationInfoData | null;
+        const cancelInfo =
+          subscription.cancellationInfo as CancellationInfoData | null;
         return cancelInfo ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Cancellation Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {cancelInfo.url && (
-              <div className="flex items-start gap-3">
-                <Globe className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Cancel Online</p>
-                  <Link
-                    href={cancelInfo.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Visit cancellation page →
-                  </Link>
+          <Card>
+            <CardHeader>
+              <CardTitle>Cancellation Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {cancelInfo.url && (
+                <div className="flex items-start gap-3">
+                  <Globe className="mt-0.5 h-5 w-5 text-muted-foreground" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Cancel Online</p>
+                    <Link
+                      href={cancelInfo.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Visit cancellation page →
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {cancelInfo.supportInfo && (
-              <div className="flex items-start gap-3">
-                <Phone className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Contact Support</p>
+              {cancelInfo.supportInfo && (
+                <div className="flex items-start gap-3">
+                  <Phone className="mt-0.5 h-5 w-5 text-muted-foreground" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Contact Support</p>
+                    <p className="text-sm text-muted-foreground">
+                      {cancelInfo.supportInfo}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {!cancelInfo.phone && !cancelInfo.email && !cancelInfo.url && (
+                <div className="rounded-lg bg-muted p-4">
                   <p className="text-sm text-muted-foreground">
-                    {cancelInfo.supportInfo}
+                    No cancellation information available. You may need to
+                    contact the provider directly.
                   </p>
                 </div>
-              </div>
-            )}
-
-            {!cancelInfo.phone && !cancelInfo.email && !cancelInfo.url && (
-              <div className="rounded-lg bg-muted p-4">
-                <p className="text-sm text-muted-foreground">
-                  No cancellation information available. You may need to contact
-                  the provider directly.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
         ) : null;
       })()}
 

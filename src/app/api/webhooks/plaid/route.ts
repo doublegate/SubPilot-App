@@ -94,7 +94,11 @@ async function handleTransactionWebhook(
   }
 }
 
-async function handleItemWebhook(code: string, itemId: string, data: PlaidWebhookData) {
+async function handleItemWebhook(
+  code: string,
+  itemId: string,
+  data: PlaidWebhookData
+) {
   switch (code) {
     case 'ERROR':
       // Update item status to error

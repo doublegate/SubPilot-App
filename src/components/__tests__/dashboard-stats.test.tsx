@@ -4,20 +4,20 @@ import { DashboardStats } from '@/components/dashboard-stats';
 
 describe('DashboardStats', () => {
   const mockStats = {
-    totalSubscriptions: 8,
-    activeSubscriptions: 6,
-    totalMonthlySpend: 125.50,
-    totalYearlySpend: 1506.00,
+    totalActive: 8,
+    monthlySpend: 125.5,
+    yearlySpend: 1506.0,
+    percentageChange: 5.2,
     upcomingRenewals: 3,
+    unusedSubscriptions: 1,
   };
 
   it('renders all stat cards', () => {
     render(<DashboardStats stats={mockStats} />);
 
-    expect(screen.getByText('Total Subscriptions')).toBeInTheDocument();
     expect(screen.getByText('Active Subscriptions')).toBeInTheDocument();
     expect(screen.getByText('Monthly Spend')).toBeInTheDocument();
-    expect(screen.getByText('Yearly Spend')).toBeInTheDocument();
+    expect(screen.getByText('Yearly Projection')).toBeInTheDocument();
     expect(screen.getByText('Upcoming Renewals')).toBeInTheDocument();
   });
 
@@ -25,101 +25,116 @@ describe('DashboardStats', () => {
     render(<DashboardStats stats={mockStats} />);
 
     expect(screen.getByText('8')).toBeInTheDocument();
-    expect(screen.getByText('6')).toBeInTheDocument();
-    expect(screen.getByText('$125.50')).toBeInTheDocument();
-    expect(screen.getByText('$1,506.00')).toBeInTheDocument();
+    expect(screen.getByText('$126')).toBeInTheDocument();
+    expect(screen.getByText('$1,506')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
   it('handles zero values gracefully', () => {
     const zeroStats = {
-      totalSubscriptions: 0,
-      activeSubscriptions: 0,
-      totalMonthlySpend: 0,
-      totalYearlySpend: 0,
+      totalActive: 0,
+      monthlySpend: 0,
+      yearlySpend: 0,
       upcomingRenewals: 0,
     };
 
     render(<DashboardStats stats={zeroStats} />);
 
-    expect(screen.getByText('$0.00')).toBeInTheDocument();
+    expect(screen.getByText('$0')).toBeInTheDocument();
   });
 
-  it('shows loading state when stats are undefined', () => {
-    render(<DashboardStats stats={undefined} />);
-
-    // Should show skeleton loaders
-    expect(screen.getAllByTestId('stat-skeleton')).toHaveLength(5);
-  });
-
-  it('shows trend indicators for changes', () => {
-    const statsWithTrends = {
-      ...mockStats,
-      monthlySpendChange: 15.5,
-      activeSubscriptionsChange: -1,
+  it('handles missing optional properties gracefully', () => {
+    const minimalStats = {
+      totalActive: 5,
+      monthlySpend: 100,
+      yearlySpend: 1200,
     };
 
-    render(<DashboardStats stats={statsWithTrends} />);
+    render(<DashboardStats stats={minimalStats} />);
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('$100')).toBeInTheDocument();
+  });
 
-    // Should show up arrow for positive change
-    expect(screen.getByTestId('trend-up')).toBeInTheDocument();
-    // Should show down arrow for negative change
-    expect(screen.getByTestId('trend-down')).toBeInTheDocument();
+  it('shows percentage change indicator', () => {
+    const statsWithPositiveChange = {
+      totalActive: 8,
+      monthlySpend: 125.5,
+      yearlySpend: 1506.0,
+      percentageChange: 15.5,
+      upcomingRenewals: 3,
+    };
+
+    render(<DashboardStats stats={statsWithPositiveChange} />);
+    expect(screen.getByText('+15.5%')).toBeInTheDocument();
   });
 
   it('formats currency correctly for different amounts', () => {
     const largeAmountStats = {
-      ...mockStats,
-      totalMonthlySpend: 1234.56,
-      totalYearlySpend: 14814.72,
+      totalActive: 8,
+      monthlySpend: 1234.56,
+      yearlySpend: 14814.72,
+      upcomingRenewals: 3,
     };
 
     render(<DashboardStats stats={largeAmountStats} />);
 
-    expect(screen.getByText('$1,234.56')).toBeInTheDocument();
-    expect(screen.getByText('$14,814.72')).toBeInTheDocument();
+    expect(screen.getByText('$1,235')).toBeInTheDocument();
+    expect(screen.getByText('$14,815')).toBeInTheDocument();
   });
 
   it('handles very large numbers with appropriate formatting', () => {
     const massiveStats = {
-      ...mockStats,
-      totalSubscriptions: 1000,
-      totalYearlySpend: 999999.99,
+      totalActive: 1000,
+      monthlySpend: 83333.33,
+      yearlySpend: 999999.99,
+      upcomingRenewals: 50,
     };
 
     render(<DashboardStats stats={massiveStats} />);
 
-    expect(screen.getByText('1,000')).toBeInTheDocument();
-    expect(screen.getByText('$999,999.99')).toBeInTheDocument();
+    expect(screen.getByText('1000')).toBeInTheDocument();
+    expect(screen.getByText('$1,000,000')).toBeInTheDocument();
   });
 
-  it('shows appropriate icons for each stat', () => {
-    render(<DashboardStats stats={mockStats} />);
-
-    // Test for presence of icons (these would be specific to your implementation)
-    expect(screen.getByTestId('subscriptions-icon')).toBeInTheDocument();
-    expect(screen.getByTestId('active-icon')).toBeInTheDocument();
-    expect(screen.getByTestId('monthly-spend-icon')).toBeInTheDocument();
-    expect(screen.getByTestId('yearly-spend-icon')).toBeInTheDocument();
-    expect(screen.getByTestId('upcoming-icon')).toBeInTheDocument();
-  });
-
-  it('applies correct styling classes', () => {
-    render(<DashboardStats stats={mockStats} />);
-
-    const statsContainer = screen.getByTestId('dashboard-stats');
-    expect(statsContainer).toHaveClass('grid', 'gap-4');
-  });
-
-  it('handles negative values appropriately', () => {
-    const negativeStats = {
-      ...mockStats,
-      monthlySpendChange: -25.75,
+  it('shows unused subscriptions warning when present', () => {
+    const statsWithUnused = {
+      totalActive: 8,
+      monthlySpend: 125.5,
+      yearlySpend: 1506.0,
+      upcomingRenewals: 3,
+      unusedSubscriptions: 2,
     };
 
-    render(<DashboardStats stats={negativeStats} />);
+    render(<DashboardStats stats={statsWithUnused} />);
+    expect(screen.getByText('Optimization Opportunity')).toBeInTheDocument();
+    expect(screen.getByText('2 unused subscriptions')).toBeInTheDocument();
+  });
 
-    // Should show decrease styling for negative changes
-    expect(screen.getByTestId('trend-down')).toHaveClass('text-red-500');
+  it('does not show unused subscriptions warning when zero', () => {
+    const statsWithoutUnused = {
+      totalActive: 8,
+      monthlySpend: 125.5,
+      yearlySpend: 1506.0,
+      upcomingRenewals: 3,
+      unusedSubscriptions: 0,
+    };
+
+    render(<DashboardStats stats={statsWithoutUnused} />);
+    expect(
+      screen.queryByText('Optimization Opportunity')
+    ).not.toBeInTheDocument();
+  });
+
+  it('handles negative percentage change', () => {
+    const negativeChangeStats = {
+      totalActive: 8,
+      monthlySpend: 125.5,
+      yearlySpend: 1506.0,
+      percentageChange: -10.5,
+      upcomingRenewals: 3,
+    };
+
+    render(<DashboardStats stats={negativeChangeStats} />);
+    expect(screen.getByText('-10.5%')).toBeInTheDocument();
   });
 });

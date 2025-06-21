@@ -5,7 +5,14 @@ import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Icons } from '@/components/ui/icons';
 import { validateEmail } from '@/lib/utils';
@@ -15,7 +22,10 @@ interface AuthFormProps {
   callbackUrl?: string;
 }
 
-export function AuthForm({ mode = 'signin', callbackUrl = '/dashboard' }: AuthFormProps) {
+export function AuthForm({
+  mode = 'signin',
+  callbackUrl = '/dashboard',
+}: AuthFormProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -28,7 +38,7 @@ export function AuthForm({ mode = 'signin', callbackUrl = '/dashboard' }: AuthFo
     try {
       setIsLoading(true);
       setError('');
-      
+
       await signIn(provider, { callbackUrl });
     } catch (error) {
       setError('Failed to sign in. Please try again.');
@@ -39,7 +49,7 @@ export function AuthForm({ mode = 'signin', callbackUrl = '/dashboard' }: AuthFo
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateEmail(email)) {
       setError('Please enter a valid email address.');
       return;
@@ -48,7 +58,7 @@ export function AuthForm({ mode = 'signin', callbackUrl = '/dashboard' }: AuthFo
     try {
       setIsEmailLoading(true);
       setError('');
-      
+
       const result = await signIn('email', {
         email,
         callbackUrl,
@@ -105,15 +115,17 @@ export function AuthForm({ mode = 'signin', callbackUrl = '/dashboard' }: AuthFo
       <CardHeader className="text-center">
         <CardTitle>{isSignUp ? 'Create an account' : 'Welcome back'}</CardTitle>
         <CardDescription>
-          {isSignUp 
+          {isSignUp
             ? 'Create your account to start managing subscriptions'
-            : 'Sign in to your account to continue'
-          }
+            : 'Sign in to your account to continue'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-800" role="alert">
+          <div
+            className="rounded-md bg-red-50 p-3 text-sm text-red-800"
+            role="alert"
+          >
             {error}
           </div>
         )}
@@ -168,12 +180,16 @@ export function AuthForm({ mode = 'signin', callbackUrl = '/dashboard' }: AuthFo
               type="email"
               placeholder="Enter your email address"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               disabled={isEmailLoading}
               required
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isEmailLoading || !email}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isEmailLoading || !email}
+          >
             {isEmailLoading ? (
               <>
                 <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
@@ -190,14 +206,20 @@ export function AuthForm({ mode = 'signin', callbackUrl = '/dashboard' }: AuthFo
           {isSignUp ? (
             <>
               Already have an account?{' '}
-              <a href="/signin" className="font-medium text-primary hover:underline">
+              <a
+                href="/signin"
+                className="font-medium text-primary hover:underline"
+              >
                 Sign in
               </a>
             </>
           ) : (
             <>
               Don't have an account?{' '}
-              <a href="/signup" className="font-medium text-primary hover:underline">
+              <a
+                href="/signup"
+                className="font-medium text-primary hover:underline"
+              >
                 Sign up
               </a>
             </>

@@ -1,4 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+} from 'vitest';
 import {
   cn,
   formatCurrency,
@@ -15,11 +24,15 @@ import {
 describe('utils', () => {
   describe('cn (className utility)', () => {
     it('merges class names correctly', () => {
-      expect(cn('base-class', 'additional-class')).toBe('base-class additional-class');
+      expect(cn('base-class', 'additional-class')).toBe(
+        'base-class additional-class'
+      );
     });
 
     it('handles conditional classes', () => {
-      expect(cn('base', true && 'conditional', false && 'hidden')).toBe('base conditional');
+      expect(cn('base', true && 'conditional', false && 'hidden')).toBe(
+        'base conditional'
+      );
     });
 
     it('handles undefined and null values', () => {
@@ -49,7 +62,7 @@ describe('utils', () => {
     });
 
     it('handles very large numbers', () => {
-      expect(formatCurrency(1000000.50)).toBe('$1,000,000.50');
+      expect(formatCurrency(1000000.5)).toBe('$1,000,000.50');
     });
 
     it('handles decimal precision', () => {
@@ -266,7 +279,7 @@ describe('utils', () => {
     it('maintains this context', () => {
       const obj = {
         value: 'test',
-        method: vi.fn(function(this: any) {
+        method: vi.fn(function (this: any) {
           return this.value;
         }),
       };
@@ -333,14 +346,14 @@ describe('utils', () => {
 
     it('handles zero delay in debounce', () => {
       vi.useFakeTimers();
-      
+
       const mockFn = vi.fn();
       const debouncedFn = debounce(mockFn, 0);
 
       debouncedFn();
       vi.advanceTimersByTime(0);
       expect(mockFn).toHaveBeenCalledOnce();
-      
+
       vi.useRealTimers();
     });
   });
