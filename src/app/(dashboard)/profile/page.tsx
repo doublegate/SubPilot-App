@@ -1,19 +1,11 @@
-import { redirect } from "next/navigation"
 import { auth } from "@/server/auth"
 import { ProfileForm } from "@/components/profile/profile-form"
-import { NavHeader } from "@/components/layout/nav-header"
 
 export default async function ProfilePage() {
   const session = await auth()
 
-  if (!session?.user) {
-    redirect("/login")
-  }
-
   return (
-    <>
-      <NavHeader />
-      <div className="container mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Profile Settings</h1>
         <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
@@ -23,7 +15,7 @@ export default async function ProfilePage() {
         {/* Profile Information */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
-          <ProfileForm user={session.user} />
+          <ProfileForm user={session!.user} />
         </div>
 
         {/* Connected Accounts */}
@@ -121,6 +113,5 @@ export default async function ProfilePage() {
         </div>
       </div>
     </div>
-    </>
   )
 }

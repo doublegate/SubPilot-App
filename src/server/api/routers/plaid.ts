@@ -5,30 +5,66 @@ import {
   protectedProcedure,
 } from "@/server/api/trpc"
 import { env } from "@/env.js"
-
-// Note: Plaid client will be initialized when Plaid integration is implemented
-// For now, we'll create placeholder endpoints that can be filled in Week 2
+import { plaid, isPlaidConfigured, handlePlaidError } from "@/server/plaid-client"
+import { 
+  CountryCode, 
+  Products,
+  LinkTokenCreateRequest,
+  AccountsGetRequest,
+  TransactionsGetRequest,
+} from "plaid"
 
 export const plaidRouter = createTRPCRouter({
   /**
    * Create a Link token for Plaid Link flow
    */
-  createLinkToken: protectedProcedure.query(async ({ ctx: _ctx }) => {
-    // TODO: Implement Plaid Link token creation in Week 2
-    // This will use the Plaid client to generate a link token
-    
-    // For now, return a mock response
-    if (env.NODE_ENV === "development") {
-      return {
-        linkToken: "link-development-mock-token",
-        expiration: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
-      }
+  createLinkToken: protectedProcedure.query(async ({ ctx }) => {
+    if (!isPlaidConfigured()) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Plaid is not configured. Please add Plaid credentials to continue.",
+      })
     }
 
-    throw new TRPCError({
-      code: "NOT_IMPLEMENTED",
-      message: "Plaid integration pending implementation",
-    })
+    const plaidClient = plaid()
+    if (!plaidClient) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to initialize Plaid client",
+      })
+    }
+
+    try {
+      const configs: LinkTokenCreateRequest = {
+        user: {
+          client_user_id: ctx.session.user.id,
+        },
+        client_name: "SubPilot",
+        products: (env.PLAID_PRODUCTS?.split(",") || ["transactions"]) as Products[],
+        country_codes: (env.PLAID_COUNTRY_CODES?.split(",") || ["US"]) as CountryCode[],
+        language: "en",
+        redirect_uri: env.PLAID_REDIRECT_URI || undefined,
+      }
+
+      // Add webhook URL if configured
+      if (env.PLAID_WEBHOOK_URL) {
+        configs.webhook = env.PLAID_WEBHOOK_URL
+      }
+
+      const response = await plaidClient.linkTokenCreate(configs)
+
+      return {
+        linkToken: response.data.link_token,
+        expiration: new Date(response.data.expiration),
+      }
+    } catch (error) {
+      const plaidError = handlePlaidError(error)
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: plaidError.message,
+        cause: plaidError,
+      })
+    }
   }),
 
   /**
@@ -48,23 +84,134 @@ export const plaidRouter = createTRPCRouter({
               id: z.string(),
               name: z.string(),
               type: z.string(),
-              subtype: z.string(),
+              subtype: z.string().nullable(),
+              mask: z.string().nullable(),
             })
           ),
         }),
       })
     )
-    .mutation(async ({ ctx: _ctx, input: _input }) => {
-      // TODO: Implement public token exchange in Week 2
-      // This will:
-      // 1. Exchange public token for access token via Plaid
-      // 2. Store encrypted access token in database
-      // 3. Create PlaidItem and Account records
-      
-      throw new TRPCError({
-        code: "NOT_IMPLEMENTED",
-        message: "Plaid token exchange pending implementation",
-      })
+    .mutation(async ({ ctx, input }) => {
+      if (!isPlaidConfigured()) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Plaid is not configured",
+        })
+      }
+
+      const plaidClient = plaid()
+      if (!plaidClient) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to initialize Plaid client",
+        })
+      }
+
+      try {
+        // Exchange public token for access token
+        const exchangeResponse = await plaidClient.itemPublicTokenExchange({
+          public_token: input.publicToken,
+        })
+
+        const accessToken = exchangeResponse.data.access_token
+        const itemId = exchangeResponse.data.item_id
+
+        // Store the item in database
+        const plaidItem = await ctx.db.plaidItem.create({
+          data: {
+            userId: ctx.session.user.id,
+            plaidItemId: itemId,
+            accessToken: accessToken, // In production, this should be encrypted
+            institutionId: input.metadata.institution.institution_id,
+            institutionName: input.metadata.institution.name,
+            status: "good",
+          },
+        })
+
+        // Get account details from Plaid
+        const accountsRequest: AccountsGetRequest = {
+          access_token: accessToken,
+        }
+        const accountsResponse = await plaidClient.accountsGet(accountsRequest)
+
+        // Store accounts in database
+        const accounts = await Promise.all(
+          accountsResponse.data.accounts.map(async (account) => {
+            return await ctx.db.account.create({
+              data: {
+                plaidItemId: plaidItem.id,
+                plaidAccountId: account.account_id,
+                name: account.name,
+                officialName: account.official_name,
+                type: account.type,
+                subtype: account.subtype || "",
+                mask: account.mask || "",
+                currentBalance: account.balances.current || 0,
+                availableBalance: account.balances.available || 0,
+                isoCurrencyCode: account.balances.iso_currency_code || "USD",
+                isActive: true,
+              },
+            })
+          })
+        )
+
+        // Fetch initial transactions
+        const now = new Date()
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        
+        const transactionsRequest: TransactionsGetRequest = {
+          access_token: accessToken,
+          start_date: thirtyDaysAgo.toISOString().split('T')[0],
+          end_date: now.toISOString().split('T')[0],
+        }
+
+        try {
+          const transactionsResponse = await plaidClient.transactionsGet(transactionsRequest)
+          
+          // Store transactions
+          if (transactionsResponse.data.transactions.length > 0) {
+            await ctx.db.transaction.createMany({
+              data: transactionsResponse.data.transactions.map((txn) => ({
+                accountId: accounts.find(a => a.plaidAccountId === txn.account_id)?.id!,
+                plaidTransactionId: txn.transaction_id,
+                amount: Math.abs(txn.amount), // Plaid returns negative for outflows
+                isoCurrencyCode: txn.iso_currency_code || "USD",
+                description: txn.name,
+                date: new Date(txn.date),
+                pending: txn.pending,
+                category: txn.category || [],
+                subcategory: txn.category?.[1] || null,
+                merchantName: txn.merchant_name,
+                paymentChannel: txn.payment_channel,
+                transactionType: txn.transaction_type || "other",
+                isSubscription: false, // Will be determined by detection algorithm
+              })),
+              skipDuplicates: true,
+            })
+          }
+        } catch (txnError) {
+          console.error("Failed to fetch initial transactions:", txnError)
+          // Don't fail the entire connection if transaction fetch fails
+        }
+
+        return {
+          success: true,
+          itemId: plaidItem.id,
+          accounts: accounts.map(acc => ({
+            id: acc.id,
+            name: acc.name,
+            type: acc.type,
+            balance: acc.currentBalance?.toNumber() || 0,
+          })),
+        }
+      } catch (error) {
+        const plaidError = handlePlaidError(error)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: plaidError.message,
+          cause: plaidError,
+        })
+      }
     }),
 
   /**
@@ -114,18 +261,137 @@ export const plaidRouter = createTRPCRouter({
         force: z.boolean().optional().default(false),
       })
     )
-    .mutation(async () => {
-      // TODO: Implement transaction sync in Week 2
-      // This will:
-      // 1. Call Plaid transactions/sync endpoint
-      // 2. Store new transactions in database
-      // 3. Run subscription detection algorithm
-      // 4. Return sync statistics
-      
-      throw new TRPCError({
-        code: "NOT_IMPLEMENTED",
-        message: "Transaction sync pending implementation",
+    .mutation(async ({ ctx, input }) => {
+      if (!isPlaidConfigured()) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Plaid is not configured",
+        })
+      }
+
+      const plaidClient = plaid()
+      if (!plaidClient) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to initialize Plaid client",
+        })
+      }
+
+      // Get all active Plaid items for the user
+      const plaidItems = await ctx.db.plaidItem.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          status: "good",
+        },
+        include: {
+          accounts: {
+            where: input.accountId ? { id: input.accountId } : { isActive: true },
+          },
+        },
       })
+
+      if (plaidItems.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No bank accounts found to sync",
+        })
+      }
+
+      let totalTransactionsSynced = 0
+      let totalNewTransactions = 0
+
+      // Sync transactions for each Plaid item
+      for (const item of plaidItems) {
+        try {
+          // Use transactions sync endpoint for efficient updates
+          // For now, we'll use the regular transactions endpoint
+          const lastSync = item.accounts[0]?.lastSync || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+          const now = new Date()
+
+          const transactionsRequest: TransactionsGetRequest = {
+            access_token: item.accessToken,
+            start_date: lastSync.toISOString().split('T')[0],
+            end_date: now.toISOString().split('T')[0],
+          }
+
+          const transactionsResponse = await plaidClient.transactionsGet(transactionsRequest)
+          totalTransactionsSynced += transactionsResponse.data.transactions.length
+
+          // Map account IDs
+          const accountIdMap = new Map(
+            item.accounts.map(acc => [acc.plaidAccountId, acc.id])
+          )
+
+          // Store new transactions
+          if (transactionsResponse.data.transactions.length > 0) {
+            const { count } = await ctx.db.transaction.createMany({
+              data: transactionsResponse.data.transactions.map((txn) => ({
+                accountId: accountIdMap.get(txn.account_id)!,
+                plaidTransactionId: txn.transaction_id,
+                amount: Math.abs(txn.amount),
+                isoCurrencyCode: txn.iso_currency_code || "USD",
+                description: txn.name,
+                date: new Date(txn.date),
+                pending: txn.pending,
+                category: txn.category || [],
+                subcategory: txn.category?.[1] || null,
+                merchantName: txn.merchant_name,
+                paymentChannel: txn.payment_channel,
+                transactionType: txn.transaction_type || "other",
+                isSubscription: false, // Will be determined by detection algorithm
+              })),
+              skipDuplicates: true,
+            })
+            totalNewTransactions += count
+          }
+
+          // Update last sync time
+          await ctx.db.account.updateMany({
+            where: {
+              plaidItemId: item.id,
+              ...(input.accountId ? { id: input.accountId } : {}),
+            },
+            data: {
+              lastSync: now,
+            },
+          })
+
+          // Update account balances
+          const accountsRequest: AccountsGetRequest = {
+            access_token: item.accessToken,
+          }
+          const accountsResponse = await plaidClient.accountsGet(accountsRequest)
+
+          for (const account of accountsResponse.data.accounts) {
+            const dbAccountId = accountIdMap.get(account.account_id)
+            if (dbAccountId) {
+              await ctx.db.account.update({
+                where: { id: dbAccountId },
+                data: {
+                  currentBalance: account.balances.current || 0,
+                  availableBalance: account.balances.available || 0,
+                },
+              })
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to sync transactions for item ${item.id}:`, error)
+          // Update item status if there's an error
+          await ctx.db.plaidItem.update({
+            where: { id: item.id },
+            data: { status: "error" },
+          })
+        }
+      }
+
+      // TODO: Run subscription detection algorithm on new transactions
+
+      return {
+        success: true,
+        totalTransactionsSynced,
+        totalNewTransactions,
+        message: `Synced ${totalNewTransactions} new transactions`,
+      }
     }),
 
   /**
@@ -151,6 +417,21 @@ export const plaidRouter = createTRPCRouter({
           code: "NOT_FOUND",
           message: "Bank connection not found",
         })
+      }
+
+      // Remove the item from Plaid (optional - keeps historical data)
+      if (isPlaidConfigured() && plaidItem.accessToken) {
+        const plaidClient = plaid()
+        if (plaidClient) {
+          try {
+            await plaidClient.itemRemove({
+              access_token: plaidItem.accessToken,
+            })
+          } catch (error) {
+            console.error("Failed to remove item from Plaid:", error)
+            // Continue with local cleanup even if Plaid removal fails
+          }
+        }
       }
 
       // Mark as inactive instead of deleting to preserve history

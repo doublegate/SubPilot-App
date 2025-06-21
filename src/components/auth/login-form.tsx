@@ -5,6 +5,9 @@ import { useState } from "react"
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  // TODO: Remove credentials login after development testing is complete
+  // This is only for development convenience and should never be enabled in production
+  const isDevelopment = process.env.NODE_ENV === "development"
 
   async function onSubmit(provider: string) {
     setIsLoading(true)
@@ -20,6 +23,23 @@ export function LoginForm() {
 
   return (
     <div className="grid gap-6">
+      {/* Development credentials login */}
+      {isDevelopment && (
+        <>
+          <CredentialsForm isLoading={isLoading} />
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with OAuth
+              </span>
+            </div>
+          </div>
+        </>
+      )}
+      
       <button
         type="button"
         className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#4285F4] px-8 text-sm font-medium text-white transition-colors hover:bg-[#357AE8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4285F4] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
@@ -156,6 +176,98 @@ function EmailForm({ isLoading }: { isLoading: boolean }) {
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
         ) : (
           "Send magic link"
+        )}
+      </button>
+    </form>
+  )
+}
+
+function CredentialsForm({ isLoading }: { isLoading: boolean }) {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setError("")
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: "/dashboard",
+      })
+
+      if (result?.error) {
+        setError("Invalid email or password")
+      } else if (result?.url) {
+        window.location.href = result.url
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again.")
+      console.error("Credentials sign-in error:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleCredentialsSubmit} className="grid gap-4">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+        <p className="font-medium text-amber-800">Development Mode</p>
+        <p className="text-amber-700">Test account: test@subpilot.dev / testpassword123</p>
+      </div>
+      
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      
+      <div className="grid gap-2">
+        <label htmlFor="email" className="text-sm font-medium">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="test@subpilot.dev"
+          required
+          className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={isLoading || isSubmitting}
+        />
+      </div>
+      
+      <div className="grid gap-2">
+        <label htmlFor="password" className="text-sm font-medium">
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          required
+          className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={isLoading || isSubmitting}
+        />
+      </div>
+      
+      <button
+        type="submit"
+        className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        disabled={isLoading || isSubmitting}
+      >
+        {isSubmitting ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+        ) : (
+          "Sign in with Email"
         )}
       </button>
     </form>

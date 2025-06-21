@@ -2,10 +2,10 @@
 # 🚀 SubPilot
 
 <div align="center">
-  <img src="images/SubPilot_Logo.png" alt="SubPilot Logo" width="200"/>
-  
+  <img src="images/SubPilot_NewLogo.png" alt="SubPilot Logo" width="00"/>
+
   <h3>Take Control of Your Recurring Finances</h3>
-  
+
   <p>
     <a href="https://github.com/doublegate/SubPilot-App/actions">
       <img src="https://img.shields.io/github/actions/workflow/status/doublegate/SubPilot-App/ci.yml?branch=main" alt="Build Status">
@@ -21,8 +21,8 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
-> **Current Status**: Active development (Phase 1 - MVP, Week 1 Complete, CI/CD Fixed, Documentation Updated) | Version 0.1.0 | **Live Demo Available** | Last Updated: 2025-06-21 07:34 AM EDT | [View Changelog](./CHANGELOG.md)  
-> **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) - Full authentication, API, and UI implementation
+> **Current Status**: Active development (Phase 1 - MVP, Week 2 In Progress, Plaid Integration Implemented) | Version 0.1.0 | **Live Demo Available** | Last Updated: 2025-06-21 01:56 PM EDT | [View Changelog](./CHANGELOG.md)  
+> **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) - Full authentication, API, UI, and Plaid bank integration
 
 ## 🎯 Key Features
 
@@ -121,20 +121,20 @@ SubPilot is a modern, intelligent subscription management platform that automati
    ```env
    # Database
    DATABASE_URL="postgresql://user:password@localhost:5432/subpilot"
-   
+
    # Auth.js
    NEXTAUTH_URL="http://localhost:3000"
    NEXTAUTH_SECRET="your-secret-here" # Generate with: openssl rand -base64 32
-   
+
    # OAuth Providers
    GOOGLE_CLIENT_ID="your-google-client-id"
    GOOGLE_CLIENT_SECRET="your-google-client-secret"
-   
+
    # Plaid
    PLAID_CLIENT_ID="your-plaid-client-id"
    PLAID_SECRET="your-plaid-secret"
    PLAID_ENV="sandbox" # Use "sandbox" for development
-   
+
    # Optional Services
    OPENAI_API_KEY="your-openai-key"
    RESEND_API_KEY="your-resend-key"
@@ -145,10 +145,10 @@ SubPilot is a modern, intelligent subscription management platform that automati
    ```bash
    # Push the Prisma schema to your database
    npm run db:push
-   
+
    # Seed with sample data (optional)
    npm run db:seed
-   
+
    # Open Prisma Studio to view your database
    npm run db:studio
    ```

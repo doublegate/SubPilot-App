@@ -2,6 +2,7 @@ import "@/styles/globals.css"
 import { Analytics } from "@vercel/analytics/next"
 import { Inter } from "next/font/google"
 import { type Metadata } from "next"
+import { Toaster } from "sonner"
 
 import { TRPCReactProvider } from "@/trpc/react"
 
@@ -30,6 +31,7 @@ export default function RootLayout({
         <TRPCReactProvider>
           {children}
           <Analytics />
+          <Toaster richColors position="bottom-right" />
         </TRPCReactProvider>
       </body>
     </html>

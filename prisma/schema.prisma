@@ -17,6 +17,7 @@ model User {
   emailVerified DateTime?
   name          String?
   image         String?
+  password      String?   // For credential-based auth (development)
 
   // Notification preferences stored as JSON
   notificationPreferences Json @default("{\"emailAlerts\":true,\"pushNotifications\":true,\"weeklyReports\":true}")
@@ -46,6 +47,7 @@ model Account {
   // Account Details
   name              String
   officialName      String?
+  mask              String  // Last 4 digits
   type              String  // depository, credit, loan, investment
   subtype           String  // checking, savings, credit card, etc.
 
@@ -89,8 +91,12 @@ model PlaidItem {
   billedProducts    Json     @default("[]")
 
   // Connection Status
-  status            String   @default("good") // good, bad, requires_update
+  status            String   @default("good") // good, bad, requires_update, error, pending_expiration, inactive
   lastWebhook       DateTime?
+  needsSync         Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  errorCode         String?
+  errorMessage      String?
 
   // Timestamps
   createdAt         DateTime @default(now())
@@ -115,10 +121,12 @@ model Transaction {
 
   // Transaction Details
   amount                Decimal
+  isoCurrencyCode       String   @default("USD")
   description           String
   merchantName          String?
   category              Json     @default("[]") // Plaid categories array
   subcategory           String?
+  transactionType       String   @default("other")
 
   // Dates
   date                  DateTime

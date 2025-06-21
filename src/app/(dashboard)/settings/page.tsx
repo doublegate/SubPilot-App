@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation"
-import { auth } from "@/server/auth"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -7,19 +5,10 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { NavHeader } from "@/components/layout/nav-header"
 
-export default async function SettingsPage() {
-  const session = await auth()
-
-  if (!session?.user) {
-    redirect("/login")
-  }
-
+export default function SettingsPage() {
   return (
-    <>
-      <NavHeader />
-      <div className="container mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Settings</h1>
         <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
@@ -219,6 +208,5 @@ export default async function SettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
-    </>
   )
 }

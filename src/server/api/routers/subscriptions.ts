@@ -5,6 +5,7 @@ import {
   protectedProcedure,
 } from "@/server/api/trpc"
 import { Prisma } from "@prisma/client"
+import { SubscriptionDetector } from "@/server/services/subscription-detector"
 
 const subscriptionStatusEnum = z.enum(["active", "cancelled", "pending"])
 // Removed frequencyEnum as it's not currently used
@@ -329,4 +330,67 @@ export const subscriptionsRouter = createTRPCRouter({
       yearlySpend: Math.round(monthlyTotal * 12 * 100) / 100,
     }
   }),
+
+  /**
+   * Detect subscriptions from transactions
+   */
+  detectSubscriptions: protectedProcedure
+    .input(
+      z.object({
+        accountId: z.string().optional(), // Optionally limit to specific account
+        forceRedetect: z.boolean().optional().default(false), // Re-analyze existing subscriptions
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const detector = new SubscriptionDetector(ctx.db)
+      
+      // Get all transactions or filter by account
+      const whereClause: Prisma.TransactionWhereInput = {
+        userId: ctx.session.user.id,
+      }
+      
+      if (input.accountId) {
+        whereClause.accountId = input.accountId
+      }
+      
+      // If not forcing re-detection, only analyze unprocessed transactions
+      if (!input.forceRedetect) {
+        whereClause.isSubscription = false
+        whereClause.confidence = 0
+      }
+      
+      // Run detection
+      const results = await detector.detectUserSubscriptions(ctx.session.user.id)
+      
+      // Create/update subscription records
+      await detector.createSubscriptionsFromDetection(ctx.session.user.id, results)
+      
+      // Create notification for new subscriptions found
+      const newSubscriptionsCount = results.filter(r => r.isSubscription).length
+      
+      if (newSubscriptionsCount > 0) {
+        await ctx.db.notification.create({
+          data: {
+            userId: ctx.session.user.id,
+            type: "new_subscription",
+            title: "New subscriptions detected! 🔍",
+            message: `We found ${newSubscriptionsCount} recurring payment${newSubscriptionsCount > 1 ? 's' : ''} in your transactions.`,
+            scheduledFor: new Date(),
+          },
+        })
+      }
+      
+      return {
+        detected: results.length,
+        created: newSubscriptionsCount,
+        results: results.map(r => ({
+          merchantName: r.merchantName,
+          isSubscription: r.isSubscription,
+          confidence: r.confidence,
+          frequency: r.frequency,
+          averageAmount: r.averageAmount,
+          nextBillingDate: r.nextBillingDate,
+        })),
+      }
+    }),
 })
