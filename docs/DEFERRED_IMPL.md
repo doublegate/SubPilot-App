@@ -1,6 +1,7 @@
 # Deferred Implementation Items
 
-**Created**: June 21, 2025 07:15 AM EDT  
+**Created**: June 21, 2025 07:15 AM EDT
+**Last Updated**: June 21, 2025 07:30 AM EDT
 **Purpose**: Track all TODO items, disabled features, and deferred implementations that need to be completed
 
 ## Overview
@@ -13,19 +14,25 @@ This document captures all functionality that was stubbed out, marked as TODO, o
 
 **Location**: `src/server/api/routers/auth.ts`
 
-- **Lines**: 128, 155-160
+- **Lines**: 128, 154-158
 - **Issue**: Auth.js v5 doesn't expose sessionToken in client-side session
 - **TODO**: Implement proper current session detection
 - **Impact**: Cannot identify current session in active sessions list
 - **Workaround**: All sessions show as not current
+- **Related Test Issue**: `src/server/api/routers/__tests__/auth.test.ts:175`
 
 ```typescript
 // TODO: Implement current session detection
 isCurrent: false, // Line 128
 
 // TODO: Implement check to prevent revoking current session
-// For now, allow all revocations
+// For now, allow all revocations (Lines 154-158)
 ```
+
+**Test Files Affected**:
+
+- Test expects `isCurrent` to be implemented for proper session detection
+- Current workaround: All test sessions marked as not current
 
 ## Plaid Integration
 
@@ -52,6 +59,19 @@ isCurrent: false, // Line 128
 - **Line**: 118
 - **TODO**: Implement transaction sync in Week 2
 - **Status**: Throws NOT_IMPLEMENTED error
+
+### Institution Logos
+
+**Location**: `src/server/api/routers/plaid.ts`
+
+- **Line**: 96
+- **TODO**: Add institution logos for bank display
+- **Status**: Returns null for all institution logos
+- **Impact**: Bank connection cards show no institution branding
+
+```typescript
+logo: null, // TODO: Add institution logos
+```
 
 ### Webhook Processing
 
@@ -99,13 +119,26 @@ if (input.category) {
 
 **Location**: `src/server/api/routers/subscriptions.ts`
 
-- **Line**: 86
+- **Line**: 83
 - **TODO**: Implement last transaction lookup
 - **Status**: Returns null
 - **Impact**: Cannot show last transaction date in subscription list
 
 ```typescript
 lastTransaction: null, // TODO: Implement last transaction lookup
+```
+
+### Subscription Cancellation Notifications
+
+**Location**: `src/server/api/routers/subscriptions.ts`
+
+- **Line**: 239
+- **TODO**: Create notification for cancelled subscription
+- **Status**: No notification sent when subscription is cancelled
+- **Impact**: Users don't receive confirmation of cancellation actions
+
+```typescript
+// TODO: Create notification for cancelled subscription
 ```
 
 ### Provider Information
@@ -153,6 +186,32 @@ lastTransaction: null, // TODO: Implement last transaction lookup
 - **TODO**: Implement proper image optimization or use Image component
 - **Note**: Next.js Image component had compatibility issues
 
+### Profile Form API Integration
+
+**Location**: `src/components/profile/profile-form.tsx`
+
+- **Line**: 28
+- **TODO**: Implement profile update API endpoint
+- **Status**: Form exists but API integration not implemented
+- **Impact**: Profile updates may not persist properly
+
+```typescript
+// TODO: Implement profile update API endpoint
+```
+
+### Email Field Modification
+
+**Location**: `src/components/profile/profile-form.tsx`
+
+- **Line**: 86
+- **TODO**: Implement email change functionality
+- **Status**: Email field is currently disabled
+- **Impact**: Users cannot update their email address
+
+```typescript
+disabled // Email cannot be changed for now
+```
+
 ## Database Schema Enhancements
 
 ### Suggested Schema Additions
@@ -162,7 +221,20 @@ lastTransaction: null, // TODO: Implement last transaction lookup
 3. **Transaction.enrichedData**: Store additional Plaid data
 4. **NotificationPreference**: Consider separate table vs JSON
 
-## Security Enhancements
+## Security & Authentication Features
+
+### Two-Factor Authentication
+
+**Location**: `src/app/settings/page.tsx`
+
+- **Line**: 143
+- **Status**: Currently disabled with placeholder text
+- **TODO**: Implement 2FA functionality
+- **Impact**: Users cannot enable two-factor authentication for enhanced security
+
+```typescript
+<p className="text-sm text-gray-500">Two-factor authentication is currently disabled</p>
+```
 
 ### Rate Limiting
 
@@ -224,6 +296,32 @@ lastTransaction: null, // TODO: Implement last transaction lookup
 - **TODO**: Configure SendGrid for production
 - **TODO**: Create email templates in SendGrid
 - **TODO**: Set up email authentication (SPF, DKIM)
+
+## Code Quality & Development Tools
+
+### ESLint Suppressions
+
+**Multiple Locations**: Various files contain ESLint rule suppressions
+
+- **Test Setup**: `src/test/setup.ts` - Multiple suppressions for test environment compatibility
+- **UI Components**: Several components use `eslint-disable` for Next.js image optimization
+- **Impact**: Some type safety and code quality checks are bypassed
+- **TODO**: Review and minimize ESLint suppressions where possible
+
+**Specific Suppressions**:
+
+- `@typescript-eslint/no-explicit-any` in test files
+- `@next/next/no-img-element` for image optimization workarounds
+- `@typescript-eslint/no-empty-object-type` for type definitions
+
+### Test Infrastructure Improvements
+
+**Location**: `src/server/api/routers/__tests__/`
+
+- **TODO**: Remove dependency on mock implementations for core functionality
+- **TODO**: Add proper type definitions for test fixtures
+- **TODO**: Implement test database seeding for integration tests
+- **TODO**: Add performance benchmarks for API endpoints
 
 ## Migration Scripts
 
@@ -287,11 +385,30 @@ lastTransaction: null, // TODO: Implement last transaction lookup
 ## Notes
 
 - Most TODOs are marked with clear comments in the code
-- Search for "TODO:" to find all instances
+- Search for "TODO:" to find all instances (currently 12+ active TODOs)
 - Many features return mock data or null as placeholders
 - All NOT_IMPLEMENTED errors need to be resolved
 - Type safety is maintained even for unimplemented features
+- CI/CD fixes completed - TypeScript compilation now clean
+- Some ESLint suppressions remain for compatibility reasons
+
+## Recent Changes (2025-06-21 07:30 AM)
+
+### Added During CI/CD Fix Session
+
+- **Test Infrastructure**: Fixed Session type compatibility in auth tests
+- **Code Quality**: Resolved nullish coalescing and unused variable warnings
+- **Type Safety**: Improved mock data structure alignment with actual schemas
+
+### Newly Identified TODOs
+
+1. Institution logos for bank connections
+2. Subscription cancellation notifications
+3. Profile form API integration
+4. Email field modification capabilities
+5. Two-factor authentication implementation
 
 ---
 
 *This document should be updated as TODOs are completed or new ones are discovered*
+*Last comprehensive update: 2025-06-21 07:30 AM EDT*
