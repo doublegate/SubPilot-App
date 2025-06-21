@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getAuthForEdge } from "@/server/auth-edge"
+import { securityMiddleware, applySecurityHeaders } from "@/middleware/security"
 
 export async function middleware(req: NextRequest) {
+  // Apply security middleware first
+  const securityResponse = securityMiddleware(req)
+  if (securityResponse) {
+    return securityResponse
+  }
+
   const { auth } = await getAuthForEdge(req)
   const isLoggedIn = !!auth
   const { pathname } = req.nextUrl
@@ -30,7 +37,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  return NextResponse.next()
+  // Apply security headers to the response
+  const response = NextResponse.next()
+  return applySecurityHeaders(response)
 }
 
 export const config = {

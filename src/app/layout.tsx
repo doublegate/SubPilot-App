@@ -1,4 +1,5 @@
 import "@/styles/globals.css"
+import { Analytics } from "@vercel/analytics/next"
 import { Inter } from "next/font/google"
 import { type Metadata } from "next"
 

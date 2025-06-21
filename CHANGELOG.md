@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configured Neon PostgreSQL serverless database
   - Set up all environment variables properly
   - Created comprehensive deployment documentation
-  - Application live at https://subpilot-test.vercel.app
+  - Application live at <https://subpilot-test.vercel.app>
   - Created automated deployment testing script
   - Added Vercel-specific .gitignore patterns
 
