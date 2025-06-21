@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Added (Unreleased)
 
 - **Test Framework Restoration** - 2025-06-21 04:36 PM - 05:39 PM
   - Restored testing framework to achieve 83.2% test pass rate (89/107 tests passing - exceeded 80% target)
@@ -139,7 +139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Created automated deployment testing script
   - Added Vercel-specific .gitignore patterns
 
-### Fixed
+### Fixed (Unreleased)
 
 - **CI/CD Pipeline TypeScript & ESLint Errors** - 2025-06-21 06:35-07:15 AM
   - Fixed 100+ TypeScript compilation errors blocking CI/CD pipeline
