@@ -1,9 +1,9 @@
 # SubPilot Project Status
 
-**Last Updated**: 2025-06-21 05:39 PM EDT  
-**Current Version**: 0.1.0 (Released)  
-**Current Phase**: Phase 1 - MVP Development (Week 1 Complete, Week 2 In Progress - 85% Complete)  
-**Latest Release**: [v0.1.0 - Foundation Release](https://github.com/doublegate/SubPilot-App/releases/tag/v0.1.0)  
+**Last Updated**: 2025-06-21 06:52 PM EDT  
+**Current Version**: 0.1.5 (Released)  
+**Current Phase**: Phase 1 - MVP Development (Week 1-2 Complete, 70% of Phase 1 Complete)  
+**Latest Release**: [v0.1.5 - Bank Sync & Dashboard](https://github.com/doublegate/SubPilot-App/releases/tag/v0.1.5)  
 **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)
 
 ## 🎯 Project Overview

@@ -1,9 +1,9 @@
 # 🚧 Phase 1: MVP Buildout
 
-**Status**: Week 1 Complete ✅ | CI/CD Fixed ✅ | Week 2 85% Complete 🚧
+**Status**: Week 1-2 Complete ✅ | Bank Sync Working ✅ | 70% Total Progress
 **Duration**: 4 weeks  
-**Current Date**: 2025-06-21 05:39 PM EDT
-**Progress**: 63.75% Complete (Week 2 - Test framework restored, 83.2% pass rate, exceeded 80% target)
+**Current Date**: 2025-06-21 06:52 PM EDT
+**Progress**: 70% Complete (Week 2 Complete - Bank sync, subscription detection, dashboard functional)
 **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)
 
 ## Goals
@@ -113,13 +113,13 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [x] Sample test suites created
 - [x] Coverage reporting configured
 
-## Week 2: Bank Integration 🚧 (85% Complete)
+## Week 2: Bank Integration ✅ (100% Complete)
 
 ### Prerequisites
 - [x] Set up Neon PostgreSQL database ✅
 - [x] Run initial Prisma migration ✅
-- [ ] Create Plaid developer account (User needs to do this)
-- [ ] Configure Plaid sandbox (Pending account creation)
+- [x] Plaid developer account configured ✅
+- [x] Plaid sandbox working ✅
 
 ### Plaid Setup ✅
 
@@ -179,6 +179,12 @@ Build core functionality allowing users to connect bank accounts, view subscript
   - Simplified API router tests to avoid complex tRPC setup
   - Fixed component prop interfaces and dropdown interactions
   - 89/107 tests passing (18 failing tests for future fixes)
+- [x] **Dashboard UI & Bank Sync** (2025-06-21 05:39 - 06:52 PM)
+  - Fixed dashboard layout issues with Tailwind container
+  - Implemented functional bank sync with toast notifications
+  - Added automatic subscription detection on sync
+  - Fixed dropdown menus and bank grouping logic
+  - Dashboard displays real statistics from synced data
 
 ## Week 3: Subscription Detection & Dashboard 📋
 

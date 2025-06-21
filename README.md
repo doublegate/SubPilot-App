@@ -21,17 +21,17 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
-> **Current Status**: Active development (Phase 1 - MVP, Week 2 85% Complete) | Version 0.1.0 | **Live Demo Available** | Last Updated: 2025-06-21 05:39 PM EDT | [View Changelog](./CHANGELOG.md)
-> **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) - Full authentication working, dashboard accessible, 83.2% test pass rate (exceeded 80% target)
+> **Current Status**: Active development (Phase 1 - MVP, Week 2 Complete) | Version 0.1.5 | **Live Demo Available** | Last Updated: 2025-06-21 06:52 PM EDT | [View Changelog](./CHANGELOG.md)
+> **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) - Full bank sync working, subscription detection active, dashboard fully functional
 
-## 🔥 Recent Updates (June 21, 2025 - 05:39 PM EDT)
+## 🔥 Recent Updates (June 21, 2025 - 06:52 PM EDT)
 
-- ✅ **Test Framework Fully Restored** - 107 test cases with 83.2% pass rate (89 passing, exceeded 80% target)
-- ✅ **Testing Infrastructure Fixed** - All TypeScript compilation errors resolved
-- ✅ **API Router Testing** - Simplified logic tests for analytics and auth routers
-- ✅ **Component Testing** - Fixed prop interfaces and dropdown menu interaction tests
-- ✅ **Utility Testing** - 50 test cases passing with comprehensive coverage
-- ✅ **Quality Assurance** - Applied Prettier formatting and fixed ESLint issues across all test files
+- ✅ **Bank Sync Implementation** - Full Plaid integration with automatic subscription detection
+- ✅ **Dashboard UI Fixed** - Resolved layout issues, implemented real-time data updates
+- ✅ **Subscription Detection** - Automatic detection algorithm runs on transaction sync
+- ✅ **Bank Connection Flow** - Complete Plaid Link integration with security fixes
+- ✅ **Test Framework Maintained** - 83.2% test pass rate (89/107 tests passing)
+- ✅ **Live Deployment** - Fully functional app deployed to Vercel with Neon PostgreSQL
 
 ## 🎯 Key Features
 

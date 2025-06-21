@@ -5,6 +5,30 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2025-06-21
+
+### Added
+
+- **Dashboard UI and Bank Sync Implementation** - 2025-06-21 05:39 PM - 06:52 PM
+  - Fixed dashboard layout issues with proper Tailwind container configuration
+  - Converted dashboard to client component with real-time data fetching
+  - Implemented functional bank sync with automatic subscription detection
+  - Added SessionProvider wrapper for authentication context
+  - Created bank connection page at /banks/connect route
+  - Fixed Content Security Policy to allow Plaid scripts
+  - Implemented toast notifications for user feedback
+  - Fixed bank grouping logic to consolidate accounts by institution
+  - Added automatic subscription detection on initial bank connection
+  - Dashboard now displays real statistics from synced data
+
+### Fixed
+
+- Dashboard layout no longer crammed to left side
+- Dropdown menus in bank cards now functional
+- Bank accounts properly grouped by institution
+- CSP blocking Plaid scripts resolved
+- Plaid API configuration issues fixed
+
 ## [Unreleased]
 
 ### Added
