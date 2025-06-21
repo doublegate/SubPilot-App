@@ -1,27 +1,27 @@
-import { type Transaction, type PrismaClient } from "@prisma/client"
-import { type Decimal } from "@prisma/client/runtime/library"
+import { type Transaction, type PrismaClient } from '@prisma/client';
+import { type Decimal } from '@prisma/client/runtime/library';
 
 interface DetectionResult {
-  isSubscription: boolean
-  confidence: number
-  frequency?: "weekly" | "monthly" | "quarterly" | "yearly"
-  merchantName: string
-  averageAmount: number
-  nextBillingDate?: Date
+  isSubscription: boolean;
+  confidence: number;
+  frequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  merchantName: string;
+  averageAmount: number;
+  nextBillingDate?: Date;
 }
 
 interface TransactionGroup {
-  merchantName: string
-  transactions: Transaction[]
+  merchantName: string;
+  transactions: Transaction[];
 }
 
 export class SubscriptionDetector {
-  private readonly db: PrismaClient
-  
+  private readonly db: PrismaClient;
+
   // Minimum requirements for detection
-  private readonly MIN_TRANSACTIONS = 2
-  private readonly MIN_CONFIDENCE = 0.7
-  
+  private readonly MIN_TRANSACTIONS = 2;
+  private readonly MIN_CONFIDENCE = 0.7;
+
   // Time windows for frequency detection (in days)
   private readonly FREQUENCY_WINDOWS = {
     weekly: { min: 6, max: 8, ideal: 7 },
@@ -29,20 +29,20 @@ export class SubscriptionDetector {
     monthly: { min: 27, max: 33, ideal: 30 },
     quarterly: { min: 85, max: 95, ideal: 90 },
     yearly: { min: 355, max: 375, ideal: 365 },
-  }
-  
+  };
+
   constructor(db: PrismaClient) {
-    this.db = db
+    this.db = db;
   }
-  
+
   /**
    * Analyze all transactions for a user and detect subscriptions
    */
   async detectUserSubscriptions(userId: string): Promise<DetectionResult[]> {
     // Get all transactions for the user from the past year
-    const oneYearAgo = new Date()
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
-    
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
     const transactions = await this.db.transaction.findMany({
       where: {
         userId,
@@ -50,40 +50,42 @@ export class SubscriptionDetector {
         pending: false,
         amount: { gt: 0 }, // Only consider charges, not refunds
       },
-      orderBy: { date: "desc" },
-    })
-    
+      orderBy: { date: 'desc' },
+    });
+
     // Group transactions by merchant
-    const merchantGroups = this.groupByMerchant(transactions)
-    
+    const merchantGroups = this.groupByMerchant(transactions);
+
     // Analyze each merchant group
-    const detectionResults: DetectionResult[] = []
-    
+    const detectionResults: DetectionResult[] = [];
+
     for (const group of merchantGroups) {
-      const result = this.analyzeTransactionGroup(group)
+      const result = this.analyzeTransactionGroup(group);
       if (result && result.confidence >= this.MIN_CONFIDENCE) {
-        detectionResults.push(result)
-        
+        detectionResults.push(result);
+
         // Update transaction records with detection results
-        await this.updateTransactionDetection(group.transactions, result)
+        await this.updateTransactionDetection(group.transactions, result);
       }
     }
-    
-    return detectionResults
+
+    return detectionResults;
   }
-  
+
   /**
    * Analyze a single transaction to see if it's part of a subscription
    */
-  async detectSingleTransaction(transactionId: string): Promise<DetectionResult | null> {
+  async detectSingleTransaction(
+    transactionId: string
+  ): Promise<DetectionResult | null> {
     const transaction = await this.db.transaction.findUnique({
       where: { id: transactionId },
-    })
-    
-    if (!transaction || !transaction.merchantName) {
-      return null
+    });
+
+    if (!transaction?.merchantName) {
+      return null;
     }
-    
+
     // Find similar transactions from the same merchant
     const similarTransactions = await this.db.transaction.findMany({
       where: {
@@ -92,104 +94,109 @@ export class SubscriptionDetector {
         id: { not: transactionId },
         pending: false,
       },
-      orderBy: { date: "desc" },
+      orderBy: { date: 'desc' },
       take: 12, // Look at up to 12 transactions
-    })
-    
+    });
+
     if (similarTransactions.length < this.MIN_TRANSACTIONS - 1) {
-      return null
+      return null;
     }
-    
+
     const group: TransactionGroup = {
       merchantName: transaction.merchantName,
       transactions: [transaction, ...similarTransactions],
-    }
-    
-    return this.analyzeTransactionGroup(group)
+    };
+
+    return this.analyzeTransactionGroup(group);
   }
-  
+
   /**
    * Group transactions by merchant name
    */
   private groupByMerchant(transactions: Transaction[]): TransactionGroup[] {
-    const groups = new Map<string, Transaction[]>()
-    
+    const groups = new Map<string, Transaction[]>();
+
     for (const transaction of transactions) {
-      const merchantName = this.normalizeMerchantName(transaction.merchantName || transaction.description)
-      
+      const merchantName = this.normalizeMerchantName(
+        transaction.merchantName ?? transaction.description
+      );
+
       if (!groups.has(merchantName)) {
-        groups.set(merchantName, [])
+        groups.set(merchantName, []);
       }
-      
-      groups.get(merchantName)!.push(transaction)
+
+      groups.get(merchantName)!.push(transaction);
     }
-    
+
     return Array.from(groups.entries())
       .map(([merchantName, transactions]) => ({ merchantName, transactions }))
-      .filter(group => group.transactions.length >= this.MIN_TRANSACTIONS)
+      .filter(group => group.transactions.length >= this.MIN_TRANSACTIONS);
   }
-  
+
   /**
    * Normalize merchant names to handle variations
    */
   private normalizeMerchantName(name: string): string {
     return name
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, "") // Remove special characters
-      .replace(/\d+/g, "") // Remove numbers (often transaction IDs)
-      .trim()
+      .replace(/[^a-z0-9]/g, '') // Remove special characters
+      .replace(/\d+/g, '') // Remove numbers (often transaction IDs)
+      .trim();
   }
-  
+
   /**
    * Analyze a group of transactions from the same merchant
    */
-  private analyzeTransactionGroup(group: TransactionGroup): DetectionResult | null {
-    const { transactions } = group
-    
+  private analyzeTransactionGroup(
+    group: TransactionGroup
+  ): DetectionResult | null {
+    const { transactions } = group;
+
     if (transactions.length < this.MIN_TRANSACTIONS) {
-      return null
+      return null;
     }
-    
+
     // Sort by date
     const sortedTransactions = [...transactions].sort(
       (a, b) => a.date.getTime() - b.date.getTime()
-    )
-    
+    );
+
     // Calculate intervals between transactions
-    const intervals: number[] = []
+    const intervals: number[] = [];
     for (let i = 1; i < sortedTransactions.length; i++) {
       const daysBetween = this.daysBetween(
         sortedTransactions[i - 1]!.date,
         sortedTransactions[i]!.date
-      )
-      intervals.push(daysBetween)
+      );
+      intervals.push(daysBetween);
     }
-    
+
     // Determine frequency pattern
-    const frequencyResult = this.detectFrequency(intervals)
-    
+    const frequencyResult = this.detectFrequency(intervals);
+
     if (!frequencyResult) {
-      return null
+      return null;
     }
-    
+
     // Calculate amount consistency
-    const amounts = transactions.map(t => this.decimalToNumber(t.amount))
-    const amountConsistency = this.calculateAmountConsistency(amounts)
-    
+    const amounts = transactions.map(t => this.decimalToNumber(t.amount));
+    const amountConsistency = this.calculateAmountConsistency(amounts);
+
     // Calculate overall confidence
     const confidence = this.calculateConfidence(
       frequencyResult.confidence,
       amountConsistency,
       transactions.length
-    )
-    
+    );
+
     // Predict next billing date
-    const latestTransaction = sortedTransactions[sortedTransactions.length - 1]!
+    const latestTransaction =
+      sortedTransactions[sortedTransactions.length - 1]!;
     const nextBillingDate = this.predictNextBilling(
       latestTransaction.date,
       frequencyResult.frequency
-    )
-    
+    );
+
     return {
       isSubscription: confidence >= this.MIN_CONFIDENCE,
       confidence,
@@ -197,64 +204,67 @@ export class SubscriptionDetector {
       merchantName: group.merchantName,
       averageAmount: amounts.reduce((a, b) => a + b, 0) / amounts.length,
       nextBillingDate,
-    }
+    };
   }
-  
+
   /**
    * Detect frequency pattern from intervals
    */
-  private detectFrequency(intervals: number[]): { frequency: DetectionResult["frequency"], confidence: number } | null {
-    if (intervals.length === 0) return null
-    
+  private detectFrequency(
+    intervals: number[]
+  ): { frequency: DetectionResult['frequency']; confidence: number } | null {
+    if (intervals.length === 0) return null;
+
     // Try each frequency pattern
     for (const [frequency, window] of Object.entries(this.FREQUENCY_WINDOWS)) {
       const matches = intervals.filter(
         interval => interval >= window.min && interval <= window.max
-      )
-      
-      const matchRatio = matches.length / intervals.length
-      
-      if (matchRatio >= 0.6) { // 60% of intervals match the pattern
-        const avgInterval = matches.reduce((a, b) => a + b, 0) / matches.length
-        const variance = matches.reduce(
-          (acc, interval) => acc + Math.pow(interval - avgInterval, 2),
-          0
-        ) / matches.length
-        
+      );
+
+      const matchRatio = matches.length / intervals.length;
+
+      if (matchRatio >= 0.6) {
+        // 60% of intervals match the pattern
+        const avgInterval = matches.reduce((a, b) => a + b, 0) / matches.length;
+        const variance =
+          matches.reduce(
+            (acc, interval) => acc + Math.pow(interval - avgInterval, 2),
+            0
+          ) / matches.length;
+
         // Lower variance means more consistent intervals
-        const consistency = 1 - (Math.sqrt(variance) / avgInterval)
-        
+        const consistency = 1 - Math.sqrt(variance) / avgInterval;
+
         return {
-          frequency: frequency as DetectionResult["frequency"],
+          frequency: frequency as DetectionResult['frequency'],
           confidence: matchRatio * consistency,
-        }
+        };
       }
     }
-    
-    return null
+
+    return null;
   }
-  
+
   /**
    * Calculate how consistent the amounts are
    */
   private calculateAmountConsistency(amounts: number[]): number {
-    if (amounts.length === 0) return 0
-    
-    const avg = amounts.reduce((a, b) => a + b, 0) / amounts.length
-    const variance = amounts.reduce(
-      (acc, amount) => acc + Math.pow(amount - avg, 2),
-      0
-    ) / amounts.length
-    
+    if (amounts.length === 0) return 0;
+
+    const avg = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+    const variance =
+      amounts.reduce((acc, amount) => acc + Math.pow(amount - avg, 2), 0) /
+      amounts.length;
+
     // Calculate coefficient of variation
-    const cv = Math.sqrt(variance) / avg
-    
+    const cv = Math.sqrt(variance) / avg;
+
     // Convert to consistency score (0-1)
     // CV of 0 = perfect consistency (1.0)
     // CV of 0.5 = 50% variation (0.5)
-    return Math.max(0, 1 - cv)
+    return Math.max(0, 1 - cv);
   }
-  
+
   /**
    * Calculate overall confidence score
    */
@@ -264,46 +274,49 @@ export class SubscriptionDetector {
     transactionCount: number
   ): number {
     // Weight factors
-    const FREQUENCY_WEIGHT = 0.5
-    const AMOUNT_WEIGHT = 0.3
-    const COUNT_WEIGHT = 0.2
-    
+    const FREQUENCY_WEIGHT = 0.5;
+    const AMOUNT_WEIGHT = 0.3;
+    const COUNT_WEIGHT = 0.2;
+
     // Transaction count score (more transactions = higher confidence)
-    const countScore = Math.min(transactionCount / 12, 1) // Max out at 12 transactions
-    
+    const countScore = Math.min(transactionCount / 12, 1); // Max out at 12 transactions
+
     return (
       frequencyConfidence * FREQUENCY_WEIGHT +
       amountConsistency * AMOUNT_WEIGHT +
       countScore * COUNT_WEIGHT
-    )
+    );
   }
-  
+
   /**
    * Predict next billing date based on frequency
    */
-  private predictNextBilling(lastDate: Date, frequency?: DetectionResult["frequency"]): Date | undefined {
-    if (!frequency) return undefined
-    
-    const next = new Date(lastDate)
-    
+  private predictNextBilling(
+    lastDate: Date,
+    frequency?: DetectionResult['frequency']
+  ): Date | undefined {
+    if (!frequency) return undefined;
+
+    const next = new Date(lastDate);
+
     switch (frequency) {
-      case "weekly":
-        next.setDate(next.getDate() + 7)
-        break
-      case "monthly":
-        next.setMonth(next.getMonth() + 1)
-        break
-      case "quarterly":
-        next.setMonth(next.getMonth() + 3)
-        break
-      case "yearly":
-        next.setFullYear(next.getFullYear() + 1)
-        break
+      case 'weekly':
+        next.setDate(next.getDate() + 7);
+        break;
+      case 'monthly':
+        next.setMonth(next.getMonth() + 1);
+        break;
+      case 'quarterly':
+        next.setMonth(next.getMonth() + 3);
+        break;
+      case 'yearly':
+        next.setFullYear(next.getFullYear() + 1);
+        break;
     }
-    
-    return next
+
+    return next;
   }
-  
+
   /**
    * Update transaction records with detection results
    */
@@ -311,32 +324,32 @@ export class SubscriptionDetector {
     transactions: Transaction[],
     result: DetectionResult
   ): Promise<void> {
-    const transactionIds = transactions.map(t => t.id)
-    
+    const transactionIds = transactions.map(t => t.id);
+
     await this.db.transaction.updateMany({
       where: { id: { in: transactionIds } },
       data: {
         isSubscription: result.isSubscription,
         confidence: result.confidence,
       },
-    })
+    });
   }
-  
+
   /**
    * Calculate days between two dates
    */
   private daysBetween(date1: Date, date2: Date): number {
-    const MS_PER_DAY = 1000 * 60 * 60 * 24
-    return Math.round((date2.getTime() - date1.getTime()) / MS_PER_DAY)
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+    return Math.round((date2.getTime() - date1.getTime()) / MS_PER_DAY);
   }
-  
+
   /**
    * Convert Prisma Decimal to number
    */
   private decimalToNumber(decimal: Decimal): number {
-    return parseFloat(decimal.toString())
+    return parseFloat(decimal.toString());
   }
-  
+
   /**
    * Create or update subscription records based on detection results
    */
@@ -345,17 +358,17 @@ export class SubscriptionDetector {
     results: DetectionResult[]
   ): Promise<void> {
     for (const result of results) {
-      if (!result.isSubscription || !result.frequency) continue
-      
+      if (!result.isSubscription || !result.frequency) continue;
+
       // Check if subscription already exists
       const existing = await this.db.subscription.findFirst({
         where: {
           userId,
           name: result.merchantName,
-          status: "active",
+          status: 'active',
         },
-      })
-      
+      });
+
       if (!existing) {
         // Create new subscription
         await this.db.subscription.create({
@@ -363,19 +376,19 @@ export class SubscriptionDetector {
             userId,
             name: result.merchantName,
             description: `Recurring payment to ${result.merchantName}`,
-            category: "general", // Could be enhanced with category detection
+            category: 'general', // Could be enhanced with category detection
             amount: result.averageAmount,
-            currency: "USD",
+            currency: 'USD',
             frequency: result.frequency,
             nextBilling: result.nextBillingDate,
-            status: "active",
+            status: 'active',
             provider: {
               name: result.merchantName,
               detected: true,
             },
             detectionConfidence: result.confidence,
           },
-        })
+        });
       } else {
         // Update existing subscription
         await this.db.subscription.update({
@@ -385,7 +398,7 @@ export class SubscriptionDetector {
             nextBilling: result.nextBillingDate,
             detectionConfidence: result.confidence,
           },
-        })
+        });
       }
     }
   }

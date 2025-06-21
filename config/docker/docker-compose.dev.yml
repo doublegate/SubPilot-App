@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:16-alpine
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_USER: subpilot
       POSTGRES_PASSWORD: password
@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U subpilot -d subpilot_dev"]
+      test: ['CMD-SHELL', 'pg_isready -U subpilot -d subpilot_dev']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -19,8 +19,8 @@ services:
   mailhog:
     image: mailhog/mailhog:latest
     ports:
-      - "1025:1025" # SMTP server
-      - "8025:8025" # Web UI
+      - '1025:1025' # SMTP server
+      - '8025:8025' # Web UI
     environment:
       MH_STORAGE: memory
 

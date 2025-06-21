@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -9,43 +9,43 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Skeleton } from "@/components/ui/skeleton"
-import { MoreHorizontal, Link2, LinkIcon, Unlink } from "lucide-react"
-import { format } from "date-fns"
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MoreHorizontal, Link2, LinkIcon, Unlink } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface Transaction {
-  id: string
-  date: Date
-  name: string
-  merchantName?: string | null
-  amount: number
-  currency: string
-  category?: string | null
-  pending: boolean
-  isRecurring?: boolean
+  id: string;
+  date: Date;
+  name: string;
+  merchantName?: string | null;
+  amount: number;
+  currency: string;
+  category?: string | null;
+  pending: boolean;
+  isRecurring?: boolean;
   account: {
-    name: string
-    institution: string
-  }
+    name: string;
+    institution: string;
+  };
   subscription?: {
-    id: string
-    name: string
-  } | null
+    id: string;
+    name: string;
+  } | null;
 }
 
 interface TransactionListProps {
-  transactions: Transaction[]
-  isLoading?: boolean
-  onLinkToSubscription?: (transactionId: string) => void
-  onUnlinkFromSubscription?: (transactionId: string) => void
-  onViewDetails?: (transactionId: string) => void
+  transactions: Transaction[];
+  isLoading?: boolean;
+  onLinkToSubscription?: (transactionId: string) => void;
+  onUnlinkFromSubscription?: (transactionId: string) => void;
+  onViewDetails?: (transactionId: string) => void;
 }
 
 export function TransactionList({
@@ -56,11 +56,11 @@ export function TransactionList({
   onViewDetails,
 }: TransactionListProps) {
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency: currency,
-    }).format(Math.abs(amount))
-  }
+    }).format(Math.abs(amount));
+  };
 
   if (isLoading) {
     return (
@@ -75,15 +75,15 @@ export function TransactionList({
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-muted-foreground">No transactions found</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -101,16 +101,18 @@ export function TransactionList({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.map((transaction) => (
+          {transactions.map(transaction => (
             <TableRow key={transaction.id}>
               <TableCell className="font-medium">
-                {format(transaction.date, "MMM d, yyyy")}
+                {format(transaction.date, 'MMM d, yyyy')}
               </TableCell>
               <TableCell>
                 <div>
                   <p className="font-medium">{transaction.name}</p>
                   {transaction.merchantName && (
-                    <p className="text-sm text-muted-foreground">{transaction.merchantName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {transaction.merchantName}
+                    </p>
                   )}
                 </div>
               </TableCell>
@@ -124,17 +126,24 @@ export function TransactionList({
               <TableCell>
                 <div className="text-sm">
                   <p>{transaction.account.name}</p>
-                  <p className="text-muted-foreground">{transaction.account.institution}</p>
+                  <p className="text-muted-foreground">
+                    {transaction.account.institution}
+                  </p>
                 </div>
               </TableCell>
               <TableCell>
                 {transaction.subscription ? (
                   <div className="flex items-center gap-2">
                     <LinkIcon className="h-3 w-3 text-green-600" />
-                    <span className="text-sm">{transaction.subscription.name}</span>
+                    <span className="text-sm">
+                      {transaction.subscription.name}
+                    </span>
                   </div>
                 ) : transaction.isRecurring ? (
-                  <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600">
+                  <Badge
+                    variant="secondary"
+                    className="bg-yellow-500/10 text-yellow-600"
+                  >
                     Recurring
                   </Badge>
                 ) : (
@@ -142,8 +151,12 @@ export function TransactionList({
                 )}
               </TableCell>
               <TableCell className="text-right">
-                <span className={transaction.amount < 0 ? "text-red-600" : "text-green-600"}>
-                  {transaction.amount < 0 ? "-" : "+"}
+                <span
+                  className={
+                    transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
+                  }
+                >
+                  {transaction.amount < 0 ? '-' : '+'}
                   {formatCurrency(transaction.amount, transaction.currency)}
                 </span>
                 {transaction.pending && (
@@ -162,18 +175,24 @@ export function TransactionList({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {onViewDetails && (
-                      <DropdownMenuItem onClick={() => onViewDetails(transaction.id)}>
+                      <DropdownMenuItem
+                        onClick={() => onViewDetails(transaction.id)}
+                      >
                         View Details
                       </DropdownMenuItem>
                     )}
                     {!transaction.subscription && onLinkToSubscription && (
-                      <DropdownMenuItem onClick={() => onLinkToSubscription(transaction.id)}>
+                      <DropdownMenuItem
+                        onClick={() => onLinkToSubscription(transaction.id)}
+                      >
                         <Link2 className="mr-2 h-4 w-4" />
                         Link to Subscription
                       </DropdownMenuItem>
                     )}
                     {transaction.subscription && onUnlinkFromSubscription && (
-                      <DropdownMenuItem onClick={() => onUnlinkFromSubscription(transaction.id)}>
+                      <DropdownMenuItem
+                        onClick={() => onUnlinkFromSubscription(transaction.id)}
+                      >
                         <Unlink className="mr-2 h-4 w-4" />
                         Unlink from Subscription
                       </DropdownMenuItem>
@@ -186,5 +205,5 @@ export function TransactionList({
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }

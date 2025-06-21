@@ -1,21 +1,18 @@
-import { z } from "zod"
-import { TRPCError } from "@trpc/server"
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc"
-import { type Prisma } from "@prisma/client"
+import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import { type Prisma } from '@prisma/client';
 
 const notificationTypeEnum = z.enum([
-  "renewal_reminder",
-  "price_change",
-  "new_subscription",
-  "cancelled_service",
-  "payment_failed",
-  "weekly_report",
-  "trial_ending",
-  "general",
-])
+  'renewal_reminder',
+  'price_change',
+  'new_subscription',
+  'cancelled_service',
+  'payment_failed',
+  'weekly_report',
+  'trial_ending',
+  'general',
+]);
 
 export const notificationsRouter = createTRPCRouter({
   /**
@@ -33,20 +30,20 @@ export const notificationsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const where: Prisma.NotificationWhereInput = {
         userId: ctx.session.user.id,
-      }
+      };
 
       if (input.unreadOnly) {
-        where.read = false
+        where.read = false;
       }
 
       if (input.type) {
-        where.type = input.type
+        where.type = input.type;
       }
 
       const [notifications, total] = await Promise.all([
         ctx.db.notification.findMany({
           where,
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
           take: input.limit,
           skip: input.offset,
           include: {
@@ -59,10 +56,10 @@ export const notificationsRouter = createTRPCRouter({
           },
         }),
         ctx.db.notification.count({ where }),
-      ])
+      ]);
 
       return {
-        notifications: notifications.map((n) => ({
+        notifications: notifications.map(n => ({
           id: n.id,
           type: n.type,
           title: n.title,
@@ -78,7 +75,7 @@ export const notificationsRouter = createTRPCRouter({
         })),
         total,
         hasMore: input.offset + input.limit < total,
-      }
+      };
     }),
 
   /**
@@ -96,21 +93,21 @@ export const notificationsRouter = createTRPCRouter({
           id: input.notificationId,
           userId: ctx.session.user.id,
         },
-      })
+      });
 
       if (!notification) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Notification not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Notification not found',
+        });
       }
 
       const updated = await ctx.db.notification.update({
         where: { id: input.notificationId },
         data: { read: true },
-      })
+      });
 
-      return updated
+      return updated;
     }),
 
   /**
@@ -123,9 +120,9 @@ export const notificationsRouter = createTRPCRouter({
         read: false,
       },
       data: { read: true },
-    })
+    });
 
-    return { success: true }
+    return { success: true };
   }),
 
   /**
@@ -137,9 +134,9 @@ export const notificationsRouter = createTRPCRouter({
         userId: ctx.session.user.id,
         read: false,
       },
-    })
+    });
 
-    return { count }
+    return { count };
   }),
 
   /**
@@ -157,20 +154,20 @@ export const notificationsRouter = createTRPCRouter({
           id: input.notificationId,
           userId: ctx.session.user.id,
         },
-      })
+      });
 
       if (!notification) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Notification not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Notification not found',
+        });
       }
 
       await ctx.db.notification.delete({
         where: { id: input.notificationId },
-      })
+      });
 
-      return { success: true }
+      return { success: true };
     }),
 
   /**
@@ -182,9 +179,9 @@ export const notificationsRouter = createTRPCRouter({
         userId: ctx.session.user.id,
         read: true,
       },
-    })
+    });
 
-    return { success: true }
+    return { success: true };
   }),
 
   /**
@@ -200,11 +197,11 @@ export const notificationsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // Only allow in development
-      if (process.env.NODE_ENV !== "development") {
+      if (process.env.NODE_ENV !== 'development') {
         throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Test notifications only available in development",
-        })
+          code: 'FORBIDDEN',
+          message: 'Test notifications only available in development',
+        });
       }
 
       const notification = await ctx.db.notification.create({
@@ -215,9 +212,9 @@ export const notificationsRouter = createTRPCRouter({
           message: input.message,
           scheduledFor: new Date(),
         },
-      })
+      });
 
-      return notification
+      return notification;
     }),
 
   /**
@@ -227,16 +224,16 @@ export const notificationsRouter = createTRPCRouter({
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       select: { notificationPreferences: true },
-    })
+    });
 
     const preferences = user?.notificationPreferences as {
-      emailAlerts?: boolean
-      pushNotifications?: boolean
-      renewalReminders?: boolean
-      priceChangeAlerts?: boolean
-      cancelledServiceAlerts?: boolean
-      weeklyReports?: boolean
-    } | null
+      emailAlerts?: boolean;
+      pushNotifications?: boolean;
+      renewalReminders?: boolean;
+      priceChangeAlerts?: boolean;
+      cancelledServiceAlerts?: boolean;
+      weeklyReports?: boolean;
+    } | null;
 
     return {
       emailEnabled: preferences?.emailAlerts ?? true,
@@ -250,6 +247,6 @@ export const notificationsRouter = createTRPCRouter({
         weekly_report: preferences?.weeklyReports ?? true,
         trial_ending: true, // Always notify for trial endings
       },
-    }
+    };
   }),
-})
+});

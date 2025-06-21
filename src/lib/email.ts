@@ -1,47 +1,49 @@
-import nodemailer from "nodemailer"
-import { env } from "@/env.js"
+import nodemailer from 'nodemailer';
+import { env } from '@/env.js';
 
 type SendVerificationRequestParams = {
-  identifier: string
-  url: string
-  expires: Date
+  identifier: string;
+  url: string;
+  expires: Date;
   provider: {
-    server?: unknown
-    from?: string
-  }
-  token: string
-  theme: unknown
-  request: Request
-}
+    server?: unknown;
+    from?: string;
+  };
+  token: string;
+  theme: unknown;
+  request: Request;
+};
 
 // Create transporter based on environment
 const createTransporter = () => {
-  if (env.NODE_ENV === "development") {
+  if (env.NODE_ENV === 'development') {
     // Use Mailhog for development
     return nodemailer.createTransport({
-      host: env.SMTP_HOST ?? "localhost",
-      port: parseInt(env.SMTP_PORT ?? "1025"),
+      host: env.SMTP_HOST ?? 'localhost',
+      port: parseInt(env.SMTP_PORT ?? '1025'),
       secure: false,
       ignoreTLS: true,
-    })
+    });
   } else {
     // Use SendGrid for production
     return nodemailer.createTransport({
-      host: "smtp.sendgrid.net",
+      host: 'smtp.sendgrid.net',
       port: 587,
       secure: false,
       auth: {
-        user: "apikey",
-        pass: env.SENDGRID_API_KEY ?? "",
+        user: 'apikey',
+        pass: env.SENDGRID_API_KEY ?? '',
       },
-    })
+    });
   }
-}
+};
 
-export async function sendVerificationRequest(params: SendVerificationRequestParams) {
-  const { identifier: email, url } = params
-  const { host } = new URL(url)
-  const transporter = createTransporter()
+export async function sendVerificationRequest(
+  params: SendVerificationRequestParams
+) {
+  const { identifier: email, url } = params;
+  const { host } = new URL(url);
+  const transporter = createTransporter();
 
   const html = `
     <!DOCTYPE html>
@@ -111,7 +113,7 @@ export async function sendVerificationRequest(params: SendVerificationRequestPar
         </table>
       </body>
     </html>
-  `
+  `;
 
   const text = `Sign in to SubPilot
 
@@ -122,7 +124,7 @@ This link expires in 24 hours and can only be used once.
 
 If you didn't request this email, you can safely ignore it.
 
-© ${new Date().getFullYear()} SubPilot. All rights reserved.`
+© ${new Date().getFullYear()} SubPilot. All rights reserved.`;
 
   try {
     await transporter.sendMail({
@@ -131,10 +133,10 @@ If you didn't request this email, you can safely ignore it.
       subject: `Sign in to ${host}`,
       text,
       html,
-    })
+    });
   } catch (error) {
-    console.error("Failed to send verification email:", error)
-    throw new Error("Failed to send verification email")
+    console.error('Failed to send verification email:', error);
+    throw new Error('Failed to send verification email');
   }
 }
 
@@ -145,18 +147,18 @@ export async function sendEmail({
   html,
   text,
 }: {
-  to: string
-  subject: string
-  html: string
-  text: string
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
 }) {
-  const transporter = createTransporter()
-  
+  const transporter = createTransporter();
+
   await transporter.sendMail({
     from: env.FROM_EMAIL ?? '"SubPilot" <noreply@subpilot.com>',
     to,
     subject,
     html,
     text,
-  })
+  });
 }

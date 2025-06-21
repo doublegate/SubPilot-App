@@ -1,21 +1,18 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { auth } from "@/server/auth"
-import { LoginForm } from "@/components/auth/login-form"
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { auth } from '@/server/auth';
+import { LoginForm } from '@/components/auth/login-form';
 
 export default async function SignUpPage() {
-  const session = await auth()
-  
+  const session = await auth();
+
   if (session?.user) {
-    redirect("/dashboard")
+    redirect('/dashboard');
   }
 
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <Link
-        href="/"
-        className="absolute left-4 top-4 md:left-8 md:top-8"
-      >
+      <Link href="/" className="absolute left-4 top-4 md:left-8 md:top-8">
         <span className="text-lg font-semibold">SubPilot</span>
       </Link>
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
@@ -38,5 +35,5 @@ export default async function SignUpPage() {
         </p>
       </div>
     </div>
-  )
+  );
 }

@@ -106,7 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated all nullish coalescing operators (`||` → `??`)
   - Installed missing shadcn UI components (table, skeleton)
   - Fixed provider field access (JSON field, not relation)
-  - Fixed subscription cancelation fields (stored in cancelationInfo JSON)
+  - Fixed subscription cancellation fields (stored in cancelationInfo JSON)
   - Fixed account relation queries with proper user filtering
   - Added type guards for JSON field access patterns
   - Fixed category field handling for JSON arrays
@@ -271,7 +271,7 @@ This is the first official release of SubPilot, marking the completion of Phase 
   - Configured Auth.js with App Router integration
   - Created authentication API routes (`/api/auth/[...nextauth]`)
   - Implemented OAuth provider setup (Google & GitHub ready)
-  - Built login and signup pages with modern UI
+  - Built login and sign-up pages with modern UI
   - Added protected routes with session management
   - Created sign-out functionality with client-side handling
   

@@ -1,16 +1,13 @@
-import { z } from "zod"
-import { TRPCError } from "@trpc/server"
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc"
-import { Prisma } from "@prisma/client"
-import { SubscriptionDetector } from "@/server/services/subscription-detector"
+import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import { Prisma } from '@prisma/client';
+import { SubscriptionDetector } from '@/server/services/subscription-detector';
 
-const subscriptionStatusEnum = z.enum(["active", "cancelled", "pending"])
+const subscriptionStatusEnum = z.enum(['active', 'cancelled', 'pending']);
 // Removed frequencyEnum as it's not currently used
-const sortByEnum = z.enum(["name", "amount", "nextBilling", "createdAt"])
-const sortOrderEnum = z.enum(["asc", "desc"])
+const sortByEnum = z.enum(['name', 'amount', 'nextBilling', 'createdAt']);
+const sortOrderEnum = z.enum(['asc', 'desc']);
 
 export const subscriptionsRouter = createTRPCRouter({
   /**
@@ -21,8 +18,8 @@ export const subscriptionsRouter = createTRPCRouter({
       z.object({
         status: subscriptionStatusEnum.optional(),
         category: z.string().optional(),
-        sortBy: sortByEnum.optional().default("nextBilling"),
-        sortOrder: sortOrderEnum.optional().default("asc"),
+        sortBy: sortByEnum.optional().default('nextBilling'),
+        sortOrder: sortOrderEnum.optional().default('asc'),
         limit: z.number().min(1).max(100).optional().default(20),
         offset: z.number().min(0).optional().default(0),
       })
@@ -30,25 +27,25 @@ export const subscriptionsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const where: Prisma.SubscriptionWhereInput = {
         userId: ctx.session.user.id,
-      }
+      };
 
       if (input.status) {
-        where.status = input.status
+        where.status = input.status;
       }
 
       if (input.category) {
-        where.category = input.category
+        where.category = input.category;
       }
 
-      const orderBy: Prisma.SubscriptionOrderByWithRelationInput = {}
-      if (input.sortBy === "name") {
-        orderBy.name = input.sortOrder
-      } else if (input.sortBy === "amount") {
-        orderBy.amount = input.sortOrder
-      } else if (input.sortBy === "nextBilling") {
-        orderBy.nextBilling = input.sortOrder
+      const orderBy: Prisma.SubscriptionOrderByWithRelationInput = {};
+      if (input.sortBy === 'name') {
+        orderBy.name = input.sortOrder;
+      } else if (input.sortBy === 'amount') {
+        orderBy.amount = input.sortOrder;
+      } else if (input.sortBy === 'nextBilling') {
+        orderBy.nextBilling = input.sortOrder;
       } else {
-        orderBy.createdAt = input.sortOrder
+        orderBy.createdAt = input.sortOrder;
       }
 
       const [subscriptions, total] = await Promise.all([
@@ -59,10 +56,10 @@ export const subscriptionsRouter = createTRPCRouter({
           skip: input.offset,
         }),
         ctx.db.subscription.count({ where }),
-      ])
+      ]);
 
       return {
-        subscriptions: subscriptions.map((sub) => ({
+        subscriptions: subscriptions.map(sub => ({
           id: sub.id,
           name: sub.name,
           description: sub.description,
@@ -73,13 +70,28 @@ export const subscriptionsRouter = createTRPCRouter({
           nextBilling: sub.nextBilling,
           status: sub.status,
           isActive: sub.isActive,
-          provider: sub.provider && typeof sub.provider === "object" && sub.provider !== null
-            ? {
-                name: "name" in sub.provider && typeof (sub.provider as any).name === "string" ? (sub.provider as any).name : "Unknown",
-                website: "website" in sub.provider && typeof (sub.provider as any).website === "string" ? (sub.provider as any).website : null,
-                logo: "logo" in sub.provider && typeof (sub.provider as any).logo === "string" ? (sub.provider as any).logo : null,
-              }
-            : null,
+          provider:
+            sub.provider &&
+            typeof sub.provider === 'object' &&
+            sub.provider !== null
+              ? {
+                  name:
+                    'name' in sub.provider &&
+                    typeof (sub.provider as any).name === 'string'
+                      ? (sub.provider as any).name
+                      : 'Unknown',
+                  website:
+                    'website' in sub.provider &&
+                    typeof (sub.provider as any).website === 'string'
+                      ? (sub.provider as any).website
+                      : null,
+                  logo:
+                    'logo' in sub.provider &&
+                    typeof (sub.provider as any).logo === 'string'
+                      ? (sub.provider as any).logo
+                      : null,
+                }
+              : null,
           detectedAt: sub.detectedAt,
           lastTransaction: null, // TODO: Implement last transaction lookup
           createdAt: sub.createdAt,
@@ -87,7 +99,7 @@ export const subscriptionsRouter = createTRPCRouter({
         })),
         total,
         hasMore: input.offset + input.limit < total,
-      }
+      };
     }),
 
   /**
@@ -103,52 +115,86 @@ export const subscriptionsRouter = createTRPCRouter({
         },
         include: {
           transactions: {
-            orderBy: { date: "desc" },
+            orderBy: { date: 'desc' },
             take: 12, // Last 12 transactions
           },
         },
-      })
+      });
 
       if (!subscription) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Subscription not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Subscription not found',
+        });
       }
 
       // Calculate price history from transactions
-      const priceHistory = "transactions" in subscription && Array.isArray(subscription.transactions)
-        ? subscription.transactions
-            .map((t: any) => ({
-              amount: t.amount.toNumber(),
-              date: t.date,
-            }))
-            .reverse()
-        : []
+      const priceHistory =
+        'transactions' in subscription &&
+        Array.isArray(subscription.transactions)
+          ? subscription.transactions
+              .map((t: any) => ({
+                amount: t.amount.toNumber(),
+                date: t.date,
+              }))
+              .reverse()
+          : [];
 
       return {
         ...subscription,
         amount: subscription.amount.toNumber(),
-        provider: subscription.provider && typeof subscription.provider === "object"
-          ? {
-              name: "name" in subscription.provider && typeof (subscription.provider as any).name === "string" ? (subscription.provider as any).name : "Unknown",
-              website: "website" in subscription.provider && typeof (subscription.provider as any).website === "string" ? (subscription.provider as any).website : null,
-              logo: "logo" in subscription.provider && typeof (subscription.provider as any).logo === "string" ? (subscription.provider as any).logo : null,
-            }
-          : null,
-        transactions: "transactions" in subscription && Array.isArray(subscription.transactions)
-          ? subscription.transactions.map((t: any) => ({
-              ...t,
-              amount: t.amount.toNumber(),
-            }))
-          : [],
+        provider:
+          subscription.provider && typeof subscription.provider === 'object'
+            ? {
+                name:
+                  'name' in subscription.provider &&
+                  typeof (subscription.provider as any).name === 'string'
+                    ? (subscription.provider as any).name
+                    : 'Unknown',
+                website:
+                  'website' in subscription.provider &&
+                  typeof (subscription.provider as any).website === 'string'
+                    ? (subscription.provider as any).website
+                    : null,
+                logo:
+                  'logo' in subscription.provider &&
+                  typeof (subscription.provider as any).logo === 'string'
+                    ? (subscription.provider as any).logo
+                    : null,
+              }
+            : null,
+        transactions:
+          'transactions' in subscription &&
+          Array.isArray(subscription.transactions)
+            ? subscription.transactions.map((t: any) => ({
+                ...t,
+                amount: t.amount.toNumber(),
+              }))
+            : [],
         priceHistory,
         cancelationInfo: {
-          canCancel: subscription.cancelationInfo && typeof subscription.cancelationInfo === "object" && "cancelUrl" in subscription.cancelationInfo && subscription.cancelationInfo.cancelUrl !== null,
-          cancelationUrl: subscription.cancelationInfo && typeof subscription.cancelationInfo === "object" && "cancelUrl" in subscription.cancelationInfo && typeof (subscription.cancelationInfo as any).cancelUrl === "string" ? (subscription.cancelationInfo as any).cancelUrl : null,
-          supportInfo: subscription.cancelationInfo && typeof subscription.cancelationInfo === "object" && "supportInfo" in subscription.cancelationInfo && typeof (subscription.cancelationInfo as any).supportInfo === "string" ? (subscription.cancelationInfo as any).supportInfo : null,
+          canCancel:
+            subscription.cancelationInfo &&
+            typeof subscription.cancelationInfo === 'object' &&
+            'cancelUrl' in subscription.cancelationInfo &&
+            subscription.cancelationInfo.cancelUrl !== null,
+          cancelationUrl:
+            subscription.cancelationInfo &&
+            typeof subscription.cancelationInfo === 'object' &&
+            'cancelUrl' in subscription.cancelationInfo &&
+            typeof (subscription.cancelationInfo as any).cancelUrl === 'string'
+              ? (subscription.cancelationInfo as any).cancelUrl
+              : null,
+          supportInfo:
+            subscription.cancelationInfo &&
+            typeof subscription.cancelationInfo === 'object' &&
+            'supportInfo' in subscription.cancelationInfo &&
+            typeof (subscription.cancelationInfo as any).supportInfo ===
+              'string'
+              ? (subscription.cancelationInfo as any).supportInfo
+              : null,
         },
-      }
+      };
     }),
 
   /**
@@ -166,7 +212,7 @@ export const subscriptionsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, customAmount, ...updateData } = input
+      const { id, customAmount, ...updateData } = input;
 
       // Verify ownership
       const subscription = await ctx.db.subscription.findFirst({
@@ -174,13 +220,13 @@ export const subscriptionsRouter = createTRPCRouter({
           id,
           userId: ctx.session.user.id,
         },
-      })
+      });
 
       if (!subscription) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Subscription not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Subscription not found',
+        });
       }
 
       // Update subscription
@@ -191,9 +237,9 @@ export const subscriptionsRouter = createTRPCRouter({
           amount: customAmount ? new Prisma.Decimal(customAmount) : undefined,
           updatedAt: new Date(),
         },
-      })
+      });
 
-      return updated
+      return updated;
     }),
 
   /**
@@ -215,31 +261,31 @@ export const subscriptionsRouter = createTRPCRouter({
           id: input.id,
           userId: ctx.session.user.id,
         },
-      })
+      });
 
       if (!subscription) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Subscription not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Subscription not found',
+        });
       }
 
       // Update subscription status
       const updated = await ctx.db.subscription.update({
         where: { id: input.id },
         data: {
-          status: "cancelled",
+          status: 'cancelled',
           isActive: false,
           cancelationInfo: {
             cancelledAt: input.cancellationDate,
             reason: input.reason,
           },
         },
-      })
+      });
 
       // TODO: Create notification for cancelled subscription
 
-      return updated
+      return updated;
     }),
 
   /**
@@ -255,39 +301,42 @@ export const subscriptionsRouter = createTRPCRouter({
         category: true,
         amount: true,
       },
-    })
+    });
 
     // Group by category
-    const categoryMap = subscriptions.reduce((acc, sub) => {
-      const category = sub.category ?? "Other"
-      acc[category] ??= {
-        name: category,
-        count: 0,
-        totalAmount: 0,
-      }
-      acc[category].count++
-      acc[category].totalAmount += sub.amount.toNumber()
-      return acc
-    }, {} as Record<string, { name: string; count: number; totalAmount: number }>)
+    const categoryMap = subscriptions.reduce(
+      (acc, sub) => {
+        const category = sub.category ?? 'Other';
+        acc[category] ??= {
+          name: category,
+          count: 0,
+          totalAmount: 0,
+        };
+        acc[category].count++;
+        acc[category].totalAmount += sub.amount.toNumber();
+        return acc;
+      },
+      {} as Record<string, { name: string; count: number; totalAmount: number }>
+    );
 
     // Add icons for known categories
     const categoryIcons: Record<string, string> = {
-      Streaming: "🎬",
-      Music: "🎵",
-      Software: "💻",
-      Gaming: "🎮",
-      News: "📰",
-      Fitness: "💪",
-      Education: "📚",
-      Storage: "☁️",
-      Food: "🍔",
-      Other: "📦",
-    }
+      Streaming: '🎬',
+      Music: '🎵',
+      Software: '💻',
+      Gaming: '🎮',
+      News: '📰',
+      Fitness: '💪',
+      Education: '📚',
+      Storage: '☁️',
+      Food: '🍔',
+      Other: '📦',
+    };
 
-    return Object.values(categoryMap).map((cat) => ({
+    return Object.values(categoryMap).map(cat => ({
       ...cat,
-      icon: categoryIcons[cat.name] ?? "📦",
-    }))
+      icon: categoryIcons[cat.name] ?? '📦',
+    }));
   }),
 
   /**
@@ -303,32 +352,32 @@ export const subscriptionsRouter = createTRPCRouter({
         amount: true,
         frequency: true,
       },
-    })
+    });
 
     // Calculate monthly equivalent for all subscriptions
     const monthlyTotal = subscriptions.reduce((total, sub) => {
-      let monthlyAmount = sub.amount.toNumber()
-      
+      let monthlyAmount = sub.amount.toNumber();
+
       switch (sub.frequency) {
-        case "yearly":
-          monthlyAmount = monthlyAmount / 12
-          break
-        case "quarterly":
-          monthlyAmount = monthlyAmount / 3
-          break
-        case "weekly":
-          monthlyAmount = monthlyAmount * 4.33 // Average weeks per month
-          break
+        case 'yearly':
+          monthlyAmount = monthlyAmount / 12;
+          break;
+        case 'quarterly':
+          monthlyAmount = monthlyAmount / 3;
+          break;
+        case 'weekly':
+          monthlyAmount = monthlyAmount * 4.33; // Average weeks per month
+          break;
       }
-      
-      return total + monthlyAmount
-    }, 0)
+
+      return total + monthlyAmount;
+    }, 0);
 
     return {
       totalActive: subscriptions.length,
       monthlySpend: Math.round(monthlyTotal * 100) / 100,
       yearlySpend: Math.round(monthlyTotal * 12 * 100) / 100,
-    }
+    };
   }),
 
   /**
@@ -342,44 +391,51 @@ export const subscriptionsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const detector = new SubscriptionDetector(ctx.db)
-      
+      const detector = new SubscriptionDetector(ctx.db);
+
       // Get all transactions or filter by account
       const whereClause: Prisma.TransactionWhereInput = {
         userId: ctx.session.user.id,
-      }
-      
+      };
+
       if (input.accountId) {
-        whereClause.accountId = input.accountId
+        whereClause.accountId = input.accountId;
       }
-      
+
       // If not forcing re-detection, only analyze unprocessed transactions
       if (!input.forceRedetect) {
-        whereClause.isSubscription = false
-        whereClause.confidence = 0
+        whereClause.isSubscription = false;
+        whereClause.confidence = 0;
       }
-      
+
       // Run detection
-      const results = await detector.detectUserSubscriptions(ctx.session.user.id)
-      
+      const results = await detector.detectUserSubscriptions(
+        ctx.session.user.id
+      );
+
       // Create/update subscription records
-      await detector.createSubscriptionsFromDetection(ctx.session.user.id, results)
-      
+      await detector.createSubscriptionsFromDetection(
+        ctx.session.user.id,
+        results
+      );
+
       // Create notification for new subscriptions found
-      const newSubscriptionsCount = results.filter(r => r.isSubscription).length
-      
+      const newSubscriptionsCount = results.filter(
+        r => r.isSubscription
+      ).length;
+
       if (newSubscriptionsCount > 0) {
         await ctx.db.notification.create({
           data: {
             userId: ctx.session.user.id,
-            type: "new_subscription",
-            title: "New subscriptions detected! 🔍",
+            type: 'new_subscription',
+            title: 'New subscriptions detected! 🔍',
             message: `We found ${newSubscriptionsCount} recurring payment${newSubscriptionsCount > 1 ? 's' : ''} in your transactions.`,
             scheduledFor: new Date(),
           },
-        })
+        });
       }
-      
+
       return {
         detected: results.length,
         created: newSubscriptionsCount,
@@ -391,6 +447,6 @@ export const subscriptionsRouter = createTRPCRouter({
           averageAmount: r.averageAmount,
           nextBillingDate: r.nextBillingDate,
         })),
-      }
+      };
     }),
-})
+});

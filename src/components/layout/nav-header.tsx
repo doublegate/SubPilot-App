@@ -1,6 +1,6 @@
-import Link from "next/link"
-import { auth } from "@/server/auth"
-import { SignOutButton } from "@/components/auth/sign-out-button"
+import Link from 'next/link';
+import { auth } from '@/server/auth';
+import { SignOutButton } from '@/components/auth/sign-out-button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,18 +8,22 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 export async function NavHeader() {
-  const session = await auth()
+  const session = await auth();
 
-  if (!session?.user) return null
+  if (!session?.user) return null;
 
   const initials = session.user.name
-    ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
-    : session.user.email?.[0]?.toUpperCase() ?? "U"
+    ? session.user.name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+    : (session.user.email?.[0]?.toUpperCase() ?? 'U');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,8 +33,8 @@ export async function NavHeader() {
             <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-600" />
             <span className="text-xl font-bold">SubPilot</span>
           </Link>
-          
-          <nav className="hidden md:flex items-center gap-6">
+
+          <nav className="hidden items-center gap-6 md:flex">
             <Link
               href="/dashboard"
               className="text-sm font-medium transition-colors hover:text-primary"
@@ -62,12 +66,18 @@ export async function NavHeader() {
           <Button variant="outline" size="sm" asChild>
             <Link href="/banks/connect">Connect Bank</Link>
           </Button>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+              <Button
+                variant="ghost"
+                className="relative h-10 w-10 rounded-full"
+              >
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={session.user.image ?? undefined} alt={session.user.name ?? ""} />
+                  <AvatarImage
+                    src={session.user.image ?? undefined}
+                    alt={session.user.name ?? ''}
+                  />
                   <AvatarFallback className="bg-gradient-to-r from-cyan-500 to-purple-600 text-white">
                     {initials}
                   </AvatarFallback>
@@ -77,8 +87,12 @@ export async function NavHeader() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{session.user.name ?? "User"}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
+                  <p className="text-sm font-medium leading-none">
+                    {session.user.name ?? 'User'}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {session.user.email}
+                  </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -100,5 +114,5 @@ export async function NavHeader() {
         </div>
       </div>
     </header>
-  )
+  );
 }

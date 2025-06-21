@@ -1,9 +1,6 @@
-import { z } from "zod"
-import { TRPCError } from "@trpc/server"
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc"
+import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 
 export const authRouter = createTRPCRouter({
   /**
@@ -22,16 +19,16 @@ export const authRouter = createTRPCRouter({
         updatedAt: true,
         notificationPreferences: true,
       },
-    })
+    });
 
     if (!user) {
       throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      })
+        code: 'NOT_FOUND',
+        message: 'User not found',
+      });
     }
 
-    return user
+    return user;
   }),
 
   /**
@@ -50,7 +47,7 @@ export const authRouter = createTRPCRouter({
             renewalReminders: z.boolean(),
             priceChangeAlerts: z.boolean(),
             cancelledServiceAlerts: z.boolean(),
-            digestFrequency: z.enum(["daily", "weekly", "monthly"]),
+            digestFrequency: z.enum(['daily', 'weekly', 'monthly']),
             quietHoursStart: z.string().nullable(),
             quietHoursEnd: z.string().nullable(),
           })
@@ -58,7 +55,7 @@ export const authRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { notificationPreferences, ...profileData } = input
+      const { notificationPreferences, ...profileData } = input;
 
       // Update user profile
       const updatedUser = await ctx.db.user.update({
@@ -67,7 +64,7 @@ export const authRouter = createTRPCRouter({
           ...profileData,
           updatedAt: new Date(),
         },
-      })
+      });
 
       // Update notification preferences if provided
       if (notificationPreferences) {
@@ -76,10 +73,10 @@ export const authRouter = createTRPCRouter({
           data: {
             notificationPreferences: notificationPreferences,
           },
-        })
+        });
       }
 
-      return updatedUser
+      return updatedUser;
     }),
 
   /**
@@ -89,7 +86,7 @@ export const authRouter = createTRPCRouter({
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       select: { notificationPreferences: true },
-    })
+    });
 
     // Return defaults if not set
     const defaultPreferences = {
@@ -99,12 +96,15 @@ export const authRouter = createTRPCRouter({
       renewalReminders: true,
       priceChangeAlerts: true,
       cancelledServiceAlerts: true,
-      digestFrequency: "weekly",
+      digestFrequency: 'weekly',
       quietHoursStart: null,
       quietHoursEnd: null,
-    }
-    
-    return user?.notificationPreferences as typeof defaultPreferences ?? defaultPreferences
+    };
+
+    return (
+      (user?.notificationPreferences as typeof defaultPreferences) ??
+      defaultPreferences
+    );
   }),
 
   /**
@@ -113,20 +113,20 @@ export const authRouter = createTRPCRouter({
   getSessions: protectedProcedure.query(async ({ ctx }) => {
     const sessions = await ctx.db.session.findMany({
       where: { userId: ctx.session.user.id },
-      orderBy: { expires: "desc" },
+      orderBy: { expires: 'desc' },
       select: {
         id: true,
         sessionToken: true,
         expires: true,
         createdAt: true,
       },
-    })
+    });
 
     // Mark current session
-    return sessions.map((session) => ({
+    return sessions.map(session => ({
       ...session,
       isCurrent: false, // TODO: Implement current session detection
-    }))
+    }));
   }),
 
   /**
@@ -142,13 +142,13 @@ export const authRouter = createTRPCRouter({
       // Prevent revoking current session
       const session = await ctx.db.session.findUnique({
         where: { id: input.sessionId },
-      })
+      });
 
       if (!session) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Session not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Session not found',
+        });
       }
 
       // TODO: Implement check to prevent revoking current session
@@ -160,9 +160,9 @@ export const authRouter = createTRPCRouter({
           id: input.sessionId,
           userId: ctx.session.user.id, // Ensure user owns the session
         },
-      })
+      });
 
-      return { success: true }
+      return { success: true };
     }),
 
   /**
@@ -178,20 +178,20 @@ export const authRouter = createTRPCRouter({
       // Verify email matches
       const user = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
-      })
+      });
 
       if (!user || user.email !== input.confirmationEmail) {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Email confirmation does not match",
-        })
+          code: 'BAD_REQUEST',
+          message: 'Email confirmation does not match',
+        });
       }
 
       // Delete user and all related data (cascade)
       await ctx.db.user.delete({
         where: { id: ctx.session.user.id },
-      })
+      });
 
-      return { success: true }
+      return { success: true };
     }),
-})
+});

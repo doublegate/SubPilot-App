@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from 'next/link';
 
 export default function VerifyRequestPage() {
   return (
@@ -33,16 +33,18 @@ export default function VerifyRequestPage() {
                 </svg>
               </div>
             </div>
-            
+
             <div className="mt-4 text-center">
               <h2 className="text-lg font-medium text-gray-900">
                 Check your inbox
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                We&apos;ve sent you a magic link. Click the link in the email to sign in to your account.
+                We&apos;ve sent you a magic link. Click the link in the email to
+                sign in to your account.
               </p>
               <p className="mt-4 text-xs text-gray-500">
-                The link will expire in 24 hours. If you don&apos;t see the email, check your spam folder.
+                The link will expire in 24 hours. If you don&apos;t see the
+                email, check your spam folder.
               </p>
             </div>
           </div>
@@ -58,5 +60,5 @@ export default function VerifyRequestPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

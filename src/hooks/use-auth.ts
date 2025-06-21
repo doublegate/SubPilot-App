@@ -1,31 +1,31 @@
-import { useSession, signIn, signOut } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useSession, signIn, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export function useAuth(requireAuth = false) {
-  const { data: session, status } = useSession()
-  const router = useRouter()
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
-    if (requireAuth && status === "unauthenticated") {
-      router.push("/login")
+    if (requireAuth && status === 'unauthenticated') {
+      router.push('/login');
     }
-  }, [requireAuth, status, router])
+  }, [requireAuth, status, router]);
 
   const login = (provider?: string) => {
-    void signIn(provider, { callbackUrl: "/dashboard" })
-  }
+    void signIn(provider, { callbackUrl: '/dashboard' });
+  };
 
   const logout = async () => {
-    await signOut({ callbackUrl: "/" })
-  }
+    await signOut({ callbackUrl: '/' });
+  };
 
   return {
     user: session?.user,
     session,
-    isLoading: status === "loading",
-    isAuthenticated: status === "authenticated",
+    isLoading: status === 'loading',
+    isAuthenticated: status === 'authenticated',
     login,
     logout,
-  }
+  };
 }

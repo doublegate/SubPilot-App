@@ -21,7 +21,7 @@ jobs:
       contents: read
     outputs:
       build-success: ${{ steps.build-status.outputs.success }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -38,15 +38,15 @@ jobs:
       - name: Validate project configuration
         run: |
           echo "🔍 Validating project configuration..."
-          
+
           # Check required config files exist
           test -f tsconfig.json || { echo "❌ tsconfig.json missing"; exit 1; }
           test -f next.config.js || { echo "❌ next.config.js missing"; exit 1; }
           test -f package.json || { echo "❌ package.json missing"; exit 1; }
-          
+
           # Validate TypeScript config
           npx tsc --noEmit --skipLibCheck || { echo "❌ TypeScript config invalid"; exit 1; }
-          
+
           echo "✅ Project configuration valid"
 
       - name: Run linting
@@ -60,7 +60,7 @@ jobs:
           fi
         continue-on-error: true
 
-      - name: Run Prettier check  
+      - name: Run Prettier check
         run: |
           echo "💄 Checking code formatting..."
           if npm run format:check; then
@@ -78,26 +78,26 @@ jobs:
       - name: Build application
         run: |
           echo "🏗️ Building Next.js application..."
-          
+
           # Set environment variables for build
           export SKIP_ENV_VALIDATION=true
           export NODE_ENV=production
           export NEXTAUTH_SECRET="ci-test-secret"
           export NEXTAUTH_URL="http://localhost:3000"
-          
+
           # Build with lint disabled for development mode
           npm run build:ci
-          
+
           echo "✅ Build completed successfully (linting handled separately)"
 
       - name: Create build artifacts
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           echo "📦 Creating build artifacts..."
-          
+
           # Create artifact directory
           mkdir -p artifacts
-          
+
           # Create production build archive
           tar -czf artifacts/subpilot-${{ github.ref_name }}-build.tar.gz \
             .next \
@@ -107,15 +107,15 @@ jobs:
             prisma \
             next.config.js \
             tsconfig.json
-          
+
           # Create source code archive
           git archive --format=tar.gz --prefix=subpilot-${{ github.ref_name }}/ \
             -o artifacts/subpilot-${{ github.ref_name }}-source.tar.gz HEAD
-          
+
           # Create checksums
           cd artifacts
           sha256sum *.tar.gz > checksums.sha256
-          
+
           echo "✅ Artifacts created successfully"
           ls -lah
 
@@ -183,7 +183,7 @@ jobs:
       - name: Run npm audit
         run: |
           echo "🔒 Running security audit..."
-          
+
           # Run audit and capture output
           if npm audit --audit-level=moderate; then
             echo "✅ No security vulnerabilities found"
@@ -239,12 +239,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
+
       - name: Test Docker image health
         run: |
           # Build and load image for testing
           docker buildx build --load -t test-image:latest .
-          
+
           # Set required environment variables for Docker run
           docker run -d --name test-app -p 3000:3000 \
             -e DATABASE_URL="postgresql://test:test@localhost:5432/test" \
@@ -252,11 +252,11 @@ jobs:
             -e NEXTAUTH_URL="http://localhost:3000" \
             -e SKIP_ENV_VALIDATION="true" \
             test-image:latest
-          
+
           # Wait for startup
           echo "⏳ Waiting for application startup..."
           sleep 15
-          
+
           # Test health endpoint
           echo "🔍 Testing health endpoint..."
           for i in {1..5}; do
@@ -274,7 +274,7 @@ jobs:
               sleep 3
             fi
           done
-          
+
           # Cleanup
           docker stop test-app
           docker rm test-app
@@ -283,13 +283,13 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           echo "🐳 Exporting Docker image..."
-          
+
           # Create artifacts directory
           mkdir -p docker-artifacts
-          
+
           # Save Docker image
           docker save test-image:latest | gzip > docker-artifacts/subpilot-${{ github.ref_name }}-docker.tar.gz
-          
+
           # Create Docker compose file
           cat > docker-artifacts/docker-compose.yml << EOF
           version: '3.8'
@@ -304,28 +304,28 @@ jobs:
                 - NEXTAUTH_URL=\${NEXTAUTH_URL}
               restart: unless-stopped
           EOF
-          
+
           # Create README
           cat > docker-artifacts/README.md << EOF
           # SubPilot Docker Image
-          
+
           Version: ${{ github.ref_name }}
-          
+
           ## Loading the image
           \`\`\`bash
           docker load -i subpilot-${{ github.ref_name }}-docker.tar.gz
           \`\`\`
-          
+
           ## Running with docker-compose
           1. Create a .env file with required variables
           2. Run: \`docker-compose up -d\`
-          
+
           ## Required Environment Variables
           - DATABASE_URL
           - NEXTAUTH_SECRET
           - NEXTAUTH_URL
           EOF
-          
+
           echo "✅ Docker artifacts created"
           ls -lah docker-artifacts/
 
@@ -383,15 +383,15 @@ jobs:
         with:
           body: |
             🚀 **SubPilot Release ${{ github.ref_name }}**
-            
+
             ## What's Changed
             This release includes the latest features and improvements to SubPilot.
-            
+
             ## 📦 Release Assets
             - Source code archives (tar.gz and zip)
             - Build artifacts (if applicable)
             - Docker images (if applicable)
-            
+
             ## Installation
             ```bash
             git clone https://github.com/doublegate/SubPilot-App.git
@@ -399,9 +399,9 @@ jobs:
             npm install
             npm run build
             ```
-            
+
             See the [README](https://github.com/doublegate/SubPilot-App#readme) for full setup instructions.
-            
+
             ---
             *Note: This is an automated release. For detailed release notes, please check the [CHANGELOG](https://github.com/doublegate/SubPilot-App/blob/main/CHANGELOG.md).*
           draft: false
@@ -420,14 +420,14 @@ jobs:
         if: steps.check_release.outputs.exists == 'true'
         run: |
           echo "📤 Uploading artifacts to existing release..."
-          
+
           # Upload build artifacts
           gh release upload ${{ github.ref_name }} \
             artifacts/subpilot-${{ github.ref_name }}-build.tar.gz \
             artifacts/subpilot-${{ github.ref_name }}-source.tar.gz \
             artifacts/checksums.sha256 \
             --clobber || true
-          
+
           # Upload Docker artifacts if they exist
           if [ -d "docker-artifacts" ]; then
             gh release upload ${{ github.ref_name }} \
@@ -436,7 +436,7 @@ jobs:
               docker-artifacts/README.md \
               --clobber || true
           fi
-          
+
           echo "✅ Artifacts uploaded successfully"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

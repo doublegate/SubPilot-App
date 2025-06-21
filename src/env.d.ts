@@ -1,6 +1,6 @@
-declare module "@/env.js" {
+declare module '@/env.js' {
   export const env: {
-    NODE_ENV: "development" | "test" | "production";
+    NODE_ENV: 'development' | 'test' | 'production';
     DATABASE_URL: string;
     NEXTAUTH_SECRET?: string;
     NEXTAUTH_URL: string;
@@ -10,7 +10,7 @@ declare module "@/env.js" {
     GITHUB_CLIENT_SECRET?: string;
     PLAID_CLIENT_ID?: string;
     PLAID_SECRET?: string;
-    PLAID_ENV: "sandbox" | "development" | "production";
+    PLAID_ENV: 'sandbox' | 'development' | 'production';
     PLAID_PRODUCTS: string;
     PLAID_COUNTRY_CODES: string;
     PLAID_REDIRECT_URI?: string;

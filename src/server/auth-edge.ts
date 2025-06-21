@@ -1,5 +1,5 @@
-import { getToken } from "next-auth/jwt";
-import type { NextRequest } from "next/server";
+import { getToken } from 'next-auth/jwt';
+import type { NextRequest } from 'next/server';
 
 /**
  * Edge-compatible auth check function
@@ -11,12 +11,12 @@ export async function getAuthForEdge(req: NextRequest) {
       req,
       secret: process.env.NEXTAUTH_SECRET,
     });
-    
+
     return {
       auth: token ? { user: { id: token.sub, email: token.email! } } : null,
     };
   } catch (error) {
-    console.error("Error checking auth in edge:", error);
+    console.error('Error checking auth in edge:', error);
     return { auth: null };
   }
 }

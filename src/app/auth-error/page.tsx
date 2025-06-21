@@ -1,30 +1,35 @@
-import Link from "next/link"
+import Link from 'next/link';
 
 type AuthErrorPageProps = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps) {
-  const params = await searchParams
-  const error = (params.error as string) ?? "Unknown error"
-  
+export default async function AuthErrorPage({
+  searchParams,
+}: AuthErrorPageProps) {
+  const params = await searchParams;
+  const error = (params.error as string) ?? 'Unknown error';
+
   const errorMessages: Record<string, string> = {
-    Configuration: "There is a problem with the server configuration.",
-    AccessDenied: "You do not have permission to sign in.",
-    Verification: "The sign in link is no longer valid. It may have been used already or it may have expired.",
-    OAuthSignin: "Error in constructing an authorization URL.",
-    OAuthCallback: "Error in handling the response from an OAuth provider.",
-    OAuthCreateAccount: "Could not create OAuth provider user in the database.",
-    EmailCreateAccount: "Could not create email provider user in the database.",
-    Callback: "Error in the OAuth callback handler route.",
-    OAuthAccountNotLinked: "To confirm your identity, sign in with the same account you used originally.",
-    EmailSignin: "The e-mail could not be sent. Please try again later.",
-    CredentialsSignin: "Sign in failed. Check the details you provided are correct.",
-    SessionRequired: "Please sign in to access this page.",
-    Default: "Unable to sign in. Please try again later.",
-  }
+    Configuration: 'There is a problem with the server configuration.',
+    AccessDenied: 'You do not have permission to sign in.',
+    Verification:
+      'The sign in link is no longer valid. It may have been used already or it may have expired.',
+    OAuthSignin: 'Error in constructing an authorization URL.',
+    OAuthCallback: 'Error in handling the response from an OAuth provider.',
+    OAuthCreateAccount: 'Could not create OAuth provider user in the database.',
+    EmailCreateAccount: 'Could not create email provider user in the database.',
+    Callback: 'Error in the OAuth callback handler route.',
+    OAuthAccountNotLinked:
+      'To confirm your identity, sign in with the same account you used originally.',
+    EmailSignin: 'The e-mail could not be sent. Please try again later.',
+    CredentialsSignin:
+      'Sign in failed. Check the details you provided are correct.',
+    SessionRequired: 'Please sign in to access this page.',
+    Default: 'Unable to sign in. Please try again later.',
+  };
 
-  const errorMessage = errorMessages[error] ?? errorMessages.Default
+  const errorMessage = errorMessages[error] ?? errorMessages.Default;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-cyan-50 to-purple-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -58,14 +63,10 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
                 </svg>
               </div>
             </div>
-            
+
             <div className="mt-4 text-center">
-              <h2 className="text-lg font-medium text-gray-900">
-                {error}
-              </h2>
-              <p className="mt-2 text-sm text-gray-600">
-                {errorMessage}
-              </p>
+              <h2 className="text-lg font-medium text-gray-900">{error}</h2>
+              <p className="mt-2 text-sm text-gray-600">{errorMessage}</p>
             </div>
           </div>
 
@@ -86,5 +87,5 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
         </div>
       </div>
     </div>
-  )
+  );
 }

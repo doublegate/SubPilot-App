@@ -1,12 +1,12 @@
-"use client"
+'use client';
 
-import { api } from "@/trpc/react"
-import { AccountList } from "@/components/account-list"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { api } from '@/trpc/react';
+import { AccountList } from '@/components/account-list';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export function BankAccountsList() {
-  const { data: accounts, isLoading, error } = api.plaid.getAccounts.useQuery()
+  const { data: accounts, isLoading, error } = api.plaid.getAccounts.useQuery();
 
   if (error) {
     return (
@@ -16,18 +16,19 @@ export function BankAccountsList() {
           Failed to load bank accounts. Please try again later.
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   if (!isLoading && (!accounts || accounts.length === 0)) {
     return (
-      <div className="text-center py-8">
+      <div className="py-8 text-center">
         <p className="text-muted-foreground">
-          No bank accounts connected yet. Connect your first account to start tracking subscriptions.
+          No bank accounts connected yet. Connect your first account to start
+          tracking subscriptions.
         </p>
       </div>
-    )
+    );
   }
 
-  return <AccountList accounts={accounts || []} loading={isLoading} />
+  return <AccountList accounts={accounts ?? []} />;
 }

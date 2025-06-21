@@ -1,31 +1,33 @@
-import { auth } from "@/server/auth"
-import { ProfileForm } from "@/components/profile/profile-form"
+import { auth } from '@/server/auth';
+import { ProfileForm } from '@/components/profile/profile-form';
 
 export default async function ProfilePage() {
-  const session = await auth()
+  const session = await auth();
 
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Profile Settings</h1>
-        <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
+        <p className="mt-2 text-gray-600">
+          Manage your account settings and preferences
+        </p>
       </div>
 
       <div className="space-y-8">
         {/* Profile Information */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-semibold">Profile Information</h2>
           <ProfileForm user={session!.user} />
         </div>
 
         {/* Connected Accounts */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Connected Accounts</h2>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-semibold">Connected Accounts</h2>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+                  <svg className="h-6 w-6" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -49,7 +51,7 @@ export default async function ProfilePage() {
                   <p className="text-sm text-gray-500">Connected</p>
                 </div>
               </div>
-              <button className="text-red-600 hover:text-red-700 text-sm font-medium">
+              <button className="text-sm font-medium text-red-600 hover:text-red-700">
                 Disconnect
               </button>
             </div>
@@ -57,13 +59,17 @@ export default async function ProfilePage() {
         </div>
 
         {/* Notification Preferences */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Notification Preferences</h2>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-semibold">
+            Notification Preferences
+          </h2>
           <div className="space-y-4">
             <label className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-gray-500">Receive email updates about your subscriptions</p>
+                <p className="text-sm text-gray-500">
+                  Receive email updates about your subscriptions
+                </p>
               </div>
               <input
                 type="checkbox"
@@ -74,7 +80,9 @@ export default async function ProfilePage() {
             <label className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Renewal Reminders</p>
-                <p className="text-sm text-gray-500">Get notified before subscriptions renew</p>
+                <p className="text-sm text-gray-500">
+                  Get notified before subscriptions renew
+                </p>
               </div>
               <input
                 type="checkbox"
@@ -85,7 +93,9 @@ export default async function ProfilePage() {
             <label className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Price Change Alerts</p>
-                <p className="text-sm text-gray-500">Alert when subscription prices change</p>
+                <p className="text-sm text-gray-500">
+                  Alert when subscription prices change
+                </p>
               </div>
               <input
                 type="checkbox"
@@ -97,15 +107,19 @@ export default async function ProfilePage() {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-white rounded-lg shadow p-6 border-red-200 border">
-          <h2 className="text-xl font-semibold mb-4 text-red-600">Danger Zone</h2>
+        <div className="rounded-lg border border-red-200 bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-semibold text-red-600">
+            Danger Zone
+          </h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Delete Account</p>
-                <p className="text-sm text-gray-500">Permanently delete your account and all data</p>
+                <p className="text-sm text-gray-500">
+                  Permanently delete your account and all data
+                </p>
               </div>
-              <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
+              <button className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
                 Delete Account
               </button>
             </div>
@@ -113,5 +127,5 @@ export default async function ProfilePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,57 +1,57 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface ProfileFormProps {
   user: {
-    id: string
-    name?: string | null
-    email: string
-    image?: string | null
-  }
+    id: string;
+    name?: string | null;
+    email: string;
+    image?: string | null;
+  };
 }
 
 export function ProfileForm({ user }: ProfileFormProps) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: user.name ?? "",
+    name: user.name ?? '',
     email: user.email,
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
       // TODO: Implement profile update API endpoint
-      console.log("Updating profile:", formData)
-      
+      console.log('Updating profile:', formData);
+
       // Refresh the page to show updated data
-      router.refresh()
+      router.refresh();
     } catch (error) {
-      console.error("Failed to update profile:", error)
+      console.error('Failed to update profile:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex items-center space-x-6">
         <div className="shrink-0">
-          <div className="h-24 w-24 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 text-2xl font-bold text-white">
             {user.name?.[0]?.toUpperCase() ?? user.email[0]?.toUpperCase()}
           </div>
         </div>
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-gray-700">
             Profile Picture
           </label>
           <button
             type="button"
-            className="text-sm text-cyan-600 hover:text-cyan-700 font-medium"
+            className="text-sm font-medium text-cyan-600 hover:text-cyan-700"
             disabled={isLoading}
           >
             Change avatar
@@ -60,29 +60,35 @@ export function ProfileForm({ user }: ProfileFormProps) {
       </div>
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="name"
+          className="mb-1 block text-sm font-medium text-gray-700"
+        >
           Display Name
         </label>
         <input
           id="name"
           type="text"
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+          onChange={e => setFormData({ ...formData, name: e.target.value })}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
           disabled={isLoading}
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="email"
+          className="mb-1 block text-sm font-medium text-gray-700"
+        >
           Email Address
         </label>
         <input
           id="email"
           type="email"
           value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500"
+          onChange={e => setFormData({ ...formData, email: e.target.value })}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
           disabled // Email cannot be changed for now
         />
         <p className="mt-1 text-sm text-gray-500">
@@ -94,19 +100,19 @@ export function ProfileForm({ user }: ProfileFormProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
           disabled={isLoading}
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+          className="rounded-md border border-transparent bg-gradient-to-r from-cyan-500 to-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-cyan-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
           disabled={isLoading}
         >
-          {isLoading ? "Saving..." : "Save Changes"}
+          {isLoading ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
     </form>
-  )
+  );
 }

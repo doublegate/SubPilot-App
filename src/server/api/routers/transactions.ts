@@ -1,10 +1,7 @@
-import { z } from "zod"
-import { TRPCError } from "@trpc/server"
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc"
-import { type Prisma } from "@prisma/client"
+import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import { type Prisma } from '@prisma/client';
 
 export const transactionsRouter = createTRPCRouter({
   /**
@@ -29,19 +26,19 @@ export const transactionsRouter = createTRPCRouter({
         account: {
           userId: ctx.session.user.id,
         },
-      }
+      };
 
       if (input.accountId) {
-        where.accountId = input.accountId
+        where.accountId = input.accountId;
       }
 
       if (input.startDate || input.endDate) {
-        where.date = {}
+        where.date = {};
         if (input.startDate) {
-          where.date.gte = input.startDate
+          where.date.gte = input.startDate;
         }
         if (input.endDate) {
-          where.date.lte = input.endDate
+          where.date.lte = input.endDate;
         }
       }
 
@@ -52,20 +49,20 @@ export const transactionsRouter = createTRPCRouter({
 
       if (input.search) {
         where.OR = [
-          { description: { contains: input.search, mode: "insensitive" } },
-          { merchantName: { contains: input.search, mode: "insensitive" } },
-        ]
+          { description: { contains: input.search, mode: 'insensitive' } },
+          { merchantName: { contains: input.search, mode: 'insensitive' } },
+        ];
       }
 
       if (input.isRecurring !== undefined) {
-        where.isSubscription = input.isRecurring
+        where.isSubscription = input.isRecurring;
       }
 
       // Get transactions with pagination
       const [transactions, total] = await Promise.all([
         ctx.db.transaction.findMany({
           where,
-          orderBy: { date: "desc" },
+          orderBy: { date: 'desc' },
           take: input.limit,
           skip: input.offset,
           include: {
@@ -89,16 +86,16 @@ export const transactionsRouter = createTRPCRouter({
           },
         }),
         ctx.db.transaction.count({ where }),
-      ])
+      ]);
 
       return {
-        transactions: transactions.map((t) => ({
+        transactions: transactions.map(t => ({
           id: t.id,
           date: t.date,
           name: t.description,
           merchantName: t.merchantName,
           amount: t.amount.toNumber(),
-          currency: t.account.isoCurrencyCode ?? "USD",
+          currency: t.account.isoCurrencyCode ?? 'USD',
           category: t.category,
           pending: t.pending,
           isRecurring: t.isSubscription,
@@ -115,7 +112,7 @@ export const transactionsRouter = createTRPCRouter({
         })),
         total,
         hasMore: input.offset + input.limit < total,
-      }
+      };
     }),
 
   /**
@@ -135,19 +132,19 @@ export const transactionsRouter = createTRPCRouter({
           account: true,
           subscription: true,
         },
-      })
+      });
 
       if (!transaction) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Transaction not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Transaction not found',
+        });
       }
 
       return {
         ...transaction,
         amount: transaction.amount.toNumber(),
-      }
+      };
     }),
 
   /**
@@ -179,20 +176,20 @@ export const transactionsRouter = createTRPCRouter({
             userId: ctx.session.user.id,
           },
         }),
-      ])
+      ]);
 
       if (!transaction) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Transaction not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Transaction not found',
+        });
       }
 
       if (!subscription) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Subscription not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Subscription not found',
+        });
       }
 
       // Link transaction to subscription
@@ -202,12 +199,12 @@ export const transactionsRouter = createTRPCRouter({
           subscriptionId: input.subscriptionId,
           isSubscription: true,
         },
-      })
+      });
 
       // TODO: Update subscription's last billing date
       // This would require adding a lastBilling field or using transaction history
 
-      return updated
+      return updated;
     }),
 
   /**
@@ -228,13 +225,13 @@ export const transactionsRouter = createTRPCRouter({
             userId: ctx.session.user.id,
           },
         },
-      })
+      });
 
       if (!transaction) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Transaction not found",
-        })
+          code: 'NOT_FOUND',
+          message: 'Transaction not found',
+        });
       }
 
       // Unlink from subscription
@@ -244,9 +241,9 @@ export const transactionsRouter = createTRPCRouter({
           subscriptionId: null,
           isSubscription: false,
         },
-      })
+      });
 
-      return updated
+      return updated;
     }),
 
   /**
@@ -269,10 +266,10 @@ export const transactionsRouter = createTRPCRouter({
           gte: input.startDate,
           lte: input.endDate,
         },
-      }
+      };
 
       if (input.accountId) {
-        where.accountId = input.accountId
+        where.accountId = input.accountId;
       }
 
       const transactions = await ctx.db.transaction.findMany({
@@ -281,15 +278,23 @@ export const transactionsRouter = createTRPCRouter({
           category: true,
           amount: true,
         },
-      })
+      });
 
       // Group by category
-      const categorySpending = transactions.reduce((acc, t) => {
-        const category = Array.isArray(t.category) && t.category.length > 0 && typeof t.category[0] === "string" ? t.category[0] : "Other"
-        acc[category] ??= 0
-        acc[category] += t.amount.toNumber()
-        return acc
-      }, {} as Record<string, number>)
+      const categorySpending = transactions.reduce(
+        (acc, t) => {
+          const category =
+            Array.isArray(t.category) &&
+            t.category.length > 0 &&
+            typeof t.category[0] === 'string'
+              ? t.category[0]
+              : 'Other';
+          acc[category] ??= 0;
+          acc[category] += t.amount.toNumber();
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
       // Convert to array and sort by amount
       const categories = Object.entries(categorySpending)
@@ -297,9 +302,9 @@ export const transactionsRouter = createTRPCRouter({
           category,
           amount: Math.round(amount * 100) / 100,
         }))
-        .sort((a, b) => b.amount - a.amount)
+        .sort((a, b) => b.amount - a.amount);
 
-      return categories
+      return categories;
     }),
 
   /**
@@ -315,69 +320,69 @@ export const transactionsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       // This is a simplified version - in production, this would use
       // more sophisticated pattern matching algorithms
-      
+
       const where: Prisma.TransactionWhereInput = {
         account: {
           userId: ctx.session.user.id,
         },
         isSubscription: false, // Only look at unlinked transactions
         subscriptionId: null,
-      }
+      };
 
       if (input.accountId) {
-        where.accountId = input.accountId
+        where.accountId = input.accountId;
       }
 
       // Get transactions from last 6 months
-      const sixMonthsAgo = new Date()
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-      
-      where.date = { gte: sixMonthsAgo }
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      where.date = { gte: sixMonthsAgo };
 
       const transactions = await ctx.db.transaction.findMany({
         where,
-        orderBy: { date: "desc" },
+        orderBy: { date: 'desc' },
         select: {
           id: true,
           merchantName: true,
           amount: true,
           date: true,
         },
-      })
+      });
 
       // Group by merchant and similar amounts
-      const patterns = new Map<string, typeof transactions>()
-      
-      transactions.forEach((t) => {
-        if (!t.merchantName) return
-        
-        const key = `${t.merchantName}-${Math.round(t.amount.toNumber())}`
+      const patterns = new Map<string, typeof transactions>();
+
+      transactions.forEach(t => {
+        if (!t.merchantName) return;
+
+        const key = `${t.merchantName}-${Math.round(t.amount.toNumber())}`;
         if (!patterns.has(key)) {
-          patterns.set(key, [])
+          patterns.set(key, []);
         }
-        patterns.get(key)!.push(t)
-      })
+        patterns.get(key)!.push(t);
+      });
 
       // Filter patterns with minimum occurrences
       const recurringPatterns = Array.from(patterns.entries())
         .filter(([_, txns]) => txns.length >= input.minOccurrences)
         .map(([_key, txns]) => {
-          const amounts = txns.map((t) => t.amount.toNumber())
-          const avgAmount = amounts.reduce((a, b) => a + b, 0) / amounts.length
-          
+          const amounts = txns.map(t => t.amount.toNumber());
+          const avgAmount = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+
           return {
-            merchantName: txns[0]?.merchantName ?? "Unknown",
+            merchantName: txns[0]?.merchantName ?? 'Unknown',
             occurrences: txns.length,
             averageAmount: Math.round(avgAmount * 100) / 100,
-            transactions: txns.map((t) => ({
+            transactions: txns.map(t => ({
               id: t.id,
               date: t.date,
               amount: t.amount.toNumber(),
             })),
-          }
+          };
         })
-        .sort((a, b) => b.occurrences - a.occurrences)
+        .sort((a, b) => b.occurrences - a.occurrences);
 
-      return recurringPatterns
+      return recurringPatterns;
     }),
-})
+});

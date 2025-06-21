@@ -2,7 +2,7 @@
 # 🚀 SubPilot
 
 <div align="center">
-  <img src="images/SubPilot_NewLogo.png" alt="SubPilot Logo" width="200"/>
+  <img src="images/SubPilot_NewLogo.png" alt="SubPilot Logo" width="400"/>
 
   <h3>Take Control of Your Recurring Finances</h3>
 
@@ -383,9 +383,11 @@ npm run typecheck
 ## 🔧 CI/CD & Deployment Status
 
 ### Pipeline Status ✅
+
 **Fully Operational** (Updated: 2025-06-21)
 
 Our GitHub Actions CI/CD pipeline includes:
+
 - ✅ **Dependency Installation** - Node.js 20.18 with npm caching
 - ✅ **Configuration Validation** - TypeScript and Next.js config checks
 - ✅ **Code Quality** - ESLint and Prettier (development-friendly mode)
@@ -396,6 +398,7 @@ Our GitHub Actions CI/CD pipeline includes:
 - ✅ **Release Automation** - Automated GitHub releases for tags
 
 ### Deployment Status 🚀
+
 - ✅ **Vercel Integration** - GitHub repository connected for automatic deployments
 - ✅ **Production URL** - [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)
 - ✅ **Auto-Deploy** - Pushes to main branch trigger automatic deployments

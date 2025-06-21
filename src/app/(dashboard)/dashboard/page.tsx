@@ -1,34 +1,35 @@
-import { Suspense } from "react"
-import { DashboardStats } from "@/components/dashboard-stats"
-import { SubscriptionList } from "@/components/subscription-list"
-import { BankConnectionCard } from "@/components/bank-connection-card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { api } from "@/trpc/server"
-import { auth } from "@/server/auth"
+import { Suspense } from 'react';
+import { DashboardStats } from '@/components/dashboard-stats';
+import { SubscriptionList } from '@/components/subscription-list';
+import { BankConnectionCard } from '@/components/bank-connection-card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { api } from '@/trpc/server';
+import { auth } from '@/server/auth';
 
 async function DashboardContent() {
   // Get session once (layout already ensures auth)
-  const session = await auth()
-  
+  const session = await auth();
+
   try {
     // Fetch all data in parallel
-    const [stats, subscriptions, plaidItems, notificationData] = await Promise.all([
-      api.subscriptions.getStats(),
-      api.subscriptions.getAll({ limit: 6 }),
-      api.plaid.getAccounts(),
-      api.notifications.getUnreadCount(),
-    ])
-    
-    const notifications = notificationData.count
+    const [stats, subscriptions, plaidItems, notificationData] =
+      await Promise.all([
+        api.subscriptions.getStats(),
+        api.subscriptions.getAll({ limit: 6 }),
+        api.plaid.getAccounts(),
+        api.notifications.getUnreadCount(),
+      ]);
+
+    const notifications = notificationData.count;
 
     // Calculate upcoming renewals (next 30 days)
-    const thirtyDaysFromNow = new Date()
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
-    
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
     const upcomingRenewals = subscriptions.subscriptions.filter(sub => {
-      if (!sub.nextBilling) return false
-      return new Date(sub.nextBilling) <= thirtyDaysFromNow
-    }).length
+      if (!sub.nextBilling) return false;
+      return new Date(sub.nextBilling) <= thirtyDaysFromNow;
+    }).length;
 
     const dashboardStats = {
       totalActive: stats.totalActive,
@@ -37,7 +38,7 @@ async function DashboardContent() {
       percentageChange: 0, // TODO: Calculate from historical data
       upcomingRenewals,
       unusedSubscriptions: 0, // TODO: Implement unused subscription detection
-    }
+    };
 
     return (
       <div className="space-y-8">
@@ -46,7 +47,8 @@ async function DashboardContent() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground">
-              Welcome back, {session?.user?.name ?? session?.user?.email}! Here&apos;s your subscription overview.
+              Welcome back, {session?.user?.name ?? session?.user?.email}!
+              Here&apos;s your subscription overview.
             </p>
           </div>
           {notifications > 0 && (
@@ -68,27 +70,29 @@ async function DashboardContent() {
           <h2 className="mb-4 text-xl font-semibold">Bank Connections</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {plaidItems.length > 0 ? (
-              plaidItems.map((item) => (
+              plaidItems.map(account => (
                 <BankConnectionCard
-                  key={item.id}
+                  key={account.id}
                   connection={{
-                    id: item.id,
-                    institutionName: item.institutionName,
-                    institutionLogo: item.institutionLogo,
-                    accountCount: item.accounts.length,
-                    lastSync: item.lastSync,
-                    status: item.status as "connected" | "error" | "pending",
-                    errorMessage: item.errorMessage,
+                    id: account.id,
+                    institutionName: account.institution.name,
+                    accountCount: 1,
+                    lastSync: account.lastSync,
+                    status: account.isActive ? 'connected' : 'error',
+                    error: account.isActive
+                      ? undefined
+                      : 'Account disconnected',
                   }}
                 />
               ))
             ) : (
               <BankConnectionCard
                 connection={{
-                  id: "add-new",
-                  institutionName: "Connect Your Bank",
+                  id: 'add-new',
+                  institutionName: 'Connect Your Bank',
                   accountCount: 0,
-                  status: "pending",
+                  lastSync: null,
+                  status: 'connected',
                 }}
               />
             )}
@@ -107,20 +111,38 @@ async function DashboardContent() {
             </a>
           </div>
           {subscriptions.subscriptions.length > 0 ? (
-            <SubscriptionList subscriptions={subscriptions.subscriptions} />
+            <SubscriptionList
+              subscriptions={subscriptions.subscriptions.map(sub => ({
+                id: sub.id,
+                name: sub.name,
+                amount: sub.amount,
+                currency: sub.currency,
+                frequency: sub.frequency as
+                  | 'monthly'
+                  | 'yearly'
+                  | 'weekly'
+                  | 'quarterly',
+                nextBilling: sub.nextBilling,
+                status: sub.isActive
+                  ? ('active' as const)
+                  : ('cancelled' as const),
+                category: sub.category,
+              }))}
+            />
           ) : (
             <div className="rounded-lg border border-dashed p-8 text-center">
               <p className="text-muted-foreground">
-                No subscriptions detected yet. Connect a bank account to get started.
+                No subscriptions detected yet. Connect a bank account to get
+                started.
               </p>
             </div>
           )}
         </section>
       </div>
-    )
+    );
   } catch (error) {
-    console.error("Dashboard error:", error)
-    
+    console.error('Dashboard error:', error);
+
     // Fallback UI for when data fetching fails
     return (
       <div className="space-y-8">
@@ -130,14 +152,14 @@ async function DashboardContent() {
             Welcome back{session?.user?.name ? `, ${session.user.name}` : ''}!
           </p>
         </div>
-        
+
         <div className="rounded-lg border border-dashed p-8 text-center">
           <p className="text-muted-foreground">
             Unable to load dashboard data. Please try refreshing the page.
           </p>
         </div>
       </div>
-    )
+    );
   }
 }
 
@@ -148,23 +170,23 @@ function DashboardSkeleton() {
         <Skeleton className="h-9 w-48" />
         <Skeleton className="mt-2 h-5 w-64" />
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-32" />
         ))}
       </div>
-      
+
       <div>
         <Skeleton className="mb-4 h-7 w-40" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-40" />
           ))}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function DashboardPage() {
@@ -172,5 +194,5 @@ export default function DashboardPage() {
     <Suspense fallback={<DashboardSkeleton />}>
       <DashboardContent />
     </Suspense>
-  )
+  );
 }
