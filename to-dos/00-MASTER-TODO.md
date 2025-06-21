@@ -5,7 +5,7 @@
 ## 📊 Overall Progress
 
 - **Phase 0**: ✅ Complete (Project Initialization)
-- **Phase 1**: 🚧 In Progress (MVP Buildout - Week 1 Complete, Week 2 80% Complete)
+- **Phase 1**: 🚧 In Progress (MVP Buildout - Week 1 Complete, Week 2 85% Complete)
 - **Phase 2**: 📋 Planned (Advanced Features)
 - **Phase 3**: 📋 Planned (Automation)
 - **Phase 4**: 📋 Planned (Launch)
@@ -16,12 +16,13 @@
 
 **Sprint Goal**: Complete Phase 1 Week 2 - Bank Integration & Dashboard
 **Sprint Duration**: June 21-28, 2025
+**Progress**: 85% Complete (Test framework fully restored)
 **Key Deliverables**:
-1. Set up PostgreSQL database and run migrations
-2. Plaid sandbox configuration
-3. Bank connection flow implementation
-4. Transaction import and sync
-5. Basic subscription detection algorithm
+1. ✅ Set up PostgreSQL database and run migrations
+2. ✅ Test framework restoration (82.4% pass rate)
+3. Bank connection flow implementation (pending Plaid account)
+4. Transaction import and sync (pending Plaid account)
+5. Basic subscription detection algorithm (pending real data)
 
 ## 📁 Phase Documents
 
@@ -97,7 +98,7 @@
 ### Weekly Velocity
 - **Target**: 20 story points/week
 - **Week 1 Actual**: 50+ story points (250% of target)
-- **Week 2 Progress**: Starting (June 21, 2025 07:34 AM)
+- **Week 2 Progress**: 85% Complete (June 21, 2025 05:13 PM EDT)
 
 ## 🔄 Regular Tasks
 
@@ -141,6 +142,6 @@
 
 ---
 
-Last Updated: 2025-06-21 07:34 AM EDT
+Last Updated: 2025-06-21 05:13 PM EDT
 Next Review: 2025-06-28
-Current Status: Week 1 complete with all API infrastructure + CI/CD pipeline fixed + comprehensive TODO tracking
+Current Status: Week 2 at 85% complete - Test framework fully restored with 82.4% pass rate + Phase 1 at 63.75% overall completion

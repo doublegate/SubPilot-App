@@ -84,8 +84,12 @@ describe.skip('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(mockTransaction);
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(similarTransactions);
+      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+        mockTransaction
+      );
+      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+        similarTransactions
+      );
 
       const result = await detector.detectFromTransaction('txn-1');
 
@@ -123,8 +127,12 @@ describe.skip('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(mockTransaction);
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(weeklyTransactions);
+      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+        mockTransaction
+      );
+      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+        weeklyTransactions
+      );
 
       const result = await detector.detectFromTransaction('txn-1');
 
@@ -151,7 +159,9 @@ describe.skip('SubscriptionDetector', () => {
         ...mockTransaction,
         amount: -99.99,
       });
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(yearlyTransactions);
+      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+        yearlyTransactions
+      );
 
       const result = await detector.detectFromTransaction('txn-1');
 
@@ -174,8 +184,12 @@ describe.skip('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(mockTransaction);
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(irregularTransactions);
+      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+        mockTransaction
+      );
+      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+        irregularTransactions
+      );
 
       const result = await detector.detectFromTransaction('txn-1');
 
@@ -198,8 +212,12 @@ describe.skip('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(mockTransaction);
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(varyingTransactions);
+      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+        mockTransaction
+      );
+      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+        varyingTransactions
+      );
 
       const result = await detector.detectFromTransaction('txn-1');
 
@@ -223,8 +241,12 @@ describe.skip('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(mockTransaction);
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(highVarianceTransactions);
+      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+        mockTransaction
+      );
+      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+        highVarianceTransactions
+      );
 
       const result = await detector.detectFromTransaction('txn-1');
 
@@ -367,11 +389,13 @@ describe.skip('SubscriptionDetector', () => {
   describe('normalizeMerchantName', () => {
     it('normalizes merchant names consistently', () => {
       const detector = new SubscriptionDetector(db);
-      
+
       expect(detector['normalizeMerchantName']('NETFLIX.COM')).toBe('netflix');
       expect(detector['normalizeMerchantName']('Netflix Inc.')).toBe('netflix');
       expect(detector['normalizeMerchantName']('  Spotify  ')).toBe('spotify');
-      expect(detector['normalizeMerchantName']('Amazon Prime Video')).toBe('amazon prime video');
+      expect(detector['normalizeMerchantName']('Amazon Prime Video')).toBe(
+        'amazon prime video'
+      );
     });
   });
 
@@ -410,10 +434,7 @@ describe.skip('SubscriptionDetector', () => {
     });
 
     it('defaults to monthly for ambiguous patterns', () => {
-      const dates = [
-        new Date('2024-07-15'),
-        new Date('2024-06-20'),
-      ];
+      const dates = [new Date('2024-07-15'), new Date('2024-06-20')];
 
       const frequency = detector['calculateFrequency'](dates);
       expect(frequency).toBe('monthly');

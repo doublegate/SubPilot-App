@@ -1,9 +1,13 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import type { RenderOptions } from '@testing-library/react';
-import { TRPCReactProvider } from '@/trpc/react';
 import { SessionProvider } from 'next-auth/react';
 import type { Session } from 'next-auth';
+
+// Mock tRPC React Provider
+const MockTRPCReactProvider = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -16,7 +20,7 @@ interface ProvidersProps {
 function AllTheProviders({ children, session = null }: ProvidersProps) {
   return (
     <SessionProvider session={session}>
-      <TRPCReactProvider>{children}</TRPCReactProvider>
+      <MockTRPCReactProvider>{children}</MockTRPCReactProvider>
     </SessionProvider>
   );
 }

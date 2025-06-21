@@ -64,6 +64,26 @@ vi.mock('@/env', () => ({
   },
 }));
 
+// Mock tRPC React provider
+vi.mock('@/trpc/react', () => ({
+  TRPCReactProvider: ({ children }: { children: React.ReactNode }) => children,
+  api: {
+    useQuery: vi.fn(() => ({ data: null, isLoading: false })),
+    useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })),
+  },
+}));
+
+// Mock Next Auth React
+vi.mock('next-auth/react', () => ({
+  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
+  useSession: vi.fn(() => ({
+    data: null,
+    status: 'unauthenticated',
+  })),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
