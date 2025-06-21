@@ -34,8 +34,8 @@ export const env = createEnv({
     GITHUB_CLIENT_ID: z.string().optional(),
     GITHUB_CLIENT_SECRET: z.string().optional(),
     // Plaid Configuration
-    PLAID_CLIENT_ID: z.string(),
-    PLAID_SECRET: z.string(),
+    PLAID_CLIENT_ID: z.string().optional(),
+    PLAID_SECRET: z.string().optional(),
     PLAID_ENV: z.enum(["sandbox", "development", "production"]).default("sandbox"),
     PLAID_PRODUCTS: z.string().default("transactions,accounts,identity"),
     PLAID_COUNTRY_CODES: z.string().default("US,CA"),

@@ -9,6 +9,7 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 ## 🏗️ Architecture Overview
 
 ### Tech Stack (T3 Stack)
+
 - **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind CSS + shadcn/ui
 - **Backend**: tRPC for type-safe APIs
 - **Database**: PostgreSQL + Prisma ORM
@@ -17,6 +18,7 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 - **Deployment**: Vercel (app) + Railway (database)
 
 ### Key Design Principles
+
 - **Type Safety**: End-to-end TypeScript with tRPC
 - **Server Components**: Default to server components, client components only when needed
 - **Security First**: Encrypted tokens, HTTPS only, CSRF protection
@@ -24,7 +26,7 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 
 ## 📁 Project Structure
 
-```
+```ascii
 subpilot-app/
 ├── docs/                   # Comprehensive documentation
 ├── ref_docs/              # Reference documentation
@@ -46,6 +48,7 @@ subpilot-app/
 ## 💻 Development Commands
 
 ### Essential Commands
+
 ```bash
 # Development
 npm run dev          # Start Next.js dev server (http://localhost:3000)
@@ -110,6 +113,7 @@ SMTP_PORT="1025"
 ## 🗄️ Database Schema
 
 The database is designed with the following core models:
+
 - **User**: User accounts with notification preferences
 - **PlaidItem**: Bank connections via Plaid
 - **Account**: Individual bank accounts
@@ -118,6 +122,7 @@ The database is designed with the following core models:
 - **Notification**: User notifications and alerts
 
 Key relationships:
+
 - Users can have multiple bank accounts through PlaidItems
 - Transactions are linked to Accounts and potentially to Subscriptions
 - Subscriptions track recurring payments with billing history
@@ -125,6 +130,7 @@ Key relationships:
 ## 🚀 Implementation Status
 
 ### ✅ Completed
+
 - Project initialization and structure
 - Database schema design
 - Documentation framework
@@ -133,6 +139,7 @@ Key relationships:
 - Development environment setup guide
 
 ### 🚧 In Progress / To Do
+
 - [ ] Next.js App Router implementation
 - [ ] Authentication setup with Auth.js
 - [ ] Component library with shadcn/ui
@@ -146,16 +153,19 @@ Key relationships:
 ## 🎨 Design System
 
 ### Brand Colors
+
 - **Primary**: Cyan (#06B6D4) - Trust and clarity
 - **Accent**: Purple (#9333EA) - Premium and modern
 - **Typography**: Inter font family
 
 ### UI Components
+
 Using shadcn/ui component library with custom Tailwind theme. Components should follow the established design tokens in `css_theme/`.
 
 ## 🔧 Development Guidelines
 
 ### Code Style
+
 - Use TypeScript strict mode
 - Prefer server components by default
 - Use tRPC for all API endpoints
@@ -163,11 +173,13 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 - Use meaningful variable and function names
 
 ### Git Workflow
+
 - Feature branches: `feature/description`
 - Bug fixes: `fix/description`
 - Use conventional commits: `feat:`, `fix:`, `docs:`, etc.
 
 ### Testing Strategy
+
 - Unit tests for business logic
 - Integration tests for API routes
 - E2E tests for critical user flows
@@ -185,6 +197,7 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 ## 🎯 Current Development Phase
 
 **Phase 1: MVP Buildout** (Current Focus)
+
 - User authentication system
 - Bank account integration via Plaid
 - Transaction ingestion and parsing
@@ -216,11 +229,13 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 ## 📞 External Services
 
 ### Plaid (Bank Integration)
+
 - Use sandbox environment for development
 - Test credentials available in Plaid dashboard
 - Webhook support for real-time updates
 
 ### Email Service
+
 - Mailhog for local development
 - SendGrid for production
 
@@ -230,6 +245,39 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 2. **Type Errors**: Run `npm run type-check`
 3. **API Issues**: Check tRPC error messages in browser console
 4. **Auth Issues**: Check Auth.js logs and session data
+
+## 📝 Repository Information
+
+- **GitHub URL**: <https://github.com/doublegate/SubPilot-App>
+- **Visibility**: Public repository
+- **License**: MIT License
+- **Current Version**: 0.1.0-dev
+
+## 🛠️ Common Development Tasks
+
+### Before Committing
+
+```bash
+npm run lint:fix    # Fix linting issues
+npm run format      # Format code
+npm run type-check  # Check TypeScript
+```
+
+### Database Work
+
+```bash
+npm run db:studio   # Visual database editor
+npm run db:push     # Push schema changes (dev)
+npm run db:migrate  # Create migration (prod)
+```
+
+### Running Tests
+
+```bash
+npm test            # Run all tests
+npm run test:watch  # Watch mode
+npm run test:e2e    # E2E tests
+```
 
 ---
 

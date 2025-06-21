@@ -21,6 +21,8 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
+> **Current Status**: Active development (Phase 1 - MVP) | Version 0.1.0-dev | [View Changelog](./CHANGELOG.md)
+
 ## 🎯 Key Features
 
 ### Core Functionality
@@ -223,10 +225,14 @@ Comprehensive documentation is available in the [`docs/`](./docs) directory:
 
 ### Week 1: Foundation (Current)
 
-- [ ] App Router structure
-- [ ] Authentication setup (Auth.js)
-- [ ] UI component library (shadcn/ui)
+- ✅ App Router structure
+- ✅ Authentication setup (Auth.js)
+- ✅ UI component library (shadcn/ui)
+- ✅ Basic layouts and pages
+- ✅ tRPC API configuration
+- ✅ Dashboard foundation
 - [ ] Database migrations
+- [ ] OAuth provider configuration
 
 ### Week 2: Core Features
 
