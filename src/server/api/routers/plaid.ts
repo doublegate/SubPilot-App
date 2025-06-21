@@ -13,7 +13,7 @@ export const plaidRouter = createTRPCRouter({
   /**
    * Create a Link token for Plaid Link flow
    */
-  createLinkToken: protectedProcedure.query(async ({ ctx }) => {
+  createLinkToken: protectedProcedure.query(async ({ ctx: _ctx }) => {
     // TODO: Implement Plaid Link token creation in Week 2
     // This will use the Plaid client to generate a link token
     
@@ -54,7 +54,7 @@ export const plaidRouter = createTRPCRouter({
         }),
       })
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx: _ctx, input: _input }) => {
       // TODO: Implement public token exchange in Week 2
       // This will:
       // 1. Exchange public token for access token via Plaid

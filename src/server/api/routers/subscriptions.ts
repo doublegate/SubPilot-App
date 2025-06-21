@@ -7,7 +7,7 @@ import {
 import { Prisma } from "@prisma/client"
 
 const subscriptionStatusEnum = z.enum(["active", "cancelled", "pending"])
-const frequencyEnum = z.enum(["monthly", "yearly", "weekly", "quarterly"])
+// Removed frequencyEnum as it's not currently used
 const sortByEnum = z.enum(["name", "amount", "nextBilling", "createdAt"])
 const sortOrderEnum = z.enum(["asc", "desc"])
 
@@ -258,13 +258,11 @@ export const subscriptionsRouter = createTRPCRouter({
 
     // Group by category
     const categoryMap = subscriptions.reduce((acc, sub) => {
-      const category = sub.category || "Other"
-      if (!acc[category]) {
-        acc[category] = {
-          name: category,
-          count: 0,
-          totalAmount: 0,
-        }
+      const category = sub.category ?? "Other"
+      acc[category] ??= {
+        name: category,
+        count: 0,
+        totalAmount: 0,
       }
       acc[category].count++
       acc[category].totalAmount += sub.amount.toNumber()
@@ -287,7 +285,7 @@ export const subscriptionsRouter = createTRPCRouter({
 
     return Object.values(categoryMap).map((cat) => ({
       ...cat,
-      icon: categoryIcons[cat.name] || "📦",
+      icon: categoryIcons[cat.name] ?? "📦",
     }))
   }),
 

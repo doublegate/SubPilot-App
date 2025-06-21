@@ -286,9 +286,7 @@ export const transactionsRouter = createTRPCRouter({
       // Group by category
       const categorySpending = transactions.reduce((acc, t) => {
         const category = Array.isArray(t.category) && t.category.length > 0 && typeof t.category[0] === "string" ? t.category[0] : "Other"
-        if (!acc[category]) {
-          acc[category] = 0
-        }
+        acc[category] ??= 0
         acc[category] += t.amount.toNumber()
         return acc
       }, {} as Record<string, number>)
@@ -363,7 +361,7 @@ export const transactionsRouter = createTRPCRouter({
       // Filter patterns with minimum occurrences
       const recurringPatterns = Array.from(patterns.entries())
         .filter(([_, txns]) => txns.length >= input.minOccurrences)
-        .map(([key, txns]) => {
+        .map(([_key, txns]) => {
           const amounts = txns.map((t) => t.amount.toNumber())
           const avgAmount = amounts.reduce((a, b) => a + b, 0) / amounts.length
           

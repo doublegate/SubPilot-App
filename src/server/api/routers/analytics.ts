@@ -358,9 +358,7 @@ export const analyticsRouter = createTRPCRouter({
         
         const dateKey = sub.nextBilling.toISOString().split("T")[0]
         if (dateKey) {
-          if (!renewalsByDate[dateKey]) {
-            renewalsByDate[dateKey] = []
-          }
+          renewalsByDate[dateKey] ??= []
           const dateRenewals = renewalsByDate[dateKey]
           if (dateRenewals) {
             dateRenewals.push(sub)
