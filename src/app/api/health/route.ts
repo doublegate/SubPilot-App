@@ -6,7 +6,7 @@ export async function GET() {
       status: "healthy",
       timestamp: new Date().toISOString(),
       service: "subpilot-app",
-      version: process.env.npm_package_version || "0.1.0-dev",
+      version: process.env.npm_package_version ?? "0.1.0-dev",
     },
     { status: 200 }
   )

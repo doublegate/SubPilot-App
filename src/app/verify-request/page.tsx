@@ -39,10 +39,10 @@ export default function VerifyRequestPage() {
                 Check your inbox
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                We've sent you a magic link. Click the link in the email to sign in to your account.
+                We&apos;ve sent you a magic link. Click the link in the email to sign in to your account.
               </p>
               <p className="mt-4 text-xs text-gray-500">
-                The link will expire in 24 hours. If you don't see the email, check your spam folder.
+                The link will expire in 24 hours. If you don&apos;t see the email, check your spam folder.
               </p>
             </div>
           </div>

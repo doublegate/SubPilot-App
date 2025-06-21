@@ -10,11 +10,8 @@ interface ProvidersProps {
   session?: Session | null
 }
 
-// Mock tRPC client
-const mockTRPCClient = {
-  query: () => Promise.resolve({}),
-  mutation: () => Promise.resolve({}),
-}
+// Mock tRPC client - removed as it's not used
+// Will be implemented when needed for specific tests
 
 function AllTheProviders({ children, session = null }: ProvidersProps) {
   return (
@@ -32,7 +29,7 @@ const customRender = (
   ui: React.ReactElement,
   options?: CustomRenderOptions
 ) => {
-  const { session, ...renderOptions } = options || {}
+  const { session, ...renderOptions } = options ?? {}
   
   return render(ui, {
     wrapper: ({ children }) => (

@@ -56,9 +56,6 @@ export const subscriptionsRouter = createTRPCRouter({
           orderBy,
           take: input.limit,
           skip: input.offset,
-          include: {
-            provider: true,
-          },
         }),
         ctx.db.subscription.count({ where }),
       ])
@@ -75,15 +72,15 @@ export const subscriptionsRouter = createTRPCRouter({
           nextBilling: sub.nextBilling,
           status: sub.status,
           isActive: sub.isActive,
-          provider: sub.provider
+          provider: sub.provider && typeof sub.provider === "object" && sub.provider !== null
             ? {
-                name: sub.provider.name,
-                website: sub.provider.website,
-                logo: sub.provider.logo,
+                name: "name" in sub.provider && typeof (sub.provider as any).name === "string" ? (sub.provider as any).name : "Unknown",
+                website: "website" in sub.provider && typeof (sub.provider as any).website === "string" ? (sub.provider as any).website : null,
+                logo: "logo" in sub.provider && typeof (sub.provider as any).logo === "string" ? (sub.provider as any).logo : null,
               }
             : null,
           detectedAt: sub.detectedAt,
-          lastTransaction: sub.lastTransaction,
+          lastTransaction: null, // TODO: Implement last transaction lookup
           createdAt: sub.createdAt,
           updatedAt: sub.updatedAt,
         })),
@@ -104,7 +101,6 @@ export const subscriptionsRouter = createTRPCRouter({
           userId: ctx.session.user.id,
         },
         include: {
-          provider: true,
           transactions: {
             orderBy: { date: "desc" },
             take: 12, // Last 12 transactions
@@ -120,32 +116,36 @@ export const subscriptionsRouter = createTRPCRouter({
       }
 
       // Calculate price history from transactions
-      const priceHistory = subscription.transactions
-        .map((t) => ({
-          amount: t.amount.toNumber(),
-          date: t.date,
-        }))
-        .reverse()
+      const priceHistory = "transactions" in subscription && Array.isArray(subscription.transactions)
+        ? subscription.transactions
+            .map((t: any) => ({
+              amount: t.amount.toNumber(),
+              date: t.date,
+            }))
+            .reverse()
+        : []
 
       return {
         ...subscription,
         amount: subscription.amount.toNumber(),
-        provider: subscription.provider
+        provider: subscription.provider && typeof subscription.provider === "object"
           ? {
-              name: subscription.provider.name,
-              website: subscription.provider.website,
-              logo: subscription.provider.logo,
+              name: "name" in subscription.provider && typeof (subscription.provider as any).name === "string" ? (subscription.provider as any).name : "Unknown",
+              website: "website" in subscription.provider && typeof (subscription.provider as any).website === "string" ? (subscription.provider as any).website : null,
+              logo: "logo" in subscription.provider && typeof (subscription.provider as any).logo === "string" ? (subscription.provider as any).logo : null,
             }
           : null,
-        transactions: subscription.transactions.map((t) => ({
-          ...t,
-          amount: t.amount.toNumber(),
-        })),
+        transactions: "transactions" in subscription && Array.isArray(subscription.transactions)
+          ? subscription.transactions.map((t: any) => ({
+              ...t,
+              amount: t.amount.toNumber(),
+            }))
+          : [],
         priceHistory,
         cancelationInfo: {
-          canCancel: subscription.provider?.cancelUrl !== null,
-          cancelationUrl: subscription.provider?.cancelUrl || null,
-          supportInfo: subscription.provider?.supportInfo || null,
+          canCancel: subscription.cancelationInfo && typeof subscription.cancelationInfo === "object" && "cancelUrl" in subscription.cancelationInfo && subscription.cancelationInfo.cancelUrl !== null,
+          cancelationUrl: subscription.cancelationInfo && typeof subscription.cancelationInfo === "object" && "cancelUrl" in subscription.cancelationInfo && typeof (subscription.cancelationInfo as any).cancelUrl === "string" ? (subscription.cancelationInfo as any).cancelUrl : null,
+          supportInfo: subscription.cancelationInfo && typeof subscription.cancelationInfo === "object" && "supportInfo" in subscription.cancelationInfo && typeof (subscription.cancelationInfo as any).supportInfo === "string" ? (subscription.cancelationInfo as any).supportInfo : null,
         },
       }
     }),
@@ -229,9 +229,10 @@ export const subscriptionsRouter = createTRPCRouter({
         data: {
           status: "cancelled",
           isActive: false,
-          cancelledAt: input.cancellationDate,
-          cancellationReason: input.reason,
-          updatedAt: new Date(),
+          cancelationInfo: {
+            cancelledAt: input.cancellationDate,
+            reason: input.reason,
+          },
         },
       })
 

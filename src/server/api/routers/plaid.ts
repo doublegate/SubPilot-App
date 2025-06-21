@@ -4,7 +4,7 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "@/server/api/trpc"
-import { env } from "@/env"
+import { env } from "@/env.js"
 
 // Note: Plaid client will be initialized when Plaid integration is implemented
 // For now, we'll create placeholder endpoints that can be filled in Week 2
@@ -114,7 +114,7 @@ export const plaidRouter = createTRPCRouter({
         force: z.boolean().optional().default(false),
       })
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async () => {
       // TODO: Implement transaction sync in Week 2
       // This will:
       // 1. Call Plaid transactions/sync endpoint
@@ -156,7 +156,7 @@ export const plaidRouter = createTRPCRouter({
       // Mark as inactive instead of deleting to preserve history
       await ctx.db.plaidItem.update({
         where: { id: input.plaidItemId },
-        data: { isActive: false },
+        data: { status: "inactive" },
       })
 
       // Mark all accounts as inactive
@@ -175,7 +175,7 @@ export const plaidRouter = createTRPCRouter({
     const plaidItems = await ctx.db.plaidItem.findMany({
       where: {
         userId: ctx.session.user.id,
-        isActive: true,
+        status: "good",
       },
       include: {
         accounts: {
@@ -183,7 +183,6 @@ export const plaidRouter = createTRPCRouter({
           select: {
             id: true,
             lastSync: true,
-            transactionsCursor: true,
           },
         },
       },
@@ -192,9 +191,9 @@ export const plaidRouter = createTRPCRouter({
     return plaidItems.map((item) => ({
       id: item.id,
       institutionName: item.institutionName,
-      lastSync: item.accounts[0]?.lastSync || null,
-      status: item.error ? "error" : "connected",
-      error: item.error,
+      lastSync: item.accounts[0]?.lastSync ?? null,
+      status: item.status,
+      error: null,
       accountCount: item.accounts.length,
     }))
   }),

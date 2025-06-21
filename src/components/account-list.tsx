@@ -49,7 +49,7 @@ export function AccountList({ accounts, onSelectAccount, selectedAccountId }: Ac
       loan: "Loan",
     }
     
-    return `${typeLabels[type.toLowerCase()] || type} - ${subtype}`
+    return `${typeLabels[type.toLowerCase()] ?? type} - ${subtype}`
   }
 
   const formatCurrency = (amount: number, currency: string) => {

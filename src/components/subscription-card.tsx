@@ -74,6 +74,7 @@ export function SubscriptionCard({ subscription, onCancel, onUpdate }: Subscript
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             {subscription.provider?.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={subscription.provider.logo}
                 alt={subscription.provider.name}

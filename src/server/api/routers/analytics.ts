@@ -3,7 +3,7 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "@/server/api/trpc"
-import { Prisma } from "@prisma/client"
+import { type Prisma } from "@prisma/client"
 
 const timeRangeEnum = z.enum(["week", "month", "quarter", "year", "all"])
 
@@ -78,13 +78,15 @@ export const analyticsRouter = createTRPCRouter({
         monthlyTotal += monthlyAmount
         
         const category = sub.category || "Other"
-        categorySpending[category] = (categorySpending[category] || 0) + monthlyAmount
+        categorySpending[category] = (categorySpending[category] ?? 0) + monthlyAmount
       })
 
       // Get transaction spending for comparison
       const transactionWhere: Prisma.TransactionWhereInput = {
         account: {
-          userId: ctx.session.user.id,
+          user: {
+            id: ctx.session.user.id,
+          },
         },
         date: {
           gte: startDate,
@@ -104,7 +106,7 @@ export const analyticsRouter = createTRPCRouter({
         },
       })
 
-      const totalSpent = transactionTotal._sum.amount?.toNumber() || 0
+      const totalSpent = transactionTotal._sum.amount?.toNumber() ?? 0
       const monthsBetween = Math.max(1, (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30))
       const monthlyAverage = totalSpent / monthsBetween
 
@@ -167,7 +169,9 @@ export const analyticsRouter = createTRPCRouter({
       const transactions = await ctx.db.transaction.findMany({
         where: {
           account: {
-            userId: ctx.session.user.id,
+            user: {
+              id: ctx.session.user.id,
+            },
           },
           date: {
             gte: startDate,
@@ -178,7 +182,7 @@ export const analyticsRouter = createTRPCRouter({
         select: {
           date: true,
           amount: true,
-          isRecurring: true,
+          isSubscription: true,
         },
         orderBy: { date: "asc" },
       })
@@ -191,25 +195,26 @@ export const analyticsRouter = createTRPCRouter({
         
         switch (input.groupBy) {
           case "day":
-            key = t.date.toISOString().split("T")[0]
+            key = t.date.toISOString().split("T")[0] ?? ""
             break
           case "week":
             const week = new Date(t.date)
             week.setDate(week.getDate() - week.getDay())
-            key = week.toISOString().split("T")[0]
+            key = week.toISOString().split("T")[0] ?? ""
             break
           case "month":
             key = `${t.date.getFullYear()}-${String(t.date.getMonth() + 1).padStart(2, "0")}`
             break
         }
         
-        if (!trends[key]) {
-          trends[key] = { total: 0, recurring: 0 }
-        }
+        trends[key] ??= { total: 0, recurring: 0 }
         
-        trends[key].total += t.amount.toNumber()
-        if (t.isRecurring) {
-          trends[key].recurring += t.amount.toNumber()
+        const trend = trends[key]
+        if (trend) {
+          trend.total += t.amount.toNumber()
+          if (t.isSubscription) {
+            trend.recurring += t.amount.toNumber()
+          }
         }
       })
 
@@ -259,8 +264,8 @@ export const analyticsRouter = createTRPCRouter({
     // Find price increases
     const priceIncreases = subscriptions.filter((s) => {
       if (s.transactions.length < 2) return false
-      const recent = s.transactions[0].amount.toNumber()
-      const previous = s.transactions[1].amount.toNumber()
+      const recent = s.transactions[0]?.amount.toNumber() ?? 0
+      const previous = s.transactions[1]?.amount.toNumber() ?? 0
       return recent > previous
     })
 
@@ -303,8 +308,8 @@ export const analyticsRouter = createTRPCRouter({
               subscriptions: priceIncreases.map((s) => ({
                 id: s.id,
                 name: s.name,
-                oldAmount: s.transactions[1].amount.toNumber(),
-                newAmount: s.transactions[0].amount.toNumber(),
+                oldAmount: s.transactions[1]?.amount.toNumber() ?? 0,
+                newAmount: s.transactions[0]?.amount.toNumber() ?? 0,
               })),
             }]
           : []),
@@ -335,13 +340,13 @@ export const analyticsRouter = createTRPCRouter({
           },
         },
         orderBy: { nextBilling: "asc" },
-        include: {
-          provider: {
-            select: {
-              name: true,
-              logo: true,
-            },
-          },
+        select: {
+          id: true,
+          name: true,
+          amount: true,
+          currency: true,
+          nextBilling: true,
+          provider: true,
         },
       })
 
@@ -352,10 +357,15 @@ export const analyticsRouter = createTRPCRouter({
         if (!sub.nextBilling) return
         
         const dateKey = sub.nextBilling.toISOString().split("T")[0]
-        if (!renewalsByDate[dateKey]) {
-          renewalsByDate[dateKey] = []
+        if (dateKey) {
+          if (!renewalsByDate[dateKey]) {
+            renewalsByDate[dateKey] = []
+          }
+          const dateRenewals = renewalsByDate[dateKey]
+          if (dateRenewals) {
+            dateRenewals.push(sub)
+          }
         }
-        renewalsByDate[dateKey].push(sub)
       })
 
       // Calculate totals
@@ -396,17 +406,21 @@ export const analyticsRouter = createTRPCRouter({
       const [subscriptions, transactions] = await Promise.all([
         ctx.db.subscription.findMany({
           where: { userId: ctx.session.user.id },
-          include: { provider: true },
         }),
         input.includeTransactions
           ? ctx.db.transaction.findMany({
               where: {
-                account: { userId: ctx.session.user.id },
+                account: {
+                  user: {
+                    id: ctx.session.user.id,
+                  },
+                },
               },
               include: {
                 account: {
                   select: {
                     name: true,
+                    isoCurrencyCode: true,
                     plaidItem: {
                       select: { institutionName: true },
                     },
@@ -441,9 +455,9 @@ export const analyticsRouter = createTRPCRouter({
           s.currency,
           s.frequency,
           s.status,
-          s.category || "",
-          s.nextBilling?.toISOString() || "",
-          s.provider?.name || "",
+          s.category ?? "",
+          s.nextBilling?.toISOString() ?? "",
+          typeof s.provider === "object" && s.provider !== null && "name" in s.provider && typeof (s.provider as {name?: unknown}).name === "string" ? (s.provider as {name: string}).name : "",
         ]),
       ]
 
@@ -452,10 +466,10 @@ export const analyticsRouter = createTRPCRouter({
             ["Date", "Description", "Amount", "Currency", "Category", "Account", "Institution"],
             ...transactions.map((t) => [
               t.date.toISOString(),
-              t.name,
+              t.description,
               t.amount.toString(),
-              t.isoCurrencyCode || "USD",
-              t.category?.[0] || "",
+              t.account.isoCurrencyCode ?? "USD",
+              Array.isArray(t.category) && t.category.length > 0 && typeof t.category[0] === "string" ? t.category[0] : "",
               t.account.name,
               t.account.plaidItem.institutionName,
             ]),

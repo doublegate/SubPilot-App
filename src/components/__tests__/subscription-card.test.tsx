@@ -73,7 +73,7 @@ describe("SubscriptionCard", () => {
     
     const logo = screen.getByAltText("Netflix Inc.")
     expect(logo).toBeInTheDocument()
-    expect(logo).toHaveAttribute("src", mockSubscription.provider!.logo)
+    expect(logo).toHaveAttribute("src", mockSubscription.provider.logo)
   })
 
   it("shows fallback initial when no logo is available", () => {

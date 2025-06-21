@@ -49,7 +49,7 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
     },
     {
       title: "Upcoming Renewals",
-      value: stats.upcomingRenewals?.toString() || "0",
+      value: stats.upcomingRenewals?.toString() ?? "0",
       icon: Calendar,
       color: "text-orange-600",
       bgColor: "bg-orange-100 dark:bg-orange-900/20",
@@ -103,7 +103,7 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
           <CardContent>
             <p className="text-sm text-muted-foreground">
               You have <span className="font-semibold text-yellow-700 dark:text-yellow-600">{stats.unusedSubscriptions} unused subscriptions</span> that
-              haven't been accessed in over 60 days. Consider reviewing these to save money.
+              haven&apos;t been accessed in over 60 days. Consider reviewing these to save money.
             </p>
           </CardContent>
         </Card>

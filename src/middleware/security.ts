@@ -30,7 +30,7 @@ function getClientId(request: NextRequest): string {
   const cfConnectingIp = request.headers.get("cf-connecting-ip")
   
   // Use the first available IP or fallback to a default
-  const ip = forwarded?.split(",")[0] || realIp || cfConnectingIp || "anonymous"
+  const ip = forwarded?.split(",")[0] ?? realIp ?? cfConnectingIp ?? "anonymous"
   
   return ip
 }
@@ -162,7 +162,7 @@ export function validateCSRFToken(request: NextRequest): boolean {
   if (origin && host) {
     try {
       const originUrl = new URL(origin)
-      const expectedOrigin = process.env.NEXTAUTH_URL || `https://${host}`
+      const expectedOrigin = process.env.NEXTAUTH_URL ?? `https://${host}`
       const expectedUrl = new URL(expectedOrigin)
       
       return originUrl.host === expectedUrl.host
@@ -173,7 +173,7 @@ export function validateCSRFToken(request: NextRequest): boolean {
   
   // For API routes, check content type
   if (request.url.includes("/api/")) {
-    return contentType?.includes("application/json") || false
+    return contentType?.includes("application/json") ?? false
   }
   
   return true

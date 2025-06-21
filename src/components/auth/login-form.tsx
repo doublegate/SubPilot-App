@@ -117,7 +117,7 @@ function EmailForm({ isLoading }: { isLoading: boolean }) {
         <div className="rounded-lg border border-green-200 bg-green-50 p-4">
           <h3 className="font-medium text-green-800">Check your email!</h3>
           <p className="mt-1 text-sm text-green-700">
-            We've sent a magic link to <span className="font-medium">{email}</span>
+            We&apos;ve sent a magic link to <span className="font-medium">{email}</span>
           </p>
         </div>
         <p className="text-sm text-gray-600">

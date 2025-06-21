@@ -6,11 +6,11 @@ type SendVerificationRequestParams = {
   url: string
   expires: Date
   provider: {
-    server?: any
+    server?: unknown
     from?: string
   }
   token: string
-  theme: any
+  theme: unknown
   request: Request
 }
 
@@ -38,11 +38,8 @@ const createTransporter = () => {
   }
 }
 
-export async function sendVerificationRequest({
-  identifier: email,
-  url,
-  provider,
-}: SendVerificationRequestParams) {
+export async function sendVerificationRequest(params: SendVerificationRequestParams) {
+  const { identifier: email, url } = params
   const { host } = new URL(url)
   const transporter = createTransporter()
 

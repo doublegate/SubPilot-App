@@ -13,7 +13,7 @@ export async function getAuthForEdge(req: NextRequest) {
     });
     
     return {
-      auth: token ? { user: { id: token.sub, email: token.email as string } } : null,
+      auth: token ? { user: { id: token.sub, email: token.email! } } : null,
     };
   } catch (error) {
     console.error("Error checking auth in edge:", error);

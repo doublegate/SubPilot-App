@@ -4,7 +4,7 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "@/server/api/trpc"
-import { Prisma } from "@prisma/client"
+import { type Prisma } from "@prisma/client"
 
 const notificationTypeEnum = z.enum([
   "renewal_reminder",
@@ -36,7 +36,7 @@ export const notificationsRouter = createTRPCRouter({
       }
 
       if (input.unreadOnly) {
-        where.isRead = false
+        where.read = false
       }
 
       if (input.type) {
@@ -67,7 +67,7 @@ export const notificationsRouter = createTRPCRouter({
           type: n.type,
           title: n.title,
           message: n.message,
-          isRead: n.isRead,
+          isRead: n.read,
           createdAt: n.createdAt,
           subscription: n.subscription
             ? {
@@ -107,7 +107,7 @@ export const notificationsRouter = createTRPCRouter({
 
       const updated = await ctx.db.notification.update({
         where: { id: input.notificationId },
-        data: { isRead: true },
+        data: { read: true },
       })
 
       return updated
@@ -120,9 +120,9 @@ export const notificationsRouter = createTRPCRouter({
     await ctx.db.notification.updateMany({
       where: {
         userId: ctx.session.user.id,
-        isRead: false,
+        read: false,
       },
-      data: { isRead: true },
+      data: { read: true },
     })
 
     return { success: true }
@@ -135,7 +135,7 @@ export const notificationsRouter = createTRPCRouter({
     const count = await ctx.db.notification.count({
       where: {
         userId: ctx.session.user.id,
-        isRead: false,
+        read: false,
       },
     })
 
@@ -180,7 +180,7 @@ export const notificationsRouter = createTRPCRouter({
     await ctx.db.notification.deleteMany({
       where: {
         userId: ctx.session.user.id,
-        isRead: true,
+        read: true,
       },
     })
 
@@ -213,6 +213,7 @@ export const notificationsRouter = createTRPCRouter({
           type: input.type,
           title: input.title,
           message: input.message,
+          scheduledFor: new Date(),
         },
       })
 
@@ -223,36 +224,30 @@ export const notificationsRouter = createTRPCRouter({
    * Get notification preferences summary
    */
   getPreferencesSummary: protectedProcedure.query(async ({ ctx }) => {
-    const preferences = await ctx.db.notificationPreference.findUnique({
-      where: { userId: ctx.session.user.id },
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { notificationPreferences: true },
     })
 
-    if (!preferences) {
-      return {
-        emailEnabled: true,
-        pushEnabled: false,
-        types: {
-          renewal_reminder: true,
-          price_change: true,
-          new_subscription: true,
-          cancelled_service: true,
-          payment_failed: true,
-          weekly_report: true,
-          trial_ending: true,
-        },
-      }
-    }
+    const preferences = user?.notificationPreferences as {
+      emailAlerts?: boolean
+      pushNotifications?: boolean
+      renewalReminders?: boolean
+      priceChangeAlerts?: boolean
+      cancelledServiceAlerts?: boolean
+      weeklyReports?: boolean
+    } | null
 
     return {
-      emailEnabled: preferences.emailAlerts,
-      pushEnabled: preferences.pushNotifications,
+      emailEnabled: preferences?.emailAlerts ?? true,
+      pushEnabled: preferences?.pushNotifications ?? false,
       types: {
-        renewal_reminder: preferences.renewalReminders,
-        price_change: preferences.priceChangeAlerts,
+        renewal_reminder: preferences?.renewalReminders ?? true,
+        price_change: preferences?.priceChangeAlerts ?? true,
         new_subscription: true, // Always notify for new subscriptions
-        cancelled_service: preferences.cancelledServiceAlerts,
+        cancelled_service: preferences?.cancelledServiceAlerts ?? true,
         payment_failed: true, // Always notify for payment failures
-        weekly_report: preferences.weeklyReports,
+        weekly_report: preferences?.weeklyReports ?? true,
         trial_ending: true, // Always notify for trial endings
       },
     }

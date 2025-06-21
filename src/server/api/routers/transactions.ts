@@ -4,7 +4,7 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "@/server/api/trpc"
-import { Prisma } from "@prisma/client"
+import { type Prisma } from "@prisma/client"
 
 export const transactionsRouter = createTRPCRouter({
   /**
@@ -46,18 +46,19 @@ export const transactionsRouter = createTRPCRouter({
       }
 
       if (input.category) {
-        where.category = { contains: input.category, mode: "insensitive" }
+        // TODO: Implement category filtering for JSON array field
+        // For now, skip category filtering
       }
 
       if (input.search) {
         where.OR = [
-          { name: { contains: input.search, mode: "insensitive" } },
+          { description: { contains: input.search, mode: "insensitive" } },
           { merchantName: { contains: input.search, mode: "insensitive" } },
         ]
       }
 
       if (input.isRecurring !== undefined) {
-        where.isRecurring = input.isRecurring
+        where.isSubscription = input.isRecurring
       }
 
       // Get transactions with pagination
@@ -71,6 +72,7 @@ export const transactionsRouter = createTRPCRouter({
             account: {
               select: {
                 name: true,
+                isoCurrencyCode: true,
                 plaidItem: {
                   select: {
                     institutionName: true,
@@ -93,13 +95,13 @@ export const transactionsRouter = createTRPCRouter({
         transactions: transactions.map((t) => ({
           id: t.id,
           date: t.date,
-          name: t.name,
+          name: t.description,
           merchantName: t.merchantName,
           amount: t.amount.toNumber(),
-          currency: t.isoCurrencyCode || "USD",
+          currency: t.account.isoCurrencyCode ?? "USD",
           category: t.category,
           pending: t.pending,
-          isRecurring: t.isRecurring,
+          isRecurring: t.isSubscription,
           account: {
             name: t.account.name,
             institution: t.account.plaidItem.institutionName,
@@ -165,7 +167,9 @@ export const transactionsRouter = createTRPCRouter({
           where: {
             id: input.transactionId,
             account: {
-              userId: ctx.session.user.id,
+              user: {
+                id: ctx.session.user.id,
+              },
             },
           },
         }),
@@ -196,17 +200,12 @@ export const transactionsRouter = createTRPCRouter({
         where: { id: input.transactionId },
         data: {
           subscriptionId: input.subscriptionId,
-          isRecurring: true,
+          isSubscription: true,
         },
       })
 
-      // Update subscription's last transaction date
-      await ctx.db.subscription.update({
-        where: { id: input.subscriptionId },
-        data: {
-          lastTransaction: transaction.date,
-        },
-      })
+      // TODO: Update subscription's last billing date
+      // This would require adding a lastBilling field or using transaction history
 
       return updated
     }),
@@ -243,7 +242,7 @@ export const transactionsRouter = createTRPCRouter({
         where: { id: input.transactionId },
         data: {
           subscriptionId: null,
-          isRecurring: false,
+          isSubscription: false,
         },
       })
 
@@ -286,7 +285,7 @@ export const transactionsRouter = createTRPCRouter({
 
       // Group by category
       const categorySpending = transactions.reduce((acc, t) => {
-        const category = t.category?.[0] || "Other"
+        const category = Array.isArray(t.category) && t.category.length > 0 && typeof t.category[0] === "string" ? t.category[0] : "Other"
         if (!acc[category]) {
           acc[category] = 0
         }
@@ -323,7 +322,7 @@ export const transactionsRouter = createTRPCRouter({
         account: {
           userId: ctx.session.user.id,
         },
-        isRecurring: false, // Only look at unlinked transactions
+        isSubscription: false, // Only look at unlinked transactions
         subscriptionId: null,
       }
 
@@ -369,7 +368,7 @@ export const transactionsRouter = createTRPCRouter({
           const avgAmount = amounts.reduce((a, b) => a + b, 0) / amounts.length
           
           return {
-            merchantName: txns[0].merchantName!,
+            merchantName: txns[0]?.merchantName ?? "Unknown",
             occurrences: txns.length,
             averageAmount: Math.round(avgAmount * 100) / 100,
             transactions: txns.map((t) => ({

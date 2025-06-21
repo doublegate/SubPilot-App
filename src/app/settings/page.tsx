@@ -97,7 +97,7 @@ export default async function SettingsPage() {
 
               <div>
                 <Label htmlFor="quiet-hours">Quiet hours</Label>
-                <p className="text-sm text-gray-500 mb-2">Don't send notifications during these hours</p>
+                <p className="text-sm text-gray-500 mb-2">Don&apos;t send notifications during these hours</p>
                 <div className="flex gap-2 items-center">
                   <Select defaultValue="22">
                     <SelectTrigger className="w-24">
