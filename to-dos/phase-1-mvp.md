@@ -118,7 +118,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] Sync progress display
 - [ ] Error state components
 
-### Testing
+### Week 2 Testing
 
 - [ ] Mock Plaid responses
 - [ ] Test token exchange flow
@@ -168,7 +168,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] Upcoming renewals list
 - [ ] Cost trend visualization
 
-### Testing
+### Week 3 Testing
 
 - [ ] Test detection algorithm accuracy
 - [ ] Verify transaction parsing

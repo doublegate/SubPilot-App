@@ -35,7 +35,7 @@ gantt
 
 ## Phase 0: Project Initialization ✅
 
-### Goals
+### Phase 0 Goals
 
 - Define core product scope and technical foundation
 - Set up development infrastructure and brand identity
@@ -70,7 +70,7 @@ gantt
 
 ## Phase 1: MVP Buildout 🚧
 
-### Goals
+### Phase 1 Goals
 
 Build core functionality allowing users to connect bank accounts, view subscriptions, and receive notifications.
 
@@ -78,13 +78,13 @@ Build core functionality allowing users to connect bank accounts, view subscript
 
 ### Week 1: Authentication & Foundation
 
-#### Primary Documentation
+#### Week 1 Primary Documentation
 
 - [`AUTHENTICATION.md`](./AUTHENTICATION.md) - Complete Auth.js implementation
 - [`QUICK_START.md`](./QUICK_START.md) - Rapid developer onboarding
 - [`API_REFERENCE.md`](./API_REFERENCE.md) - Auth router documentation
 
-#### Technical Deliverables
+#### Week 1 Technical Deliverables
 
 - [ ] User onboarding flow (Auth.js, profile setup)
 - [ ] OAuth provider integration (Google, GitHub)
@@ -92,7 +92,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] Session management and middleware
 - [ ] User profile management UI
 
-#### Success Criteria
+#### Week 1 Success Criteria
 
 - [ ] Users can sign up and sign in
 - [ ] Session persistence works across browser restarts
@@ -100,7 +100,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] OAuth providers connected and tested
 - [ ] Auth middleware protects routes
 
-#### Testing Requirements
+#### Week 1 Testing Requirements
 
 - [ ] Unit tests for auth utilities
 - [ ] Integration tests for auth flow
@@ -109,13 +109,13 @@ Build core functionality allowing users to connect bank accounts, view subscript
 
 ### Week 2: Bank Integration
 
-#### Primary Documentation
+#### Week 2 Primary Documentation
 
 - [`BANK_INTEGRATION.md`](./BANK_INTEGRATION.md) - Complete Plaid implementation
 - [`DATABASE_DESIGN.md`](./DATABASE_DESIGN.md) - Financial data models
 - [`API_REFERENCE.md`](./API_REFERENCE.md) - Plaid router documentation
 
-#### Technical Deliverables
+#### Week 2 Technical Deliverables
 
 - [ ] Plaid Link integration
 - [ ] Bank account connection flow
@@ -123,7 +123,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] Real-time webhook handling
 - [ ] Account management UI
 
-#### Success Criteria
+#### Week 2 Success Criteria
 
 - [ ] Users can connect bank accounts via Plaid
 - [ ] Transaction data syncs automatically
@@ -131,7 +131,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] Webhook events processed correctly
 - [ ] Error handling for bank connectivity issues
 
-#### Testing Requirements
+#### Week 2 Testing Requirements
 
 - [ ] Unit tests for Plaid client
 - [ ] Integration tests with Plaid sandbox
@@ -140,12 +140,12 @@ Build core functionality allowing users to connect bank accounts, view subscript
 
 ### Week 3: Subscription Detection & Dashboard
 
-#### Primary Documentation
+#### Week 3 Primary Documentation
 
 - [`API_REFERENCE.md`](./API_REFERENCE.md) - Subscription endpoints
 - [`DATABASE_DESIGN.md`](./DATABASE_DESIGN.md) - Subscription models
 
-#### Technical Deliverables
+#### Week 3 Technical Deliverables
 
 - [ ] Subscription recognition algorithm
 - [ ] Transaction parsing and categorization
@@ -153,7 +153,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] Category-based organization
 - [ ] Subscription details and history
 
-#### Success Criteria
+#### Week 3 Success Criteria
 
 - [ ] Recurring transactions detected automatically
 - [ ] Subscription categories assigned correctly
@@ -161,7 +161,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] Users can view subscription details
 - [ ] Subscription confidence scoring works
 
-#### Testing Requirements
+#### Week 3 Testing Requirements
 
 - [ ] Unit tests for detection algorithm
 - [ ] Integration tests with sample data
@@ -170,12 +170,12 @@ Build core functionality allowing users to connect bank accounts, view subscript
 
 ### Week 4: Notifications & Polish
 
-#### Primary Documentation
+#### Week 4 Primary Documentation
 
 - [`API_REFERENCE.md`](./API_REFERENCE.md) - Notification endpoints
 - [`TESTING_GUIDE.md`](./TESTING_GUIDE.md) - Complete testing strategy
 
-#### Technical Deliverables
+#### Week 4 Technical Deliverables
 
 - [ ] Notification system (email, in-app)
 - [ ] Renewal reminders and alerts
@@ -183,7 +183,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] Email templates and delivery
 - [ ] MVP UI polish and responsiveness
 
-#### Success Criteria
+#### Week 4 Success Criteria
 
 - [ ] Users receive renewal notifications
 - [ ] Email notifications delivered reliably
@@ -191,7 +191,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 - [ ] Users can customize notification settings
 - [ ] UI is responsive and accessible
 
-#### Testing Requirements
+#### Week 4 Testing Requirements
 
 - [ ] E2E tests for complete user flows
 - [ ] Notification delivery testing
@@ -210,20 +210,20 @@ Build core functionality allowing users to connect bank accounts, view subscript
 
 ## Phase 2: Advanced Features 📊
 
-### Goals
+### Phase 2 Goals
 
 Enable automated insights, enhanced analytics, and improved user experience.
 
 ### Duration: 3 weeks (July 30 - August 20, 2025)
 
-### Week 1: AI Categorization
+### Phase 2 Week 1: AI Categorization
 
-#### New Documentation Needed
+#### Phase 2 Week 1 New Documentation Needed
 
 - **`AI_INTEGRATION.md`** - OpenAI API integration guide
 - **`CATEGORIZATION_ALGORITHM.md`** - Smart categorization implementation
 
-#### Technical Deliverables
+#### Week 1 Technical Deliverables
 
 - [ ] OpenAI API integration
 - [ ] Enhanced subscription categorization
@@ -231,21 +231,21 @@ Enable automated insights, enhanced analytics, and improved user experience.
 - [ ] Category confidence scoring
 - [ ] Manual category override system
 
-#### Success Criteria
+#### Week 1 Success Criteria
 
 - [ ] AI categorization >90% accuracy
 - [ ] Reduced false positives in detection
 - [ ] User can override AI decisions
 - [ ] Category insights in dashboard
 
-### Week 2: Analytics & Reporting
+### Phase 2 Week 2: Analytics & Reporting
 
-#### New Documentation Needed
+#### Phase 2 Week 2 New Documentation Needed
 
 - **`ANALYTICS_FEATURES.md`** - Reporting engine implementation
 - **`DATA_VISUALIZATION.md`** - Chart and graph components
 
-#### Technical Deliverables
+#### Week 2 Technical Deliverables
 
 - [ ] Monthly spending reports
 - [ ] Category breakdown analytics
@@ -253,16 +253,16 @@ Enable automated insights, enhanced analytics, and improved user experience.
 - [ ] Comparative analysis features
 - [ ] Custom date range reporting
 
-#### Success Criteria
+#### Week 2 Success Criteria
 
 - [ ] Analytics load in <3 seconds
 - [ ] Multiple chart types supported
 - [ ] Export functionality works
 - [ ] Historical data analysis available
 
-### Week 3: Export & Mobile Optimization
+### Phase 2 Week 3: Export & Mobile Optimization
 
-#### Technical Deliverables
+#### Week 3 Technical Deliverables
 
 - [ ] CSV/JSON export functionality
 - [ ] Responsive mobile design
@@ -270,7 +270,7 @@ Enable automated insights, enhanced analytics, and improved user experience.
 - [ ] Mobile-optimized dashboards
 - [ ] Progressive Web App features
 
-#### Success Criteria
+#### Week 3 Success Criteria
 
 - [ ] Mobile experience matches desktop
 - [ ] Export files generate correctly
@@ -288,20 +288,20 @@ Enable automated insights, enhanced analytics, and improved user experience.
 
 ## Phase 3: Subscription Management Automation 🤖
 
-### Goals
+### Phase 3 Goals
 
 Transform SubPilot into a true control center for managing and canceling subscriptions.
 
 ### Duration: 3 weeks (August 20 - September 10, 2025)
 
-### Week 1: Cancellation Integration
+### Phase 3 Week 1: Cancellation Integration
 
-#### New Documentation Needed
+#### Phase 3 Week 1 New Documentation Needed
 
 - **`SUBSCRIPTION_MANAGEMENT.md`** - Cancellation API implementations
 - **`THIRD_PARTY_APIS.md`** - External service integrations
 
-#### Technical Deliverables
+#### Week 1 Technical Deliverables
 
 - [ ] One-click cancellation APIs
 - [ ] Service provider integrations
@@ -309,14 +309,14 @@ Transform SubPilot into a true control center for managing and canceling subscri
 - [ ] Refund monitoring
 - [ ] Cancellation success metrics
 
-### Week 2: AI Assistant
+### Phase 3 Week 2: AI Assistant
 
-#### New Documentation Needed
+#### Phase 3 Week 2 New Documentation Needed
 
 - **`CHATBOT_INTEGRATION.md`** - LLM-powered assistant setup
 - **`CONVERSATIONAL_UI.md`** - Chat interface components
 
-#### Technical Deliverables
+#### Week 2 Technical Deliverables
 
 - [ ] LLM-powered chatbot
 - [ ] Natural language query processing
@@ -324,14 +324,14 @@ Transform SubPilot into a true control center for managing and canceling subscri
 - [ ] Contextual help system
 - [ ] Voice command integration
 
-### Week 3: Premium Features
+### Phase 3 Week 3: Premium Features
 
-#### New Documentation Needed
+#### Phase 3 Week 3 New Documentation Needed
 
 - **`PREMIUM_FEATURES.md`** - Paid tier implementation
 - **`STRIPE_INTEGRATION.md`** - Payment processing setup
 
-#### Technical Deliverables
+#### Week 3 Technical Deliverables
 
 - [ ] Stripe payments integration
 - [ ] Multi-account support
@@ -350,21 +350,21 @@ Transform SubPilot into a true control center for managing and canceling subscri
 
 ## Phase 4: Marketing & Monetization 🚀
 
-### Goals
+### Phase 4 Goals
 
 Public launch, user acquisition, and revenue generation.
 
 ### Duration: 2 weeks (September 10 - September 24, 2025)
 
-### Week 1: Marketing Infrastructure
+### Phase 4 Week 1: Marketing Infrastructure
 
-#### New Documentation Needed
+#### Phase 4 Week 1 New Documentation Needed
 
 - **`MARKETING_INTEGRATION.md`** - Analytics and SEO setup
 - **`DEPLOYMENT_GUIDE.md`** - Production deployment procedures
 - **`MONITORING_GUIDE.md`** - Observability and alerting
 
-#### Technical Deliverables
+#### Week 1 Technical Deliverables
 
 - [ ] Landing page optimization
 - [ ] SEO implementation
@@ -372,9 +372,9 @@ Public launch, user acquisition, and revenue generation.
 - [ ] A/B testing framework
 - [ ] Social media integrations
 
-### Week 2: Launch & Growth
+### Phase 4 Week 2: Launch & Growth
 
-#### Technical Deliverables
+#### Week 2 Technical Deliverables
 
 - [ ] Production deployment
 - [ ] Launch on ProductHunt

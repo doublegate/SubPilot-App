@@ -7,7 +7,7 @@ await import("./src/env.js");
 /** @type {import("next").NextConfig} */
 const config = {
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled temporarily due to critters module issue
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",

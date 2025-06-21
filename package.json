@@ -2,9 +2,11 @@
   "name": "subpilot-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "SubPilot - Your command center for recurring finances",
   "scripts": {
     "build": "next build",
+    "build:ci": "next build --no-lint",
     "dev": "next dev",
     "dev:all": "concurrently \"npm run dev\" \"npm run db:studio\" \"mailhog\"",
     "postinstall": "prisma generate",
@@ -86,7 +88,7 @@
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
     "@types/eslint": "^8.44.7",
-    "@types/node": "^18.17.0",
+    "@types/node": "^20.18.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^8.21.0",
@@ -108,8 +110,12 @@
     "typescript": "^5.7.3",
     "vitest": "^3.2.4"
   },
+  "engines": {
+    "node": ">=20.18.0",
+    "npm": ">=10.9.0"
+  },
   "ct3aMetadata": {
     "initVersion": "7.25.2"
   },
-  "packageManager": "npm@10.2.4"
+  "packageManager": "npm@10.9.0"
 }

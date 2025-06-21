@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '18.17'
+  NODE_VERSION: '20.18'
 
 jobs:
   # Job 1: Code Quality & Build
@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      build-success: ${{ steps.build-status.outputs.success }}
     
     steps:
       - name: Checkout code
@@ -33,23 +35,96 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linting (continue on error)
-        run: npm run lint || true
+      - name: Validate project configuration
+        run: |
+          echo "🔍 Validating project configuration..."
+          
+          # Check required config files exist
+          test -f tsconfig.json || { echo "❌ tsconfig.json missing"; exit 1; }
+          test -f next.config.js || { echo "❌ next.config.js missing"; exit 1; }
+          test -f package.json || { echo "❌ package.json missing"; exit 1; }
+          
+          # Validate TypeScript config
+          npx tsc --noEmit --skipLibCheck || { echo "❌ TypeScript config invalid"; exit 1; }
+          
+          echo "✅ Project configuration valid"
+
+      - name: Run linting
+        run: |
+          echo "🔍 Running ESLint..."
+          if npm run lint; then
+            echo "✅ No linting errors"
+          else
+            echo "⚠️  Linting issues found (continuing in development mode)"
+            echo "🔧 Run 'npm run lint:fix' to auto-fix issues"
+          fi
         continue-on-error: true
 
-      - name: Run Prettier check (continue on error)
-        run: npm run format:check || true
+      - name: Run Prettier check  
+        run: |
+          echo "💄 Checking code formatting..."
+          if npm run format:check; then
+            echo "✅ Code formatting is correct"
+          else
+            echo "⚠️  Formatting issues found (continuing in development mode)"
+            echo "🔧 Run 'npm run format' to fix formatting"
+          fi
         continue-on-error: true
 
-      - name: Run TypeScript check (continue on error)
-        run: npm run type-check || true
-        continue-on-error: true
+      - name: Run TypeScript check
+        run: npm run type-check
+        continue-on-error: false
 
       - name: Build application
-        run: npm run build
-        continue-on-error: true
+        run: |
+          echo "🏗️ Building Next.js application..."
+          
+          # Set environment variables for build
+          export SKIP_ENV_VALIDATION=true
+          export NODE_ENV=production
+          export NEXTAUTH_SECRET="ci-test-secret"
+          export NEXTAUTH_URL="http://localhost:3000"
+          
+          # Build with lint disabled for development mode
+          npm run build:ci
+          
+          echo "✅ Build completed successfully (linting handled separately)"
 
-  # Job 2: Security Audit
+      - name: Set build status
+        id: build-status
+        run: echo "success=true" >> $GITHUB_OUTPUT
+
+      - name: Build summary
+        run: |
+          echo "## 🚀 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status | Notes |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependencies | ✅ Installed | Node.js ${{ env.NODE_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Configuration | ✅ Valid | TypeScript & Next.js configs OK |" >> $GITHUB_STEP_SUMMARY
+          echo "| Linting | ⚠️ Issues found | Development mode - non-blocking |" >> $GITHUB_STEP_SUMMARY
+          echo "| Formatting | ⚠️ Issues found | Development mode - non-blocking |" >> $GITHUB_STEP_SUMMARY
+          echo "| TypeScript | ✅ Compiled | No type errors |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ✅ Success | Next.js application built |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Development Notes" >> $GITHUB_STEP_SUMMARY
+          echo "- Code quality checks are in **development mode** (non-blocking)" >> $GITHUB_STEP_SUMMARY
+          echo "- Run \`npm run lint:fix\` and \`npm run format\` to fix issues" >> $GITHUB_STEP_SUMMARY
+          echo "- TypeScript compilation and build process are fully functional" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Pipeline completed at:** $(date)" >> $GITHUB_STEP_SUMMARY
+
+  # Job 2: Testing (Future implementation when tests are added)
+  # test:
+  #   name: Run Tests
+  #   runs-on: ubuntu-latest
+  #   needs: [build]
+  #   steps:
+  #     - name: Run unit tests
+  #       run: npm test
+  #     - name: Run E2E tests
+  #       run: npm run test:e2e
+
+  # Job 3: Security Audit
   security:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -69,10 +144,21 @@ jobs:
         run: npm ci
 
       - name: Run npm audit
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
+        run: |
+          echo "🔒 Running security audit..."
+          
+          # Run audit and capture output
+          if npm audit --audit-level=moderate; then
+            echo "✅ No security vulnerabilities found"
+          else
+            echo "⚠️  Security vulnerabilities detected"
+            echo "📊 Audit summary:"
+            npm audit --audit-level=moderate --json | jq '.metadata.vulnerabilities' || true
+            echo "ℹ️  Run 'npm audit fix' to address fixable issues"
+            # Don't fail CI for audit issues, but log them
+          fi
 
-  # Job 3: Docker Build (for releases)
+  # Job 4: Docker Build (for releases)
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
@@ -107,7 +193,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      - name: Build Docker image (no push on error)
+      - name: Build and test Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -116,9 +202,29 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-        continue-on-error: true
+          
+      - name: Test Docker image health
+        run: |
+          # Start container in background
+          docker run -d --name test-app -p 3000:3000 $(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          
+          # Wait for startup
+          sleep 10
+          
+          # Test health endpoint
+          if curl -f http://localhost:3000/api/health; then
+            echo "✅ Health check passed"
+          else
+            echo "❌ Health check failed"
+            docker logs test-app
+            exit 1
+          fi
+          
+          # Cleanup
+          docker stop test-app
+          docker rm test-app
 
-  # Job 4: Release
+  # Job 5: Release
   release:
     name: Create Release
     runs-on: ubuntu-latest
