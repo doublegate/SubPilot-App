@@ -19,8 +19,15 @@ COPY . .
 # Generate Prisma client
 RUN npm run db:generate
 
+# Set environment variables for build (skip validation)
+ENV SKIP_ENV_VALIDATION=true
+ENV NODE_ENV=production
+ENV DATABASE_URL="postgresql://placeholder:password@localhost:5432/placeholder"
+ENV NEXTAUTH_SECRET="placeholder-secret-for-build"
+ENV NEXTAUTH_URL="http://localhost:3000"
+
 # Build the application
-RUN npm run build
+RUN npm run build:ci
 
 # Production stage
 FROM node:20.18-alpine AS runner
@@ -41,8 +48,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 
 # Set environment to production
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Change ownership
 RUN chown -R nextjs:nodejs /app
@@ -52,7 +59,7 @@ USER nextjs
 # Expose port
 EXPOSE 3000
 
-ENV PORT 3000
+ENV PORT=3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

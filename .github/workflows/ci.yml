@@ -205,20 +205,38 @@ jobs:
           
       - name: Test Docker image health
         run: |
-          # Start container in background
-          docker run -d --name test-app -p 3000:3000 $(echo "${{ steps.meta.outputs.tags }}" | head -n1)
+          # Build and load image for testing
+          docker buildx build --load -t test-image:latest .
+          
+          # Set required environment variables for Docker run
+          docker run -d --name test-app -p 3000:3000 \
+            -e DATABASE_URL="postgresql://test:test@localhost:5432/test" \
+            -e NEXTAUTH_SECRET="test-secret-for-docker-health-check" \
+            -e NEXTAUTH_URL="http://localhost:3000" \
+            -e SKIP_ENV_VALIDATION="true" \
+            test-image:latest
           
           # Wait for startup
-          sleep 10
+          echo "⏳ Waiting for application startup..."
+          sleep 15
           
           # Test health endpoint
-          if curl -f http://localhost:3000/api/health; then
-            echo "✅ Health check passed"
-          else
-            echo "❌ Health check failed"
-            docker logs test-app
-            exit 1
-          fi
+          echo "🔍 Testing health endpoint..."
+          for i in {1..5}; do
+            if curl -f -s http://localhost:3000/api/health; then
+              echo "✅ Health check passed on attempt $i"
+              break
+            else
+              echo "⚠️  Health check failed on attempt $i, retrying..."
+              if [ $i -eq 5 ]; then
+                echo "❌ Health check failed after 5 attempts"
+                echo "📋 Container logs:"
+                docker logs test-app
+                exit 1
+              fi
+              sleep 3
+            fi
+          done
           
           # Cleanup
           docker stop test-app

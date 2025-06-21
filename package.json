@@ -112,10 +112,10 @@
   },
   "engines": {
     "node": ">=20.18.0",
-    "npm": ">=10.9.0"
+    "npm": ">=10.8.0"
   },
   "ct3aMetadata": {
     "initVersion": "7.25.2"
   },
-  "packageManager": "npm@10.9.0"
+  "packageManager": "npm@10.8.0"
 }
