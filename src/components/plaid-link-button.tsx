@@ -25,11 +25,19 @@ export function PlaidLinkButton({
   const [isLoading, setIsLoading] = useState(false);
 
   // Get link token from API
-  const { data: linkTokenData, isLoading: isTokenLoading } =
+  const { data: linkTokenData, isLoading: isTokenLoading, error: tokenError } =
     api.plaid.createLinkToken.useQuery(undefined, {
       retry: false,
       refetchOnWindowFocus: false,
     });
+
+  // Debug logging
+  if (tokenError) {
+    console.error('Link token error:', tokenError);
+  }
+  if (linkTokenData) {
+    console.log('Link token received:', linkTokenData.linkToken ? 'Yes' : 'No');
+  }
 
   // Exchange public token mutation
   const exchangePublicToken = api.plaid.exchangePublicToken.useMutation({
@@ -92,7 +100,24 @@ export function PlaidLinkButton({
   }, [ready, open, isLoading]);
 
   const isButtonDisabled =
-    !ready || isTokenLoading || isLoading || !linkTokenData;
+    !ready || isTokenLoading || isLoading || !linkTokenData || !!tokenError;
+
+  if (tokenError) {
+    return (
+      <div className="text-center">
+        <p className="mb-2 text-sm text-red-600">
+          Unable to connect to Plaid. Please check your configuration.
+        </p>
+        <Button
+          onClick={() => window.location.reload()}
+          variant="outline"
+          size="sm"
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <Button

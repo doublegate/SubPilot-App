@@ -1,166 +1,228 @@
-import { Suspense } from 'react';
+'use client';
+
 import { DashboardStats } from '@/components/dashboard-stats';
 import { SubscriptionList } from '@/components/subscription-list';
 import { BankConnectionCard } from '@/components/bank-connection-card';
+import { PlaidLinkButton } from '@/components/plaid-link-button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { api } from '@/trpc/server';
-import { auth } from '@/server/auth';
+import { api } from '@/trpc/react';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
-async function DashboardContent() {
-  // Get session once (layout already ensures auth)
-  const session = await auth();
+export default function DashboardPage() {
+  const router = useRouter();
+  const { data: session } = useSession();
 
-  try {
-    // Fetch all data in parallel
-    const [stats, subscriptions, plaidItems, notificationData] =
-      await Promise.all([
-        api.subscriptions.getStats(),
-        api.subscriptions.getAll({ limit: 6 }),
-        api.plaid.getAccounts(),
-        api.notifications.getUnreadCount(),
-      ]);
+  // Fetch all data
+  const { data: stats, isLoading: statsLoading } = api.subscriptions.getStats.useQuery();
+  const { data: subscriptionsData, isLoading: subsLoading } = api.subscriptions.getAll.useQuery({ limit: 6 });
+  const { data: plaidItems, isLoading: plaidLoading, refetch: refetchPlaid } = api.plaid.getAccounts.useQuery();
+  const { data: notificationData } = api.notifications.getUnreadCount.useQuery();
 
-    const notifications = notificationData.count;
+  // Mutations
+  const syncMutation = api.plaid.syncTransactions.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      refetchPlaid();
+      router.refresh();
+    },
+    onError: (error) => {
+      toast.error('Failed to sync: ' + error.message);
+    },
+  });
 
-    // Calculate upcoming renewals (next 30 days)
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+  const disconnectMutation = api.plaid.disconnectAccount.useMutation({
+    onSuccess: () => {
+      toast.success('Bank disconnected successfully');
+      refetchPlaid();
+    },
+    onError: (error) => {
+      toast.error('Failed to disconnect: ' + error.message);
+    },
+  });
 
-    const upcomingRenewals = subscriptions.subscriptions.filter(sub => {
-      if (!sub.nextBilling) return false;
-      return new Date(sub.nextBilling) <= thirtyDaysFromNow;
-    }).length;
+  // Detect subscriptions after sync
+  const detectSubscriptions = api.subscriptions.detectSubscriptions.useMutation({
+    onSuccess: (data) => {
+      if (data.created > 0) {
+        toast.success(`Detected ${data.created} new subscriptions!`);
+        router.refresh();
+      }
+    },
+  });
 
-    const dashboardStats = {
-      totalActive: stats.totalActive,
-      monthlySpend: stats.monthlySpend,
-      yearlySpend: stats.yearlySpend,
-      percentageChange: 0, // TODO: Calculate from historical data
-      upcomingRenewals,
-      unusedSubscriptions: 0, // TODO: Implement unused subscription detection
-    };
+  const handleSync = async (institutionName: string) => {
+    const accounts = plaidItems?.filter(acc => acc.institution.name === institutionName);
+    if (!accounts || accounts.length === 0) return;
 
-    return (
-      <div className="space-y-8">
-        {/* Quick Actions */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back, {session?.user?.name ?? session?.user?.email}!
-              Here&apos;s your subscription overview.
-            </p>
-          </div>
-          {notifications > 0 && (
-            <div className="flex items-center gap-2 rounded-lg bg-cyan-50 px-3 py-2 text-sm text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-400">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
-              </span>
-              {notifications} new notification{notifications !== 1 ? 's' : ''}
-            </div>
-          )}
-        </div>
+    // Find the plaid item ID (all accounts from same institution share the same plaid item)
+    const plaidItemId = accounts[0]?.id;
+    if (!plaidItemId) return;
 
-        {/* Stats Overview */}
-        <DashboardStats stats={dashboardStats} />
+    // First sync transactions
+    const result = await syncMutation.mutateAsync({});
+    
+    // Then detect subscriptions from the new transactions
+    if (result.totalNewTransactions > 0) {
+      await detectSubscriptions.mutateAsync({});
+    }
+  };
 
-        {/* Bank Connections */}
-        <section>
-          <h2 className="mb-4 text-xl font-semibold">Bank Connections</h2>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {plaidItems.length > 0 ? (
-              plaidItems.map(account => (
-                <BankConnectionCard
-                  key={account.id}
-                  connection={{
-                    id: account.id,
-                    institutionName: account.institution.name,
-                    accountCount: 1,
-                    lastSync: account.lastSync,
-                    status: account.isActive ? 'connected' : 'error',
-                    error: account.isActive
-                      ? undefined
-                      : 'Account disconnected',
-                  }}
-                />
-              ))
-            ) : (
-              <BankConnectionCard
-                connection={{
-                  id: 'add-new',
-                  institutionName: 'Connect Your Bank',
-                  accountCount: 0,
-                  lastSync: null,
-                  status: 'connected',
-                }}
-              />
-            )}
-          </div>
-        </section>
+  const handleDisconnect = async (institutionName: string) => {
+    const accounts = plaidItems?.filter(acc => acc.institution.name === institutionName);
+    if (!accounts || accounts.length === 0) return;
 
-        {/* Recent Subscriptions */}
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Active Subscriptions</h2>
-            <a
-              href="/subscriptions"
-              className="text-sm text-muted-foreground hover:text-primary"
-            >
-              View all →
-            </a>
-          </div>
-          {subscriptions.subscriptions.length > 0 ? (
-            <SubscriptionList
-              subscriptions={subscriptions.subscriptions.map(sub => ({
-                id: sub.id,
-                name: sub.name,
-                amount: sub.amount,
-                currency: sub.currency,
-                frequency: sub.frequency as
-                  | 'monthly'
-                  | 'yearly'
-                  | 'weekly'
-                  | 'quarterly',
-                nextBilling: sub.nextBilling,
-                status: sub.isActive
-                  ? ('active' as const)
-                  : ('cancelled' as const),
-                category: sub.category,
-              }))}
-            />
-          ) : (
-            <div className="rounded-lg border border-dashed p-8 text-center">
-              <p className="text-muted-foreground">
-                No subscriptions detected yet. Connect a bank account to get
-                started.
-              </p>
-            </div>
-          )}
-        </section>
-      </div>
-    );
-  } catch (error) {
-    console.error('Dashboard error:', error);
+    const firstAccount = accounts[0];
+    if (!firstAccount) return;
 
-    // Fallback UI for when data fetching fails
-    return (
-      <div className="space-y-8">
+    // We need to find the plaid item ID from the accounts
+    // For now, we'll need to pass the account ID and let the backend figure it out
+    // TODO: Update the API to accept institution-based disconnect
+    toast.info('Disconnect functionality will be available soon');
+  };
+
+  if (statsLoading || subsLoading || plaidLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  const notifications = notificationData?.count ?? 0;
+
+  // Calculate upcoming renewals (next 30 days)
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+  const upcomingRenewals = subscriptionsData?.subscriptions.filter(sub => {
+    if (!sub.nextBilling) return false;
+    return new Date(sub.nextBilling) <= thirtyDaysFromNow;
+  }).length ?? 0;
+
+  const dashboardStats = {
+    totalActive: stats?.totalActive ?? 0,
+    monthlySpend: stats?.monthlySpend ?? 0,
+    yearlySpend: stats?.yearlySpend ?? 0,
+    percentageChange: 0, // TODO: Calculate from historical data
+    upcomingRenewals,
+    unusedSubscriptions: 0, // TODO: Implement unused subscription detection
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Quick Actions */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back{session?.user?.name ? `, ${session.user.name}` : ''}!
+            Welcome back, {session?.user?.name ?? session?.user?.email}!
+            Here&apos;s your subscription overview.
           </p>
         </div>
-
-        <div className="rounded-lg border border-dashed p-8 text-center">
-          <p className="text-muted-foreground">
-            Unable to load dashboard data. Please try refreshing the page.
-          </p>
-        </div>
+        {notifications > 0 && (
+          <div className="flex items-center gap-2 rounded-lg bg-cyan-50 px-3 py-2 text-sm text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-400">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
+            </span>
+            {notifications} new notification{notifications !== 1 ? 's' : ''}
+          </div>
+        )}
       </div>
-    );
-  }
+
+      {/* Stats Overview */}
+      <DashboardStats stats={dashboardStats} />
+
+      {/* Bank Connections */}
+      <section>
+        <h2 className="mb-4 text-xl font-semibold">Bank Connections</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {plaidItems && plaidItems.length > 0 ? (
+            <>
+              {/* Group accounts by institution */}
+              {Object.entries(
+                plaidItems.reduce((acc, account) => {
+                  const instName = account.institution.name;
+                  if (!acc[instName]) {
+                    acc[instName] = [];
+                  }
+                  acc[instName]!.push(account);
+                  return acc;
+                }, {} as Record<string, typeof plaidItems>)
+              ).map(([institutionName, accounts]) => (
+                <BankConnectionCard
+                  key={institutionName}
+                  connection={{
+                    id: accounts[0]!.id,
+                    institutionName,
+                    accountCount: accounts.length,
+                    lastSync: accounts[0]!.lastSync,
+                    status: 'connected',
+                  }}
+                  onSync={() => handleSync(institutionName)}
+                  onDisconnect={() => handleDisconnect(institutionName)}
+                />
+              ))}
+              <div className="flex items-center justify-center rounded-lg border-2 border-dashed p-8">
+                <div className="text-center">
+                  <h3 className="mb-2 text-lg font-semibold">Add another bank</h3>
+                  <PlaidLinkButton className="mt-2" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="col-span-full flex items-center justify-center rounded-lg border-2 border-dashed p-8">
+              <div className="text-center">
+                <h3 className="mb-2 text-lg font-semibold">No banks connected</h3>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Connect your bank account to start tracking subscriptions
+                </p>
+                <PlaidLinkButton />
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Recent Subscriptions */}
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Active Subscriptions</h2>
+          <a
+            href="/subscriptions"
+            className="text-sm text-muted-foreground hover:text-primary"
+          >
+            View all →
+          </a>
+        </div>
+        {subscriptionsData && subscriptionsData.subscriptions.length > 0 ? (
+          <SubscriptionList
+            subscriptions={subscriptionsData.subscriptions.map(sub => ({
+              id: sub.id,
+              name: sub.name,
+              amount: sub.amount,
+              currency: sub.currency,
+              frequency: sub.frequency as
+                | 'monthly'
+                | 'yearly'
+                | 'weekly'
+                | 'quarterly',
+              nextBilling: sub.nextBilling,
+              status: sub.isActive
+                ? ('active' as const)
+                : ('cancelled' as const),
+              category: sub.category,
+            }))}
+          />
+        ) : (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <p className="text-muted-foreground">
+              No subscriptions detected yet. Connect a bank account to get
+              started.
+            </p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
 }
 
 function DashboardSkeleton() {
@@ -186,13 +248,5 @@ function DashboardSkeleton() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function DashboardPage() {
-  return (
-    <Suspense fallback={<DashboardSkeleton />}>
-      <DashboardContent />
-    </Suspense>
   );
 }

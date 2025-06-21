@@ -202,6 +202,24 @@ export const plaidRouter = createTRPCRouter({
               })),
               skipDuplicates: true,
             });
+            
+            // Run subscription detection on initial transactions
+            try {
+              const { SubscriptionDetector } = await import('@/server/services/subscription-detector');
+              const detector = new SubscriptionDetector(ctx.db);
+              
+              const results = await detector.detectUserSubscriptions(ctx.session.user.id);
+              
+              if (results.length > 0) {
+                await detector.createSubscriptionsFromDetection(
+                  ctx.session.user.id,
+                  results
+                );
+              }
+            } catch (detectError) {
+              console.error('Failed to detect subscriptions:', detectError);
+              // Don't fail the connection if detection fails
+            }
           }
         } catch (txnError) {
           console.error('Failed to fetch initial transactions:', txnError);
@@ -410,7 +428,38 @@ export const plaidRouter = createTRPCRouter({
         }
       }
 
-      // TODO: Run subscription detection algorithm on new transactions
+      // Run subscription detection algorithm on new transactions
+      if (totalNewTransactions > 0) {
+        try {
+          const { SubscriptionDetector } = await import('@/server/services/subscription-detector');
+          const detector = new SubscriptionDetector(ctx.db);
+          
+          const results = await detector.detectUserSubscriptions(ctx.session.user.id);
+          
+          if (results.length > 0) {
+            await detector.createSubscriptionsFromDetection(
+              ctx.session.user.id,
+              results
+            );
+            
+            const newSubscriptionsCount = results.filter(r => r.isSubscription).length;
+            if (newSubscriptionsCount > 0) {
+              await ctx.db.notification.create({
+                data: {
+                  userId: ctx.session.user.id,
+                  type: 'new_subscription',
+                  title: 'New subscriptions detected! 🔍',
+                  message: `We found ${newSubscriptionsCount} recurring payment${newSubscriptionsCount > 1 ? 's' : ''} in your transactions.`,
+                  scheduledFor: new Date(),
+                },
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Failed to run subscription detection:', error);
+          // Don't fail the sync if detection fails
+        }
+      }
 
       return {
         success: true,
