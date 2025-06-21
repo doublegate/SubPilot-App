@@ -29,6 +29,7 @@ export default function RootLayout({
       <body className="font-sans">
         <TRPCReactProvider>
           {children}
+          <Analytics />
         </TRPCReactProvider>
       </body>
     </html>
