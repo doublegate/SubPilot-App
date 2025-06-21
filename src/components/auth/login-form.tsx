@@ -78,25 +78,86 @@ export function LoginForm() {
         </div>
       </div>
 
-      <form className="grid gap-2">
-        <input
-          type="email"
-          placeholder="Email"
-          className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={isLoading}
-        />
-        <button
-          type="submit"
-          className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            "Sign in with Email"
-          )}
-        </button>
-      </form>
+      <EmailForm isLoading={isLoading} />
     </div>
+  )
+}
+
+function EmailForm({ isLoading }: { isLoading: boolean }) {
+  const [email, setEmail] = useState("")
+  const [isEmailSent, setIsEmailSent] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const result = await signIn("email", {
+        email,
+        redirect: false,
+        callbackUrl: "/dashboard",
+      })
+
+      if (result?.error) {
+        console.error("Email sign-in failed:", result.error)
+      } else {
+        setIsEmailSent(true)
+      }
+    } catch (error) {
+      console.error("Email sign-in error:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (isEmailSent) {
+    return (
+      <div className="text-center space-y-4">
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+          <h3 className="font-medium text-green-800">Check your email!</h3>
+          <p className="mt-1 text-sm text-green-700">
+            We've sent a magic link to <span className="font-medium">{email}</span>
+          </p>
+        </div>
+        <p className="text-sm text-gray-600">
+          Click the link in your email to sign in. The link will expire in 24 hours.
+        </p>
+        <button
+          onClick={() => {
+            setIsEmailSent(false)
+            setEmail("")
+          }}
+          className="text-sm font-medium text-cyan-600 hover:text-cyan-700"
+        >
+          Try a different email
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleEmailSubmit} className="grid gap-2">
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        required
+        className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={isLoading || isSubmitting}
+      />
+      <button
+        type="submit"
+        className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+        disabled={isLoading || isSubmitting}
+      >
+        {isSubmitting ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+        ) : (
+          "Send magic link"
+        )}
+      </button>
+    </form>
   )
 }

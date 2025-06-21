@@ -21,7 +21,7 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
-> **Current Status**: Active development (Phase 1 - MVP) | Version 0.1.0-dev | [View Changelog](./CHANGELOG.md)
+> **Current Status**: Active development (Phase 1 - MVP) | Version 0.1.0-dev | Last Updated: 2025-06-21 | [View Changelog](./CHANGELOG.md)
 
 ## 🎯 Key Features
 
@@ -223,37 +223,44 @@ Comprehensive documentation is available in the [`docs/`](./docs) directory:
 <details open>
 <summary><b>Phase 1: MVP Features</b> 🚧 In Progress (Week 1 of 4)</summary>
 
-### Week 1: Foundation (Current)
+### Week 1: Foundation ✅ (90% Complete)
 
-- ✅ App Router structure
-- ✅ Authentication setup (Auth.js)
-- ✅ UI component library (shadcn/ui)
-- ✅ Basic layouts and pages
+- ✅ App Router structure with all pages
+- ✅ Authentication setup (Auth.js v5)
+- ✅ OAuth providers (Google & GitHub)
+- ✅ Magic link email authentication
+- ✅ UI component library (shadcn/ui - 13 components)
+- ✅ User profile and settings pages
+- ✅ Navigation with user dropdown
+- ✅ Middleware route protection
 - ✅ tRPC API configuration
 - ✅ Dashboard foundation
-- [ ] Database migrations
-- [ ] OAuth provider configuration
+- [ ] Database migration (PostgreSQL server required)
+- [ ] Production OAuth credentials
 
-### Week 2: Core Features
+### Week 2: Bank Integration (Starting)
 
-- [ ] Plaid integration
+- [ ] Plaid sandbox setup
+- [ ] Bank connection flow
 - [ ] Transaction import
-- [ ] Subscription detection
-- [ ] Basic dashboard
+- [ ] Subscription detection algorithm
+- [ ] Enhanced dashboard
 
-### Week 3: User Features
+### Week 3: Subscription Management
 
-- [ ] Subscription management
+- [ ] Subscription CRUD operations
 - [ ] Cost analytics
 - [ ] Email notifications
-- [ ] User settings
+- [ ] Notification preferences
+- [ ] Renewal reminders
 
 ### Week 4: Polish & Testing
 
-- [ ] Comprehensive testing
+- [ ] Unit and integration tests
+- [ ] E2E test suite
 - [ ] Performance optimization
-- [ ] Bug fixes
-- [ ] Documentation updates
+- [ ] Security audit
+- [ ] Documentation finalization
 
 </details>
 

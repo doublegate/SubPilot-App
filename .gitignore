@@ -135,6 +135,7 @@ Desktop.ini
 .config/claude/
 .config/ghostty/
 .roo/
+CLAUDE.local.md
 
 # Package managers
 pnpm-lock.yaml
