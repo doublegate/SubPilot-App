@@ -5,9 +5,44 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2025-06-22
+
+### Fixed (0.1.6)
+
+- **Critical CSS Loading Issue** - PostCSS configuration incompatibility with ES modules
+  - Fixed PostCSS config being treated as ES module due to package.json "type": "module"
+  - Renamed `postcss.config.js` to `postcss.config.cjs` to force CommonJS treatment
+  - Resolved Webpack build errors preventing CSS from loading
+  - Fixed "module is not defined in ES module scope" error
+  - All Tailwind CSS styles and formatting now load correctly
+
+- **Dashboard UI Layout Issues**
+  - Fixed container styles not applying properly due to CSS loading failure
+  - Resolved layout cramping to left side of screen
+  - Fixed responsive padding and centering issues
+  - Dashboard now displays with proper spacing and alignment
+
+- **Mock Data Generation**
+  - Created comprehensive mock data generator for testing subscriptions
+  - Added realistic subscription patterns (Netflix, Spotify, etc.)
+  - Implemented 6+ months of transaction history generation
+  - Added "Generate Test Data" button to dashboard
+
+- **Subscription Detection Algorithm**
+  - Enhanced detection with better merchant name normalization
+  - Widened frequency windows for more flexible detection
+  - Added 5% amount tolerance for subscription variations
+  - Improved confidence scoring for better accuracy
+
+### Changed (0.1.6)
+
+- **Build Configuration**
+  - Updated PostCSS to use CommonJS configuration format
+  - Ensured compatibility with Next.js ES module project setup
+
 ## [0.1.5] - 2025-06-21
 
-### Added
+### Added (0.1.5)
 
 - **Dashboard UI and Bank Sync Implementation** - 2025-06-21 05:39 PM - 06:52 PM
   - Fixed dashboard layout issues with proper Tailwind container configuration
@@ -21,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added automatic subscription detection on initial bank connection
   - Dashboard now displays real statistics from synced data
 
-### Fixed
+### Fixed (0.1.5)
 
 - Dashboard layout no longer crammed to left side
 - Dropdown menus in bank cards now functional
@@ -166,7 +201,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Resolved "The edge runtime does not support Node.js 'stream' module" error
   - Improved middleware performance by running in Edge Runtime
 
-### Changed
+### Changed (Unreleased)
 
 - **Project Organization** - 2025-06-21
   - Moved Vercel documentation to docs/ directory

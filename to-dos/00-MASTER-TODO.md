@@ -9,8 +9,8 @@
 - **Phase 2**: 📋 Planned (Advanced Features)
 - **Phase 3**: 📋 Planned (Automation)
 - **Phase 4**: 📋 Planned (Launch)
-- **Current Version**: v0.1.5 (Released 2025-06-21)
-- **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) (Bank sync working, subscriptions detected)
+- **Current Version**: v0.1.6 (Released 2025-06-22)
+- **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) (Bank sync working, subscriptions detected, CSS fixed)
 
 ## 🎯 Current Sprint Focus
 
@@ -74,6 +74,9 @@
 - [x] Automatic subscription detection algorithm
 - [x] Dashboard UI fixes and real-time updates
 - [x] Test framework restored (83.2% pass rate)
+- [x] **CSS Loading Fix** (v0.1.6) - Fixed critical styling issue
+- [x] Dashboard improvements and statistics display
+- [x] Enhanced mock data generator with realistic subscriptions
 
 ## 🐛 Known Issues & Blockers
 
@@ -146,6 +149,6 @@
 
 ---
 
-Last Updated: 2025-06-21 05:39 PM EDT
+Last Updated: 2025-06-22 02:28 PM EDT
 Next Review: 2025-06-28
-Current Status: Week 2 at 85% complete - Test framework fully restored with 83.2% pass rate (exceeded 80% target) + Phase 1 at 63.75% overall completion
+Current Status: Week 2 complete with v0.1.6 maintenance release - Critical CSS issue resolved, dashboard fully functional

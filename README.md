@@ -24,20 +24,29 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
-> **Current Status**: Active Development (Phase 1 - MVP, 70% Complete) | Version 0.1.5 | **Live Demo Available** | Last Updated: 2025-06-21 07:21 PM EDT | [View Changelog](./CHANGELOG.md)  
+> **Current Status**: Active Development (Phase 1 - MVP, 70% Complete) | Version 0.1.6 | **Live Demo Available** | Last Updated: 2025-06-22 02:28 PM EDT | [View Changelog](./CHANGELOG.md)
 > **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) - Bank sync working, subscription detection active, real-time dashboard
 
-## 🔥 Recent Updates (v0.1.5 - June 21, 2025)
+## 🔥 Recent Updates (v0.1.6 - June 22, 2025)
 
-### 🎉 Major Features
+### 🎉 v0.1.6 Maintenance Release
+
+- ✅ **CSS Loading Fix** - Resolved critical issue preventing styles from loading
+- ✅ **Dashboard Improvements** - Fixed statistics display and data consistency
+- ✅ **Mock Data Enhancements** - More realistic test subscriptions and amounts
+- ✅ **Build System** - Optimized CSS output configuration
+- ✅ **Development Experience** - Improved local development workflow
+
+### 📊 v0.1.5 Major Features (June 21, 2025)
+
 - ✅ **Complete Bank Synchronization** - Plaid integration with automatic transaction import
 - ✅ **Automatic Subscription Detection** - Intelligent pattern matching algorithm
 - ✅ **Dashboard Overhaul** - Fixed UI issues, real-time data updates
 - ✅ **Enhanced Security** - Content Security Policy fixes for Plaid
-- ✅ **Improved UX** - Toast notifications, loading states, error boundaries
 - ✅ **Test Coverage** - Maintained 83.2% pass rate (89/107 tests)
 
 ### 📊 Progress Metrics
+
 - **Phase 1 Progress**: 70% complete (Weeks 1-2 done)
 - **Story Points**: 65+ completed (162.5% velocity)
 - **Components**: 20+ React components
@@ -47,6 +56,7 @@ SubPilot is a modern, intelligent subscription management platform that automati
 ## 🎯 Key Features
 
 ### Currently Working ✅
+
 - 🏦 **Bank Account Connection** - Connect via Plaid Link
 - 🔄 **Transaction Synchronization** - Import 30+ days of history
 - 🔍 **Subscription Detection** - Automatic recurring payment identification
@@ -56,12 +66,14 @@ SubPilot is a modern, intelligent subscription management platform that automati
 - 💾 **Data Persistence** - PostgreSQL with Prisma ORM
 
 ### In Development 🚧
+
 - 📧 **Email Notifications** - Renewal reminders (Week 3)
 - 🚫 **Cancellation Assistance** - Guided workflows (Week 3)
 - 📈 **Spending Analytics** - Detailed insights (Week 3)
 - 🔍 **Advanced Search** - Filter and find subscriptions (Week 3)
 
 ### Planned Features 📋
+
 - 🤖 **AI Insights** - Personalized recommendations
 - 📱 **Mobile Apps** - iOS and Android native apps
 - 🔄 **Auto-Cancel** - Rule-based cancellations
@@ -75,6 +87,7 @@ SubPilot is a modern, intelligent subscription management platform that automati
 <td width="50%">
 
 ### Frontend
+
 - **[Next.js 15.1.8](https://nextjs.org/)** - React framework with App Router
 - **[TypeScript 5.x](https://www.typescriptlang.org/)** - Type safety
 - **[Tailwind CSS 3.4](https://tailwindcss.com/)** - Utility-first styling
@@ -87,6 +100,7 @@ SubPilot is a modern, intelligent subscription management platform that automati
 <td width="50%">
 
 ### Backend
+
 - **[tRPC v11](https://trpc.io/)** - Type-safe APIs
 - **[Prisma 6.2](https://www.prisma.io/)** - Next-gen ORM
 - **[PostgreSQL](https://www.postgresql.org/)** - Database
@@ -100,6 +114,7 @@ SubPilot is a modern, intelligent subscription management platform that automati
 </table>
 
 ### Infrastructure & DevOps
+
 - **[Vercel](https://vercel.com/)** - Hosting & Edge Functions
 - **[Neon](https://neon.tech/)** - Serverless PostgreSQL
 - **[GitHub Actions](https://github.com/features/actions)** - CI/CD
@@ -110,6 +125,7 @@ SubPilot is a modern, intelligent subscription management platform that automati
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - **Node.js** 20.18+ (Required for Next.js 15)
 - **npm** 10.8+
 - **PostgreSQL** 15+ (or use Neon cloud)
@@ -118,6 +134,7 @@ SubPilot is a modern, intelligent subscription management platform that automati
 ### Quick Start (5 minutes)
 
 1. **Clone and install**
+
    ```bash
    git clone https://github.com/doublegate/SubPilot-App.git
    cd SubPilot-App
@@ -125,19 +142,21 @@ SubPilot is a modern, intelligent subscription management platform that automati
    ```
 
 2. **Set up environment**
+
    ```bash
    cp .env.example .env.local
    ```
 
 3. **Configure minimum required variables in `.env.local`**
+
    ```env
    # Database (use Neon for quick setup)
    DATABASE_URL="postgresql://..."
-   
+
    # Auth.js (generate with: openssl rand -base64 32)
    NEXTAUTH_SECRET="your-secret-here"
    NEXTAUTH_URL="http://localhost:3000"
-   
+
    # Plaid (get from dashboard.plaid.com)
    PLAID_CLIENT_ID="your-client-id"
    PLAID_SECRET="your-secret"
@@ -147,11 +166,13 @@ SubPilot is a modern, intelligent subscription management platform that automati
    ```
 
 4. **Initialize database**
+
    ```bash
    npm run db:push
    ```
 
 5. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -160,29 +181,35 @@ SubPilot is a modern, intelligent subscription management platform that automati
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ### Detailed Setup Guide
+
 For comprehensive setup instructions including OAuth configuration, see our [Development Setup Guide](./docs/DEVELOPMENT_SETUP.md).
 
 ## 🎉 Latest Release
 
-### v0.1.5 - Bank Sync & Dashboard (2025-06-21)
+### v0.1.6 - Maintenance Release (2025-06-22)
 
-**Major Features:**
+**Fixes and Improvements:**
+
+- ✅ Fixed critical CSS loading issue
+- ✅ Dashboard statistics display improvements
+- ✅ Enhanced mock data generator
+- ✅ Build system optimizations
+- ✅ Development workflow improvements
+
+**Previous Release: v0.1.5 - Bank Sync & Dashboard (2025-06-21)**
+
 - ✅ Complete Plaid bank integration
 - ✅ Automatic subscription detection algorithm
 - ✅ Real-time dashboard with live data
 - ✅ Fixed all UI layout issues
 - ✅ Enhanced security and error handling
 
-**Download Options:**
-- **Source Code**: [`subpilot-v0.1.5-source.tar.gz`](https://github.com/doublegate/SubPilot-App/releases/download/v0.1.5/subpilot-v0.1.5-source.tar.gz) (4 MB)
-- **Production Build**: [`subpilot-v0.1.5-build.tar.gz`](https://github.com/doublegate/SubPilot-App/releases/download/v0.1.5/subpilot-v0.1.5-build.tar.gz) (58 MB)
-- **Docker Image**: [`subpilot-v0.1.5-docker.tar.gz`](https://github.com/doublegate/SubPilot-App/releases/download/v0.1.5/subpilot-v0.1.5-docker.tar.gz) (101 MB)
-
-[View Release Notes](https://github.com/doublegate/SubPilot-App/releases/tag/v0.1.5) | [Full Changelog](./CHANGELOG.md)
+[View Release Notes](https://github.com/doublegate/SubPilot-App/releases/tag/v0.1.6) | [Full Changelog](./CHANGELOG.md)
 
 ## 📚 Documentation
 
 ### Essential Guides
+
 - 📖 [Quick Start Guide](./docs/QUICK-REFERENCE.md) - Get running in 5 minutes
 - 🏗️ [Architecture Overview](./docs/ARCHITECTURE.md) - System design
 - 🔐 [Authentication Guide](./docs/AUTHENTICATION.md) - Auth implementation
@@ -191,11 +218,13 @@ For comprehensive setup instructions including OAuth configuration, see our [Dev
 - 🚀 [Deployment Guide](./docs/VERCEL-DEPLOYMENT.md) - Production deploy
 
 ### API Documentation
+
 - [tRPC API Reference](./docs/API_REFERENCE.md) - All endpoints
 - [Database Schema](./docs/DATABASE_DESIGN.md) - Data models
 - [Environment Variables](./config/ENV_SETUP.md) - Configuration
 
 ### Development Resources
+
 - [Contributing Guide](./CONTRIBUTING.md) - How to contribute
 - [Project Status](./docs/PROJECT-STATUS.md) - Current progress
 - [Phase Roadmap](./docs/PROJECT_ROADMAP.md) - Development timeline
@@ -208,6 +237,7 @@ For comprehensive setup instructions including OAuth configuration, see our [Dev
 <summary><b>Current Sprint - Week 3: Email & Subscriptions</b></summary>
 
 **Starting Monday, June 24, 2025**
+
 - [ ] Email notification system
 - [ ] Subscription management UI
 - [ ] Cancellation workflows
@@ -220,6 +250,7 @@ For comprehensive setup instructions including OAuth configuration, see our [Dev
 <summary><b>✅ Week 1-2 Completed Features</b></summary>
 
 **Week 1: Foundation (100% Complete)**
+
 - ✅ Complete authentication system (OAuth + Magic Links)
 - ✅ 15+ UI components with shadcn/ui
 - ✅ All 6 API routers (35+ endpoints)
@@ -228,6 +259,7 @@ For comprehensive setup instructions including OAuth configuration, see our [Dev
 - ✅ Live Vercel deployment
 
 **Week 2: Bank Integration (100% Complete)**
+
 - ✅ Plaid integration
 - ✅ Transaction sync
 - ✅ Subscription detection
@@ -314,12 +346,14 @@ npm run clean        # Clean build artifacts
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 1. Fork this repository
 2. Import to Vercel
 3. Add environment variables
 4. Deploy!
 
 ### Docker
+
 ```bash
 # Using Docker Compose
 docker-compose up -d
@@ -336,6 +370,7 @@ See [Deployment Guide](./docs/VERCEL-DEPLOYMENT.md) for detailed instructions.
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### Quick Contribution Steps
+
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit changes (`git commit -m 'feat: add amazing feature'`)
@@ -343,6 +378,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 5. Open a Pull Request
 
 ### Development Guidelines
+
 - Use [Conventional Commits](https://www.conventionalcommits.org/)
 - Write tests for new features
 - Update relevant documentation
@@ -352,12 +388,13 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ## 🔒 Security
 
 Security is our top priority. See [SECURITY.md](SECURITY.md) for:
+
 - Vulnerability reporting
 - Security measures
 - Best practices
 - Responsible disclosure
 
-**Report vulnerabilities to**: security@subpilot.app
+**Report vulnerabilities to**: <security@subpilot.app>
 
 ## 📄 License
 

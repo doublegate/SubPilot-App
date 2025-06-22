@@ -24,11 +24,11 @@ export class SubscriptionDetector {
 
   // Time windows for frequency detection (in days)
   private readonly FREQUENCY_WINDOWS = {
-    weekly: { min: 6, max: 8, ideal: 7 },
-    biweekly: { min: 13, max: 15, ideal: 14 },
-    monthly: { min: 27, max: 33, ideal: 30 },
-    quarterly: { min: 85, max: 95, ideal: 90 },
-    yearly: { min: 355, max: 375, ideal: 365 },
+    weekly: { min: 5, max: 9, ideal: 7 },
+    biweekly: { min: 12, max: 16, ideal: 14 },
+    monthly: { min: 25, max: 35, ideal: 30 },
+    quarterly: { min: 80, max: 100, ideal: 90 },
+    yearly: { min: 350, max: 380, ideal: 365 },
   };
 
   constructor(db: PrismaClient) {
@@ -137,11 +137,17 @@ export class SubscriptionDetector {
    * Normalize merchant names to handle variations
    */
   private normalizeMerchantName(name: string): string {
-    return name
+    // Keep the original name if it's too short after normalization
+    const normalized = name
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, '') // Remove special characters
-      .replace(/\d+/g, '') // Remove numbers (often transaction IDs)
+      .trim()
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/[*#]+\d+$/, '') // Remove trailing transaction IDs like *1234 or #5678
+      .replace(/\b(inc|llc|ltd|corp|corporation|company|co)\b\.?$/i, '') // Remove company suffixes
       .trim();
+    
+    // If normalization made the name too short, use the original
+    return normalized.length < 3 ? name.trim() : normalized;
   }
 
   /**
@@ -250,19 +256,30 @@ export class SubscriptionDetector {
    */
   private calculateAmountConsistency(amounts: number[]): number {
     if (amounts.length === 0) return 0;
+    if (amounts.length === 1) return 1; // Single amount is perfectly consistent
 
     const avg = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+    
+    // Allow up to 5% variation in amounts (common for currency conversion, taxes, etc.)
+    const tolerance = avg * 0.05;
+    const withinTolerance = amounts.filter(amount => 
+      Math.abs(amount - avg) <= tolerance
+    ).length;
+    
+    // If most amounts are within tolerance, consider it highly consistent
+    const toleranceRatio = withinTolerance / amounts.length;
+    if (toleranceRatio >= 0.8) {
+      return 0.95; // Very high consistency
+    }
+    
+    // Otherwise, calculate coefficient of variation
     const variance =
       amounts.reduce((acc, amount) => acc + Math.pow(amount - avg, 2), 0) /
       amounts.length;
-
-    // Calculate coefficient of variation
     const cv = Math.sqrt(variance) / avg;
 
-    // Convert to consistency score (0-1)
-    // CV of 0 = perfect consistency (1.0)
-    // CV of 0.5 = 50% variation (0.5)
-    return Math.max(0, 1 - cv);
+    // More lenient scoring: CV of 0.1 (10% variation) still gets 0.8 score
+    return Math.max(0, 1 - (cv * 2));
   }
 
   /**

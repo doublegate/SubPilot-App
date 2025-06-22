@@ -2,8 +2,8 @@
 
 **Status**: Week 1-2 Complete ✅ | Bank Sync Working ✅ | 70% Total Progress
 **Duration**: 4 weeks  
-**Current Date**: 2025-06-21 06:52 PM EDT
-**Progress**: 70% Complete (Week 2 Complete - Bank sync, subscription detection, dashboard functional)
+**Current Date**: 2025-06-22 02:28 PM EDT
+**Progress**: 70% Complete (Week 2 Complete - Bank sync, subscription detection, dashboard fully functional with v0.1.6)
 **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)
 
 ## Goals
@@ -185,6 +185,12 @@ Build core functionality allowing users to connect bank accounts, view subscript
   - Added automatic subscription detection on sync
   - Fixed dropdown menus and bank grouping logic
   - Dashboard displays real statistics from synced data
+- [x] **v0.1.6 Maintenance Release** (2025-06-22 02:28 PM)
+  - Fixed critical CSS loading issue (css: false in Next.js config)
+  - Dashboard now displays with proper styling
+  - Enhanced mock data generator with realistic subscriptions
+  - Fixed statistics display showing correct values
+  - All UI components rendering correctly
 
 ## Week 3: Subscription Detection & Dashboard 📋
 
@@ -299,7 +305,7 @@ Build core functionality allowing users to connect bank accounts, view subscript
 
 ---
 
-**Last Updated**: 2025-06-21 05:39 PM EDT  
-**Next Review**: Week 2 Completion  
+**Last Updated**: 2025-06-22 02:28 PM EDT  
+**Next Review**: Week 3 Start (Monday)  
 **Story Points Completed**: 70+ (Week 1: 50+, Week 2: 20+)  
-**Latest Session**: Test framework restoration with 83.2% pass rate (exceeded 80% target)
+**Latest Session**: v0.1.6 maintenance release fixing critical CSS issues

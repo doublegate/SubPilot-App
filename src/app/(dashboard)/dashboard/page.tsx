@@ -15,10 +15,15 @@ export default function DashboardPage() {
   const { data: session } = useSession();
 
   // Fetch all data
-  const { data: stats, isLoading: statsLoading } = api.subscriptions.getStats.useQuery();
-  const { data: subscriptionsData, isLoading: subsLoading } = api.subscriptions.getAll.useQuery({ limit: 6 });
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = api.subscriptions.getStats.useQuery();
+  const { data: subscriptionsData, isLoading: subsLoading, refetch: refetchSubscriptions } = api.subscriptions.getAll.useQuery({ 
+    limit: 6,
+    status: 'active', // Only show active subscriptions on dashboard
+    sortBy: 'nextBilling',
+    sortOrder: 'asc'
+  });
   const { data: plaidItems, isLoading: plaidLoading, refetch: refetchPlaid } = api.plaid.getAccounts.useQuery();
-  const { data: notificationData } = api.notifications.getUnreadCount.useQuery();
+  const { data: notificationData, refetch: refetchNotifications } = api.notifications.getUnreadCount.useQuery();
 
   // Mutations
   const syncMutation = api.plaid.syncTransactions.useMutation({
@@ -29,6 +34,26 @@ export default function DashboardPage() {
     },
     onError: (error) => {
       toast.error('Failed to sync: ' + error.message);
+    },
+  });
+
+  const generateMockData = api.plaid.generateMockData.useMutation({
+    onSuccess: async (data) => {
+      toast.success(data.message);
+      // Run detection immediately after generating mock data
+      const detectionResult = await detectSubscriptions.mutateAsync({});
+      if (detectionResult.created > 0) {
+        toast.success(`Detected ${detectionResult.created} subscriptions from mock data!`);
+      }
+      // Refetch all data
+      await Promise.all([
+        refetchStats(),
+        refetchSubscriptions(),
+        refetchPlaid(),
+      ]);
+    },
+    onError: (error) => {
+      toast.error('Failed to generate mock data: ' + error.message);
     },
   });
 
@@ -44,11 +69,21 @@ export default function DashboardPage() {
 
   // Detect subscriptions after sync
   const detectSubscriptions = api.subscriptions.detectSubscriptions.useMutation({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.created > 0) {
         toast.success(`Detected ${data.created} new subscriptions!`);
-        router.refresh();
+        // Refetch all data to show new subscriptions
+        await Promise.all([
+          refetchStats(),
+          refetchSubscriptions(),
+          refetchNotifications(),
+        ]);
+      } else if (data.detected > 0) {
+        toast.info(`Analyzed ${data.detected} merchants, but no subscriptions found yet. Keep syncing for better detection!`);
       }
+    },
+    onError: (error) => {
+      toast.error('Failed to detect subscriptions: ' + error.message);
     },
   });
 
@@ -133,7 +168,18 @@ export default function DashboardPage() {
 
       {/* Bank Connections */}
       <section>
-        <h2 className="mb-4 text-xl font-semibold">Bank Connections</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Bank Connections</h2>
+          {plaidItems && plaidItems.length > 0 && (
+            <button
+              onClick={() => generateMockData.mutate()}
+              disabled={generateMockData.isPending}
+              className="text-sm text-accent-600 hover:text-accent-700 disabled:opacity-50"
+            >
+              {generateMockData.isPending ? 'Generating...' : 'Generate Test Data'}
+            </button>
+          )}
+        </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {plaidItems && plaidItems.length > 0 ? (
             <>
@@ -186,12 +232,23 @@ export default function DashboardPage() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Active Subscriptions</h2>
-          <a
-            href="/subscriptions"
-            className="text-sm text-muted-foreground hover:text-primary"
-          >
-            View all →
-          </a>
+          <div className="flex items-center gap-4">
+            {plaidItems && plaidItems.length > 0 && (
+              <button
+                onClick={() => detectSubscriptions.mutate({})}
+                disabled={detectSubscriptions.isPending}
+                className="text-sm text-cyan-600 hover:text-cyan-700 disabled:opacity-50"
+              >
+                {detectSubscriptions.isPending ? 'Detecting...' : 'Detect Subscriptions'}
+              </button>
+            )}
+            <a
+              href="/subscriptions"
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              View all →
+            </a>
+          </div>
         </div>
         {subscriptionsData && subscriptionsData.subscriptions.length > 0 ? (
           <SubscriptionList

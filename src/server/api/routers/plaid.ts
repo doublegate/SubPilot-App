@@ -17,6 +17,42 @@ import {
 
 export const plaidRouter = createTRPCRouter({
   /**
+   * Generate mock transactions for testing
+   */
+  generateMockData: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      // Check if user has any accounts
+      const accounts = await ctx.db.account.findMany({
+        where: { userId: ctx.session.user.id },
+        take: 1,
+      });
+
+      if (accounts.length === 0) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No bank accounts found. Please connect a bank first.',
+        });
+      }
+
+      const { MockDataGenerator } = await import('@/server/services/mock-data');
+      const generator = new MockDataGenerator(ctx.db);
+      
+      // Clear existing transactions first
+      await generator.clearUserTransactions(ctx.session.user.id);
+      
+      // Generate mock transactions
+      const count = await generator.generateMockTransactions(
+        ctx.session.user.id,
+        accounts[0]!.id
+      );
+
+      return {
+        success: true,
+        transactionCount: count,
+        message: `Generated ${count} mock transactions`,
+      };
+    }),
+  /**
    * Create a Link token for Plaid Link flow
    */
   createLinkToken: protectedProcedure.query(async ({ ctx }) => {
@@ -354,6 +390,8 @@ export const plaidRouter = createTRPCRouter({
             await plaidClient.transactionsGet(transactionsRequest);
           totalTransactionsSynced +=
             transactionsResponse.data.transactions.length;
+            
+          console.log(`Fetched ${transactionsResponse.data.transactions.length} transactions from Plaid`);
 
           // Map account IDs
           const accountIdMap = new Map(
@@ -362,6 +400,8 @@ export const plaidRouter = createTRPCRouter({
 
           // Store new transactions
           if (transactionsResponse.data.transactions.length > 0) {
+            console.log('Sample transaction:', transactionsResponse.data.transactions[0]);
+            
             const { count } = await ctx.db.transaction.createMany({
               data: transactionsResponse.data.transactions.map(txn => ({
                 userId: ctx.session.user.id,
@@ -383,6 +423,8 @@ export const plaidRouter = createTRPCRouter({
               skipDuplicates: true,
             });
             totalNewTransactions += count;
+            
+            console.log(`Stored ${count} new transactions in database`);
           }
 
           // Update last sync time
