@@ -1,0 +1,72 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# GitHub files
+.github
+
+# Documentation
+*.md
+docs
+ref_docs
+to-dos
+LICENSE
+
+# Development files
+.env*
+!.env.example
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test files
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+coverage
+.nyc_output
+playwright-report
+test-results
+
+# Build artifacts
+.next
+out
+dist
+build
+
+# Dependencies
+node_modules
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# Docker files (avoid recursion)
+Dockerfile*
+docker-compose*
+.dockerignore

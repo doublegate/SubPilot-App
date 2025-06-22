@@ -188,7 +188,7 @@ For comprehensive setup instructions including OAuth configuration, see our [Dev
 
 ### v0.1.6 - Maintenance Release (2025-06-22)
 
-**Fixes and Improvements:**
+### Fixes and Improvements
 
 - ✅ Fixed critical CSS loading issue
 - ✅ Dashboard statistics display improvements
@@ -196,7 +196,7 @@ For comprehensive setup instructions including OAuth configuration, see our [Dev
 - ✅ Build system optimizations
 - ✅ Development workflow improvements
 
-**Previous Release: v0.1.5 - Bank Sync & Dashboard (2025-06-21)**
+### Previous Release: v0.1.5 - Bank Sync & Dashboard (2025-06-21)
 
 - ✅ Complete Plaid bank integration
 - ✅ Automatic subscription detection algorithm
@@ -236,7 +236,7 @@ For comprehensive setup instructions including OAuth configuration, see our [Dev
 <details open>
 <summary><b>Current Sprint - Week 3: Email & Subscriptions</b></summary>
 
-**Starting Monday, June 24, 2025**
+### Starting Monday, June 24, 2025
 
 - [ ] Email notification system
 - [ ] Subscription management UI
@@ -249,7 +249,7 @@ For comprehensive setup instructions including OAuth configuration, see our [Dev
 <details>
 <summary><b>✅ Week 1-2 Completed Features</b></summary>
 
-**Week 1: Foundation (100% Complete)**
+### Week 1: Foundation (100% Complete)
 
 - ✅ Complete authentication system (OAuth + Magic Links)
 - ✅ 15+ UI components with shadcn/ui
@@ -258,7 +258,7 @@ For comprehensive setup instructions including OAuth configuration, see our [Dev
 - ✅ CI/CD pipeline with Docker
 - ✅ Live Vercel deployment
 
-**Week 2: Bank Integration (100% Complete)**
+### Week 2: Bank Integration (100% Complete)
 
 - ✅ Plaid integration
 - ✅ Transaction sync
