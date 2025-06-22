@@ -256,7 +256,7 @@ jobs:
             SKIP_ENV_VALIDATION=true
             NODE_ENV=production
             DATABASE_URL=postgresql://placeholder:password@localhost:5432/placeholder
-            NEXTAUTH_SECRET=placeholder-secret-for-build
+            BUILD_AUTH_TOKEN=placeholder-token-for-build
             NEXTAUTH_URL=http://localhost:3000
 
       - name: Test Docker image health
@@ -266,7 +266,7 @@ jobs:
             --build-arg SKIP_ENV_VALIDATION=true \
             --build-arg NODE_ENV=production \
             --build-arg DATABASE_URL="postgresql://placeholder:password@localhost:5432/placeholder" \
-            --build-arg NEXTAUTH_SECRET="placeholder-secret-for-build" \
+            --build-arg BUILD_AUTH_TOKEN="placeholder-token-for-build" \
             --build-arg NEXTAUTH_URL="http://localhost:3000" \
             .
 

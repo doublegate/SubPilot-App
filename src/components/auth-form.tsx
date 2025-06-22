@@ -40,7 +40,7 @@ export function AuthForm({
       setError('');
 
       await signIn(provider, { callbackUrl });
-    } catch (error) {
+    } catch {
       setError('Failed to sign in. Please try again.');
     } finally {
       setIsLoading(false);
@@ -70,7 +70,7 @@ export function AuthForm({
       } else {
         setEmailSent(true);
       }
-    } catch (error) {
+    } catch {
       setError('Failed to send magic link. Please try again.');
     } finally {
       setIsEmailLoading(false);
@@ -86,7 +86,7 @@ export function AuthForm({
           </div>
           <CardTitle>Check your email</CardTitle>
           <CardDescription>
-            We've sent a magic link to <strong>{email}</strong>
+            We&apos;ve sent a magic link to <strong>{email}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -215,7 +215,7 @@ export function AuthForm({
             </>
           ) : (
             <>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <a
                 href="/signup"
                 className="font-medium text-primary hover:underline"

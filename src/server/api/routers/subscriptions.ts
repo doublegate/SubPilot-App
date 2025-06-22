@@ -77,18 +77,21 @@ export const subscriptionsRouter = createTRPCRouter({
               ? {
                   name:
                     'name' in sub.provider &&
-                    typeof (sub.provider as any).name === 'string'
-                      ? (sub.provider as any).name
+                    typeof (sub.provider as { name?: unknown }).name ===
+                      'string'
+                      ? (sub.provider as { name: string }).name
                       : 'Unknown',
                   website:
                     'website' in sub.provider &&
-                    typeof (sub.provider as any).website === 'string'
-                      ? (sub.provider as any).website
+                    typeof (sub.provider as { website?: unknown }).website ===
+                      'string'
+                      ? (sub.provider as { website: string }).website
                       : null,
                   logo:
                     'logo' in sub.provider &&
-                    typeof (sub.provider as any).logo === 'string'
-                      ? (sub.provider as any).logo
+                    typeof (sub.provider as { logo?: unknown }).logo ===
+                      'string'
+                      ? (sub.provider as { logo: string }).logo
                       : null,
                 }
               : null,
@@ -133,7 +136,7 @@ export const subscriptionsRouter = createTRPCRouter({
         'transactions' in subscription &&
         Array.isArray(subscription.transactions)
           ? subscription.transactions
-              .map((t: any) => ({
+              .map((t: { amount: { toNumber: () => number }; date: Date }) => ({
                 amount: t.amount.toNumber(),
                 date: t.date,
               }))
@@ -148,28 +151,33 @@ export const subscriptionsRouter = createTRPCRouter({
             ? {
                 name:
                   'name' in subscription.provider &&
-                  typeof (subscription.provider as any).name === 'string'
-                    ? (subscription.provider as any).name
+                  typeof (subscription.provider as { name?: unknown }).name ===
+                    'string'
+                    ? (subscription.provider as { name: string }).name
                     : 'Unknown',
                 website:
                   'website' in subscription.provider &&
-                  typeof (subscription.provider as any).website === 'string'
-                    ? (subscription.provider as any).website
+                  typeof (subscription.provider as { website?: unknown })
+                    .website === 'string'
+                    ? (subscription.provider as { website: string }).website
                     : null,
                 logo:
                   'logo' in subscription.provider &&
-                  typeof (subscription.provider as any).logo === 'string'
-                    ? (subscription.provider as any).logo
+                  typeof (subscription.provider as { logo?: unknown }).logo ===
+                    'string'
+                    ? (subscription.provider as { logo: string }).logo
                     : null,
               }
             : null,
         transactions:
           'transactions' in subscription &&
           Array.isArray(subscription.transactions)
-            ? subscription.transactions.map((t: any) => ({
-                ...t,
-                amount: t.amount.toNumber(),
-              }))
+            ? subscription.transactions.map(
+                (t: { amount: { toNumber: () => number } }) => ({
+                  ...t,
+                  amount: t.amount.toNumber(),
+                })
+              )
             : [],
         priceHistory,
         cancellationInfo: {
@@ -182,16 +190,19 @@ export const subscriptionsRouter = createTRPCRouter({
             subscription.cancellationInfo &&
             typeof subscription.cancellationInfo === 'object' &&
             'cancelUrl' in subscription.cancellationInfo &&
-            typeof (subscription.cancellationInfo as any).cancelUrl === 'string'
-              ? (subscription.cancellationInfo as any).cancelUrl
+            typeof (subscription.cancellationInfo as { cancelUrl?: unknown })
+              .cancelUrl === 'string'
+              ? (subscription.cancellationInfo as { cancelUrl: string })
+                  .cancelUrl
               : null,
           supportInfo:
             subscription.cancellationInfo &&
             typeof subscription.cancellationInfo === 'object' &&
             'supportInfo' in subscription.cancellationInfo &&
-            typeof (subscription.cancellationInfo as any).supportInfo ===
-              'string'
-              ? (subscription.cancellationInfo as any).supportInfo
+            typeof (subscription.cancellationInfo as { supportInfo?: unknown })
+              .supportInfo === 'string'
+              ? (subscription.cancellationInfo as { supportInfo: string })
+                  .supportInfo
               : null,
         },
       };

@@ -1,72 +1,61 @@
-# Git files
+# Git
 .git
 .gitignore
-.gitattributes
-
-# GitHub files
 .github
 
-# Documentation
-*.md
-docs
-ref_docs
-to-dos
-LICENSE
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Development files
-.env*
-!.env.example
-.vscode
-.idea
-*.swp
-*.swo
-
-# Test files
-**/__tests__
-**/*.test.ts
-**/*.test.tsx
-**/*.spec.ts
-**/*.spec.tsx
+# Testing
 coverage
 .nyc_output
-playwright-report
-test-results
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
 
-# Build artifacts
+# Build outputs
 .next
 out
 dist
 build
 
-# Dependencies
-node_modules
+# Development
+.env
+.env.local
+.env.development
+.env.test
+.env.production
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-lerna-debug.log*
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
 
-# IDE files
-.vscode
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Documentation
+*.md
+LICENSE
+docs
+to-dos
+ref_docs
 
-# Temporary files
-*.tmp
-*.temp
-.cache
-
-# Docker files (avoid recursion)
-Dockerfile*
-docker-compose*
+# CI/CD
+.github
+docker-compose*.yml
+Dockerfile
 .dockerignore
+
+# Misc
+.eslintcache
+.cache
+tmp
+temp

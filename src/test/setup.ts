@@ -89,7 +89,7 @@ Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
-    media: query as string,
+    media: query,
     onchange: null,
     addListener: vi.fn(), // deprecated
     removeListener: vi.fn(), // deprecated
@@ -117,3 +117,24 @@ Object.defineProperty(global, 'IntersectionObserver', {
   configurable: true,
   value: IntersectionObserver,
 });
+
+// Mock pointer capture for Radix UI
+if (typeof Element !== 'undefined' && !Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = vi.fn(() => false);
+}
+
+if (typeof Element !== 'undefined' && !Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = vi.fn();
+}
+
+if (
+  typeof Element !== 'undefined' &&
+  !Element.prototype.releasePointerCapture
+) {
+  Element.prototype.releasePointerCapture = vi.fn();
+}
+
+// Mock scrollIntoView for Radix UI Select
+if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn();
+}

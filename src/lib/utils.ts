@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function formatCurrency(
   amount: number | null | undefined,
-  currency: string = 'USD'
+  currency = 'USD'
 ): string {
   if (amount == null || isNaN(amount)) return '$0.00';
 
@@ -35,7 +35,7 @@ export function formatFrequency(frequency: string): string {
     daily: 'day',
   };
 
-  return frequencies[frequency] || frequency;
+  return frequencies[frequency] ?? frequency;
 }
 
 /**
@@ -69,7 +69,7 @@ export function calculateNextBilling(date: Date, frequency: string): Date {
  */
 export function isUpcomingRenewal(
   renewalDate: Date,
-  thresholdDays: number = 7
+  thresholdDays = 7
 ): boolean {
   const now = new Date();
   const timeDiff = renewalDate.getTime() - now.getTime();
@@ -110,7 +110,7 @@ export function validateEmail(email: string | null | undefined): boolean {
 export function truncateText(
   text: string,
   maxLength: number,
-  suffix: string = '...'
+  suffix = '...'
 ): string {
   if (!text || maxLength < 0) return text || '';
   if (text.length <= maxLength) return text;
@@ -122,14 +122,14 @@ export function truncateText(
 /**
  * Debounce function calls
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
 
-  return function executedFunction(this: any, ...args: Parameters<T>) {
-    const context = this;
+  return function executedFunction(this: unknown, ...args: Parameters<T>) {
+    const context = this as ThisParameterType<T>;
     const later = () => {
       timeout = null;
       func.apply(context, args);
@@ -143,7 +143,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Generate unique ID with optional prefix
  */
-export function generateId(prefix?: string, length: number = 12): string {
+export function generateId(prefix?: string, length = 12): string {
   const chars =
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';

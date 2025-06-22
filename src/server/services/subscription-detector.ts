@@ -145,7 +145,7 @@ export class SubscriptionDetector {
       .replace(/[*#]+\d+$/, '') // Remove trailing transaction IDs like *1234 or #5678
       .replace(/\b(inc|llc|ltd|corp|corporation|company|co)\b\.?$/i, '') // Remove company suffixes
       .trim();
-    
+
     // If normalization made the name too short, use the original
     return normalized.length < 3 ? name.trim() : normalized;
   }
@@ -259,19 +259,19 @@ export class SubscriptionDetector {
     if (amounts.length === 1) return 1; // Single amount is perfectly consistent
 
     const avg = amounts.reduce((a, b) => a + b, 0) / amounts.length;
-    
+
     // Allow up to 5% variation in amounts (common for currency conversion, taxes, etc.)
     const tolerance = avg * 0.05;
-    const withinTolerance = amounts.filter(amount => 
-      Math.abs(amount - avg) <= tolerance
+    const withinTolerance = amounts.filter(
+      amount => Math.abs(amount - avg) <= tolerance
     ).length;
-    
+
     // If most amounts are within tolerance, consider it highly consistent
     const toleranceRatio = withinTolerance / amounts.length;
     if (toleranceRatio >= 0.8) {
       return 0.95; // Very high consistency
     }
-    
+
     // Otherwise, calculate coefficient of variation
     const variance =
       amounts.reduce((acc, amount) => acc + Math.pow(amount - avg, 2), 0) /
@@ -279,7 +279,7 @@ export class SubscriptionDetector {
     const cv = Math.sqrt(variance) / avg;
 
     // More lenient scoring: CV of 0.1 (10% variation) still gets 0.8 score
-    return Math.max(0, 1 - (cv * 2));
+    return Math.max(0, 1 - cv * 2);
   }
 
   /**

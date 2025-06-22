@@ -80,12 +80,24 @@ describe('utils', () => {
     });
 
     it('handles unknown frequencies', () => {
-      expect(formatFrequency('unknown' as any)).toBe('unknown');
+      expect(
+        formatFrequency(
+          'unknown' as unknown as Parameters<typeof formatFrequency>[0]
+        )
+      ).toBe('unknown');
     });
 
     it('handles edge cases', () => {
-      expect(formatFrequency(undefined as any)).toBe('undefined');
-      expect(formatFrequency(null as any)).toBe('null');
+      expect(
+        formatFrequency(
+          undefined as unknown as Parameters<typeof formatFrequency>[0]
+        )
+      ).toBe('undefined');
+      expect(
+        formatFrequency(
+          null as unknown as Parameters<typeof formatFrequency>[0]
+        )
+      ).toBe('null');
     });
   });
 
@@ -279,7 +291,7 @@ describe('utils', () => {
     it('maintains this context', () => {
       const obj = {
         value: 'test',
-        method: vi.fn(function (this: any) {
+        method: vi.fn(function (this: { value: string }) {
           return this.value;
         }),
       };
@@ -324,8 +336,8 @@ describe('utils', () => {
 
   describe('edge cases and error handling', () => {
     it('handles null and undefined in formatCurrency', () => {
-      expect(formatCurrency(null as any)).toBe('$0.00');
-      expect(formatCurrency(undefined as any)).toBe('$0.00');
+      expect(formatCurrency(null as unknown as number)).toBe('$0.00');
+      expect(formatCurrency(undefined as unknown as number)).toBe('$0.00');
     });
 
     it('handles invalid dates in calculateNextBilling', () => {
@@ -335,9 +347,9 @@ describe('utils', () => {
     });
 
     it('handles invalid email inputs', () => {
-      expect(validateEmail(null as any)).toBe(false);
-      expect(validateEmail(undefined as any)).toBe(false);
-      expect(validateEmail(123 as any)).toBe(false);
+      expect(validateEmail(null as unknown as string)).toBe(false);
+      expect(validateEmail(undefined as unknown as string)).toBe(false);
+      expect(validateEmail(123 as unknown as string)).toBe(false);
     });
 
     it('handles negative length in truncateText', () => {

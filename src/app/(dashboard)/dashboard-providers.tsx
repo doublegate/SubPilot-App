@@ -2,6 +2,10 @@
 
 import { SessionProvider } from 'next-auth/react';
 
-export function DashboardProviders({ children }: { children: React.ReactNode }) {
+export function DashboardProviders({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <SessionProvider>{children}</SessionProvider>;
 }

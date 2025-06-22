@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@/test/utils';
+import { render, screen } from '@/test/utils';
+import userEvent from '@testing-library/user-event';
 import { SubscriptionCard } from '@/components/subscription-card';
 import { mockSubscription } from '@/test/utils';
 
@@ -41,6 +42,7 @@ describe('SubscriptionCard', () => {
   });
 
   it('calls onCancel when cancel menu item is clicked', async () => {
+    const user = userEvent.setup();
     const handleCancel = vi.fn();
     render(
       <SubscriptionCard
@@ -51,18 +53,21 @@ describe('SubscriptionCard', () => {
 
     // Open dropdown menu - find button by class since it has no aria-label
     const menuButtons = screen.getAllByRole('button');
-    const menuButton = menuButtons.find(btn => btn.className.includes('h-8 w-8'));
+    const menuButton = menuButtons.find(btn =>
+      btn.className.includes('h-8 w-8')
+    );
     expect(menuButton).toBeDefined();
-    fireEvent.click(menuButton!);
+    await user.click(menuButton!);
 
-    // Click cancel option
-    const cancelButton = screen.getByText('Cancel Subscription');
-    fireEvent.click(cancelButton);
+    // Wait for dropdown content to appear and click cancel option
+    const cancelButton = await screen.findByText('Cancel Subscription');
+    await user.click(cancelButton);
 
     expect(handleCancel).toHaveBeenCalledWith(mockSubscription.id);
   });
 
   it('calls onUpdate when edit menu item is clicked', async () => {
+    const user = userEvent.setup();
     const handleUpdate = vi.fn();
     render(
       <SubscriptionCard
@@ -73,13 +78,15 @@ describe('SubscriptionCard', () => {
 
     // Open dropdown menu - find button by class since it has no aria-label
     const menuButtons = screen.getAllByRole('button');
-    const menuButton = menuButtons.find(btn => btn.className.includes('h-8 w-8'));
+    const menuButton = menuButtons.find(btn =>
+      btn.className.includes('h-8 w-8')
+    );
     expect(menuButton).toBeDefined();
-    fireEvent.click(menuButton!);
+    await user.click(menuButton!);
 
-    // Click edit option
-    const editButton = screen.getByText('Edit Subscription');
-    fireEvent.click(editButton);
+    // Wait for dropdown content to appear and click edit option
+    const editButton = await screen.findByText('Edit Subscription');
+    await user.click(editButton);
 
     expect(handleUpdate).toHaveBeenCalledWith(mockSubscription.id);
   });

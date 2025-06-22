@@ -15,35 +15,50 @@ export default function DashboardPage() {
   const { data: session } = useSession();
 
   // Fetch all data
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = api.subscriptions.getStats.useQuery();
-  const { data: subscriptionsData, isLoading: subsLoading, refetch: refetchSubscriptions } = api.subscriptions.getAll.useQuery({ 
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    refetch: refetchStats,
+  } = api.subscriptions.getStats.useQuery();
+  const {
+    data: subscriptionsData,
+    isLoading: subsLoading,
+    refetch: refetchSubscriptions,
+  } = api.subscriptions.getAll.useQuery({
     limit: 6,
     status: 'active', // Only show active subscriptions on dashboard
     sortBy: 'nextBilling',
-    sortOrder: 'asc'
+    sortOrder: 'asc',
   });
-  const { data: plaidItems, isLoading: plaidLoading, refetch: refetchPlaid } = api.plaid.getAccounts.useQuery();
-  const { data: notificationData, refetch: refetchNotifications } = api.notifications.getUnreadCount.useQuery();
+  const {
+    data: plaidItems,
+    isLoading: plaidLoading,
+    refetch: refetchPlaid,
+  } = api.plaid.getAccounts.useQuery();
+  const { data: notificationData, refetch: refetchNotifications } =
+    api.notifications.getUnreadCount.useQuery();
 
   // Mutations
   const syncMutation = api.plaid.syncTransactions.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast.success(data.message);
-      refetchPlaid();
+      void refetchPlaid();
       router.refresh();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to sync: ' + error.message);
     },
   });
 
   const generateMockData = api.plaid.generateMockData.useMutation({
-    onSuccess: async (data) => {
+    onSuccess: async data => {
       toast.success(data.message);
       // Run detection immediately after generating mock data
       const detectionResult = await detectSubscriptions.mutateAsync({});
       if (detectionResult.created > 0) {
-        toast.success(`Detected ${detectionResult.created} subscriptions from mock data!`);
+        toast.success(
+          `Detected ${detectionResult.created} subscriptions from mock data!`
+        );
       }
       // Refetch all data
       await Promise.all([
@@ -52,43 +67,50 @@ export default function DashboardPage() {
         refetchPlaid(),
       ]);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to generate mock data: ' + error.message);
     },
   });
 
-  const disconnectMutation = api.plaid.disconnectAccount.useMutation({
-    onSuccess: () => {
-      toast.success('Bank disconnected successfully');
-      refetchPlaid();
-    },
-    onError: (error) => {
-      toast.error('Failed to disconnect: ' + error.message);
-    },
-  });
+  // Removed unused mutation - disconnectMutation
+  // const disconnectMutation = api.plaid.disconnectAccount.useMutation({
+  //   onSuccess: () => {
+  //     toast.success('Bank disconnected successfully');
+  //     void refetchPlaid();
+  //   },
+  //   onError: (error) => {
+  //     toast.error('Failed to disconnect: ' + error.message);
+  //   },
+  // });
 
   // Detect subscriptions after sync
-  const detectSubscriptions = api.subscriptions.detectSubscriptions.useMutation({
-    onSuccess: async (data) => {
-      if (data.created > 0) {
-        toast.success(`Detected ${data.created} new subscriptions!`);
-        // Refetch all data to show new subscriptions
-        await Promise.all([
-          refetchStats(),
-          refetchSubscriptions(),
-          refetchNotifications(),
-        ]);
-      } else if (data.detected > 0) {
-        toast.info(`Analyzed ${data.detected} merchants, but no subscriptions found yet. Keep syncing for better detection!`);
-      }
-    },
-    onError: (error) => {
-      toast.error('Failed to detect subscriptions: ' + error.message);
-    },
-  });
+  const detectSubscriptions = api.subscriptions.detectSubscriptions.useMutation(
+    {
+      onSuccess: async data => {
+        if (data.created > 0) {
+          toast.success(`Detected ${data.created} new subscriptions!`);
+          // Refetch all data to show new subscriptions
+          await Promise.all([
+            refetchStats(),
+            refetchSubscriptions(),
+            refetchNotifications(),
+          ]);
+        } else if (data.detected > 0) {
+          toast.info(
+            `Analyzed ${data.detected} merchants, but no subscriptions found yet. Keep syncing for better detection!`
+          );
+        }
+      },
+      onError: error => {
+        toast.error('Failed to detect subscriptions: ' + error.message);
+      },
+    }
+  );
 
   const handleSync = async (institutionName: string) => {
-    const accounts = plaidItems?.filter(acc => acc.institution.name === institutionName);
+    const accounts = plaidItems?.filter(
+      acc => acc.institution.name === institutionName
+    );
     if (!accounts || accounts.length === 0) return;
 
     // Find the plaid item ID (all accounts from same institution share the same plaid item)
@@ -97,7 +119,7 @@ export default function DashboardPage() {
 
     // First sync transactions
     const result = await syncMutation.mutateAsync({});
-    
+
     // Then detect subscriptions from the new transactions
     if (result.totalNewTransactions > 0) {
       await detectSubscriptions.mutateAsync({});
@@ -105,7 +127,9 @@ export default function DashboardPage() {
   };
 
   const handleDisconnect = async (institutionName: string) => {
-    const accounts = plaidItems?.filter(acc => acc.institution.name === institutionName);
+    const accounts = plaidItems?.filter(
+      acc => acc.institution.name === institutionName
+    );
     if (!accounts || accounts.length === 0) return;
 
     const firstAccount = accounts[0];
@@ -127,10 +151,11 @@ export default function DashboardPage() {
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-  const upcomingRenewals = subscriptionsData?.subscriptions.filter(sub => {
-    if (!sub.nextBilling) return false;
-    return new Date(sub.nextBilling) <= thirtyDaysFromNow;
-  }).length ?? 0;
+  const upcomingRenewals =
+    subscriptionsData?.subscriptions.filter(sub => {
+      if (!sub.nextBilling) return false;
+      return new Date(sub.nextBilling) <= thirtyDaysFromNow;
+    }).length ?? 0;
 
   const dashboardStats = {
     totalActive: stats?.totalActive ?? 0,
@@ -176,7 +201,9 @@ export default function DashboardPage() {
               disabled={generateMockData.isPending}
               className="text-sm text-accent-600 hover:text-accent-700 disabled:opacity-50"
             >
-              {generateMockData.isPending ? 'Generating...' : 'Generate Test Data'}
+              {generateMockData.isPending
+                ? 'Generating...'
+                : 'Generate Test Data'}
             </button>
           )}
         </div>
@@ -185,14 +212,15 @@ export default function DashboardPage() {
             <>
               {/* Group accounts by institution */}
               {Object.entries(
-                plaidItems.reduce((acc, account) => {
-                  const instName = account.institution.name;
-                  if (!acc[instName]) {
-                    acc[instName] = [];
-                  }
-                  acc[instName]!.push(account);
-                  return acc;
-                }, {} as Record<string, typeof plaidItems>)
+                plaidItems.reduce(
+                  (acc, account) => {
+                    const instName = account.institution.name;
+                    acc[instName] ??= [];
+                    acc[instName].push(account);
+                    return acc;
+                  },
+                  {} as Record<string, typeof plaidItems>
+                )
               ).map(([institutionName, accounts]) => (
                 <BankConnectionCard
                   key={institutionName}
@@ -209,7 +237,9 @@ export default function DashboardPage() {
               ))}
               <div className="flex items-center justify-center rounded-lg border-2 border-dashed p-8">
                 <div className="text-center">
-                  <h3 className="mb-2 text-lg font-semibold">Add another bank</h3>
+                  <h3 className="mb-2 text-lg font-semibold">
+                    Add another bank
+                  </h3>
                   <PlaidLinkButton className="mt-2" />
                 </div>
               </div>
@@ -217,7 +247,9 @@ export default function DashboardPage() {
           ) : (
             <div className="col-span-full flex items-center justify-center rounded-lg border-2 border-dashed p-8">
               <div className="text-center">
-                <h3 className="mb-2 text-lg font-semibold">No banks connected</h3>
+                <h3 className="mb-2 text-lg font-semibold">
+                  No banks connected
+                </h3>
                 <p className="mb-4 text-sm text-muted-foreground">
                   Connect your bank account to start tracking subscriptions
                 </p>
@@ -239,7 +271,9 @@ export default function DashboardPage() {
                 disabled={detectSubscriptions.isPending}
                 className="text-sm text-cyan-600 hover:text-cyan-700 disabled:opacity-50"
               >
-                {detectSubscriptions.isPending ? 'Detecting...' : 'Detect Subscriptions'}
+                {detectSubscriptions.isPending
+                  ? 'Detecting...'
+                  : 'Detect Subscriptions'}
               </button>
             )}
             <a

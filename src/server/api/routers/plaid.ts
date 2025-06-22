@@ -7,7 +7,7 @@ import {
   isPlaidConfigured,
   handlePlaidError,
 } from '@/server/plaid-client';
-import {
+import type {
   CountryCode,
   Products,
   LinkTokenCreateRequest,
@@ -19,39 +19,38 @@ export const plaidRouter = createTRPCRouter({
   /**
    * Generate mock transactions for testing
    */
-  generateMockData: protectedProcedure
-    .mutation(async ({ ctx }) => {
-      // Check if user has any accounts
-      const accounts = await ctx.db.account.findMany({
-        where: { userId: ctx.session.user.id },
-        take: 1,
+  generateMockData: protectedProcedure.mutation(async ({ ctx }) => {
+    // Check if user has any accounts
+    const accounts = await ctx.db.account.findMany({
+      where: { userId: ctx.session.user.id },
+      take: 1,
+    });
+
+    if (accounts.length === 0) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'No bank accounts found. Please connect a bank first.',
       });
+    }
 
-      if (accounts.length === 0) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'No bank accounts found. Please connect a bank first.',
-        });
-      }
+    const { MockDataGenerator } = await import('@/server/services/mock-data');
+    const generator = new MockDataGenerator(ctx.db);
 
-      const { MockDataGenerator } = await import('@/server/services/mock-data');
-      const generator = new MockDataGenerator(ctx.db);
-      
-      // Clear existing transactions first
-      await generator.clearUserTransactions(ctx.session.user.id);
-      
-      // Generate mock transactions
-      const count = await generator.generateMockTransactions(
-        ctx.session.user.id,
-        accounts[0]!.id
-      );
+    // Clear existing transactions first
+    await generator.clearUserTransactions(ctx.session.user.id);
 
-      return {
-        success: true,
-        transactionCount: count,
-        message: `Generated ${count} mock transactions`,
-      };
-    }),
+    // Generate mock transactions
+    const count = await generator.generateMockTransactions(
+      ctx.session.user.id,
+      accounts[0]!.id
+    );
+
+    return {
+      success: true,
+      transactionCount: count,
+      message: `Generated ${count} mock transactions`,
+    };
+  }),
   /**
    * Create a Link token for Plaid Link flow
    */
@@ -85,7 +84,7 @@ export const plaidRouter = createTRPCRouter({
           'US',
         ]) as CountryCode[],
         language: 'en',
-        redirect_uri: env.PLAID_REDIRECT_URI || undefined,
+        redirect_uri: env.PLAID_REDIRECT_URI ?? undefined,
       };
 
       // Add webhook URL if configured
@@ -187,11 +186,11 @@ export const plaidRouter = createTRPCRouter({
                 name: account.name,
                 officialName: account.official_name,
                 type: account.type,
-                subtype: account.subtype || '',
-                mask: account.mask || '',
-                currentBalance: account.balances.current || 0,
-                availableBalance: account.balances.available || 0,
-                isoCurrencyCode: account.balances.iso_currency_code || 'USD',
+                subtype: account.subtype ?? '',
+                mask: account.mask ?? '',
+                currentBalance: account.balances.current ?? 0,
+                availableBalance: account.balances.available ?? 0,
+                isoCurrencyCode: account.balances.iso_currency_code ?? 'USD',
                 isActive: true,
               },
             });
@@ -219,33 +218,37 @@ export const plaidRouter = createTRPCRouter({
             await ctx.db.transaction.createMany({
               data: transactionsResponse.data.transactions.map(txn => ({
                 userId: ctx.session.user.id,
-                accountId: accounts.find(
-                  a => a.plaidAccountId === txn.account_id
-                )?.id!,
+                accountId:
+                  accounts.find(a => a.plaidAccountId === txn.account_id)?.id ??
+                  '',
                 plaidTransactionId: txn.transaction_id,
                 amount: Math.abs(txn.amount), // Plaid returns negative for outflows
-                isoCurrencyCode: txn.iso_currency_code || 'USD',
-                name: txn.merchant_name || txn.name,
+                isoCurrencyCode: txn.iso_currency_code ?? 'USD',
+                name: txn.merchant_name ?? txn.name,
                 description: txn.name,
                 date: new Date(txn.date),
                 pending: txn.pending,
-                category: txn.category || [],
-                subcategory: txn.category?.[1] || null,
+                category: txn.category ?? [],
+                subcategory: txn.category?.[1] ?? null,
                 merchantName: txn.merchant_name,
                 paymentChannel: txn.payment_channel,
-                transactionType: txn.transaction_type || 'other',
+                transactionType: txn.transaction_type ?? 'other',
                 isSubscription: false, // Will be determined by detection algorithm
               })),
               skipDuplicates: true,
             });
-            
+
             // Run subscription detection on initial transactions
             try {
-              const { SubscriptionDetector } = await import('@/server/services/subscription-detector');
+              const { SubscriptionDetector } = await import(
+                '@/server/services/subscription-detector'
+              );
               const detector = new SubscriptionDetector(ctx.db);
-              
-              const results = await detector.detectUserSubscriptions(ctx.session.user.id);
-              
+
+              const results = await detector.detectUserSubscriptions(
+                ctx.session.user.id
+              );
+
               if (results.length > 0) {
                 await detector.createSubscriptionsFromDetection(
                   ctx.session.user.id,
@@ -376,7 +379,7 @@ export const plaidRouter = createTRPCRouter({
           // Use transactions sync endpoint for efficient updates
           // For now, we'll use the regular transactions endpoint
           const lastSync =
-            item.accounts[0]?.lastSync ||
+            item.accounts[0]?.lastSync ??
             new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
           const now = new Date();
 
@@ -390,8 +393,10 @@ export const plaidRouter = createTRPCRouter({
             await plaidClient.transactionsGet(transactionsRequest);
           totalTransactionsSynced +=
             transactionsResponse.data.transactions.length;
-            
-          console.log(`Fetched ${transactionsResponse.data.transactions.length} transactions from Plaid`);
+
+          console.log(
+            `Fetched ${transactionsResponse.data.transactions.length} transactions from Plaid`
+          );
 
           // Map account IDs
           const accountIdMap = new Map(
@@ -400,30 +405,33 @@ export const plaidRouter = createTRPCRouter({
 
           // Store new transactions
           if (transactionsResponse.data.transactions.length > 0) {
-            console.log('Sample transaction:', transactionsResponse.data.transactions[0]);
-            
+            console.log(
+              'Sample transaction:',
+              transactionsResponse.data.transactions[0]
+            );
+
             const { count } = await ctx.db.transaction.createMany({
               data: transactionsResponse.data.transactions.map(txn => ({
                 userId: ctx.session.user.id,
                 accountId: accountIdMap.get(txn.account_id)!,
                 plaidTransactionId: txn.transaction_id,
                 amount: Math.abs(txn.amount),
-                isoCurrencyCode: txn.iso_currency_code || 'USD',
-                name: txn.merchant_name || txn.name,
+                isoCurrencyCode: txn.iso_currency_code ?? 'USD',
+                name: txn.merchant_name ?? txn.name,
                 description: txn.name,
                 date: new Date(txn.date),
                 pending: txn.pending,
-                category: txn.category || [],
-                subcategory: txn.category?.[1] || null,
+                category: txn.category ?? [],
+                subcategory: txn.category?.[1] ?? null,
                 merchantName: txn.merchant_name,
                 paymentChannel: txn.payment_channel,
-                transactionType: txn.transaction_type || 'other',
+                transactionType: txn.transaction_type ?? 'other',
                 isSubscription: false, // Will be determined by detection algorithm
               })),
               skipDuplicates: true,
             });
             totalNewTransactions += count;
-            
+
             console.log(`Stored ${count} new transactions in database`);
           }
 
@@ -451,8 +459,8 @@ export const plaidRouter = createTRPCRouter({
               await ctx.db.account.update({
                 where: { id: dbAccountId },
                 data: {
-                  currentBalance: account.balances.current || 0,
-                  availableBalance: account.balances.available || 0,
+                  currentBalance: account.balances.current ?? 0,
+                  availableBalance: account.balances.available ?? 0,
                 },
               });
             }
@@ -473,18 +481,24 @@ export const plaidRouter = createTRPCRouter({
       // Run subscription detection algorithm on new transactions
       if (totalNewTransactions > 0) {
         try {
-          const { SubscriptionDetector } = await import('@/server/services/subscription-detector');
+          const { SubscriptionDetector } = await import(
+            '@/server/services/subscription-detector'
+          );
           const detector = new SubscriptionDetector(ctx.db);
-          
-          const results = await detector.detectUserSubscriptions(ctx.session.user.id);
-          
+
+          const results = await detector.detectUserSubscriptions(
+            ctx.session.user.id
+          );
+
           if (results.length > 0) {
             await detector.createSubscriptionsFromDetection(
               ctx.session.user.id,
               results
             );
-            
-            const newSubscriptionsCount = results.filter(r => r.isSubscription).length;
+
+            const newSubscriptionsCount = results.filter(
+              r => r.isSubscription
+            ).length;
             if (newSubscriptionsCount > 0) {
               await ctx.db.notification.create({
                 data: {

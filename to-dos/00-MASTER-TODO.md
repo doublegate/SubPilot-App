@@ -11,6 +11,7 @@
 - **Phase 4**: 📋 Planned (Launch)
 - **Current Version**: v0.1.6 (Released 2025-06-22)
 - **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) (Bank sync working, subscriptions detected, CSS fixed)
+- **Test Coverage**: 100% pass rate (147/147 tests passing)
 
 ## 🎯 Current Sprint Focus
 

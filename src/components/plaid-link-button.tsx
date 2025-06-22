@@ -25,11 +25,14 @@ export function PlaidLinkButton({
   const [isLoading, setIsLoading] = useState(false);
 
   // Get link token from API
-  const { data: linkTokenData, isLoading: isTokenLoading, error: tokenError } =
-    api.plaid.createLinkToken.useQuery(undefined, {
-      retry: false,
-      refetchOnWindowFocus: false,
-    });
+  const {
+    data: linkTokenData,
+    isLoading: isTokenLoading,
+    error: tokenError,
+  } = api.plaid.createLinkToken.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
   // Debug logging
   if (tokenError) {
@@ -95,7 +98,7 @@ export function PlaidLinkButton({
 
   const handleClick = useCallback(() => {
     if (ready && !isLoading) {
-      open();
+      void (open as () => void)();
     }
   }, [ready, open, isLoading]);
 
