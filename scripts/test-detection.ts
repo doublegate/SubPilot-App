@@ -31,7 +31,7 @@ async function testDetection() {
     
     console.log('\nRecent transactions:');
     transactions.forEach(t => {
-      console.log(`- ${t.merchantName || t.name} - $${t.amount} - ${t.date.toISOString().split('T')[0]}`);
+      console.log(`- ${t.merchantName || t.description || 'Unknown'} - $${t.amount} - ${t.date.toISOString().split('T')[0]}`);
     });
     
     // Run detection
