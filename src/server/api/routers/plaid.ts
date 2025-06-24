@@ -215,28 +215,42 @@ export const plaidRouter = createTRPCRouter({
 
           // Store transactions
           if (transactionsResponse.data.transactions.length > 0) {
-            await ctx.db.transaction.createMany({
-              data: transactionsResponse.data.transactions.map(txn => ({
-                userId: ctx.session.user.id,
-                accountId:
-                  accounts.find(a => a.plaidAccountId === txn.account_id)?.id ??
-                  '',
-                plaidTransactionId: txn.transaction_id,
-                amount: Math.abs(txn.amount), // Plaid returns negative for outflows
-                isoCurrencyCode: txn.iso_currency_code ?? 'USD',
-                name: txn.merchant_name ?? txn.name,
-                description: txn.name,
-                date: new Date(txn.date),
-                pending: txn.pending,
-                category: txn.category ?? [],
-                subcategory: txn.category?.[1] ?? null,
-                merchantName: txn.merchant_name,
-                paymentChannel: txn.payment_channel,
-                transactionType: txn.transaction_type ?? 'other',
-                isSubscription: false, // Will be determined by detection algorithm
-              })),
-              skipDuplicates: true,
-            });
+            // Filter out transactions without valid account mapping
+            const validTransactions = transactionsResponse.data.transactions
+              .map(txn => {
+                const account = accounts.find(a => a.plaidAccountId === txn.account_id);
+                if (!account) {
+                  console.warn(`Skipping transaction ${txn.transaction_id}: Account ${txn.account_id} not found`);
+                  return null;
+                }
+                return {
+                  userId: ctx.session.user.id,
+                  accountId: account.id,
+                  plaidTransactionId: txn.transaction_id,
+                  amount: Math.abs(txn.amount), // Plaid returns negative for outflows
+                  isoCurrencyCode: txn.iso_currency_code ?? 'USD',
+                  name: txn.merchant_name ?? txn.name,
+                  description: txn.name,
+                  date: new Date(txn.date),
+                  pending: txn.pending,
+                  category: txn.category ?? [],
+                  subcategory: txn.category?.[1] ?? null,
+                  merchantName: txn.merchant_name,
+                  paymentChannel: txn.payment_channel,
+                  transactionType: txn.transaction_type ?? 'other',
+                  isSubscription: false, // Will be determined by detection algorithm
+                };
+              })
+              .filter((txn): txn is NonNullable<typeof txn> => txn !== null);
+
+            if (validTransactions.length > 0) {
+              await ctx.db.transaction.createMany({
+                data: validTransactions,
+                skipDuplicates: true,
+              });
+              
+              console.log(`Imported ${validTransactions.length} transactions (${transactionsResponse.data.transactions.length - validTransactions.length} skipped)`);
+            }
 
             // Run subscription detection on initial transactions
             try {
@@ -410,29 +424,43 @@ export const plaidRouter = createTRPCRouter({
               transactionsResponse.data.transactions[0]
             );
 
-            const { count } = await ctx.db.transaction.createMany({
-              data: transactionsResponse.data.transactions.map(txn => ({
-                userId: ctx.session.user.id,
-                accountId: accountIdMap.get(txn.account_id)!,
-                plaidTransactionId: txn.transaction_id,
-                amount: Math.abs(txn.amount),
-                isoCurrencyCode: txn.iso_currency_code ?? 'USD',
-                name: txn.merchant_name ?? txn.name,
-                description: txn.name,
-                date: new Date(txn.date),
-                pending: txn.pending,
-                category: txn.category ?? [],
-                subcategory: txn.category?.[1] ?? null,
-                merchantName: txn.merchant_name,
-                paymentChannel: txn.payment_channel,
-                transactionType: txn.transaction_type ?? 'other',
-                isSubscription: false, // Will be determined by detection algorithm
-              })),
-              skipDuplicates: true,
-            });
-            totalNewTransactions += count;
+            // Filter out transactions without valid account mapping
+            const validTransactions = transactionsResponse.data.transactions
+              .map(txn => {
+                const accountId = accountIdMap.get(txn.account_id);
+                if (!accountId) {
+                  console.warn(`Skipping transaction ${txn.transaction_id}: Account ${txn.account_id} not found in map`);
+                  return null;
+                }
+                return {
+                  userId: ctx.session.user.id,
+                  accountId,
+                  plaidTransactionId: txn.transaction_id,
+                  amount: Math.abs(txn.amount),
+                  isoCurrencyCode: txn.iso_currency_code ?? 'USD',
+                  name: txn.merchant_name ?? txn.name,
+                  description: txn.name,
+                  date: new Date(txn.date),
+                  pending: txn.pending,
+                  category: txn.category ?? [],
+                  subcategory: txn.category?.[1] ?? null,
+                  merchantName: txn.merchant_name,
+                  paymentChannel: txn.payment_channel,
+                  transactionType: txn.transaction_type ?? 'other',
+                  isSubscription: false, // Will be determined by detection algorithm
+                };
+              })
+              .filter((txn): txn is NonNullable<typeof txn> => txn !== null);
 
-            console.log(`Stored ${count} new transactions in database`);
+            if (validTransactions.length > 0) {
+              const { count } = await ctx.db.transaction.createMany({
+                data: validTransactions,
+                skipDuplicates: true,
+              });
+              totalNewTransactions += count;
+
+              console.log(`Stored ${count} new transactions in database (${transactionsResponse.data.transactions.length - validTransactions.length} skipped)`);
+            }
           }
 
           // Update last sync time

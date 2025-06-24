@@ -345,7 +345,7 @@ gh run watch <run-id>
 
 **Remember**: This is a T3 Stack project with full implementation completed for Week 1 of Phase 1. When in doubt, refer to the T3 Stack documentation and best practices. The project follows standard T3 conventions with some customizations for the subscription management domain.
 
-## 🎯 Current Session Context (2025-06-24 06:06 PM EDT)
+## 🎯 Current Session Context (2025-06-24 06:11 PM EDT)
 
 - **Phase 1 Progress**: 70% Complete (Weeks 1-2 Done, Week 3 Starting)
 - **Velocity**: 250% of target (consistent high performance)
@@ -357,3 +357,21 @@ gh run watch <run-id>
 - **Code Quality**: Zero ESLint errors, Prettier formatted, TypeScript fully compliant
 - **Key Features Working**: Authentication, Bank Sync, Transactions, Auto-Detection
 - **Recent Fixes**: CI/CD pipeline TypeScript compilation errors resolved with proper test mock data typing
+
+## 🧪 Test Data Best Practices
+
+When writing tests with TypeScript, define individual typed constants instead of using array access:
+
+```typescript
+// ❌ Avoid - TypeScript can't guarantee array element exists
+const mockAccounts = [...];
+const account = mockAccounts[0]; // Type: Account | undefined
+
+// ✅ Preferred - TypeScript knows these constants exist
+const mockAccount1: Account = {...};
+const mockAccount2: Account = {...};
+const mockAccounts: Account[] = [mockAccount1, mockAccount2];
+const account = mockAccount1; // Type: Account (guaranteed)
+```
+
+This pattern eliminates the need for non-null assertions and improves test maintainability.

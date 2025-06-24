@@ -20,15 +20,16 @@ export class SubscriptionDetector {
 
   // Minimum requirements for detection
   private readonly MIN_TRANSACTIONS = 2;
-  private readonly MIN_CONFIDENCE = 0.7;
+  private readonly MIN_CONFIDENCE = 0.5; // Lowered from 0.7 to catch more subscriptions
 
   // Time windows for frequency detection (in days)
+  // Widened ranges to account for billing date variations
   private readonly FREQUENCY_WINDOWS = {
-    weekly: { min: 5, max: 9, ideal: 7 },
-    biweekly: { min: 12, max: 16, ideal: 14 },
-    monthly: { min: 25, max: 35, ideal: 30 },
-    quarterly: { min: 80, max: 100, ideal: 90 },
-    yearly: { min: 350, max: 380, ideal: 365 },
+    weekly: { min: 5, max: 10, ideal: 7 },
+    biweekly: { min: 11, max: 17, ideal: 14 },
+    monthly: { min: 24, max: 38, ideal: 30 }, // Accounts for month length variations
+    quarterly: { min: 75, max: 105, ideal: 90 },
+    yearly: { min: 340, max: 390, ideal: 365 },
   };
 
   constructor(db: PrismaClient) {
@@ -374,49 +375,73 @@ export class SubscriptionDetector {
     userId: string,
     results: DetectionResult[]
   ): Promise<void> {
+    console.log(`Creating subscriptions for user ${userId} from ${results.length} detection results`);
+    
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+    let errors = 0;
+
     for (const result of results) {
-      if (!result.isSubscription || !result.frequency) continue;
+      if (!result.isSubscription || !result.frequency) {
+        skipped++;
+        continue;
+      }
 
-      // Check if subscription already exists
-      const existing = await this.db.subscription.findFirst({
-        where: {
-          userId,
-          name: result.merchantName,
-          status: 'active',
-        },
-      });
-
-      if (!existing) {
-        // Create new subscription
-        await this.db.subscription.create({
-          data: {
+      try {
+        // Check if subscription already exists
+        const existing = await this.db.subscription.findFirst({
+          where: {
             userId,
             name: result.merchantName,
-            description: `Recurring payment to ${result.merchantName}`,
-            category: 'general', // Could be enhanced with category detection
-            amount: result.averageAmount,
-            currency: 'USD',
-            frequency: result.frequency,
-            nextBilling: result.nextBillingDate,
-            status: 'active',
-            provider: {
+            // Don't filter by status - update inactive ones too
+          },
+        });
+
+        if (!existing) {
+          // Create new subscription
+          await this.db.subscription.create({
+            data: {
+              userId,
               name: result.merchantName,
-              detected: true,
+              description: `Recurring payment to ${result.merchantName}`,
+              category: 'general', // Could be enhanced with category detection
+              amount: result.averageAmount,
+              currency: 'USD',
+              frequency: result.frequency,
+              nextBilling: result.nextBillingDate,
+              status: 'active',
+              isActive: true, // Explicitly set to ensure dashboard queries work
+              provider: {
+                name: result.merchantName,
+                detected: true,
+              },
+              detectionConfidence: result.confidence,
             },
-            detectionConfidence: result.confidence,
-          },
-        });
-      } else {
-        // Update existing subscription
-        await this.db.subscription.update({
-          where: { id: existing.id },
-          data: {
-            amount: result.averageAmount,
-            nextBilling: result.nextBillingDate,
-            detectionConfidence: result.confidence,
-          },
-        });
+          });
+          created++;
+          console.log(`Created subscription: ${result.merchantName} (${result.frequency}, confidence: ${result.confidence})`);
+        } else {
+          // Update existing subscription - reactivate if needed
+          await this.db.subscription.update({
+            where: { id: existing.id },
+            data: {
+              amount: result.averageAmount,
+              nextBilling: result.nextBillingDate,
+              detectionConfidence: result.confidence,
+              status: 'active', // Reactivate if it was cancelled
+              isActive: true, // Ensure it's active for dashboard
+            },
+          });
+          updated++;
+          console.log(`Updated subscription: ${result.merchantName} (${result.frequency})`);
+        }
+      } catch (error) {
+        errors++;
+        console.error(`Failed to create/update subscription for ${result.merchantName}:`, error);
       }
     }
+
+    console.log(`Subscription processing complete: ${created} created, ${updated} updated, ${skipped} skipped, ${errors} errors`);
   }
 }
