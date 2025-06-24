@@ -23,59 +23,64 @@ interface Transaction {
   } | null;
 }
 
-const mockTransactions: Transaction[] = [
-  {
-    id: 'txn-1',
-    date: new Date('2024-07-15'),
-    name: 'Netflix Monthly Subscription',
-    merchantName: 'Netflix',
-    amount: -15.99,
-    currency: 'USD',
-    category: 'Entertainment',
-    pending: false,
-    isRecurring: true,
-    account: {
-      name: 'Checking Account',
-      institution: 'Chase Bank',
-    },
-    subscription: {
-      id: 'sub-1',
-      name: 'Netflix',
-    },
+const mockTransaction1: Transaction = {
+  id: 'txn-1',
+  date: new Date('2024-07-15'),
+  name: 'Netflix Monthly Subscription',
+  merchantName: 'Netflix',
+  amount: -15.99,
+  currency: 'USD',
+  category: 'Entertainment',
+  pending: false,
+  isRecurring: true,
+  account: {
+    name: 'Checking Account',
+    institution: 'Chase Bank',
   },
-  {
-    id: 'txn-2',
-    date: new Date('2024-07-14'),
-    name: 'Starbucks',
-    merchantName: 'Starbucks',
-    amount: -5.75,
-    currency: 'USD',
-    category: 'Food & Drink',
-    pending: true,
-    isRecurring: false,
-    account: {
-      name: 'Credit Card',
-      institution: 'Capital One',
-    },
-    subscription: null,
+  subscription: {
+    id: 'sub-1',
+    name: 'Netflix',
   },
-  {
-    id: 'txn-3',
-    date: new Date('2024-07-13'),
-    name: 'Spotify Premium',
-    merchantName: 'Spotify',
-    amount: -9.99,
-    currency: 'USD',
-    category: 'Entertainment',
-    pending: false,
-    isRecurring: true,
-    account: {
-      name: 'Checking Account',
-      institution: 'Chase Bank',
-    },
-    subscription: null,
+};
+
+const mockTransaction2: Transaction = {
+  id: 'txn-2',
+  date: new Date('2024-07-14'),
+  name: 'Starbucks',
+  merchantName: 'Starbucks',
+  amount: -5.75,
+  currency: 'USD',
+  category: 'Food & Drink',
+  pending: true,
+  isRecurring: false,
+  account: {
+    name: 'Credit Card',
+    institution: 'Capital One',
   },
-];
+  subscription: null,
+};
+
+const mockTransaction3: Transaction = {
+  id: 'txn-3',
+  date: new Date('2024-07-13'),
+  name: 'Spotify Premium',
+  merchantName: 'Spotify',
+  amount: -9.99,
+  currency: 'USD',
+  category: 'Entertainment',
+  pending: false,
+  isRecurring: true,
+  account: {
+    name: 'Checking Account',
+    institution: 'Chase Bank',
+  },
+  subscription: {
+    id: 'sub-2',
+    name: 'Spotify',
+  },
+};
+
+const mockTransactions: Transaction[] = [mockTransaction1, mockTransaction2, mockTransaction3];
 
 describe('TransactionList', () => {
   it('renders loading skeleton when isLoading is true', () => {
@@ -142,7 +147,7 @@ describe('TransactionList', () => {
 
   it('formats positive amounts correctly', () => {
     const positiveTransaction: Transaction = {
-      ...mockTransactions[0]!,
+      ...mockTransaction1,
       id: 'txn-4',
       amount: 100.5,
       name: 'Refund',
@@ -163,7 +168,7 @@ describe('TransactionList', () => {
 
   it('shows dash for missing category', () => {
     const transactionNoCategory: Transaction = {
-      ...mockTransactions[0]!,
+      ...mockTransaction1,
       id: 'txn-5',
       category: null,
     };
@@ -243,7 +248,7 @@ describe('TransactionList', () => {
 
   it('handles transactions with no merchant name', () => {
     const transactionNoMerchant: Transaction = {
-      ...mockTransactions[0]!,
+      ...mockTransaction1,
       id: 'txn-6',
       merchantName: null,
     };
@@ -257,7 +262,7 @@ describe('TransactionList', () => {
   });
 
   it('displays linked subscription with icon', () => {
-    render(<TransactionList transactions={[mockTransactions[0]!]} />);
+    render(<TransactionList transactions={[mockTransaction1]} />);
 
     // Check for the Netflix subscription link
     const subscriptionName = screen.getByText('Netflix', { selector: 'span' });
@@ -270,7 +275,7 @@ describe('TransactionList', () => {
 
   it('handles multiple currencies correctly', () => {
     const eurTransaction: Transaction = {
-      ...mockTransactions[0]!,
+      ...mockTransaction1,
       id: 'txn-7',
       currency: 'EUR',
       amount: -12.99,

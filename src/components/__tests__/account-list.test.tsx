@@ -18,53 +18,55 @@ interface Account {
   lastSync: Date | null;
 }
 
-const mockAccounts: Account[] = [
-  {
-    id: 'acc-1',
-    plaidAccountId: 'plaid-acc-1',
-    name: 'Checking Account',
-    type: 'depository',
-    subtype: 'checking',
-    balance: 2500.5,
-    currency: 'USD',
-    institution: {
-      name: 'Chase Bank',
-      logo: 'https://example.com/chase-logo.png',
-    },
-    isActive: true,
-    lastSync: new Date('2024-07-20T10:00:00Z'),
+const mockAccount1: Account = {
+  id: 'acc-1',
+  plaidAccountId: 'plaid-acc-1',
+  name: 'Checking Account',
+  type: 'depository',
+  subtype: 'checking',
+  balance: 2500.5,
+  currency: 'USD',
+  institution: {
+    name: 'Chase Bank',
+    logo: 'https://example.com/chase-logo.png',
   },
-  {
-    id: 'acc-2',
-    plaidAccountId: 'plaid-acc-2',
-    name: 'Visa Card',
-    type: 'credit',
-    subtype: 'credit card',
-    balance: -1200.75,
-    currency: 'USD',
-    institution: {
-      name: 'Capital One',
-      logo: null,
-    },
-    isActive: true,
-    lastSync: new Date('2024-07-20T09:30:00Z'),
+  isActive: true,
+  lastSync: new Date('2024-07-20T10:00:00Z'),
+};
+
+const mockAccount2: Account = {
+  id: 'acc-2',
+  plaidAccountId: 'plaid-acc-2',
+  name: 'Visa Card',
+  type: 'credit',
+  subtype: 'credit card',
+  balance: -1200.75,
+  currency: 'USD',
+  institution: {
+    name: 'Capital One',
+    logo: null,
   },
-  {
-    id: 'acc-3',
-    plaidAccountId: 'plaid-acc-3',
-    name: 'Investment Account',
-    type: 'investment',
-    subtype: 'brokerage',
-    balance: 15000.0,
-    currency: 'USD',
-    institution: {
-      name: 'Fidelity',
-      logo: null,
-    },
-    isActive: false,
-    lastSync: null,
+  isActive: true,
+  lastSync: new Date('2024-07-20T09:30:00Z'),
+};
+
+const mockAccount3: Account = {
+  id: 'acc-3',
+  plaidAccountId: 'plaid-acc-3',
+  name: 'Investment Account',
+  type: 'investment',
+  subtype: 'brokerage',
+  balance: 15000.0,
+  currency: 'USD',
+  institution: {
+    name: 'Fidelity',
+    logo: null,
   },
-];
+  isActive: false,
+  lastSync: null,
+};
+
+const mockAccounts: Account[] = [mockAccount1, mockAccount2, mockAccount3];
 
 describe('AccountList', () => {
   it('shows empty state when no accounts', () => {
@@ -155,7 +157,7 @@ describe('AccountList', () => {
 
   it('handles different currency types', () => {
     const eurAccount: Account = {
-      ...mockAccounts[0]!,
+      ...mockAccount1,
       id: 'acc-4',
       currency: 'EUR',
       balance: 1500.0,
@@ -180,7 +182,7 @@ describe('AccountList', () => {
 
   it('handles unknown account types gracefully', () => {
     const unknownTypeAccount: Account = {
-      ...mockAccounts[0]!,
+      ...mockAccount1,
       id: 'acc-5',
       type: 'unknown_type',
       subtype: 'unknown_subtype',
@@ -195,14 +197,14 @@ describe('AccountList', () => {
   });
 
   it('does not show last sync for accounts without sync date', () => {
-    render(<AccountList accounts={[mockAccounts[2]!]} />);
+    render(<AccountList accounts={[mockAccount3]} />);
 
     // Investment account has no lastSync
     expect(screen.queryByText(/Last synced/)).not.toBeInTheDocument();
   });
 
   it('maintains hover state on cards', () => {
-    render(<AccountList accounts={[mockAccounts[0]!]} />);
+    render(<AccountList accounts={[mockAccount1]} />);
 
     const card = screen.getByText('Checking Account').closest('.rounded-lg');
     expect(card).toHaveClass('hover:shadow-lg');

@@ -19,50 +19,52 @@ interface Subscription {
   lastTransaction?: Date;
 }
 
-const mockSubscriptions: Subscription[] = [
-  {
-    id: 'sub-1',
-    name: 'Netflix',
-    amount: 15.99,
-    currency: 'USD',
-    frequency: 'monthly' as const,
-    nextBilling: new Date('2024-08-15'),
-    status: 'active' as const,
-    category: 'Entertainment',
-    provider: {
-      name: 'Netflix Inc.',
-      logo: 'https://example.com/netflix-logo.png',
-    },
-    lastTransaction: new Date('2024-07-15'),
+const mockSubscription1: Subscription = {
+  id: 'sub-1',
+  name: 'Netflix',
+  amount: 15.99,
+  currency: 'USD',
+  frequency: 'monthly',
+  nextBilling: new Date('2024-08-15'),
+  status: 'active',
+  category: 'Entertainment',
+  provider: {
+    name: 'Netflix Inc.',
+    logo: 'https://example.com/netflix-logo.png',
   },
-  {
-    id: 'sub-2',
-    name: 'Spotify',
-    amount: 9.99,
-    currency: 'USD',
-    frequency: 'monthly' as const,
-    nextBilling: new Date('2024-08-10'),
-    status: 'active' as const,
-    category: 'Music',
-    provider: {
-      name: 'Spotify AB',
-      logo: null,
-    },
-    lastTransaction: new Date('2024-07-10'),
+  lastTransaction: new Date('2024-07-15'),
+};
+
+const mockSubscription2: Subscription = {
+  id: 'sub-2',
+  name: 'Spotify',
+  amount: 9.99,
+  currency: 'USD',
+  frequency: 'monthly',
+  nextBilling: new Date('2024-08-10'),
+  status: 'active',
+  category: 'Music',
+  provider: {
+    name: 'Spotify AB',
+    logo: null,
   },
-  {
-    id: 'sub-3',
-    name: 'Hulu',
-    amount: 7.99,
-    currency: 'USD',
-    frequency: 'monthly' as const,
-    nextBilling: null,
-    status: 'cancelled' as const,
-    category: 'Entertainment',
-    provider: null,
-    lastTransaction: new Date('2024-06-01'),
-  },
-];
+  lastTransaction: new Date('2024-07-10'),
+};
+
+const mockSubscription3: Subscription = {
+  id: 'sub-3',
+  name: 'Hulu',
+  amount: 7.99,
+  currency: 'USD',
+  frequency: 'monthly',
+  nextBilling: null,
+  status: 'cancelled',
+  category: 'Entertainment',
+  provider: null,
+  lastTransaction: new Date('2024-06-01'),
+};
+
+const mockSubscriptions: Subscription[] = [mockSubscription1, mockSubscription2, mockSubscription3];
 
 describe('SubscriptionList', () => {
   it('renders loading state correctly', () => {
@@ -214,7 +216,7 @@ describe('SubscriptionList', () => {
 
     render(
       <SubscriptionList
-        subscriptions={[mockSubscriptions[0]!]}
+        subscriptions={[mockSubscription1]}
         onCancel={handleCancel}
         onUpdate={handleUpdate}
       />
