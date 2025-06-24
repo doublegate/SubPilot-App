@@ -278,9 +278,9 @@ describe('SubscriptionDetector', () => {
         detector,
         'groupByMerchant' as keyof typeof detector
       ).mockReturnValue([
-        { merchantName: 'Netflix', transactions: [allTransactions[0]] },
-        { merchantName: 'Spotify', transactions: [allTransactions[1]] },
-      ]);
+        { merchantName: 'Netflix', transactions: [allTransactions[0]!] },
+        { merchantName: 'Spotify', transactions: [allTransactions[1]!] },
+      ] as any);
 
       vi.spyOn(detector, 'analyzeTransactionGroup' as keyof typeof detector)
         .mockReturnValueOnce({
@@ -290,7 +290,7 @@ describe('SubscriptionDetector', () => {
           averageAmount: 15.99,
           nextBillingDate: new Date(),
           merchantName: 'Netflix',
-        })
+        } as any)
         .mockReturnValueOnce({
           isSubscription: true,
           confidence: 0.85,
@@ -298,7 +298,7 @@ describe('SubscriptionDetector', () => {
           averageAmount: 9.99,
           nextBillingDate: new Date(),
           merchantName: 'Spotify',
-        });
+        } as any);
 
       vi.spyOn(
         detector,
@@ -322,7 +322,7 @@ describe('SubscriptionDetector', () => {
         'groupByMerchant' as keyof typeof detector
       ).mockReturnValue([
         { merchantName: 'Netflix', transactions: allTransactions },
-      ]);
+      ] as any);
 
       vi.spyOn(
         detector,
@@ -334,7 +334,7 @@ describe('SubscriptionDetector', () => {
         averageAmount: 15.99,
         nextBillingDate: new Date(),
         merchantName: 'Netflix',
-      });
+      } as any);
 
       const results = await detector.detectUserSubscriptions('user-1');
 

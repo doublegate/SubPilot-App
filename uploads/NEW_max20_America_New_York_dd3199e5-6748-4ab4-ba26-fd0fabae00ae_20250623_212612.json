@@ -1,0 +1,1259 @@
+{
+  "blocks": [
+    {
+      "startTime": "2025-05-26T17:00:00.000Z",
+      "endTime": "2025-05-26T22:00:00.000Z",
+      "actualEndTime": "2025-05-26T20:46:40.506Z",
+      "perModelStats": {
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 2257,
+            "outputTokens": 146243,
+            "cacheCreationTokens": 649634,
+            "cacheReadTokens": 32117889,
+            "totalTokens": 148500
+          },
+          "costUSD": 14.27191,
+          "entriesCount": 528
+        }
+      },
+      "totalTokens": 148500,
+      "totalTokensOld": 148500,
+      "costUSD": 14.27191,
+      "entries": 528,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-26T20:46:40.506Z",
+      "endTime": "2025-05-27T03:16:47.222Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-27T03:00:00.000Z",
+      "endTime": "2025-05-27T08:00:00.000Z",
+      "actualEndTime": "2025-05-27T06:25:45.371Z",
+      "perModelStats": {
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 286,
+            "outputTokens": 24806,
+            "cacheCreationTokens": 102455,
+            "cacheReadTokens": 4610391,
+            "totalTokens": 25092
+          },
+          "costUSD": 2.140272,
+          "entriesCount": 97
+        },
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 345,
+            "outputTokens": 80721,
+            "cacheCreationTokens": 490781,
+            "cacheReadTokens": 34787771,
+            "totalTokens": 81066
+          },
+          "costUSD": 67.44305,
+          "entriesCount": 364
+        }
+      },
+      "totalTokens": 430422,
+      "totalTokensOld": 106158,
+      "costUSD": 69.583322,
+      "entries": 461,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-27T06:25:45.371Z",
+      "endTime": "2025-05-27T21:31:27.837Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-27T21:00:00.000Z",
+      "endTime": "2025-05-28T02:00:00.000Z",
+      "actualEndTime": "2025-05-28T01:59:59.455Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 289,
+            "outputTokens": 14418,
+            "cacheCreationTokens": 149191,
+            "cacheReadTokens": 1519150,
+            "totalTokens": 14707
+          },
+          "costUSD": 6.161741,
+          "entriesCount": 84
+        }
+      },
+      "totalTokens": 73535,
+      "totalTokensOld": 14707,
+      "costUSD": 6.161741,
+      "entries": 84,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-28T02:00:00.000Z",
+      "endTime": "2025-05-28T07:00:00.000Z",
+      "actualEndTime": "2025-05-28T04:57:31.579Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 312,
+            "outputTokens": 13100,
+            "cacheCreationTokens": 171085,
+            "cacheReadTokens": 1007093,
+            "totalTokens": 13412
+          },
+          "costUSD": 5.705663,
+          "entriesCount": 62
+        }
+      },
+      "totalTokens": 67060,
+      "totalTokensOld": 13412,
+      "costUSD": 5.705663,
+      "entries": 62,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-28T07:00:00.000Z",
+      "endTime": "2025-05-28T12:00:00.000Z",
+      "actualEndTime": "2025-05-28T08:01:34.170Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 167,
+            "outputTokens": 5241,
+            "cacheCreationTokens": 92806,
+            "cacheReadTokens": 585965,
+            "totalTokens": 5408
+          },
+          "costUSD": 3.01464,
+          "entriesCount": 31
+        }
+      },
+      "totalTokens": 27040,
+      "totalTokensOld": 5408,
+      "costUSD": 3.01464,
+      "entries": 31,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-28T08:01:34.170Z",
+      "endTime": "2025-05-29T01:25:57.430Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-29T01:00:00.000Z",
+      "endTime": "2025-05-29T06:00:00.000Z",
+      "actualEndTime": "2025-05-29T05:58:20.746Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1648,
+            "outputTokens": 96142,
+            "cacheCreationTokens": 1478955,
+            "cacheReadTokens": 33184669,
+            "totalTokens": 97790
+          },
+          "costUSD": 84.74278,
+          "entriesCount": 410
+        }
+      },
+      "totalTokens": 488950,
+      "totalTokensOld": 97790,
+      "costUSD": 84.74278,
+      "entries": 410,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-29T06:00:00.000Z",
+      "endTime": "2025-05-29T11:00:00.000Z",
+      "actualEndTime": "2025-05-29T06:13:03.798Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 115,
+            "outputTokens": 5392,
+            "cacheCreationTokens": 93932,
+            "cacheReadTokens": 1858922,
+            "totalTokens": 5507
+          },
+          "costUSD": 4.955733,
+          "entriesCount": 21
+        }
+      },
+      "totalTokens": 27535,
+      "totalTokensOld": 5507,
+      "costUSD": 4.955733,
+      "entries": 21,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-29T06:13:03.798Z",
+      "endTime": "2025-05-29T21:52:26.274Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-29T21:00:00.000Z",
+      "endTime": "2025-05-30T02:00:00.000Z",
+      "actualEndTime": "2025-05-30T00:15:19.360Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 217,
+            "outputTokens": 6774,
+            "cacheCreationTokens": 132530,
+            "cacheReadTokens": 1066910,
+            "totalTokens": 6991
+          },
+          "costUSD": 4.596607,
+          "entriesCount": 45
+        }
+      },
+      "totalTokens": 34955,
+      "totalTokensOld": 6991,
+      "costUSD": 4.596607,
+      "entries": 45,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-30T03:00:00.000Z",
+      "endTime": "2025-05-30T08:00:00.000Z",
+      "actualEndTime": "2025-05-30T05:42:15.270Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 826,
+            "outputTokens": 154256,
+            "cacheCreationTokens": 689438,
+            "cacheReadTokens": 23267970,
+            "totalTokens": 155082
+          },
+          "costUSD": 59.410507,
+          "entriesCount": 443
+        }
+      },
+      "totalTokens": 775410,
+      "totalTokensOld": 155082,
+      "costUSD": 59.410507,
+      "entries": 443,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-30T05:42:15.270Z",
+      "endTime": "2025-05-30T21:39:53.818Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-30T21:00:00.000Z",
+      "endTime": "2025-05-31T02:00:00.000Z",
+      "actualEndTime": "2025-05-31T01:56:07.441Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1874,
+            "outputTokens": 257252,
+            "cacheCreationTokens": 989269,
+            "cacheReadTokens": 73833920,
+            "totalTokens": 259126
+          },
+          "costUSD": 148.621684,
+          "entriesCount": 947
+        }
+      },
+      "totalTokens": 1295630,
+      "totalTokensOld": 259126,
+      "costUSD": 148.621684,
+      "entries": 949,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-31T02:00:00.000Z",
+      "endTime": "2025-05-31T07:00:00.000Z",
+      "actualEndTime": "2025-05-31T06:59:48.987Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1400,
+            "outputTokens": 70194,
+            "cacheCreationTokens": 673866,
+            "cacheReadTokens": 9968129,
+            "totalTokens": 71594
+          },
+          "costUSD": 32.872731,
+          "entriesCount": 320
+        }
+      },
+      "totalTokens": 357970,
+      "totalTokensOld": 71594,
+      "costUSD": 32.872731,
+      "entries": 320,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-31T07:00:00.000Z",
+      "endTime": "2025-05-31T12:00:00.000Z",
+      "actualEndTime": "2025-05-31T11:59:45.780Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1677,
+            "outputTokens": 140297,
+            "cacheCreationTokens": 1449675,
+            "cacheReadTokens": 37022255,
+            "totalTokens": 141974
+          },
+          "costUSD": 93.262219,
+          "entriesCount": 554
+        }
+      },
+      "totalTokens": 709870,
+      "totalTokensOld": 141974,
+      "costUSD": 93.262219,
+      "entries": 554,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-31T12:00:00.000Z",
+      "endTime": "2025-05-31T17:00:00.000Z",
+      "actualEndTime": "2025-05-31T15:54:24.581Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1363,
+            "outputTokens": 239150,
+            "cacheCreationTokens": 919298,
+            "cacheReadTokens": 44580166,
+            "totalTokens": 240513
+          },
+          "costUSD": 102.063782,
+          "entriesCount": 421
+        },
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 151,
+            "outputTokens": 20946,
+            "cacheCreationTokens": 141615,
+            "cacheReadTokens": 2533017,
+            "totalTokens": 21097
+          },
+          "costUSD": 1.605604,
+          "entriesCount": 34
+        }
+      },
+      "totalTokens": 1223662,
+      "totalTokensOld": 261610,
+      "costUSD": 103.669386,
+      "entries": 455,
+      "limits": []
+    },
+    {
+      "startTime": "2025-05-31T15:54:24.581Z",
+      "endTime": "2025-06-01T17:59:52.462Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-01T17:00:00.000Z",
+      "endTime": "2025-06-01T22:00:00.000Z",
+      "actualEndTime": "2025-06-01T21:47:51.698Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 2643,
+            "outputTokens": 165127,
+            "cacheCreationTokens": 1492112,
+            "cacheReadTokens": 39744081,
+            "totalTokens": 167770
+          },
+          "costUSD": 100.017392,
+          "entriesCount": 484
+        }
+      },
+      "totalTokens": 838850,
+      "totalTokensOld": 167770,
+      "costUSD": 100.017392,
+      "entries": 484,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-01T22:00:00.000Z",
+      "endTime": "2025-06-02T03:00:00.000Z",
+      "actualEndTime": "2025-06-02T01:38:21.247Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1006,
+            "outputTokens": 149611,
+            "cacheCreationTokens": 1213559,
+            "cacheReadTokens": 52900637,
+            "totalTokens": 150617
+          },
+          "costUSD": 113.341102,
+          "entriesCount": 513
+        }
+      },
+      "totalTokens": 753085,
+      "totalTokensOld": 150617,
+      "costUSD": 113.341102,
+      "entries": 513,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-02T03:00:00.000Z",
+      "endTime": "2025-06-02T08:00:00.000Z",
+      "actualEndTime": "2025-06-02T07:25:27.902Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 2240,
+            "outputTokens": 223330,
+            "cacheCreationTokens": 1130343,
+            "cacheReadTokens": 64907434,
+            "totalTokens": 225570
+          },
+          "costUSD": 135.338432,
+          "entriesCount": 757
+        },
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 916,
+            "outputTokens": 69798,
+            "cacheCreationTokens": 687712,
+            "cacheReadTokens": 32922155,
+            "totalTokens": 70714
+          },
+          "costUSD": 13.505285,
+          "entriesCount": 300
+        }
+      },
+      "totalTokens": 1198564,
+      "totalTokensOld": 296284,
+      "costUSD": 148.84371700000003,
+      "entries": 1057,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-02T07:25:27.902Z",
+      "endTime": "2025-06-02T22:39:56.439Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-02T22:00:00.000Z",
+      "endTime": "2025-06-03T03:00:00.000Z",
+      "actualEndTime": "2025-06-03T02:59:37.542Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 346,
+            "outputTokens": 70943,
+            "cacheCreationTokens": 444840,
+            "cacheReadTokens": 9456201,
+            "totalTokens": 71289
+          },
+          "costUSD": 27.850966,
+          "entriesCount": 186
+        }
+      },
+      "totalTokens": 356445,
+      "totalTokensOld": 71289,
+      "costUSD": 27.850966,
+      "entries": 187,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-03T03:00:00.000Z",
+      "endTime": "2025-06-03T08:00:00.000Z",
+      "actualEndTime": "2025-06-03T06:10:58.378Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1463,
+            "outputTokens": 267795,
+            "cacheCreationTokens": 1074216,
+            "cacheReadTokens": 39310412,
+            "totalTokens": 269258
+          },
+          "costUSD": 99.213738,
+          "entriesCount": 514
+        },
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 14,
+            "outputTokens": 484,
+            "cacheCreationTokens": 124059,
+            "cacheReadTokens": 123743,
+            "totalTokens": 498
+          },
+          "costUSD": 0.509646,
+          "entriesCount": 2
+        }
+      },
+      "totalTokens": 1346788,
+      "totalTokensOld": 269756,
+      "costUSD": 99.72338400000001,
+      "entries": 518,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-03T06:10:58.378Z",
+      "endTime": "2025-06-03T21:03:52.536Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-03T21:00:00.000Z",
+      "endTime": "2025-06-04T02:00:00.000Z",
+      "actualEndTime": "2025-06-04T00:48:54.713Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1106,
+            "outputTokens": 121670,
+            "cacheCreationTokens": 1108171,
+            "cacheReadTokens": 52268983,
+            "totalTokens": 122776
+          },
+          "costUSD": 108.323521,
+          "entriesCount": 567
+        }
+      },
+      "totalTokens": 613880,
+      "totalTokensOld": 122776,
+      "costUSD": 108.323521,
+      "entries": 568,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-04T02:00:00.000Z",
+      "endTime": "2025-06-04T07:00:00.000Z",
+      "actualEndTime": "2025-06-04T06:40:52.386Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1819,
+            "outputTokens": 109734,
+            "cacheCreationTokens": 2161470,
+            "cacheReadTokens": 44783922,
+            "totalTokens": 111553
+          },
+          "costUSD": 115.96078,
+          "entriesCount": 571
+        },
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 12526,
+            "outputTokens": 13966,
+            "cacheCreationTokens": 795682,
+            "cacheReadTokens": 22105392,
+            "totalTokens": 26492
+          },
+          "costUSD": 9.862493,
+          "entriesCount": 203
+        }
+      },
+      "totalTokens": 584257,
+      "totalTokensOld": 138045,
+      "costUSD": 125.823273,
+      "entries": 779,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-04T06:40:52.386Z",
+      "endTime": "2025-06-04T22:49:53.932Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-04T22:00:00.000Z",
+      "endTime": "2025-06-05T03:00:00.000Z",
+      "actualEndTime": "2025-06-05T02:58:47.513Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1541,
+            "outputTokens": 71141,
+            "cacheCreationTokens": 1232245,
+            "cacheReadTokens": 29436334,
+            "totalTokens": 72682
+          },
+          "costUSD": 72.617785,
+          "entriesCount": 344
+        }
+      },
+      "totalTokens": 363410,
+      "totalTokensOld": 72682,
+      "costUSD": 72.617785,
+      "entries": 345,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-05T03:00:00.000Z",
+      "endTime": "2025-06-05T08:00:00.000Z",
+      "actualEndTime": "2025-06-05T05:58:05.968Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1450,
+            "outputTokens": 40987,
+            "cacheCreationTokens": 806152,
+            "cacheReadTokens": 42436628,
+            "totalTokens": 42437
+          },
+          "costUSD": 81.866067,
+          "entriesCount": 441
+        }
+      },
+      "totalTokens": 212185,
+      "totalTokensOld": 42437,
+      "costUSD": 81.866067,
+      "entries": 441,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-05T05:58:05.968Z",
+      "endTime": "2025-06-06T04:01:52.347Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-06T04:00:00.000Z",
+      "endTime": "2025-06-06T09:00:00.000Z",
+      "actualEndTime": "2025-06-06T06:04:32.691Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 621,
+            "outputTokens": 123849,
+            "cacheCreationTokens": 622913,
+            "cacheReadTokens": 15578120,
+            "totalTokens": 124470
+          },
+          "costUSD": 44.344789,
+          "entriesCount": 183
+        }
+      },
+      "totalTokens": 622350,
+      "totalTokensOld": 124470,
+      "costUSD": 44.344789,
+      "entries": 186,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-06T06:04:32.691Z",
+      "endTime": "2025-06-13T05:13:57.604Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-13T05:00:00.000Z",
+      "endTime": "2025-06-13T10:00:00.000Z",
+      "actualEndTime": "2025-06-13T06:24:48.396Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 656,
+            "outputTokens": 24645,
+            "cacheCreationTokens": 385456,
+            "cacheReadTokens": 13931527,
+            "totalTokens": 25301
+          },
+          "costUSD": 29.982805,
+          "entriesCount": 248
+        }
+      },
+      "totalTokens": 126505,
+      "totalTokensOld": 25301,
+      "costUSD": 29.982805,
+      "entries": 252,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-13T06:24:48.396Z",
+      "endTime": "2025-06-13T12:38:54.414Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-13T12:00:00.000Z",
+      "endTime": "2025-06-13T17:00:00.000Z",
+      "actualEndTime": "2025-06-13T13:20:35.595Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 185,
+            "outputTokens": 32922,
+            "cacheCreationTokens": 447628,
+            "cacheReadTokens": 8727757,
+            "totalTokens": 33107
+          },
+          "costUSD": 23.956586,
+          "entriesCount": 86
+        }
+      },
+      "totalTokens": 165535,
+      "totalTokensOld": 33107,
+      "costUSD": 23.956586,
+      "entries": 86,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-13T13:20:35.595Z",
+      "endTime": "2025-06-13T21:19:49.877Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-13T21:00:00.000Z",
+      "endTime": "2025-06-14T02:00:00.000Z",
+      "actualEndTime": "2025-06-14T00:14:44.047Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1832,
+            "outputTokens": 154984,
+            "cacheCreationTokens": 1532862,
+            "cacheReadTokens": 24458626,
+            "totalTokens": 156816
+          },
+          "costUSD": 77.080382,
+          "entriesCount": 375
+        },
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1295,
+            "outputTokens": 3671,
+            "cacheCreationTokens": 658352,
+            "cacheReadTokens": 27960282,
+            "totalTokens": 4966
+          },
+          "costUSD": 10.915855,
+          "entriesCount": 267
+        }
+      },
+      "totalTokens": 789046,
+      "totalTokensOld": 161782,
+      "costUSD": 87.99623700000001,
+      "entries": 642,
+      "limits": [
+        {
+          "type": "opus_limit",
+          "timestamp": "2025-06-13T23:05:19.957Z",
+          "content": "Claude Opus 4 limit reached, now using Sonnet 4",
+          "resetTime": null
+        }
+      ]
+    },
+    {
+      "startTime": "2025-06-14T02:00:00.000Z",
+      "endTime": "2025-06-14T07:00:00.000Z",
+      "actualEndTime": "2025-06-14T04:21:00.268Z",
+      "perModelStats": {
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 16,
+            "outputTokens": 5,
+            "cacheCreationTokens": 114919,
+            "cacheReadTokens": 229277,
+            "totalTokens": 21
+          },
+          "costUSD": 0.499852,
+          "entriesCount": 3
+        },
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 791,
+            "outputTokens": 34977,
+            "cacheCreationTokens": 1051960,
+            "cacheReadTokens": 17133673,
+            "totalTokens": 35768
+          },
+          "costUSD": 48.0599,
+          "entriesCount": 173
+        }
+      },
+      "totalTokens": 178861,
+      "totalTokensOld": 35789,
+      "costUSD": 48.559751999999996,
+      "entries": 176,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-14T04:21:00.268Z",
+      "endTime": "2025-06-14T17:59:30.138Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-14T17:00:00.000Z",
+      "endTime": "2025-06-14T22:00:00.000Z",
+      "actualEndTime": "2025-06-14T19:58:48.089Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1289,
+            "outputTokens": 9330,
+            "cacheCreationTokens": 791019,
+            "cacheReadTokens": 38312800,
+            "totalTokens": 10619
+          },
+          "costUSD": 73.019891,
+          "entriesCount": 354
+        }
+      },
+      "totalTokens": 53095,
+      "totalTokensOld": 10619,
+      "costUSD": 73.019891,
+      "entries": 355,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-14T19:58:48.089Z",
+      "endTime": "2025-06-15T01:41:03.385Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-15T01:00:00.000Z",
+      "endTime": "2025-06-15T06:00:00.000Z",
+      "actualEndTime": "2025-06-15T05:01:27.208Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1842,
+            "outputTokens": 32861,
+            "cacheCreationTokens": 1915753,
+            "cacheReadTokens": 51704719,
+            "totalTokens": 34703
+          },
+          "costUSD": 115.969652,
+          "entriesCount": 506
+        },
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 114,
+            "outputTokens": 484,
+            "cacheCreationTokens": 160750,
+            "cacheReadTokens": 1738140,
+            "totalTokens": 598
+          },
+          "costUSD": 1.131857,
+          "entriesCount": 19
+        }
+      },
+      "totalTokens": 174113,
+      "totalTokensOld": 35301,
+      "costUSD": 117.101509,
+      "entries": 526,
+      "limits": [
+        {
+          "type": "opus_limit",
+          "timestamp": "2025-06-15T04:54:44.689Z",
+          "content": "Claude Opus 4 limit reached, now using Sonnet 4",
+          "resetTime": null
+        }
+      ]
+    },
+    {
+      "startTime": "2025-06-15T05:01:27.208Z",
+      "endTime": "2025-06-18T04:30:36.084Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-18T04:00:00.000Z",
+      "endTime": "2025-06-18T09:00:00.000Z",
+      "actualEndTime": "2025-06-18T04:49:20.841Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 9,
+            "outputTokens": 15,
+            "cacheCreationTokens": 70776,
+            "cacheReadTokens": 13025,
+            "totalTokens": 24
+          },
+          "costUSD": 1.347847,
+          "entriesCount": 3
+        }
+      },
+      "totalTokens": 120,
+      "totalTokensOld": 24,
+      "costUSD": 1.347847,
+      "entries": 3,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-18T04:49:20.841Z",
+      "endTime": "2025-06-20T02:03:12.067Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-20T02:00:00.000Z",
+      "endTime": "2025-06-20T07:00:00.000Z",
+      "actualEndTime": "2025-06-20T02:24:03.115Z",
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0.0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-20T02:24:03.115Z",
+      "endTime": "2025-06-20T21:51:29.541Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-20T21:00:00.000Z",
+      "endTime": "2025-06-21T02:00:00.000Z",
+      "actualEndTime": "2025-06-21T00:57:57.811Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 645,
+            "outputTokens": 5695,
+            "cacheCreationTokens": 289247,
+            "cacheReadTokens": 11676084,
+            "totalTokens": 6340
+          },
+          "costUSD": 23.374307,
+          "entriesCount": 219
+        }
+      },
+      "totalTokens": 31700,
+      "totalTokensOld": 6340,
+      "costUSD": 23.374307,
+      "entries": 219,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-21T03:00:00.000Z",
+      "endTime": "2025-06-21T08:00:00.000Z",
+      "actualEndTime": "2025-06-21T07:58:14.367Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1577,
+            "outputTokens": 56388,
+            "cacheCreationTokens": 1955048,
+            "cacheReadTokens": 49243607,
+            "totalTokens": 57965
+          },
+          "costUSD": 114.775315,
+          "entriesCount": 505
+        },
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1373,
+            "outputTokens": 1532,
+            "cacheCreationTokens": 357667,
+            "cacheReadTokens": 14700846,
+            "totalTokens": 2905
+          },
+          "costUSD": 5.778604,
+          "entriesCount": 146
+        }
+      },
+      "totalTokens": 292730,
+      "totalTokensOld": 60870,
+      "costUSD": 120.55391900000001,
+      "entries": 652,
+      "limits": [
+        {
+          "type": "opus_limit",
+          "timestamp": "2025-06-21T07:00:21.652Z",
+          "content": "Claude Opus 4 limit reached, now using Sonnet 4",
+          "resetTime": null
+        }
+      ]
+    },
+    {
+      "startTime": "2025-06-21T08:00:00.000Z",
+      "endTime": "2025-06-21T13:00:00.000Z",
+      "actualEndTime": "2025-06-21T11:59:02.942Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 2121,
+            "outputTokens": 16737,
+            "cacheCreationTokens": 1401229,
+            "cacheReadTokens": 63735991,
+            "totalTokens": 18858
+          },
+          "costUSD": 123.16412,
+          "entriesCount": 586
+        },
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 682,
+            "outputTokens": 5840,
+            "cacheCreationTokens": 393808,
+            "cacheReadTokens": 16767573,
+            "totalTokens": 6522
+          },
+          "costUSD": 6.596698,
+          "entriesCount": 150
+        }
+      },
+      "totalTokens": 100812,
+      "totalTokensOld": 25380,
+      "costUSD": 129.760818,
+      "entries": 743,
+      "limits": [
+        {
+          "type": "opus_limit",
+          "timestamp": "2025-06-21T11:22:12.977Z",
+          "content": "Claude Opus 4 limit reached, now using Sonnet 4",
+          "resetTime": null
+        }
+      ]
+    },
+    {
+      "startTime": "2025-06-21T16:00:00.000Z",
+      "endTime": "2025-06-21T21:00:00.000Z",
+      "actualEndTime": "2025-06-21T20:59:59.158Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 2090,
+            "outputTokens": 18838,
+            "cacheCreationTokens": 1668855,
+            "cacheReadTokens": 58024220,
+            "totalTokens": 20928
+          },
+          "costUSD": 119.771561,
+          "entriesCount": 543
+        },
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 13969,
+            "outputTokens": 13344,
+            "cacheCreationTokens": 1047248,
+            "cacheReadTokens": 27236792,
+            "totalTokens": 27313
+          },
+          "costUSD": 12.340285,
+          "entriesCount": 242
+        }
+      },
+      "totalTokens": 131953,
+      "totalTokensOld": 48241,
+      "costUSD": 132.111846,
+      "entries": 789,
+      "limits": [
+        {
+          "type": "opus_limit",
+          "timestamp": "2025-06-21T19:36:10.439Z",
+          "content": "Claude Opus 4 limit reached, now using Sonnet 4",
+          "resetTime": null
+        },
+        {
+          "type": "opus_limit",
+          "timestamp": "2025-06-21T19:36:10.439Z",
+          "content": "Claude Opus 4 limit reached, now using Sonnet 4",
+          "resetTime": null
+        }
+      ]
+    },
+    {
+      "startTime": "2025-06-21T21:00:00.000Z",
+      "endTime": "2025-06-22T02:00:00.000Z",
+      "actualEndTime": "2025-06-21T23:18:25.992Z",
+      "perModelStats": {
+        "claude-sonnet-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 71,
+            "outputTokens": 139,
+            "cacheCreationTokens": 56472,
+            "cacheReadTokens": 2999179,
+            "totalTokens": 210
+          },
+          "costUSD": 1.113822,
+          "entriesCount": 24
+        },
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 1941,
+            "outputTokens": 29177,
+            "cacheCreationTokens": 1240125,
+            "cacheReadTokens": 36451068,
+            "totalTokens": 31118
+          },
+          "costUSD": 80.146336,
+          "entriesCount": 334
+        }
+      },
+      "totalTokens": 155800,
+      "totalTokensOld": 31328,
+      "costUSD": 81.260158,
+      "entries": 358,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-21T23:18:25.992Z",
+      "endTime": "2025-06-22T17:29:48.731Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-22T17:00:00.000Z",
+      "endTime": "2025-06-22T22:00:00.000Z",
+      "actualEndTime": "2025-06-22T20:33:12.948Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 2544,
+            "outputTokens": 92073,
+            "cacheCreationTokens": 1448725,
+            "cacheReadTokens": 48182866,
+            "totalTokens": 94617
+          },
+          "costUSD": 106.381528,
+          "entriesCount": 515
+        }
+      },
+      "totalTokens": 473085,
+      "totalTokensOld": 94617,
+      "costUSD": 106.381528,
+      "entries": 516,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-22T20:33:12.948Z",
+      "endTime": "2025-06-24T00:28:50.167Z",
+      "actualEndTime": null,
+      "perModelStats": {},
+      "totalTokens": 0,
+      "totalTokensOld": 0,
+      "costUSD": 0,
+      "entries": 0,
+      "limits": []
+    },
+    {
+      "startTime": "2025-06-24T00:00:00.000Z",
+      "endTime": "2025-06-24T05:00:00.000Z",
+      "actualEndTime": "2025-06-24T01:26:08.530Z",
+      "perModelStats": {
+        "claude-opus-4-20250514": {
+          "tokenCounts": {
+            "inputTokens": 356,
+            "outputTokens": 16014,
+            "cacheCreationTokens": 461694,
+            "cacheReadTokens": 15433319,
+            "totalTokens": 16370
+          },
+          "costUSD": 33.013131,
+          "entriesCount": 184
+        }
+      },
+      "totalTokens": 81850,
+      "totalTokensOld": 16370,
+      "costUSD": 33.013131,
+      "entries": 186,
+      "limits": []
+    }
+  ]
+}

@@ -2,7 +2,23 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@/test/utils';
 import { AccountList } from '@/components/account-list';
 
-const mockAccounts = [
+interface Account {
+  id: string;
+  plaidAccountId: string;
+  name: string;
+  type: string;
+  subtype: string;
+  balance: number;
+  currency: string;
+  institution: {
+    name: string;
+    logo?: string | null;
+  };
+  isActive: boolean;
+  lastSync: Date | null;
+}
+
+const mockAccounts: Account[] = [
   {
     id: 'acc-1',
     plaidAccountId: 'plaid-acc-1',
@@ -138,8 +154,8 @@ describe('AccountList', () => {
   });
 
   it('handles different currency types', () => {
-    const eurAccount = {
-      ...mockAccounts[0],
+    const eurAccount: Account = {
+      ...mockAccounts[0]!,
       id: 'acc-4',
       currency: 'EUR',
       balance: 1500.0,
@@ -163,8 +179,8 @@ describe('AccountList', () => {
   });
 
   it('handles unknown account types gracefully', () => {
-    const unknownTypeAccount = {
-      ...mockAccounts[0],
+    const unknownTypeAccount: Account = {
+      ...mockAccounts[0]!,
       id: 'acc-5',
       type: 'unknown_type',
       subtype: 'unknown_subtype',
@@ -179,14 +195,14 @@ describe('AccountList', () => {
   });
 
   it('does not show last sync for accounts without sync date', () => {
-    render(<AccountList accounts={[mockAccounts[2]]} />);
+    render(<AccountList accounts={[mockAccounts[2]!]} />);
 
     // Investment account has no lastSync
     expect(screen.queryByText(/Last synced/)).not.toBeInTheDocument();
   });
 
   it('maintains hover state on cards', () => {
-    render(<AccountList accounts={[mockAccounts[0]]} />);
+    render(<AccountList accounts={[mockAccounts[0]!]} />);
 
     const card = screen.getByText('Checking Account').closest('.rounded-lg');
     expect(card).toHaveClass('hover:shadow-lg');

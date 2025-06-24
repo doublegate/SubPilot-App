@@ -3,7 +3,23 @@ import { render, screen } from '@/test/utils';
 import userEvent from '@testing-library/user-event';
 import { SubscriptionList } from '@/components/subscription-list';
 
-const mockSubscriptions = [
+interface Subscription {
+  id: string;
+  name: string;
+  amount: number;
+  currency: string;
+  frequency: 'monthly' | 'yearly' | 'weekly' | 'quarterly';
+  nextBilling: Date | null;
+  status: 'active' | 'cancelled' | 'pending';
+  category?: string;
+  provider?: {
+    name: string;
+    logo?: string | null;
+  } | null;
+  lastTransaction?: Date;
+}
+
+const mockSubscriptions: Subscription[] = [
   {
     id: 'sub-1',
     name: 'Netflix',
@@ -198,7 +214,7 @@ describe('SubscriptionList', () => {
 
     render(
       <SubscriptionList
-        subscriptions={[mockSubscriptions[0]]}
+        subscriptions={[mockSubscriptions[0]!]}
         onCancel={handleCancel}
         onUpdate={handleUpdate}
       />

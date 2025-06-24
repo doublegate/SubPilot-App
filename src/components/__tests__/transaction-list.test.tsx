@@ -3,7 +3,27 @@ import { render, screen } from '@/test/utils';
 import userEvent from '@testing-library/user-event';
 import { TransactionList } from '@/components/transaction-list';
 
-const mockTransactions = [
+interface Transaction {
+  id: string;
+  date: Date;
+  name: string;
+  merchantName?: string | null;
+  amount: number;
+  currency: string;
+  category?: string | null;
+  pending: boolean;
+  isRecurring?: boolean;
+  account: {
+    name: string;
+    institution: string;
+  };
+  subscription?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+const mockTransactions: Transaction[] = [
   {
     id: 'txn-1',
     date: new Date('2024-07-15'),
@@ -121,8 +141,8 @@ describe('TransactionList', () => {
   });
 
   it('formats positive amounts correctly', () => {
-    const positiveTransaction = {
-      ...mockTransactions[0],
+    const positiveTransaction: Transaction = {
+      ...mockTransactions[0]!,
       id: 'txn-4',
       amount: 100.5,
       name: 'Refund',
@@ -142,8 +162,8 @@ describe('TransactionList', () => {
   });
 
   it('shows dash for missing category', () => {
-    const transactionNoCategory = {
-      ...mockTransactions[0],
+    const transactionNoCategory: Transaction = {
+      ...mockTransactions[0]!,
       id: 'txn-5',
       category: null,
     };
@@ -222,8 +242,8 @@ describe('TransactionList', () => {
   });
 
   it('handles transactions with no merchant name', () => {
-    const transactionNoMerchant = {
-      ...mockTransactions[0],
+    const transactionNoMerchant: Transaction = {
+      ...mockTransactions[0]!,
       id: 'txn-6',
       merchantName: null,
     };
@@ -237,7 +257,7 @@ describe('TransactionList', () => {
   });
 
   it('displays linked subscription with icon', () => {
-    render(<TransactionList transactions={[mockTransactions[0]]} />);
+    render(<TransactionList transactions={[mockTransactions[0]!]} />);
 
     // Check for the Netflix subscription link
     const subscriptionName = screen.getByText('Netflix', { selector: 'span' });
@@ -249,8 +269,8 @@ describe('TransactionList', () => {
   });
 
   it('handles multiple currencies correctly', () => {
-    const eurTransaction = {
-      ...mockTransactions[0],
+    const eurTransaction: Transaction = {
+      ...mockTransactions[0]!,
       id: 'txn-7',
       currency: 'EUR',
       amount: -12.99,

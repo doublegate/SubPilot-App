@@ -1,0 +1,17 @@
+{
+  "user_id": "dd3199e5-6748-4ab4-ba26-fd0fabae00ae",
+  "first_run": "2025-06-23T21:26:12.675207",
+  "runs": [
+    {
+      "timestamp": "2025-06-23T21:26:13.381708",
+      "plan": "max20",
+      "timezone": "America_New_York",
+      "filename": "NEW_max20_America_New_York_dd3199e5-6748-4ab4-ba26-fd0fabae00ae_20250623_212612.json"
+    }
+  ],
+  "last_upload_config": {
+    "plan": "max20",
+    "timezone": "America_New_York",
+    "timestamp": "2025-06-23T21:26:13.381921"
+  }
+}
