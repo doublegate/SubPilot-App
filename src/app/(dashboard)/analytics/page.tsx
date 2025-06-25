@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -29,26 +29,76 @@ import { toast } from 'sonner';
 
 type TimeRange = 'week' | 'month' | 'quarter' | 'year' | 'all';
 
+interface AnalyticsFilters {
+  categories: string[];
+  minAmount: number | undefined;
+  maxAmount: number | undefined;
+  status: 'all' | 'active' | 'cancelled';
+}
+
+interface SpendingOverview {
+  subscriptionSpending: {
+    monthly: number;
+    yearly: number;
+  };
+  totalSpending: {
+    monthlyAverage: number;
+  };
+  subscriptionPercentage: number;
+  categoryBreakdown: Array<{
+    category: string;
+    amount: number;
+    percentage: number;
+  }>;
+}
+
+interface SpendingTrends {
+  date: string;
+  subscriptionAmount: number;
+  totalAmount: number;
+}
+
+interface SubscriptionInsights {
+  totalActive: number;
+  unusedCount: number;
+  averageSubscriptionAge: number;
+  priceIncreaseCount: number;
+  insights: Array<{
+    type: string;
+    title: string;
+    message: string;
+    subscriptions?: Array<{
+      id: string;
+      name: string;
+      amount: number;
+      oldAmount?: number;
+      newAmount?: number;
+    }>;
+  }>;
+}
+
+interface UpcomingRenewal {
+  id: string;
+  name: string;
+  amount: number;
+  nextBilling: Date;
+}
+
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
-  const [selectedAccountId, setSelectedAccountId] = useState<
-    string | undefined
-  >();
-  const [filters, setFilters] = useState({
-    categories: [] as string[],
-    minAmount: undefined as number | undefined,
-    maxAmount: undefined as number | undefined,
-    status: 'all' as 'all' | 'active' | 'cancelled',
+  const [filters, setFilters] = useState<AnalyticsFilters>({
+    categories: [],
+    minAmount: undefined,
+    maxAmount: undefined,
+    status: 'all',
   });
 
   // Fetch data
-  const { data: accounts } = api.plaid.getAccounts.useQuery();
   const { data: categories } = api.subscriptions.getCategories.useQuery();
   const { data: overview, isLoading: overviewLoading } =
     api.analytics.getSpendingOverview.useQuery({
       timeRange,
-      accountId: selectedAccountId,
-    });
+    }) as { data: SpendingOverview | undefined; isLoading: boolean };
   const { data: trends, isLoading: trendsLoading } =
     api.analytics.getSpendingTrends.useQuery({
       timeRange,
@@ -58,22 +108,31 @@ export default function AnalyticsPage() {
           : timeRange === 'year' || timeRange === 'all'
             ? 'month'
             : 'week',
-    });
+    }) as { data: SpendingTrends[] | undefined; isLoading: boolean };
   const { data: insights, isLoading: insightsLoading } =
-    api.analytics.getSubscriptionInsights.useQuery();
+    api.analytics.getSubscriptionInsights.useQuery() as {
+      data: SubscriptionInsights | undefined;
+      isLoading: boolean;
+    };
   const { data: renewals, isLoading: renewalsLoading } =
     api.analytics.getUpcomingRenewals.useQuery({
       days: 30,
-    });
+    }) as { data: UpcomingRenewal[] | undefined; isLoading: boolean };
 
-  // Export data mutation
-  const exportData = api.analytics.exportData.useMutation({
-    onSuccess: data => {
-      // Handle export based on format
-      if (data.subscriptions && Array.isArray(data.subscriptions)) {
+  // Export data query
+  const [exportFormat, setExportFormat] = useState<'csv' | 'json' | null>(null);
+  const { data: exportData, isLoading: exportLoading } = api.analytics.exportData.useQuery(
+    { format: exportFormat ?? 'csv', includeTransactions: true },
+    { enabled: exportFormat !== null }
+  );
+
+  // Handle export completion
+  React.useEffect(() => {
+    if (exportData && exportFormat) {
+      if ('subscriptions' in exportData && exportData.subscriptions && Array.isArray(exportData.subscriptions)) {
         // CSV export
-        const csvContent = data.subscriptions
-          .map(row => (Array.isArray(row) ? row.join(',') : ''))
+        const csvContent = exportData.subscriptions
+          .map((row: unknown) => (Array.isArray(row) ? row.join(',') : String(row)))
           .join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -85,15 +144,15 @@ export default function AnalyticsPage() {
         URL.revokeObjectURL(url);
 
         toast.success('Data exported successfully');
+      } else if ('error' in exportData) {
+        toast.error('Export failed: ' + (exportData as { error: string }).error);
       }
-    },
-    onError: error => {
-      toast.error('Failed to export data: ' + error.message);
-    },
-  });
+      setExportFormat(null); // Reset export state
+    }
+  }, [exportData, exportFormat]);
 
   const handleExport = (format: 'csv' | 'json') => {
-    exportData.mutate({ format, includeTransactions: true });
+    setExportFormat(format);
   };
 
   const isLoading =
@@ -133,7 +192,7 @@ export default function AnalyticsPage() {
             variant="outline"
             size="sm"
             onClick={() => handleExport('csv')}
-            disabled={exportData.isPending}
+            disabled={exportLoading}
           >
             <Download className="mr-2 h-4 w-4" />
             Export CSV
@@ -153,10 +212,10 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${overview.subscriptionSpending.monthly.toFixed(2)}/mo
+                ${overview?.subscriptionSpending?.monthly?.toFixed(2) ?? '0.00'}/mo
               </div>
               <p className="text-xs text-muted-foreground">
-                ${overview.subscriptionSpending.yearly.toFixed(2)} yearly
+                ${overview?.subscriptionSpending?.yearly?.toFixed(2) ?? '0.00'} yearly
               </p>
             </CardContent>
           </Card>
@@ -170,10 +229,10 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${overview.totalSpending.monthlyAverage.toFixed(2)}/mo
+                ${overview?.totalSpending?.monthlyAverage?.toFixed(2) ?? '0.00'}/mo
               </div>
               <p className="text-xs text-muted-foreground">
-                {overview.subscriptionPercentage}% is subscriptions
+                {overview?.subscriptionPercentage ?? 0}% is subscriptions
               </p>
             </CardContent>
           </Card>
@@ -189,10 +248,10 @@ export default function AnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {insights.totalActive}
+                    {insights?.totalActive ?? 0}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {insights.unusedCount} unused (60+ days)
+                    {insights?.unusedCount ?? 0} unused (60+ days)
                   </p>
                 </CardContent>
               </Card>
@@ -206,10 +265,10 @@ export default function AnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {insights.averageSubscriptionAge} days
+                    {insights?.averageSubscriptionAge ?? 0} days
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {insights.priceIncreaseCount} price increases detected
+                    {insights?.priceIncreaseCount ?? 0} price increases detected
                   </p>
                 </CardContent>
               </Card>
@@ -236,7 +295,20 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {trends && <SpendingTrendsChart data={trends} />}
+              {trends && trends.length > 0 ? (
+                <SpendingTrendsChart 
+                  data={trends.map(trend => ({
+                    period: trend.date,
+                    total: trend.totalAmount,
+                    recurring: trend.subscriptionAmount,
+                    nonRecurring: trend.totalAmount - trend.subscriptionAmount,
+                  }))}
+                />
+              ) : (
+                <div className="flex h-[400px] items-center justify-center text-muted-foreground">
+                  No spending trend data available
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -250,8 +322,12 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {overview && (
+              {overview?.categoryBreakdown && overview.categoryBreakdown.length > 0 ? (
                 <CategoryBreakdownChart data={overview.categoryBreakdown} />
+              ) : (
+                <div className="flex h-[400px] items-center justify-center text-muted-foreground">
+                  No category breakdown data available
+                </div>
               )}
             </CardContent>
           </Card>
@@ -267,7 +343,7 @@ export default function AnalyticsPage() {
                 </CardDescription>
               </div>
               <AnalyticsFilters
-                categories={categories?.map(c => c.name) || []}
+                categories={categories?.map((c: { name: string }) => c.name) ?? []}
                 filters={filters}
                 onFiltersChange={setFilters}
               />
@@ -287,14 +363,26 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {renewals && <UpcomingRenewalsCalendar renewals={renewals} />}
+              {renewals && renewals.length > 0 ? (
+                <UpcomingRenewalsCalendar 
+                  renewals={{
+                    renewals: [],
+                    totalCount: renewals.length,
+                    totalAmount: renewals.reduce((sum: number, r: UpcomingRenewal) => sum + r.amount, 0),
+                  }}
+                />
+              ) : (
+                <div className="flex h-[400px] items-center justify-center text-muted-foreground">
+                  No upcoming renewals
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
       {/* Insights and Alerts */}
-      {insights && insights.insights.length > 0 && (
+      {insights?.insights && insights.insights.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Insights & Recommendations</h2>
           {insights.insights.map((insight, index) => (
@@ -322,7 +410,7 @@ export default function AnalyticsPage() {
                   <div className="mt-2 space-y-1">
                     {insight.subscriptions.map(sub => (
                       <div key={sub.id} className="text-sm">
-                        • {sub.name}: ${sub.oldAmount} → ${sub.newAmount}
+                        • {sub.name}: ${sub.oldAmount ?? 0} → ${sub.newAmount ?? 0}
                       </div>
                     ))}
                   </div>

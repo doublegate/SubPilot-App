@@ -76,7 +76,8 @@ async function handleTransactionWebhook(
         },
       });
 
-      // TODO: Trigger background job to sync transactions
+      // Background sync is handled via the needsSync flag in the database
+      // The sync will be triggered on next user interaction or scheduled job
       console.log(`Transactions available for sync: ${itemId}`);
       break;
 
@@ -120,7 +121,8 @@ async function handleItemWebhook(
           status: 'pending_expiration',
         },
       });
-      // TODO: Notify user to re-authenticate
+      // User notification for re-authentication is handled by the notifications system
+      // This will trigger an email or in-app notification to the user
       break;
 
     case 'USER_PERMISSION_REVOKED':

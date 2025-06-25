@@ -44,7 +44,7 @@ export function SubscriptionNotes({
   const handleSaveNotes = () => {
     updateMutation.mutate({
       id: subscriptionId,
-      notes: editedNotes.trim() || null,
+      notes: editedNotes.trim() || undefined,
     });
   };
 

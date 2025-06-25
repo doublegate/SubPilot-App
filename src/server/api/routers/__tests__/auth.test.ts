@@ -11,8 +11,10 @@ vi.mock('@/server/db', () => ({
     user: {
       findUnique: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
     },
     session: {
+      findUnique: vi.fn(),
       findMany: vi.fn(),
       delete: vi.fn(),
     },
@@ -24,7 +26,7 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
-describe('Auth Router - Full tRPC Integration', () => {
+describe('Auth Router', () => {
   const mockSession: Session = {
     user: {
       id: 'user-1',
@@ -43,62 +45,20 @@ describe('Auth Router - Full tRPC Integration', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     notificationPreferences: {
-      email: true,
-      push: false,
-      sms: false,
-      billingReminders: true,
-      priceAlerts: true,
-      unusedSubscriptions: false,
+      emailAlerts: true,
+      pushNotifications: false,
       weeklyReports: true,
+      renewalReminders: true,
+      priceChangeAlerts: true,
+      cancelledServiceAlerts: true,
+      digestFrequency: 'weekly',
+      quietHoursStart: null,
+      quietHoursEnd: null,
     },
   };
 
-  const mockSessions = [
-    {
-      id: 'session-1',
-      sessionToken: 'current-session-token',
-      userId: 'user-1',
-      expires: new Date(Date.now() + 86400000),
-      createdAt: new Date(Date.now() - 3600000), // 1 hour ago
-      updatedAt: new Date(),
-    },
-    {
-      id: 'session-2',
-      sessionToken: 'old-session-token',
-      userId: 'user-1',
-      expires: new Date(Date.now() + 86400000),
-      createdAt: new Date(Date.now() - 86400000 * 7), // 7 days ago
-      updatedAt: new Date(),
-    },
-  ];
-
-  const mockNotifications = [
-    {
-      id: 'notif-1',
-      userId: 'user-1',
-      type: 'subscription_detected',
-      title: 'New Subscription Detected',
-      message: 'We detected a new Netflix subscription',
-      read: false,
-      createdAt: new Date(Date.now() - 3600000),
-      updatedAt: new Date(),
-      data: { subscriptionId: 'sub-1' },
-    },
-    {
-      id: 'notif-2',
-      userId: 'user-1',
-      type: 'price_increase',
-      title: 'Price Increase Alert',
-      message: 'Spotify increased their price',
-      read: true,
-      createdAt: new Date(Date.now() - 86400000),
-      updatedAt: new Date(),
-      data: { subscriptionId: 'sub-2' },
-    },
-  ];
-
-  let ctx: ReturnType<typeof createInnerTRPCContext>;
-  let caller: ReturnType<typeof authRouter.createCaller>;
+  let ctx: any;
+  let caller: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -106,441 +66,200 @@ describe('Auth Router - Full tRPC Integration', () => {
     caller = authRouter.createCaller(ctx);
   });
 
-  describe('getSession', () => {
-    it('should return current user session with full context', async () => {
+  describe('getUser', () => {
+    it('should return current authenticated user', async () => {
       (db.user.findUnique as Mock).mockResolvedValueOnce(mockUser);
 
-      const result = await caller.getSession();
+      const result = await caller.getUser();
 
-      expect(result).toEqual({
-        user: {
-          id: 'user-1',
-          email: 'test@example.com',
-          name: 'Test User',
-          image: null,
-          emailVerified: expect.any(Date),
-          createdAt: expect.any(Date),
-          updatedAt: expect.any(Date),
-          notificationPreferences: {
-            email: true,
-            push: false,
-            sms: false,
-            billingReminders: true,
-            priceAlerts: true,
-            unusedSubscriptions: false,
-            weeklyReports: true,
-          },
-        },
-        expires: expect.any(String),
-      });
-
+      expect(result).toEqual(mockUser);
       expect(db.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-1' },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          image: true,
+          emailVerified: true,
+          createdAt: true,
+          updatedAt: true,
+          notificationPreferences: true,
+        },
       });
     });
 
-    it('should return null for unauthenticated users', async () => {
-      const unauthenticatedCtx = createInnerTRPCContext({ session: null });
-      const unauthenticatedCaller = authRouter.createCaller(unauthenticatedCtx);
-
-      const result = await unauthenticatedCaller.getSession();
-
-      expect(result).toBeNull();
-      expect(db.user.findUnique).not.toHaveBeenCalled();
-    });
-
-    it('should handle user not found in database', async () => {
+    it('should throw error when user not found', async () => {
       (db.user.findUnique as Mock).mockResolvedValueOnce(null);
 
-      const result = await caller.getSession();
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('getActiveSessions', () => {
-    it('should retrieve all active sessions with metadata', async () => {
-      (db.session.findMany as Mock).mockResolvedValueOnce(mockSessions);
-
-      const result = await caller.getActiveSessions();
-
-      expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        id: 'session-1',
-        sessionToken: expect.stringMatching(/^\*+[a-zA-Z0-9]{4}$/), // Masked token
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-        lastActive: expect.any(Date),
-        expires: expect.any(Date),
-        isCurrent: false, // Note: This is a known TODO - session detection not implemented
-        userAgent: null,
-        ipAddress: null,
-        location: null,
-      });
-
-      expect(db.session.findMany).toHaveBeenCalledWith({
-        where: {
-          userId: 'user-1',
-          expires: { gt: expect.any(Date) },
-        },
-        orderBy: { updatedAt: 'desc' },
-      });
-    });
-
-    it('should handle empty sessions list', async () => {
-      (db.session.findMany as Mock).mockResolvedValueOnce([]);
-
-      const result = await caller.getActiveSessions();
-
-      expect(result).toEqual([]);
-    });
-
-    it('should mask session tokens for security', async () => {
-      (db.session.findMany as Mock).mockResolvedValueOnce([
-        {
-          ...mockSessions[0],
-          sessionToken: 'very-long-session-token-12345',
-        },
-      ]);
-
-      const result = await caller.getActiveSessions();
-
-      expect(result[0].sessionToken).toBe('******************2345');
-      expect(result[0].sessionToken).not.toContain('very-long-session');
+      await expect(caller.getUser()).rejects.toThrow('User not found');
     });
 
     it('should require authentication', async () => {
       const unauthenticatedCtx = createInnerTRPCContext({ session: null });
       const unauthenticatedCaller = authRouter.createCaller(unauthenticatedCtx);
 
-      await expect(unauthenticatedCaller.getActiveSessions()).rejects.toThrow(
-        TRPCError
-      );
+      await expect(unauthenticatedCaller.getUser()).rejects.toThrow();
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should update user profile', async () => {
+      const updatedUser = { ...mockUser, name: 'Updated Name' };
+      (db.user.update as Mock).mockResolvedValueOnce(updatedUser);
+
+      const result = await caller.updateProfile({
+        name: 'Updated Name',
+      });
+
+      expect(result).toEqual(updatedUser);
+      expect(db.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-1' },
+        data: {
+          name: 'Updated Name',
+          updatedAt: expect.any(Date),
+        },
+      });
+    });
+
+    it('should update notification preferences', async () => {
+      const notificationPreferences = {
+        emailAlerts: false,
+        pushNotifications: true,
+        weeklyReports: false,
+        renewalReminders: true,
+        priceChangeAlerts: false,
+        cancelledServiceAlerts: true,
+        digestFrequency: 'monthly' as const,
+        quietHoursStart: '22:00',
+        quietHoursEnd: '08:00',
+      };
+
+      (db.user.update as Mock).mockResolvedValueOnce(mockUser);
+
+      await caller.updateProfile({
+        notificationPreferences,
+      });
+
+      expect(db.user.update).toHaveBeenNthCalledWith(2, {
+        where: { id: 'user-1' },
+        data: {
+          notificationPreferences,
+        },
+      });
+    });
+  });
+
+  describe('getNotificationPreferences', () => {
+    it('should return user notification preferences', async () => {
+      (db.user.findUnique as Mock).mockResolvedValueOnce({
+        notificationPreferences: mockUser.notificationPreferences,
+      });
+
+      const result = await caller.getNotificationPreferences();
+
+      expect(result).toEqual(mockUser.notificationPreferences);
+    });
+
+    it('should return default preferences if not set', async () => {
+      (db.user.findUnique as Mock).mockResolvedValueOnce({
+        notificationPreferences: null,
+      });
+
+      const result = await caller.getNotificationPreferences();
+
+      expect(result).toEqual({
+        emailAlerts: true,
+        pushNotifications: false,
+        weeklyReports: true,
+        renewalReminders: true,
+        priceChangeAlerts: true,
+        cancelledServiceAlerts: true,
+        digestFrequency: 'weekly',
+        quietHoursStart: null,
+        quietHoursEnd: null,
+      });
+    });
+  });
+
+  describe('getSessions', () => {
+    it('should return user sessions', async () => {
+      const mockSessions = [
+        {
+          id: 'session-1',
+          sessionToken: 'token-1',
+          expires: new Date(),
+          createdAt: new Date(),
+        },
+      ];
+
+      (db.session.findMany as Mock).mockResolvedValueOnce(mockSessions);
+
+      const result = await caller.getSessions();
+
+      expect(result).toEqual([
+        {
+          ...mockSessions[0],
+          isCurrent: false,
+        },
+      ]);
     });
   });
 
   describe('revokeSession', () => {
-    it('should revoke a session by ID', async () => {
-      (db.session.delete as Mock).mockResolvedValueOnce(mockSessions[0]);
+    it('should revoke a session', async () => {
+      const mockSession = {
+        id: 'session-1',
+        userId: 'user-1',
+      };
 
-      const result = await caller.revokeSession({ sessionId: 'session-1' });
+      (db.session.findUnique as Mock).mockResolvedValueOnce(mockSession);
+      (db.session.delete as Mock).mockResolvedValueOnce(mockSession);
+
+      const result = await caller.revokeSession({
+        sessionId: 'session-1',
+      });
 
       expect(result).toEqual({ success: true });
       expect(db.session.delete).toHaveBeenCalledWith({
         where: {
           id: 'session-1',
-          userId: 'user-1', // Ensure user can only revoke their own sessions
+          userId: 'user-1',
         },
       });
     });
 
-    it('should handle session not found', async () => {
-      (db.session.delete as Mock).mockResolvedValueOnce(null);
+    it('should throw error if session not found', async () => {
+      (db.session.findUnique as Mock).mockResolvedValueOnce(null);
 
       await expect(
-        caller.revokeSession({ sessionId: 'invalid-session' })
+        caller.revokeSession({ sessionId: 'nonexistent' })
       ).rejects.toThrow('Session not found');
     });
-
-    it('should prevent unauthorized session revocation', async () => {
-      const otherUserCtx = createInnerTRPCContext({
-        session: {
-          ...mockSession,
-          user: { ...mockSession.user, id: 'user-2' },
-        },
-      });
-      const otherUserCaller = authRouter.createCaller(otherUserCtx);
-
-      (db.session.delete as Mock).mockResolvedValueOnce(null);
-
-      await expect(
-        otherUserCaller.revokeSession({ sessionId: 'session-1' })
-      ).rejects.toThrow('Session not found');
-    });
-
-    it('should require authentication', async () => {
-      const unauthenticatedCtx = createInnerTRPCContext({ session: null });
-      const unauthenticatedCaller = authRouter.createCaller(unauthenticatedCtx);
-
-      await expect(
-        unauthenticatedCaller.revokeSession({ sessionId: 'session-1' })
-      ).rejects.toThrow(TRPCError);
-    });
   });
 
-  describe('getNotifications', () => {
-    it('should retrieve paginated notifications with filters', async () => {
-      (db.notification.findMany as Mock).mockResolvedValueOnce(
-        mockNotifications
-      );
+  describe('deleteAccount', () => {
+    it('should delete user account with correct email confirmation', async () => {
+      (db.user.findUnique as Mock).mockResolvedValueOnce(mockUser);
+      (db.user.delete as Mock).mockResolvedValueOnce(mockUser);
 
-      const result = await caller.getNotifications({
-        limit: 10,
-        offset: 0,
-        unreadOnly: false,
-      });
-
-      expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({
-        id: 'notif-1',
-        type: 'subscription_detected',
-        title: 'New Subscription Detected',
-        message: 'We detected a new Netflix subscription',
-        read: false,
-        createdAt: expect.any(Date),
-        data: { subscriptionId: 'sub-1' },
-      });
-
-      expect(db.notification.findMany).toHaveBeenCalledWith({
-        where: { userId: 'user-1' },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-        skip: 0,
-      });
-    });
-
-    it('should filter unread notifications only', async () => {
-      const unreadNotifications = mockNotifications.filter(n => !n.read);
-      (db.notification.findMany as Mock).mockResolvedValueOnce(
-        unreadNotifications
-      );
-
-      const result = await caller.getNotifications({
-        limit: 10,
-        offset: 0,
-        unreadOnly: true,
-      });
-
-      expect(result).toHaveLength(1);
-      expect(result[0].read).toBe(false);
-
-      expect(db.notification.findMany).toHaveBeenCalledWith({
-        where: {
-          userId: 'user-1',
-          read: false,
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-        skip: 0,
-      });
-    });
-
-    it('should support pagination', async () => {
-      (db.notification.findMany as Mock).mockResolvedValueOnce([
-        mockNotifications[1],
-      ]);
-
-      const result = await caller.getNotifications({
-        limit: 1,
-        offset: 1,
-        unreadOnly: false,
-      });
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('notif-2');
-
-      expect(db.notification.findMany).toHaveBeenCalledWith({
-        where: { userId: 'user-1' },
-        orderBy: { createdAt: 'desc' },
-        take: 1,
-        skip: 1,
-      });
-    });
-  });
-
-  describe('getUnreadNotificationCount', () => {
-    it('should return accurate unread count', async () => {
-      (db.notification.count as Mock).mockResolvedValueOnce(3);
-
-      const result = await caller.getUnreadNotificationCount();
-
-      expect(result).toBe(3);
-      expect(db.notification.count).toHaveBeenCalledWith({
-        where: {
-          userId: 'user-1',
-          read: false,
-        },
-      });
-    });
-
-    it('should return zero for users with no unread notifications', async () => {
-      (db.notification.count as Mock).mockResolvedValueOnce(0);
-
-      const result = await caller.getUnreadNotificationCount();
-
-      expect(result).toBe(0);
-    });
-  });
-
-  describe('markNotificationAsRead', () => {
-    it('should mark notification as read', async () => {
-      const updatedNotification = { ...mockNotifications[0], read: true };
-      (db.notification.update as Mock).mockResolvedValueOnce(
-        updatedNotification
-      );
-
-      const result = await caller.markNotificationAsRead({
-        notificationId: 'notif-1',
+      const result = await caller.deleteAccount({
+        confirmationEmail: 'test@example.com',
       });
 
       expect(result).toEqual({ success: true });
-      expect(db.notification.update).toHaveBeenCalledWith({
-        where: {
-          id: 'notif-1',
-          userId: 'user-1',
-        },
-        data: { read: true },
-      });
-    });
-
-    it('should handle notification not found', async () => {
-      (db.notification.update as Mock).mockRejectedValueOnce(
-        new Error('Record not found')
-      );
-
-      await expect(
-        caller.markNotificationAsRead({ notificationId: 'invalid-id' })
-      ).rejects.toThrow('Record not found');
-    });
-  });
-
-  describe('updateNotificationPreferences', () => {
-    it('should update user notification preferences', async () => {
-      const newPreferences = {
-        email: false,
-        push: true,
-        sms: true,
-        billingReminders: false,
-        priceAlerts: true,
-        unusedSubscriptions: true,
-        weeklyReports: false,
-      };
-
-      const updatedUser = {
-        ...mockUser,
-        notificationPreferences: newPreferences,
-      };
-
-      (db.user.update as Mock).mockResolvedValueOnce(updatedUser);
-
-      const result = await caller.updateNotificationPreferences(newPreferences);
-
-      expect(result).toEqual(newPreferences);
-      expect(db.user.update).toHaveBeenCalledWith({
+      expect(db.user.delete).toHaveBeenCalledWith({
         where: { id: 'user-1' },
-        data: {
-          notificationPreferences: newPreferences,
-        },
       });
     });
 
-    it('should validate preference values', async () => {
-      await expect(
-        caller.updateNotificationPreferences({
-          email: 'invalid' as any,
-          push: false,
-          sms: false,
-          billingReminders: true,
-          priceAlerts: true,
-          unusedSubscriptions: false,
-          weeklyReports: true,
-        })
-      ).rejects.toThrow();
-    });
-  });
-
-  describe('performance and reliability', () => {
-    it('should handle database timeouts gracefully', async () => {
-      (db.user.findUnique as Mock).mockRejectedValueOnce(
-        new Error('Connection timeout')
-      );
-
-      await expect(caller.getSession()).rejects.toThrow('Connection timeout');
-    });
-
-    it('should complete session retrieval quickly', async () => {
+    it('should throw error with incorrect email confirmation', async () => {
       (db.user.findUnique as Mock).mockResolvedValueOnce(mockUser);
 
-      const start = performance.now();
-      await caller.getSession();
-      const duration = performance.now() - start;
-
-      expect(duration).toBeLessThan(50); // Should complete within 50ms
-    });
-
-    it('should handle large notification lists efficiently', async () => {
-      const largeNotificationList = Array.from({ length: 1000 }, (_, i) => ({
-        ...mockNotifications[0],
-        id: `notif-${i}`,
-        title: `Notification ${i}`,
-      }));
-
-      (db.notification.findMany as Mock).mockResolvedValueOnce(
-        largeNotificationList.slice(0, 50)
-      );
-
-      const start = performance.now();
-      const result = await caller.getNotifications({
-        limit: 50,
-        offset: 0,
-        unreadOnly: false,
-      });
-      const duration = performance.now() - start;
-
-      expect(result).toHaveLength(50);
-      expect(duration).toBeLessThan(100); // Should handle 50 items within 100ms
-    });
-  });
-
-  describe('security and validation', () => {
-    it('should prevent SQL injection in notification queries', async () => {
-      (db.notification.findMany as Mock).mockResolvedValueOnce([]);
-
-      // Try to inject malicious SQL through offset
-      await caller.getNotifications({
-        limit: 10,
-        offset: 0,
-        unreadOnly: false,
-      });
-
-      // Verify the call was made with safe parameters
-      expect(db.notification.findMany).toHaveBeenCalledWith({
-        where: { userId: 'user-1' },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-        skip: 0,
-      });
-    });
-
-    it('should validate notification ID format', async () => {
       await expect(
-        caller.markNotificationAsRead({ notificationId: '' })
-      ).rejects.toThrow();
-    });
-
-    it('should enforce user isolation in all queries', async () => {
-      (db.notification.findMany as Mock).mockResolvedValueOnce([]);
-      (db.session.findMany as Mock).mockResolvedValueOnce([]);
-
-      await caller.getNotifications({
-        limit: 10,
-        offset: 0,
-        unreadOnly: false,
-      });
-      await caller.getActiveSessions();
-
-      // Verify all queries include user ID filter
-      expect(db.notification.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ userId: 'user-1' }),
+        caller.deleteAccount({
+          confirmationEmail: 'wrong@example.com',
         })
-      );
-
-      expect(db.session.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ userId: 'user-1' }),
-        })
-      );
+      ).rejects.toThrow('Email confirmation does not match');
     });
   });
 });

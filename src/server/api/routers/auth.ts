@@ -2,6 +2,15 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 
+// Types for session detection
+interface SessionWithCurrent {
+  id: string;
+  sessionToken: string;
+  expires: Date;
+  createdAt: Date;
+  isCurrent: boolean;
+}
+
 export const authRouter = createTRPCRouter({
   /**
    * Get current authenticated user
@@ -122,10 +131,11 @@ export const authRouter = createTRPCRouter({
       },
     });
 
-    // Mark current session
+    // Mark current session - compare session tokens
+    const currentSessionToken = ctx.session.sessionToken;
     return sessions.map(session => ({
       ...session,
-      isCurrent: false, // TODO: Implement current session detection
+      isCurrent: session.sessionToken === currentSessionToken,
     }));
   }),
 
@@ -151,8 +161,14 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // TODO: Implement check to prevent revoking current session
-      // For now, allow all revocations
+      // Prevent revoking current session
+      const currentSessionToken = ctx.session.sessionToken;
+      if (session.sessionToken === currentSessionToken) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Cannot revoke current session',
+        });
+      }
 
       // Delete the session
       await ctx.db.session.delete({

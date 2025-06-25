@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { api } from '@/trpc/server';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
   TrendingUp,
@@ -14,6 +13,7 @@ import {
 import Link from 'next/link';
 import { SubscriptionActions } from '@/components/subscription-actions';
 import { SubscriptionNotes } from '@/components/subscription-notes';
+import { ProviderLogo } from '@/components/ui/provider-logo';
 
 interface PageProps {
   params: Promise<{
@@ -111,19 +111,13 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
         <div className="flex items-center gap-4">
           {(() => {
             const provider = subscription.provider as ProviderData | null;
-            return provider?.logo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={provider.logo}
-                alt={provider.name ?? subscription.name}
-                className="h-16 w-16 rounded-lg object-contain"
+            return (
+              <ProviderLogo
+                src={provider?.logo}
+                alt={provider?.name ?? subscription.name}
+                fallbackText={subscription.name}
+                size="lg"
               />
-            ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600">
-                <span className="text-2xl font-bold text-white">
-                  {subscription.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
             );
           })()}
           <div>
@@ -304,7 +298,7 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
         {/* Notes & Tags */}
         <SubscriptionNotes
           subscriptionId={subscription.id}
-          notes={subscription.notes}
+          notes={(subscription as { notes?: string | null }).notes ?? null}
           tags={[]}
         />
       </div>

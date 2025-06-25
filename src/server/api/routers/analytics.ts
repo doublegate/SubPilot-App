@@ -555,9 +555,35 @@ export const analyticsRouter = createTRPCRouter({
           ]
         : [];
 
+      // Convert arrays to CSV string
+      const csvToString = (data: string[][]) => {
+        return data.map(row => 
+          row.map(cell => 
+            // Escape quotes and wrap in quotes if cell contains comma, quote, or newline
+            cell.includes(',') || cell.includes('"') || cell.includes('\n')
+              ? `"${cell.replace(/"/g, '""')}"`
+              : cell
+          ).join(',')
+        ).join('\n');
+      };
+
+      const subscriptionsCsvContent = csvToString(subscriptionsCsv);
+      const transactionsCsvContent = input.includeTransactions 
+        ? csvToString(transactionsCsv) 
+        : '';
+
       return {
-        subscriptions: subscriptionsCsv,
-        transactions: transactionsCsv,
+        format: input.format,
+        data: {
+          subscriptions: input.format === 'json' 
+            ? subscriptions.map(s => ({...s, amount: s.amount.toNumber()}))
+            : subscriptionsCsvContent,
+          transactions: input.format === 'json'
+            ? transactions.map(t => ({...t, amount: t.amount.toNumber()}))
+            : transactionsCsvContent,
+        },
+        filename: `subpilot-export-${new Date().toISOString().split('T')[0]}.${input.format}`,
+        contentType: input.format === 'json' ? 'application/json' : 'text/csv',
         exportDate: new Date(),
       };
     }),

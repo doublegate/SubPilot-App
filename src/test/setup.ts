@@ -5,12 +5,8 @@ import React from 'react';
 
 // Extend Vitest matchers with jest-dom matchers
 declare module 'vitest' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-explicit-any
-  interface Assertion<T = any> extends jest.Matchers<void, T> {}
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface AsymmetricMatchersContaining {
-    // Add the matchers we need here
-  }
+  interface Assertion<T = unknown> extends jest.Matchers<void, T> {}
+  interface AsymmetricMatchersContaining extends jest.AsymmetricMatchers {}
 }
 
 // Clean up after each test
@@ -38,19 +34,10 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-// Mock Next.js Image component
+// Mock Next.js Image component for testing
 vi.mock('next/image', () => ({
-  default: ({
-    src,
-    alt,
-    ...props
-  }: {
-    src: string;
-    alt: string;
-    [key: string]: unknown;
-  }) => {
-    // eslint-disable-next-line @next/next/no-img-element
-    return React.createElement('img', { src, alt, ...props });
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    return React.createElement('img', props);
   },
 }));
 

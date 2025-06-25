@@ -17,7 +17,7 @@ export default async function LoginPage() {
         <span className="text-lg font-semibold">SubPilot</span>
       </Link>
       <ThemeToggleStandalone />
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+      <main className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
         <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
             Welcome back
@@ -35,7 +35,7 @@ export default async function LoginPage() {
             Don&apos;t have an account? Sign Up
           </Link>
         </p>
-      </div>
+      </main>
     </div>
   );
 }

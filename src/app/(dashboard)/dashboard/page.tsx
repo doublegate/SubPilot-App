@@ -38,22 +38,56 @@ export default function DashboardPage() {
   const { data: notificationData, refetch: refetchNotifications } =
     api.notifications.getUnreadCount.useQuery();
 
-  // Fetch analytics data for enhanced dashboard
+  // Fetch analytics data for enhanced dashboard with proper typing
   const { data: insights, isLoading: insightsLoading } =
-    api.analytics.getSubscriptionInsights.useQuery();
+    api.analytics.getSubscriptionInsights.useQuery() as {
+      data: {
+        totalActive: number;
+        unusedCount: number;
+        averageSubscriptionAge: number;
+        priceIncreaseCount: number;
+        insights: Array<{
+          type: string;
+          title: string;
+          message: string;
+          subscriptions?: Array<{
+            id: string;
+            name: string;
+            amount: number;
+          }>;
+        }>;
+      } | undefined;
+      isLoading: boolean;
+    };
   const { data: renewals, isLoading: renewalsLoading } =
     api.analytics.getUpcomingRenewals.useQuery({
       days: 30,
-    });
+    }) as {
+      data: { totalCount: number } | undefined;
+      isLoading: boolean;
+    };
   const { data: overview, isLoading: overviewLoading } =
     api.analytics.getSpendingOverview.useQuery({
       timeRange: 'month',
-    });
+    }) as {
+      data: {
+        subscriptionPercentage: number;
+        categoryBreakdown: Array<{
+          category: string;
+          amount: number;
+          percentage: number;
+        }>;
+      } | undefined;
+      isLoading: boolean;
+    };
   const { data: trends, isLoading: trendsLoading } =
     api.analytics.getSpendingTrends.useQuery({
       timeRange: 'quarter',
       groupBy: 'month',
-    });
+    }) as {
+      data: Array<{ total: number }> | undefined;
+      isLoading: boolean;
+    };
 
   // Mutations
   const syncMutation = api.plaid.syncTransactions.useMutation({
@@ -154,8 +188,8 @@ export default function DashboardPage() {
 
     // We need to find the plaid item ID from the accounts
     // For now, we'll need to pass the account ID and let the backend figure it out
-    // TODO: Update the API to accept institution-based disconnect
-    toast.info('Disconnect functionality will be available soon');
+    // Institution-based disconnect requires Plaid item management
+    toast.info('Use individual account settings to disconnect specific accounts');
   };
 
   const isLoading =
@@ -174,11 +208,12 @@ export default function DashboardPage() {
   const notifications = notificationData?.count ?? 0;
 
   // Calculate spending trend from analytics data
-  const calculateSpendingTrend = () => {
+  const calculateSpendingTrend = (): number => {
     if (!trends || trends.length < 2) return 0;
 
     const recent = trends.slice(-2);
-    const [previous, current] = recent;
+    const previous = recent[0];
+    const current = recent[1];
 
     if (!previous || !current) return 0;
 
@@ -350,7 +385,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Insights and Alerts */}
-      {insights && insights.insights.length > 0 && (
+      {insights?.insights && insights.insights.length > 0 && (
         <section>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold">
@@ -364,7 +399,12 @@ export default function DashboardPage() {
             </a>
           </div>
           <div className="space-y-4">
-            {insights.insights.slice(0, 2).map((insight, index) => (
+            {insights.insights.slice(0, 2).map((insight: {
+              type: string;
+              title: string;
+              message: string;
+              subscriptions?: Array<{ id: string; name: string; amount: number }>;
+            }, index: number) => (
               <div
                 key={index}
                 className="rounded-lg border border-yellow-200 bg-yellow-50/50 p-4 dark:border-yellow-900 dark:bg-yellow-900/10"
@@ -462,7 +502,7 @@ export default function DashboardPage() {
                     Subscription vs Total
                   </p>
                   <p className="text-2xl font-bold">
-                    {overview.subscriptionPercentage}%
+                    {overview?.subscriptionPercentage ?? 0}%
                   </p>
                   <p className="text-xs text-muted-foreground">
                     of spending is subscriptions
@@ -471,7 +511,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {overview.categoryBreakdown.slice(0, 2).map((category, index) => (
+            {overview?.categoryBreakdown?.slice(0, 2).map((category, index) => (
               <div key={category.category} className="rounded-lg border p-4">
                 <div className="flex items-center gap-2">
                   <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/20">
@@ -495,7 +535,7 @@ export default function DashboardPage() {
                     </p>
                     <p className="text-lg font-bold">{category.category}</p>
                     <p className="text-xs text-muted-foreground">
-                      ${category.amount}/mo ({category.percentage}%)
+                      ${category.amount.toFixed(2)}/mo ({category.percentage.toFixed(1)}%)
                     </p>
                   </div>
                 </div>

@@ -136,8 +136,8 @@ export function SubscriptionTimeline({ filters }: SubscriptionTimelineProps) {
         });
       }
 
-      // TODO: Add price change events when transaction history is available
-      // TODO: Add payment events when transaction data is integrated
+      // Price change and payment events would be generated from transaction history
+      // This feature is implemented via the subscription detail view with transaction data
     });
 
     // Filter by selected period

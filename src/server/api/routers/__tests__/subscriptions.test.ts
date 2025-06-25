@@ -205,12 +205,12 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
     });
 
     it.skip('should filter by frequency', async () => {
-      // TODO: Implement frequency filter in the router
+      // Frequency filtering is not currently implemented in the API
       // The current router input schema doesn't include frequency parameter
     });
 
     it.skip('should search by name or merchant', async () => {
-      // TODO: Implement search parameter in the router
+      // Search parameter is not currently implemented in the subscription router
       // The current router input schema doesn't include search parameter
     });
 

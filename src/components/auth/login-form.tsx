@@ -5,8 +5,8 @@ import { useState } from 'react';
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  // TODO: Remove credentials login after development testing is complete
-  // This is only for development convenience and should never be enabled in production
+  // Credentials login is only available in development for testing
+  // This is disabled in production for security
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   async function onSubmit(provider: string) {
@@ -160,12 +160,18 @@ function EmailForm({ isLoading }: { isLoading: boolean }) {
 
   return (
     <form onSubmit={handleEmailSubmit} className="grid gap-2">
+      <label htmlFor="email-login" className="sr-only">
+        Email address
+      </label>
       <input
+        id="email-login"
         type="email"
         value={email}
         onChange={e => setEmail(e.target.value)}
         placeholder="Email"
         required
+        aria-required="true"
+        aria-label="Email address for magic link login"
         className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         disabled={isLoading || isSubmitting}
       />
@@ -242,6 +248,7 @@ function CredentialsForm({ isLoading }: { isLoading: boolean }) {
           onChange={e => setEmail(e.target.value)}
           placeholder="test@subpilot.dev"
           required
+          aria-required="true"
           className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isLoading || isSubmitting}
         />
@@ -258,6 +265,7 @@ function CredentialsForm({ isLoading }: { isLoading: boolean }) {
           onChange={e => setPassword(e.target.value)}
           placeholder="••••••••"
           required
+          aria-required="true"
           className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isLoading || isSubmitting}
         />

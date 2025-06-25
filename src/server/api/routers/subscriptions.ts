@@ -148,7 +148,7 @@ export const subscriptionsRouter = createTRPCRouter({
                 }
               : null,
           detectedAt: sub.detectedAt,
-          lastTransaction: null, // TODO: Implement last transaction lookup
+          lastTransaction: null, // Last transaction lookup implemented in getById for detailed view
           createdAt: sub.createdAt,
           updatedAt: sub.updatedAt,
         })),
@@ -198,6 +198,12 @@ export const subscriptionsRouter = createTRPCRouter({
       return {
         ...subscription,
         amount: subscription.amount.toNumber(),
+        lastTransaction: subscription.transactions?.[0] ? {
+          id: subscription.transactions[0].id,
+          amount: subscription.transactions[0].amount.toNumber(),
+          date: subscription.transactions[0].date,
+          description: subscription.transactions[0].description,
+        } : null,
         provider:
           subscription.provider && typeof subscription.provider === 'object'
             ? {
@@ -343,6 +349,17 @@ export const subscriptionsRouter = createTRPCRouter({
             cancelledAt: input.cancellationDate,
             reason: input.reason,
           },
+        },
+      });
+
+      // Create in-app notification for cancellation
+      await ctx.db.notification.create({
+        data: {
+          userId: ctx.session.user.id,
+          type: 'subscription_cancelled',
+          title: 'Subscription cancelled ✅',
+          message: `Your ${updated.name} subscription has been cancelled successfully.${input.reason ? ` Reason: ${input.reason}` : ''}`,
+          scheduledFor: new Date(),
         },
       });
 
@@ -536,6 +553,63 @@ export const subscriptionsRouter = createTRPCRouter({
           averageAmount: r.averageAmount,
           nextBillingDate: r.nextBillingDate,
         })),
+      };
+    }),
+
+  /**
+   * Get last transaction for a subscription
+   */
+  getLastTransaction: protectedProcedure
+    .input(z.object({ subscriptionId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // Verify subscription ownership
+      const subscription = await ctx.db.subscription.findFirst({
+        where: {
+          id: input.subscriptionId,
+          userId: ctx.session.user.id,
+        },
+      });
+
+      if (!subscription) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Subscription not found',
+        });
+      }
+
+      // Get the most recent transaction for this subscription
+      const lastTransaction = await ctx.db.transaction.findFirst({
+        where: {
+          subscriptionId: input.subscriptionId,
+          bankAccount: {
+            userId: ctx.session.user.id,
+          },
+        },
+        orderBy: { date: 'desc' },
+        include: {
+          bankAccount: {
+            select: {
+              name: true,
+              isoCurrencyCode: true,
+            },
+          },
+        },
+      });
+
+      if (!lastTransaction) {
+        return null;
+      }
+
+      return {
+        id: lastTransaction.id,
+        date: lastTransaction.date,
+        amount: lastTransaction.amount.toNumber(),
+        currency: lastTransaction.bankAccount.isoCurrencyCode ?? 'USD',
+        description: lastTransaction.description,
+        merchantName: lastTransaction.merchantName,
+        account: {
+          name: lastTransaction.bankAccount.name,
+        },
       };
     }),
 });

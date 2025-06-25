@@ -124,10 +124,9 @@ describe('API Performance Benchmarks', () => {
 
       const start = performance.now();
       const result = await caller.subscriptions.getAll({
-        search: 'netflix',
         category: 'Entertainment',
-        frequency: 'monthly',
-        activeOnly: true,
+        limit: 50,
+        offset: 0,
       });
       const duration = performance.now() - start;
 
@@ -165,7 +164,8 @@ describe('API Performance Benchmarks', () => {
 
       const start = performance.now();
       const result = await caller.analytics.getSpendingTrends({
-        period: 'monthly',
+        timeRange: 'month',
+        groupBy: 'week',
       });
       const duration = performance.now() - start;
 
@@ -221,7 +221,7 @@ describe('API Performance Benchmarks', () => {
       }));
 
       const start = performance.now();
-      const result = await caller.analytics.getCategoryBreakdown();
+      const result = await caller.analytics.getSpendingOverview({ timeRange: 'month' });
       const duration = performance.now() - start;
 
       expect(result.length).toBe(10); // 10 categories
@@ -318,7 +318,7 @@ describe('API Performance Benchmarks', () => {
 
       for (const { limit, offset } of paginationTests) {
         const start = performance.now();
-        const result = await caller.notifications.getNotifications({
+        const result = await caller.notifications.getAll({
           limit,
           offset,
         });
@@ -363,10 +363,10 @@ describe('API Performance Benchmarks', () => {
 
       const concurrentRequests = [
         () => caller.subscriptions.getAll({}),
-        () => caller.analytics.getSpendingTrends({ period: 'monthly' }),
-        () => caller.notifications.getNotifications({}),
+        () => caller.analytics.getSpendingTrends({ timeRange: 'month' }),
+        () => caller.notifications.getAll({}),
         () => caller.subscriptions.getAll({ category: 'Entertainment' }),
-        () => caller.analytics.getCategoryBreakdown(),
+        () => caller.analytics.getSpendingOverview({ timeRange: 'month' }),
       ];
 
       const start = performance.now();
@@ -492,8 +492,8 @@ describe('API Performance Benchmarks', () => {
       const result = await caller.analytics.exportData({ format: 'json' });
       const duration = performance.now() - start;
 
-      expect(result.data.subscriptions).toHaveLength(5000);
-      expect(result.data.transactions).toHaveLength(20000);
+      expect(result.subscriptions).toHaveLength(5000);
+      expect(result.transactions).toHaveLength(20000);
       expect(duration).toBeLessThan(1000); // Large export should complete within 1 second
     });
   });
@@ -516,10 +516,6 @@ describe('API Performance Benchmarks', () => {
       // Baseline performance targets for common operations
       const performanceTargets = [
         { operation: () => caller.subscriptions.getAll({}), maxTime: 50 },
-        {
-          operation: () => caller.subscriptions.getAll({ search: 'netflix' }),
-          maxTime: 75,
-        },
         {
           operation: () =>
             caller.subscriptions.getAll({ category: 'Entertainment' }),

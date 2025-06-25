@@ -26,6 +26,23 @@ import { EditSubscriptionModal } from '@/components/edit-subscription-modal';
 import { CancellationAssistant } from '@/components/cancellation-assistant';
 import { ArchiveSubscriptionModal } from '@/components/archive-subscription-modal';
 
+interface Subscription {
+  id: string;
+  name: string;
+  description?: string | null;
+  amount: number;
+  currency: string;
+  frequency: string;
+  status: string;
+  category?: string | null;
+  nextBilling?: Date | null;
+  provider?: {
+    name: string;
+    website?: string | null;
+    logo?: string | null;
+  } | null;
+}
+
 export default function SubscriptionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -40,10 +57,10 @@ export default function SubscriptionsPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [cancellationModalOpen, setCancellationModalOpen] = useState(false);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
-  const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
 
   // Fetch subscriptions with filters
-  const { data: subscriptionsData, isLoading } =
+  const { data: subscriptionsData, isLoading, refetch } =
     api.subscriptions.getAll.useQuery({
       status:
         statusFilter === 'all'
@@ -87,19 +104,14 @@ export default function SubscriptionsPage() {
     ) ?? [];
 
   // Modal handlers
-  const handleEditSubscription = (subscription: any) => {
+  const handleEditSubscription = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
     setEditModalOpen(true);
   };
 
-  const handleCancelSubscription = (subscription: any) => {
+  const handleCancelSubscription = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
     setArchiveModalOpen(true);
-  };
-
-  const handleCancellationGuide = (subscription: any) => {
-    setSelectedSubscription(subscription);
-    setCancellationModalOpen(true);
   };
 
   const handleMarkCancelled = (subscriptionId: string) => {
@@ -220,8 +232,10 @@ export default function SubscriptionsPage() {
             variant="outline"
             size="icon"
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+            aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
           >
             {sortOrder === 'asc' ? '↑' : '↓'}
+            <span className="sr-only">Sort {sortOrder === 'asc' ? 'descending' : 'ascending'}</span>
           </Button>
         </div>
       </div>
@@ -268,7 +282,7 @@ export default function SubscriptionsPage() {
       <AddSubscriptionModal
         open={addModalOpen}
         onOpenChange={setAddModalOpen}
-        onSuccess={refreshData}
+        onSuccess={() => void refetch()}
       />
 
       {selectedSubscription && (
@@ -284,7 +298,7 @@ export default function SubscriptionsPage() {
             }}
             open={editModalOpen}
             onOpenChange={setEditModalOpen}
-            onSuccess={refreshData}
+            onSuccess={() => void refetch()}
           />
 
           <ArchiveSubscriptionModal
@@ -298,7 +312,7 @@ export default function SubscriptionsPage() {
             }}
             open={archiveModalOpen}
             onOpenChange={setArchiveModalOpen}
-            onSuccess={refreshData}
+            onSuccess={() => void refetch()}
           />
 
           <CancellationAssistant

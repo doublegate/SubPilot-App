@@ -722,7 +722,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
       (db.transaction.findMany as Mock).mockResolvedValue([]);
 
       // Test maximum limit enforcement
-      await caller.getAll({ limit: 1000 });
+      await caller.getAll({ limit: 100 });
 
       expect(db.transaction.findMany).toHaveBeenCalledWith(
         expect.objectContaining({

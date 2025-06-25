@@ -32,11 +32,11 @@ describe('API Security Tests', () => {
 
       // Test all major protected endpoints
       const protectedCalls = [
-        () => caller.auth.getSession(),
+        () => caller.auth.getSessions(),
         () => caller.subscriptions.getAll({}),
         () => caller.transactions.getAll({}),
-        () => caller.analytics.getSpendingTrends({ period: 'monthly' }),
-        () => caller.notifications.getNotifications({}),
+        () => caller.analytics.getSpendingTrends({ timeRange: 'month' }),
+        () => caller.notifications.getAll({}),
         () => caller.plaid.createLinkToken(),
       ];
 
@@ -155,9 +155,9 @@ describe('API Security Tests', () => {
       }));
 
       const user1Notifications =
-        await user1Caller.notifications.getNotifications({});
+        await user1Caller.notifications.getAll({});
       const user2Notifications =
-        await user2Caller.notifications.getNotifications({});
+        await user2Caller.notifications.getAll({});
 
       expect(user1Notifications).toHaveLength(1);
       expect(user2Notifications).toHaveLength(0);

@@ -125,10 +125,10 @@ describe('Analytics Router', () => {
 
     it('should handle different frequency calculations', async () => {
       const testSubs = [
-        { amount: { toNumber: () => 12.0 }, frequency: 'monthly' },
-        { amount: { toNumber: () => 120.0 }, frequency: 'yearly' },
-        { amount: { toNumber: () => 30.0 }, frequency: 'quarterly' },
-        { amount: { toNumber: () => 3.0 }, frequency: 'weekly' },
+        { amount: { toNumber: () => 12.0 }, frequency: 'monthly', category: 'Test1' },
+        { amount: { toNumber: () => 120.0 }, frequency: 'yearly', category: 'Test2' },
+        { amount: { toNumber: () => 30.0 }, frequency: 'quarterly', category: 'Test3' },
+        { amount: { toNumber: () => 3.0 }, frequency: 'weekly', category: 'Test4' },
       ];
 
       mockDb.subscription.findMany.mockResolvedValue(testSubs);
@@ -343,13 +343,17 @@ describe('Analytics Router', () => {
       const subscriptionsWithAges = [
         {
           id: 'sub-1',
+          name: 'Test Sub 1',
           isActive: true,
+          amount: { toNumber: () => 15.99 },
           createdAt: thirtyDaysAgo,
           transactions: [],
         },
         {
           id: 'sub-2',
+          name: 'Test Sub 2',
           isActive: true,
+          amount: { toNumber: () => 9.99 },
           createdAt: tenDaysAgo,
           transactions: [],
         },

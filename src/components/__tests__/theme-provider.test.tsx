@@ -277,7 +277,7 @@ describe('ThemeProvider', () => {
 
       // Should render without throwing, even with potential prop validation warnings
       const { getByTestId } = render(
-        <ThemeProvider invalidProp="test">
+        <ThemeProvider>
           <div>Content</div>
         </ThemeProvider>
       );

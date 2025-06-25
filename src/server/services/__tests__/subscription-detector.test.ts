@@ -36,6 +36,7 @@ class TestableSubscriptionDetector extends SubscriptionDetector {
     return this.analyzeTransactionGroup(group);
   }
 
+  // detectFrequency is already public, so no need to wrap it
   public testDetectFrequency(intervals: number[]) {
     return this.detectFrequency(intervals);
   }
@@ -56,7 +57,8 @@ class TestableSubscriptionDetector extends SubscriptionDetector {
     );
   }
 
-  public testUpdateTransactionDetection(
+  // Override the private method to avoid database calls in tests
+  protected async updateTransactionDetection(
     transactions: Transaction[],
     result: {
       isSubscription: boolean;
@@ -66,15 +68,6 @@ class TestableSubscriptionDetector extends SubscriptionDetector {
       averageAmount: number;
       nextBillingDate?: Date;
     }
-  ) {
-    // Make the protected method accessible for testing
-    return (this as any).updateTransactionDetection(transactions, result);
-  }
-
-  // Override the private method to avoid database calls in tests
-  protected async updateTransactionDetection(
-    transactions: Transaction[],
-    result: any
   ): Promise<void> {
     // Mock implementation for testing - do nothing
     return Promise.resolve();
@@ -435,9 +428,8 @@ describe('SubscriptionDetector', () => {
         mockDetection,
       ]);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(db.subscription.create as Mock).toHaveBeenCalledWith({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const createMock = db.subscription.create as Mock;
+      expect(createMock).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId: 'user-1',
           name: 'Netflix',
@@ -468,8 +460,8 @@ describe('SubscriptionDetector', () => {
         mockDetection,
       ]);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(db.subscription.create as Mock).not.toHaveBeenCalled();
+      const createMock = db.subscription.create as Mock;
+      expect(createMock).not.toHaveBeenCalled();
     });
   });
 
@@ -491,8 +483,7 @@ describe('SubscriptionDetector', () => {
       // Intervals in days: [30, 31] for monthly payments
       const intervals = [30, 31];
 
-      // @ts-expect-error - accessing private method for testing
-      const result = detector.detectFrequency(intervals);
+      const result = detector.testDetectFrequency(intervals);
       expect(result?.frequency).toBe('monthly');
     });
 
@@ -500,8 +491,7 @@ describe('SubscriptionDetector', () => {
       // Intervals in days: [7, 7] for weekly payments
       const intervals = [7, 7];
 
-      // @ts-expect-error - accessing private method for testing
-      const result = detector.detectFrequency(intervals);
+      const result = detector.testDetectFrequency(intervals);
       expect(result?.frequency).toBe('weekly');
     });
 
@@ -509,8 +499,7 @@ describe('SubscriptionDetector', () => {
       // Intervals in days: [365, 365] for yearly payments
       const intervals = [365, 365];
 
-      // @ts-expect-error - accessing private method for testing
-      const result = detector.detectFrequency(intervals);
+      const result = detector.testDetectFrequency(intervals);
       expect(result?.frequency).toBe('yearly');
     });
 
@@ -518,11 +507,8 @@ describe('SubscriptionDetector', () => {
       // Interval of 25 days - close to monthly
       const intervals = [25];
 
-      // @ts-expect-error - accessing private method for testing
-      const result = detector.detectFrequency(intervals);
+      const result = detector.testDetectFrequency(intervals);
       expect(result?.frequency).toBe('monthly');
     });
   });
 });
-
-/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */

@@ -51,7 +51,10 @@ export default async function ProfilePage() {
                   <p className="text-sm text-gray-500">Connected</p>
                 </div>
               </div>
-              <button className="text-sm font-medium text-red-600 hover:text-red-700">
+              <button 
+                className="text-sm font-medium text-red-600 hover:text-red-700"
+                aria-label="Disconnect Google account"
+              >
                 Disconnect
               </button>
             </div>
@@ -74,6 +77,7 @@ export default async function ProfilePage() {
               <input
                 type="checkbox"
                 defaultChecked
+                aria-label="Enable email notifications for subscription updates"
                 className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
               />
             </label>
@@ -87,6 +91,7 @@ export default async function ProfilePage() {
               <input
                 type="checkbox"
                 defaultChecked
+                aria-label="Enable renewal reminder notifications before subscriptions renew"
                 className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
               />
             </label>
@@ -100,6 +105,7 @@ export default async function ProfilePage() {
               <input
                 type="checkbox"
                 defaultChecked
+                aria-label="Enable alerts for subscription price changes"
                 className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
               />
             </label>
@@ -119,7 +125,10 @@ export default async function ProfilePage() {
                   Permanently delete your account and all data
                 </p>
               </div>
-              <button className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+              <button 
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                aria-label="Permanently delete your account and all data"
+              >
                 Delete Account
               </button>
             </div>

@@ -219,9 +219,16 @@ export class SubscriptionDetector {
   }
 
   /**
+   * Group transactions by merchant (exposed for testing)
+   */
+  public testGroupByMerchant(transactions: Transaction[]): TransactionGroup[] {
+    return this.groupByMerchant(transactions);
+  }
+
+  /**
    * Detect frequency pattern from intervals
    */
-  protected detectFrequency(
+  public detectFrequency(
     intervals: number[]
   ): { frequency: DetectionResult['frequency']; confidence: number } | null {
     if (intervals.length === 0) return null;

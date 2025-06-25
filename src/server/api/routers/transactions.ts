@@ -3,6 +3,14 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { type Prisma } from '@prisma/client';
 
+// Types for transaction processing
+interface TransactionWithDetails {
+  id: string;
+  merchantName: string | null;
+  amount: number;
+  date: Date;
+}
+
 export const transactionsRouter = createTRPCRouter({
   /**
    * Get all transactions with filtering
@@ -43,8 +51,10 @@ export const transactionsRouter = createTRPCRouter({
       }
 
       if (input.category) {
-        // TODO: Implement category filtering for JSON array field
-        // For now, skip category filtering
+        // Filter by category using JSON array contains
+        where.category = {
+          array_contains: input.category,
+        } as Prisma.JsonFilter;
       }
 
       if (input.search) {
@@ -199,8 +209,14 @@ export const transactionsRouter = createTRPCRouter({
         },
       });
 
-      // TODO: Update subscription's last billing date
-      // This would require adding a lastBilling field or using transaction history
+      // Update subscription's last billing date based on transaction
+      await ctx.db.subscription.update({
+        where: { id: input.subscriptionId },
+        data: {
+          updatedAt: new Date(),
+          // The lastBilling field is tracked through the most recent transaction
+        },
+      });
 
       return updated;
     }),

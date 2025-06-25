@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import Link from 'next/link';
+import { ProviderLogo } from '@/components/ui/provider-logo';
 
 interface SubscriptionCardProps {
   subscription: {
@@ -87,20 +88,12 @@ export function SubscriptionCard({
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            {subscription.provider?.logo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={subscription.provider.logo}
-                alt={subscription.provider.name}
-                className="h-10 w-10 rounded-lg object-contain"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600">
-                <span className="text-lg font-bold text-white">
-                  {subscription.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+            <ProviderLogo
+              src={subscription.provider?.logo}
+              alt={subscription.provider?.name ?? subscription.name}
+              fallbackText={subscription.name}
+              size="md"
+            />
             <div>
               <CardTitle className="text-lg font-semibold">
                 {subscription.name}
@@ -114,8 +107,9 @@ export function SubscriptionCard({
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`More options for ${subscription.name}`}>
                 <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">More options for {subscription.name}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

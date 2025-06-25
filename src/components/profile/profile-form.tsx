@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { api } from '@/trpc/react';
+import { toast } from 'sonner';
 
 interface ProfileFormProps {
   user: {
@@ -20,16 +22,25 @@ export function ProfileForm({ user }: ProfileFormProps) {
     email: user.email,
   });
 
+  const updateProfileMutation = api.auth.updateProfile.useMutation({
+    onSuccess: () => {
+      toast.success('Profile updated successfully');
+      router.refresh();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update profile');
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // TODO: Implement profile update API endpoint
-      console.log('Updating profile:', formData);
-
-      // Refresh the page to show updated data
-      router.refresh();
+      await updateProfileMutation.mutateAsync({
+        name: formData.name.trim() || undefined,
+        email: formData.email !== user.email ? formData.email : undefined,
+      });
     } catch (error) {
       console.error('Failed to update profile:', error);
     } finally {
@@ -89,10 +100,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
           value={formData.email}
           onChange={e => setFormData({ ...formData, email: e.target.value })}
           className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
-          disabled // Email cannot be changed for now
+          disabled={isLoading}
         />
         <p className="mt-1 text-sm text-gray-500">
-          Email address cannot be changed
+          Changing your email will require re-verification
         </p>
       </div>
 
