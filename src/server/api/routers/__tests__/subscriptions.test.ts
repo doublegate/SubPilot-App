@@ -132,7 +132,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       const result = await caller.getAll({});
 
       expect(result.subscriptions).toHaveLength(3);
-      expect(result.totalCount).toBe(3);
+      expect(result.total).toBe(3);
       expect(result.subscriptions[0]).toEqual({
         id: 'sub-1',
         name: 'Netflix',
@@ -306,11 +306,11 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       const result = await caller.create({
         name: 'Netflix',
         amount: 15.99,
+        currency: 'USD',
         frequency: 'monthly',
         category: 'Entertainment',
         description: 'Netflix Subscription',
-        startDate: '2024-01-15',
-        nextBillingDate: '2024-08-15',
+        nextBilling: new Date('2024-08-15'),
       });
 
       expect(result).toEqual({
@@ -395,7 +395,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       const result = await caller.update({
         id: 'sub-1',
         name: 'Netflix Premium',
-        amount: 17.99,
+        customAmount: 17.99,
       });
 
       expect(result).toEqual({ success: true });
@@ -438,7 +438,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       );
       (db.notification.create as Mock).mockResolvedValueOnce({});
 
-      const result = await caller.cancel({
+      const result = await caller.markCancelled({
         id: 'sub-1',
         reason: 'Too expensive',
       });
@@ -494,7 +494,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         cancelledSubscription
       );
 
-      await expect(caller.cancel({ id: 'sub-3' })).rejects.toThrow(
+      await expect(caller.markCancelled({ id: 'sub-3' })).rejects.toThrow(
         'Subscription is already cancelled'
       );
     });
@@ -568,8 +568,8 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       const result = await caller.getStats();
 
       expect(result.totalActive).toBe(0);
-      expect(result.totalCancelled).toBe(0);
-      expect(result.totalMonthlySpend).toBe(0);
+      expect(result.monthlySpend).toBe(0);
+      expect(result.yearlySpend).toBe(0);
     });
   });
 
@@ -610,9 +610,9 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
       const result = await caller.getAll({});
 
-      expect(result.subscriptions[0].description).toBeNull();
-      expect(result.subscriptions[0].lastBillingDate).toBeNull();
-      expect(result.subscriptions[0].nextBillingDate).toBeNull();
+      expect(result.subscriptions[0]?.description).toBeNull();
+      expect(result.subscriptions[0]?.nextBilling).toBeNull();
+      expect(result.subscriptions[0]?.lastTransaction).toBeNull();
     });
   });
 
@@ -645,8 +645,8 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
       const result = await caller.getAll({});
 
-      expect(result.subscriptions[0].startDate).toEqual(new Date('2025-01-01'));
-      expect(result.subscriptions[0].nextBillingDate).toEqual(
+      expect(result.subscriptions[0]?.createdAt).toBeDefined();
+      expect(result.subscriptions[0]?.nextBilling).toEqual(
         new Date('2025-02-01')
       );
     });

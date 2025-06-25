@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { analyticsRouter } from '../analytics';
-import { createTRPCMsw } from 'msw-trpc';
+// import { createTRPCMsw } from 'msw-trpc'; // Package not available
 import { type AppRouter } from '../../root';
 
 // Mock Prisma client

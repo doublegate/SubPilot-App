@@ -111,7 +111,7 @@ describe('Plaid Router', () => {
       mockPlaidClient.linkTokenCreate = vi.fn().mockResolvedValue(mockResponse);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.createLinkToken();
@@ -137,7 +137,7 @@ describe('Plaid Router', () => {
       vi.mocked(plaidClient.isPlaidConfigured).mockReturnValue(false);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
 
@@ -233,7 +233,7 @@ describe('Plaid Router', () => {
 
     it('should exchange public token and set up bank connection', async () => {
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.exchangePublicToken(mockInput);
@@ -269,7 +269,7 @@ describe('Plaid Router', () => {
         .mockRejectedValue(new Error('Transaction fetch failed'));
 
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.exchangePublicToken(mockInput);
@@ -337,7 +337,7 @@ describe('Plaid Router', () => {
 
     it('should sync transactions using sync endpoint', async () => {
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.syncTransactions({});
@@ -373,7 +373,7 @@ describe('Plaid Router', () => {
       });
 
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       await caller.syncTransactions({});
@@ -408,7 +408,7 @@ describe('Plaid Router', () => {
       });
 
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       await caller.syncTransactions({});
@@ -453,7 +453,7 @@ describe('Plaid Router', () => {
       ]);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.getAccounts();
@@ -488,7 +488,7 @@ describe('Plaid Router', () => {
 
     it('should disconnect account and remove from Plaid', async () => {
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.disconnectAccount({
@@ -520,7 +520,7 @@ describe('Plaid Router', () => {
         .mockRejectedValue(new Error('Plaid removal failed'));
 
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.disconnectAccount({
@@ -536,7 +536,7 @@ describe('Plaid Router', () => {
       mockDb.plaidItem.findFirst.mockResolvedValue(null);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
 
@@ -564,7 +564,7 @@ describe('Plaid Router', () => {
       ]);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
-      // @ts-expect-error - Mocking db for tests
+      // Mocking db for tests
       ctx.db = mockDb as any;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.getSyncStatus();

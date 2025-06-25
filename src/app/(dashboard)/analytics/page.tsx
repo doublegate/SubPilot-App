@@ -138,18 +138,20 @@ export default function AnalyticsPage() {
         exportData.data
       ) {
         // CSV export
+        const dataObj = exportData as { data: { subscriptions?: string } };
         const csvContent =
-          typeof exportData.data.subscriptions === 'string'
-            ? exportData.data.subscriptions
+          typeof dataObj.data?.subscriptions === 'string'
+            ? dataObj.data.subscriptions
             : '';
 
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
+        const filenameObj = exportData as { filename?: string };
         a.download =
-          'filename' in exportData && exportData.filename
-            ? exportData.filename
+          filenameObj.filename
+            ? filenameObj.filename
             : `subpilot-export-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
@@ -162,14 +164,16 @@ export default function AnalyticsPage() {
         exportData.data
       ) {
         // JSON export
-        const jsonContent = JSON.stringify(exportData.data, null, 2);
+        const dataObj = exportData as { data: unknown };
+        const jsonContent = JSON.stringify(dataObj.data, null, 2);
         const blob = new Blob([jsonContent], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
+        const filenameObj = exportData as { filename?: string };
         a.download =
-          'filename' in exportData && exportData.filename
-            ? exportData.filename
+          filenameObj.filename
+            ? filenameObj.filename
             : `subpilot-export-${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);

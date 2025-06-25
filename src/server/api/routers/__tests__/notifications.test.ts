@@ -106,17 +106,17 @@ describe('Notifications Router - Full tRPC Integration', () => {
         mockNotifications
       );
 
-      const result = await caller.getNotifications({});
+      const result = await caller.notifications.getAll({});
 
-      expect(result).toHaveLength(3);
-      expect(result[0]).toEqual({
+      expect(result.notifications).toHaveLength(3);
+      expect(result.notifications[0]).toEqual({
         id: 'notif-1',
         type: 'subscription_detected',
         title: 'New Subscription Detected',
         message: 'We found a new Netflix subscription in your transactions',
         read: false,
         createdAt: expect.any(Date),
-        data: { subscriptionId: 'sub-1', amount: 15.99, confidence: 0.95 },
+        metadata: { subscriptionId: 'sub-1', amount: 15.99, confidence: 0.95 },
       });
 
       expect(db.notification.findMany).toHaveBeenCalledWith({
@@ -541,7 +541,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         malformedNotification,
       ]);
 
-      const result = await caller.getNotifications({});
+      const result = await caller.notifications.getAll({});
 
       expect(result[0].data).toBeNull();
     });
@@ -556,7 +556,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         oldNotification,
       ]);
 
-      const result = await caller.getNotifications({});
+      const result = await caller.notifications.getAll({});
 
       expect(result[0].createdAt).toEqual(new Date('2020-01-01'));
     });

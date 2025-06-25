@@ -134,6 +134,7 @@ describe('Analytics Router Integration Tests', () => {
           currentBalance: 1000,
           isoCurrencyCode: 'USD',
           isActive: true,
+          mask: '1234',
         },
       });
 
@@ -258,8 +259,8 @@ describe('Analytics Router Integration Tests', () => {
       expect(result).toBeDefined();
       expect(result.format).toBe('json');
       expect(result.data).toBeDefined();
-      expect(result.data.subscriptions).toBeDefined();
-      expect(Array.isArray(result.data.subscriptions)).toBe(true);
+      expect(result.data?.subscriptions).toBeDefined();
+      expect(Array.isArray(result.data?.subscriptions)).toBe(true);
     });
   });
 });

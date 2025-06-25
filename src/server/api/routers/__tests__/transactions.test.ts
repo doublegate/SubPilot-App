@@ -176,10 +176,10 @@ describe('Transactions Router - Full tRPC Integration', () => {
         subscriptionTransactions
       );
 
-      const result = await caller.getAll({ subscriptionsOnly: true });
+      const result = await caller.getAll({ isRecurring: true });
 
-      expect(result).toHaveLength(1);
-      expect(result[0].isSubscription).toBe(true);
+      expect(result.transactions).toHaveLength(1);
+      expect(result.transactions[0].isRecurring).toBe(true);
 
       expect(db.transaction.findMany).toHaveBeenCalledWith({
         where: {
