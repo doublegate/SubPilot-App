@@ -41,6 +41,8 @@ interface Subscription {
     website?: string | null;
     logo?: string | null;
   } | null;
+  notes?: string | null;
+  isActive: boolean;
 }
 
 export default function SubscriptionsPage() {
@@ -124,13 +126,9 @@ export default function SubscriptionsPage() {
     }
   };
 
-  const refreshData = () => {
-    // Refresh all queries
-    void detectSubscriptions.mutate({});
-  };
 
   return (
-    <div className="space-y-8">
+    <main className="space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -145,6 +143,7 @@ export default function SubscriptionsPage() {
             Add Subscription
           </Button>
           <Button
+            type="button"
             onClick={() => detectSubscriptions.mutate({})}
             disabled={detectSubscriptions.isPending}
           >
@@ -264,8 +263,14 @@ export default function SubscriptionsPage() {
             category: sub.category,
             provider: sub.provider,
           }))}
-          onUpdate={handleEditSubscription}
-          onCancel={handleCancelSubscription}
+          onUpdate={(id: string) => {
+            const subscription = filteredSubscriptions.find(s => s.id === id);
+            if (subscription) handleEditSubscription(subscription);
+          }}
+          onCancel={(id: string) => {
+            const subscription = filteredSubscriptions.find(s => s.id === id);
+            if (subscription) handleCancelSubscription(subscription);
+          }}
         />
       ) : (
         <div className="rounded-lg border border-dashed p-12 text-center">
@@ -330,6 +335,6 @@ export default function SubscriptionsPage() {
           />
         </>
       )}
-    </div>
+    </main>
   );
 }

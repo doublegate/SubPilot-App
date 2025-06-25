@@ -18,7 +18,7 @@ export default function HomePage() {
             className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/80 p-4 text-gray-900 shadow-lg hover:bg-white/90 dark:bg-gray-800/80 dark:text-gray-100 dark:hover:bg-gray-800/90"
             href="/dashboard"
           >
-            <h3 className="text-2xl font-bold">Get Started →</h3>
+            <h2 className="text-2xl font-bold">Get Started →</h2>
             <div className="text-lg">
               Connect your bank account and start tracking your subscriptions.
             </div>
@@ -27,7 +27,7 @@ export default function HomePage() {
             className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/80 p-4 text-gray-900 shadow-lg hover:bg-white/90 dark:bg-gray-800/80 dark:text-gray-100 dark:hover:bg-gray-800/90"
             href="/login"
           >
-            <h3 className="text-2xl font-bold">Sign In →</h3>
+            <h2 className="text-2xl font-bold">Sign In →</h2>
             <div className="text-lg">
               Already have an account? Sign in to view your dashboard.
             </div>

@@ -11,7 +11,7 @@ export async function GET() {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       service: 'subpilot-app',
-      version: process.env.npm_package_version || '0.1.8',
+      version: process.env.npm_package_version ?? '0.1.8',
       environment: env.NODE_ENV,
       checks: {
         database: 'unknown',
@@ -97,7 +97,7 @@ export async function HEAD() {
     // Quick database ping
     await db.$queryRaw`SELECT 1`;
     return new NextResponse(null, { status: 200 });
-  } catch (error) {
+  } catch {
     return new NextResponse(null, { status: 503 });
   }
 }
