@@ -229,7 +229,6 @@ export const plaidRouter = createTRPCRouter({
                   plaidTransactionId: txn.transaction_id,
                   amount: Math.abs(txn.amount), // Plaid returns negative for outflows
                   isoCurrencyCode: txn.iso_currency_code ?? 'USD',
-                  name: txn.merchant_name ?? txn.name,
                   description: txn.name,
                   date: new Date(txn.date),
                   pending: txn.pending,
@@ -438,7 +437,6 @@ export const plaidRouter = createTRPCRouter({
                   plaidTransactionId: txn.transaction_id,
                   amount: Math.abs(txn.amount),
                   isoCurrencyCode: txn.iso_currency_code ?? 'USD',
-                  name: txn.merchant_name ?? txn.name,
                   description: txn.name,
                   date: new Date(txn.date),
                   pending: txn.pending,
@@ -464,7 +462,7 @@ export const plaidRouter = createTRPCRouter({
           }
 
           // Update last sync time
-          await ctx.db.account.updateMany({
+          await ctx.db.bankAccount.updateMany({
             where: {
               plaidItemId: item.id,
               ...(input.accountId ? { id: input.accountId } : {}),
