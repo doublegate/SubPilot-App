@@ -598,7 +598,7 @@ export const plaidRouter = createTRPCRouter({
       });
 
       // Mark all accounts as inactive
-      await ctx.db.account.updateMany({
+      await ctx.db.bankAccount.updateMany({
         where: { plaidItemId: input.plaidItemId },
         data: { isActive: false },
       });
@@ -616,7 +616,7 @@ export const plaidRouter = createTRPCRouter({
         status: 'good',
       },
       include: {
-        accounts: {
+        bankAccounts: {
           where: { isActive: true },
           select: {
             id: true,
@@ -629,10 +629,10 @@ export const plaidRouter = createTRPCRouter({
     return plaidItems.map(item => ({
       id: item.id,
       institutionName: item.institutionName,
-      lastSync: item.accounts[0]?.lastSync ?? null,
+      lastSync: item.bankAccounts[0]?.lastSync ?? null,
       status: item.status,
       error: null,
-      accountCount: item.accounts.length,
+      accountCount: item.bankAccounts.length,
     }));
   }),
 });
