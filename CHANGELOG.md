@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-06-25
 
+### Added
+
+- **Theme Switching System** - Complete Light/Dark/Auto mode implementation
+  - Integrated next-themes for robust theme management
+  - Created theme toggle dropdown with Light/Dark/Auto options
+  - Added theme toggle to all pages (dashboard, auth, landing)
+  - Theme preference persists across sessions
+  - Auto mode follows system preferences in real-time
+  - Smooth transitions without flashing
+
 ### Fixed
 
 - **OAuth Authentication** - Fixed Google and GitHub login errors
