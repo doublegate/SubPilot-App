@@ -195,7 +195,7 @@ async function debugDashboard() {
     
     // Group by merchant to find recurring patterns
     const merchantGroups = recentTransactions.reduce((acc, txn) => {
-      const merchant = txn.merchantName || txn.name || 'Unknown';
+      const merchant = txn.merchantName || txn.description || 'Unknown';
       if (!acc[merchant]) acc[merchant] = [];
       acc[merchant].push(txn);
       return acc;
