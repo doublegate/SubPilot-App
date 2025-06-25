@@ -2,7 +2,7 @@
 
 /**
  * Production Environment Validation Script
- * 
+ *
  * Validates that all required environment variables are properly configured
  * for production deployment. Checks for common configuration issues and
  * provides actionable feedback.
@@ -29,14 +29,21 @@ class ProductionEnvironmentValidator {
       fail: '❌',
       warning: '⚠️',
     }[result.status];
-    
-    console.log(`${emoji} ${result.category} - ${result.variable}: ${result.message}`);
+
+    console.log(
+      `${emoji} ${result.category} - ${result.variable}: ${result.message}`
+    );
     if (result.recommendation) {
       console.log(`   💡 ${result.recommendation}`);
     }
   }
 
-  private validateRequired(category: string, variable: string, value: string | undefined, message: string) {
+  private validateRequired(
+    category: string,
+    variable: string,
+    value: string | undefined,
+    message: string
+  ) {
     if (!value || value === '') {
       this.addResult({
         category,
@@ -47,7 +54,7 @@ class ProductionEnvironmentValidator {
       });
       return false;
     }
-    
+
     this.addResult({
       category,
       variable,
@@ -57,7 +64,12 @@ class ProductionEnvironmentValidator {
     return true;
   }
 
-  private validateOptional(category: string, variable: string, value: string | undefined, message: string) {
+  private validateOptional(
+    category: string,
+    variable: string,
+    value: string | undefined,
+    message: string
+  ) {
     if (!value || value === '') {
       this.addResult({
         category,
@@ -68,7 +80,7 @@ class ProductionEnvironmentValidator {
       });
       return false;
     }
-    
+
     this.addResult({
       category,
       variable,
@@ -78,7 +90,13 @@ class ProductionEnvironmentValidator {
     return true;
   }
 
-  private validatePattern(category: string, variable: string, value: string | undefined, pattern: RegExp, message: string) {
+  private validatePattern(
+    category: string,
+    variable: string,
+    value: string | undefined,
+    pattern: RegExp,
+    message: string
+  ) {
     if (!value) {
       this.addResult({
         category,
@@ -147,8 +165,10 @@ class ProductionEnvironmentValidator {
         });
       }
 
-      if (env.NEXTAUTH_SECRET.includes('your-super-secret-key') || 
-          env.NEXTAUTH_SECRET.includes('change-this')) {
+      if (
+        env.NEXTAUTH_SECRET.includes('your-super-secret-key') ||
+        env.NEXTAUTH_SECRET.includes('change-this')
+      ) {
         this.addResult({
           category: 'Core',
           variable: 'NEXTAUTH_SECRET',
@@ -174,7 +194,10 @@ class ProductionEnvironmentValidator {
 
     // Check for production database indicators
     if (env.DATABASE_URL) {
-      if (env.DATABASE_URL.includes('localhost') || env.DATABASE_URL.includes('127.0.0.1')) {
+      if (
+        env.DATABASE_URL.includes('localhost') ||
+        env.DATABASE_URL.includes('127.0.0.1')
+      ) {
         this.addResult({
           category: 'Database',
           variable: 'DATABASE_URL',
@@ -389,7 +412,8 @@ class ProductionEnvironmentValidator {
           variable: 'DATABASE_URL',
           status: 'warning',
           message: 'Plain text password in connection string',
-          recommendation: 'Consider using connection string with encoded credentials',
+          recommendation:
+            'Consider using connection string with encoded credentials',
         });
       }
     }
@@ -424,7 +448,7 @@ class ProductionEnvironmentValidator {
   private printSummary() {
     console.log('\n📊 Validation Summary');
     console.log('=====================');
-    
+
     const summary = this.results.reduce(
       (acc, result) => {
         acc[result.status]++;
@@ -474,14 +498,16 @@ class ProductionEnvironmentValidator {
 
     console.log('\n🎯 Next Steps');
     console.log('='.repeat(15));
-    
+
     if (failures.length > 0) {
       console.log('❌ PRODUCTION NOT READY');
       console.log('   Fix all critical issues before deploying to production.');
       process.exit(1);
     } else if (warnings.length > 0) {
       console.log('⚠️  PRODUCTION READY WITH WARNINGS');
-      console.log('   Consider addressing warnings for optimal production setup.');
+      console.log(
+        '   Consider addressing warnings for optimal production setup.'
+      );
       process.exit(0);
     } else {
       console.log('🎉 PRODUCTION READY');

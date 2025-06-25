@@ -13,10 +13,10 @@ import { db } from '@/server/db';
 // Mock Plaid client
 vi.mock('@/server/plaid-client', () => ({
   plaid: vi.fn(() => null),
-  plaidWithRetry: vi.fn().mockImplementation(async (operation) => operation()),
+  plaidWithRetry: vi.fn().mockImplementation(async operation => operation()),
   isPlaidConfigured: vi.fn(() => false),
   verifyPlaidWebhook: vi.fn().mockResolvedValue(true),
-  handlePlaidError: vi.fn((error) => console.error('Plaid error:', error)),
+  handlePlaidError: vi.fn(error => console.error('Plaid error:', error)),
 }));
 
 describe('Analytics Router Integration Tests', () => {
@@ -26,10 +26,15 @@ describe('Analytics Router Integration Tests', () => {
   beforeEach(async () => {
     // Create test user
     await createTestUser({ id: testUserId });
-    
+
     // Create authenticated caller
     caller = createAuthenticatedCaller({
-      user: { id: testUserId, email: 'test@example.com', name: 'Test User', image: null },
+      user: {
+        id: testUserId,
+        email: 'test@example.com',
+        name: 'Test User',
+        image: null,
+      },
     });
   });
 
@@ -89,7 +94,7 @@ describe('Analytics Router Integration Tests', () => {
 
     it('should throw error for unauthenticated user', async () => {
       const unauthenticatedCaller = createUnauthenticatedCaller();
-      
+
       await expect(
         unauthenticatedCaller.analytics.getOverview()
       ).rejects.toThrow(TRPCError);
@@ -150,7 +155,7 @@ describe('Analytics Router Integration Tests', () => {
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
-      
+
       // Verify structure of trend data
       result.forEach(trend => {
         expect(trend).toHaveProperty('period');
@@ -199,9 +204,11 @@ describe('Analytics Router Integration Tests', () => {
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
-      
+
       // Find Entertainment category
-      const entertainmentCategory = result.find(cat => cat.category === 'Entertainment');
+      const entertainmentCategory = result.find(
+        cat => cat.category === 'Entertainment'
+      );
       expect(entertainmentCategory).toBeDefined();
       expect(entertainmentCategory?.count).toBe(2);
       expect(entertainmentCategory?.totalSpend).toBeCloseTo(28.98, 2); // 15.99 + 12.99
@@ -219,7 +226,7 @@ describe('Analytics Router Integration Tests', () => {
       // Create subscriptions at different times
       await createTestSubscription(testUserId, {
         name: 'Old Subscription',
-        amount: 10.00,
+        amount: 10.0,
         frequency: 'monthly',
       });
 

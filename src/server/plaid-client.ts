@@ -121,7 +121,9 @@ export const verifyPlaidWebhook = async (
     // Get the webhook verification key from Plaid
     // For now, skip webhook verification since we need to determine the correct API
     // TODO: Implement proper webhook verification once Plaid API is clarified
-    console.warn('Webhook verification not implemented - accepting all webhooks');
+    console.warn(
+      'Webhook verification not implemented - accepting all webhooks'
+    );
     return true;
 
     // Original verification code for reference:

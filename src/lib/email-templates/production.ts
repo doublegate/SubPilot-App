@@ -15,7 +15,7 @@ export const SENDGRID_TEMPLATES = {
       dashboard_url: 'string',
     },
   },
-  
+
   // Magic link authentication
   MAGIC_LINK: {
     id: 'd-magic-link-template-id', // Replace with actual SendGrid template ID
@@ -26,7 +26,7 @@ export const SENDGRID_TEMPLATES = {
       expires_at: 'string',
     },
   },
-  
+
   // Password reset
   PASSWORD_RESET: {
     id: 'd-password-reset-template-id', // Replace with actual SendGrid template ID
@@ -37,7 +37,7 @@ export const SENDGRID_TEMPLATES = {
       expires_at: 'string',
     },
   },
-  
+
   // Subscription alert
   SUBSCRIPTION_ALERT: {
     id: 'd-subscription-alert-template-id', // Replace with actual SendGrid template ID
@@ -50,7 +50,7 @@ export const SENDGRID_TEMPLATES = {
       cancel_url: 'string',
     },
   },
-  
+
   // Weekly summary
   WEEKLY_SUMMARY: {
     id: 'd-weekly-summary-template-id', // Replace with actual SendGrid template ID
@@ -63,7 +63,7 @@ export const SENDGRID_TEMPLATES = {
       upcoming_renewals: 'array',
     },
   },
-  
+
   // Cancellation confirmation
   CANCELLATION_CONFIRMATION: {
     id: 'd-cancellation-confirmation-template-id', // Replace with actual SendGrid template ID
@@ -139,8 +139,12 @@ export const HTML_TEMPLATES = {
       </body>
     </html>
   `,
-  
-  magicLink: (data: { userName: string; magicLink: string; expiresAt: string }) => `
+
+  magicLink: (data: {
+    userName: string;
+    magicLink: string;
+    expiresAt: string;
+  }) => `
     <!DOCTYPE html>
     <html>
       <head>
@@ -197,13 +201,13 @@ export const HTML_TEMPLATES = {
       </body>
     </html>
   `,
-  
-  subscriptionAlert: (data: { 
-    userName: string; 
-    subscriptionName: string; 
-    amount: string; 
-    nextBilling: string; 
-    cancelUrl: string; 
+
+  subscriptionAlert: (data: {
+    userName: string;
+    subscriptionName: string;
+    amount: string;
+    nextBilling: string;
+    cancelUrl: string;
   }) => `
     <!DOCTYPE html>
     <html>
@@ -299,8 +303,12 @@ The SubPilot Team
 SubPilot - Your command center for recurring finances
 https://subpilot.com
   `,
-  
-  magicLink: (data: { userName: string; magicLink: string; expiresAt: string }) => `
+
+  magicLink: (data: {
+    userName: string;
+    magicLink: string;
+    expiresAt: string;
+  }) => `
 Sign in to SubPilot
 
 Hi ${data.userName},
@@ -318,13 +326,13 @@ The SubPilot Team
 SubPilot - Your command center for recurring finances
 https://subpilot.com
   `,
-  
-  subscriptionAlert: (data: { 
-    userName: string; 
-    subscriptionName: string; 
-    amount: string; 
-    nextBilling: string; 
-    cancelUrl: string; 
+
+  subscriptionAlert: (data: {
+    userName: string;
+    subscriptionName: string;
+    amount: string;
+    nextBilling: string;
+    cancelUrl: string;
   }) => `
 🚨 New Subscription Detected
 

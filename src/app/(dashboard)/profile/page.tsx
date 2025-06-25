@@ -51,7 +51,7 @@ export default async function ProfilePage() {
                   <p className="text-sm text-gray-500">Connected</p>
                 </div>
               </div>
-              <button 
+              <button
                 className="text-sm font-medium text-red-600 hover:text-red-700"
                 aria-label="Disconnect Google account"
               >
@@ -125,7 +125,7 @@ export default async function ProfilePage() {
                   Permanently delete your account and all data
                 </p>
               </div>
-              <button 
+              <button
                 className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
                 aria-label="Permanently delete your account and all data"
               >

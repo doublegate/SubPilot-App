@@ -41,22 +41,24 @@ export default function DashboardPage() {
   // Fetch analytics data for enhanced dashboard with proper typing
   const { data: insights, isLoading: insightsLoading } =
     api.analytics.getSubscriptionInsights.useQuery() as {
-      data: {
-        totalActive: number;
-        unusedCount: number;
-        averageSubscriptionAge: number;
-        priceIncreaseCount: number;
-        insights: Array<{
-          type: string;
-          title: string;
-          message: string;
-          subscriptions?: Array<{
-            id: string;
-            name: string;
-            amount: number;
-          }>;
-        }>;
-      } | undefined;
+      data:
+        | {
+            totalActive: number;
+            unusedCount: number;
+            averageSubscriptionAge: number;
+            priceIncreaseCount: number;
+            insights: Array<{
+              type: string;
+              title: string;
+              message: string;
+              subscriptions?: Array<{
+                id: string;
+                name: string;
+                amount: number;
+              }>;
+            }>;
+          }
+        | undefined;
       isLoading: boolean;
     };
   const { data: renewals, isLoading: renewalsLoading } =
@@ -70,14 +72,16 @@ export default function DashboardPage() {
     api.analytics.getSpendingOverview.useQuery({
       timeRange: 'month',
     }) as {
-      data: {
-        subscriptionPercentage: number;
-        categoryBreakdown: Array<{
-          category: string;
-          amount: number;
-          percentage: number;
-        }>;
-      } | undefined;
+      data:
+        | {
+            subscriptionPercentage: number;
+            categoryBreakdown: Array<{
+              category: string;
+              amount: number;
+              percentage: number;
+            }>;
+          }
+        | undefined;
       isLoading: boolean;
     };
   const { data: trends, isLoading: trendsLoading } =
@@ -189,7 +193,9 @@ export default function DashboardPage() {
     // We need to find the plaid item ID from the accounts
     // For now, we'll need to pass the account ID and let the backend figure it out
     // Institution-based disconnect requires Plaid item management
-    toast.info('Use individual account settings to disconnect specific accounts');
+    toast.info(
+      'Use individual account settings to disconnect specific accounts'
+    );
   };
 
   const isLoading =
@@ -399,70 +405,79 @@ export default function DashboardPage() {
             </a>
           </div>
           <div className="space-y-4">
-            {insights.insights.slice(0, 2).map((insight: {
-              type: string;
-              title: string;
-              message: string;
-              subscriptions?: Array<{ id: string; name: string; amount: number }>;
-            }, index: number) => (
-              <div
-                key={index}
-                className="rounded-lg border border-yellow-200 bg-yellow-50/50 p-4 dark:border-yellow-900 dark:bg-yellow-900/10"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="rounded-lg bg-yellow-100 p-2 dark:bg-yellow-900/20">
-                    {insight.type === 'unused' ? (
-                      <svg
-                        className="h-4 w-4 text-yellow-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.662-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="h-4 w-4 text-yellow-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">{insight.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {insight.message}
-                    </p>
-                    {insight.type === 'unused' && insight.subscriptions && (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium">
-                          Potential monthly savings:
-                        </p>
-                        <p className="text-lg font-bold text-green-600">
-                          $
-                          {insight.subscriptions
-                            .reduce((sum, sub) => sum + sub.amount, 0)
-                            .toFixed(2)}
-                        </p>
-                      </div>
-                    )}
+            {insights.insights.slice(0, 2).map(
+              (
+                insight: {
+                  type: string;
+                  title: string;
+                  message: string;
+                  subscriptions?: Array<{
+                    id: string;
+                    name: string;
+                    amount: number;
+                  }>;
+                },
+                index: number
+              ) => (
+                <div
+                  key={index}
+                  className="rounded-lg border border-yellow-200 bg-yellow-50/50 p-4 dark:border-yellow-900 dark:bg-yellow-900/10"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-yellow-100 p-2 dark:bg-yellow-900/20">
+                      {insight.type === 'unused' ? (
+                        <svg
+                          className="h-4 w-4 text-yellow-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.662-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="h-4 w-4 text-yellow-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{insight.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {insight.message}
+                      </p>
+                      {insight.type === 'unused' && insight.subscriptions && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium">
+                            Potential monthly savings:
+                          </p>
+                          <p className="text-lg font-bold text-green-600">
+                            $
+                            {insight.subscriptions
+                              .reduce((sum, sub) => sum + sub.amount, 0)
+                              .toFixed(2)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </section>
       )}
@@ -535,7 +550,8 @@ export default function DashboardPage() {
                     </p>
                     <p className="text-lg font-bold">{category.category}</p>
                     <p className="text-xs text-muted-foreground">
-                      ${category.amount.toFixed(2)}/mo ({category.percentage.toFixed(1)}%)
+                      ${category.amount.toFixed(2)}/mo (
+                      {category.percentage.toFixed(1)}%)
                     </p>
                   </div>
                 </div>

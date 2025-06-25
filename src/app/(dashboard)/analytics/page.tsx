@@ -121,18 +121,25 @@ export default function AnalyticsPage() {
 
   // Export data query
   const [exportFormat, setExportFormat] = useState<'csv' | 'json' | null>(null);
-  const { data: exportData, isLoading: exportLoading } = api.analytics.exportData.useQuery(
-    { format: exportFormat ?? 'csv', includeTransactions: true },
-    { enabled: exportFormat !== null }
-  );
+  const { data: exportData, isLoading: exportLoading } =
+    api.analytics.exportData.useQuery(
+      { format: exportFormat ?? 'csv', includeTransactions: true },
+      { enabled: exportFormat !== null }
+    );
 
   // Handle export completion
   React.useEffect(() => {
     if (exportData && exportFormat) {
-      if ('subscriptions' in exportData && exportData.subscriptions && Array.isArray(exportData.subscriptions)) {
+      if (
+        'subscriptions' in exportData &&
+        exportData.subscriptions &&
+        Array.isArray(exportData.subscriptions)
+      ) {
         // CSV export
         const csvContent = exportData.subscriptions
-          .map((row: unknown) => (Array.isArray(row) ? row.join(',') : String(row)))
+          .map((row: unknown) =>
+            Array.isArray(row) ? row.join(',') : String(row)
+          )
           .join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -145,7 +152,9 @@ export default function AnalyticsPage() {
 
         toast.success('Data exported successfully');
       } else if ('error' in exportData) {
-        toast.error('Export failed: ' + (exportData as { error: string }).error);
+        toast.error(
+          'Export failed: ' + (exportData as { error: string }).error
+        );
       }
       setExportFormat(null); // Reset export state
     }
@@ -212,10 +221,12 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${overview?.subscriptionSpending?.monthly?.toFixed(2) ?? '0.00'}/mo
+                ${overview?.subscriptionSpending?.monthly?.toFixed(2) ?? '0.00'}
+                /mo
               </div>
               <p className="text-xs text-muted-foreground">
-                ${overview?.subscriptionSpending?.yearly?.toFixed(2) ?? '0.00'} yearly
+                ${overview?.subscriptionSpending?.yearly?.toFixed(2) ?? '0.00'}{' '}
+                yearly
               </p>
             </CardContent>
           </Card>
@@ -229,7 +240,8 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${overview?.totalSpending?.monthlyAverage?.toFixed(2) ?? '0.00'}/mo
+                ${overview?.totalSpending?.monthlyAverage?.toFixed(2) ?? '0.00'}
+                /mo
               </div>
               <p className="text-xs text-muted-foreground">
                 {overview?.subscriptionPercentage ?? 0}% is subscriptions
@@ -296,7 +308,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               {trends && trends.length > 0 ? (
-                <SpendingTrendsChart 
+                <SpendingTrendsChart
                   data={trends.map(trend => ({
                     period: trend.date,
                     total: trend.totalAmount,
@@ -322,7 +334,8 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {overview?.categoryBreakdown && overview.categoryBreakdown.length > 0 ? (
+              {overview?.categoryBreakdown &&
+              overview.categoryBreakdown.length > 0 ? (
                 <CategoryBreakdownChart data={overview.categoryBreakdown} />
               ) : (
                 <div className="flex h-[400px] items-center justify-center text-muted-foreground">
@@ -343,7 +356,9 @@ export default function AnalyticsPage() {
                 </CardDescription>
               </div>
               <AnalyticsFilters
-                categories={categories?.map((c: { name: string }) => c.name) ?? []}
+                categories={
+                  categories?.map((c: { name: string }) => c.name) ?? []
+                }
                 filters={filters}
                 onFiltersChange={setFilters}
               />
@@ -364,11 +379,14 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               {renewals && renewals.length > 0 ? (
-                <UpcomingRenewalsCalendar 
+                <UpcomingRenewalsCalendar
                   renewals={{
                     renewals: [],
                     totalCount: renewals.length,
-                    totalAmount: renewals.reduce((sum: number, r: UpcomingRenewal) => sum + r.amount, 0),
+                    totalAmount: renewals.reduce(
+                      (sum: number, r: UpcomingRenewal) => sum + r.amount,
+                      0
+                    ),
                   }}
                 />
               ) : (
@@ -410,7 +428,8 @@ export default function AnalyticsPage() {
                   <div className="mt-2 space-y-1">
                     {insight.subscriptions.map(sub => (
                       <div key={sub.id} className="text-sm">
-                        • {sub.name}: ${sub.oldAmount ?? 0} → ${sub.newAmount ?? 0}
+                        • {sub.name}: ${sub.oldAmount ?? 0} → $
+                        {sub.newAmount ?? 0}
                       </div>
                     ))}
                   </div>

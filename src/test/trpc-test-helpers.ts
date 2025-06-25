@@ -20,7 +20,9 @@ export const createMockTRPCCaller = (session: Session | null) => {
 /**
  * Creates a mock session for testing
  */
-export const createMockSession = (overrides: Partial<Session> = {}): Session => {
+export const createMockSession = (
+  overrides: Partial<Session> = {}
+): Session => {
   return {
     user: {
       id: 'test-user-id',
@@ -36,7 +38,9 @@ export const createMockSession = (overrides: Partial<Session> = {}): Session => 
 /**
  * Creates an authenticated tRPC caller for testing
  */
-export const createAuthenticatedCaller = (sessionOverrides: Partial<Session> = {}) => {
+export const createAuthenticatedCaller = (
+  sessionOverrides: Partial<Session> = {}
+) => {
   const session = createMockSession(sessionOverrides);
   return createMockTRPCCaller(session);
 };
@@ -95,13 +99,16 @@ export const createTestUser = async (userData: {
 /**
  * Creates test subscription data
  */
-export const createTestSubscription = async (userId: string, subscriptionData: {
-  name?: string;
-  amount?: number;
-  frequency?: 'monthly' | 'yearly' | 'weekly' | 'quarterly';
-  category?: string;
-  status?: 'active' | 'cancelled' | 'pending';
-}) => {
+export const createTestSubscription = async (
+  userId: string,
+  subscriptionData: {
+    name?: string;
+    amount?: number;
+    frequency?: 'monthly' | 'yearly' | 'weekly' | 'quarterly';
+    category?: string;
+    status?: 'active' | 'cancelled' | 'pending';
+  }
+) => {
   return await db.subscription.create({
     data: {
       userId,

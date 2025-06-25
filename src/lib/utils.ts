@@ -161,7 +161,7 @@ export function generateId(prefix?: string, length = 12): string {
  */
 export function formatDate(
   date: Date | string | null | undefined,
-  formatStr: string = 'MMM d, yyyy'
+  formatStr = 'MMM d, yyyy'
 ): string {
   if (!date) return '';
 

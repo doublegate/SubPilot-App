@@ -221,7 +221,9 @@ describe('API Performance Benchmarks', () => {
       }));
 
       const start = performance.now();
-      const result = await caller.analytics.getSpendingOverview({ timeRange: 'month' });
+      const result = await caller.analytics.getSpendingOverview({
+        timeRange: 'month',
+      });
       const duration = performance.now() - start;
 
       expect(result.length).toBe(10); // 10 categories

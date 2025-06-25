@@ -145,10 +145,10 @@ vi.mock('@/server/db', () => ({
 // Mock Plaid client
 vi.mock('@/server/plaid-client', () => ({
   plaid: vi.fn(() => null), // Return null by default (client not configured)
-  plaidWithRetry: vi.fn().mockImplementation(async (operation) => operation()),
+  plaidWithRetry: vi.fn().mockImplementation(async operation => operation()),
   isPlaidConfigured: vi.fn(() => false),
   verifyPlaidWebhook: vi.fn().mockResolvedValue(true),
-  handlePlaidError: vi.fn((error) => console.error('Plaid error:', error)),
+  handlePlaidError: vi.fn(error => console.error('Plaid error:', error)),
 }));
 
 // Mock email service

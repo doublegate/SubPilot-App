@@ -53,16 +53,16 @@ const sentryConfig = {
 
   // Suppresses source map uploading logs during build
   silent: true,
-  
+
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-  
+
   // Only upload source maps in production
   dryRun: process.env.NODE_ENV !== 'production',
-  
+
   // Upload source maps during CI/CD
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  
+
   // Additional options
   widenClientFileUpload: true,
   tunnelRoute: '/monitoring',
@@ -71,4 +71,6 @@ const sentryConfig = {
 };
 
 // Export the config with Sentry if enabled, otherwise export plain config
-export default process.env.SENTRY_DSN ? withSentryConfig(config, sentryConfig) : config;
+export default process.env.SENTRY_DSN
+  ? withSentryConfig(config, sentryConfig)
+  : config;

@@ -107,9 +107,16 @@ export function SubscriptionCard({
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`More options for ${subscription.name}`}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label={`More options for ${subscription.name}`}
+              >
                 <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">More options for {subscription.name}</span>
+                <span className="sr-only">
+                  More options for {subscription.name}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

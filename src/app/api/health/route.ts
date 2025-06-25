@@ -4,7 +4,7 @@ import { env } from '@/env.js';
 
 export async function GET() {
   const startTime = Date.now();
-  
+
   try {
     // Basic health check
     const health = {
@@ -74,20 +74,26 @@ export async function GET() {
     health.responseTime = Date.now() - startTime;
 
     // Return appropriate status code
-    const statusCode = health.status === 'healthy' ? 200 : 
-                      health.status === 'degraded' ? 200 : 503;
+    const statusCode =
+      health.status === 'healthy'
+        ? 200
+        : health.status === 'degraded'
+          ? 200
+          : 503;
 
     return NextResponse.json(health, { status: statusCode });
-    
   } catch (error) {
     console.error('Health check failed:', error);
-    
-    return NextResponse.json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: 'Health check failed',
-      responseTime: Date.now() - startTime,
-    }, { status: 503 });
+
+    return NextResponse.json(
+      {
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: 'Health check failed',
+        responseTime: Date.now() - startTime,
+      },
+      { status: 503 }
+    );
   }
 }
 

@@ -154,10 +154,8 @@ describe('API Security Tests', () => {
         },
       }));
 
-      const user1Notifications =
-        await user1Caller.notifications.getAll({});
-      const user2Notifications =
-        await user2Caller.notifications.getAll({});
+      const user1Notifications = await user1Caller.notifications.getAll({});
+      const user2Notifications = await user2Caller.notifications.getAll({});
 
       expect(user1Notifications).toHaveLength(1);
       expect(user2Notifications).toHaveLength(0);

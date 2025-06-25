@@ -59,19 +59,23 @@ export default function SubscriptionsPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [cancellationModalOpen, setCancellationModalOpen] = useState(false);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  const [selectedSubscription, setSelectedSubscription] =
+    useState<Subscription | null>(null);
 
   // Fetch subscriptions with filters
-  const { data: subscriptionsData, isLoading, refetch } =
-    api.subscriptions.getAll.useQuery({
-      status:
-        statusFilter === 'all'
-          ? undefined
-          : (statusFilter as 'active' | 'cancelled' | 'pending'),
-      category: categoryFilter === 'all' ? undefined : categoryFilter,
-      sortBy,
-      sortOrder,
-    });
+  const {
+    data: subscriptionsData,
+    isLoading,
+    refetch,
+  } = api.subscriptions.getAll.useQuery({
+    status:
+      statusFilter === 'all'
+        ? undefined
+        : (statusFilter as 'active' | 'cancelled' | 'pending'),
+    category: categoryFilter === 'all' ? undefined : categoryFilter,
+    sortBy,
+    sortOrder,
+  });
 
   // Fetch stats
   const { data: stats } = api.subscriptions.getStats.useQuery();
@@ -125,7 +129,6 @@ export default function SubscriptionsPage() {
       setArchiveModalOpen(true);
     }
   };
-
 
   return (
     <main className="space-y-8">
@@ -234,7 +237,9 @@ export default function SubscriptionsPage() {
             aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
           >
             {sortOrder === 'asc' ? '↑' : '↓'}
-            <span className="sr-only">Sort {sortOrder === 'asc' ? 'descending' : 'ascending'}</span>
+            <span className="sr-only">
+              Sort {sortOrder === 'asc' ? 'descending' : 'ascending'}
+            </span>
           </Button>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 /**
  * Production Integration Testing Script
- * 
+ *
  * Tests all production services and integrations:
  * - OAuth providers (Google, GitHub)
  * - Email service (SendGrid)
@@ -35,7 +35,7 @@ class ProductionTester {
       warning: '⚠️',
       skip: '⏭️',
     }[result.status];
-    
+
     console.log(`${emoji} ${result.service}: ${result.message}`);
     if (result.details) {
       console.log(`   Details:`, result.details);
@@ -44,14 +44,14 @@ class ProductionTester {
 
   async testDatabase() {
     console.log('\n🗄️  Testing Database Connection...');
-    
+
     try {
       // Test basic connectivity
       await db.$queryRaw`SELECT 1 as test`;
-      
+
       // Test user table access
       const userCount = await db.user.count();
-      
+
       this.addResult({
         service: 'Database',
         status: 'pass',
@@ -69,7 +69,7 @@ class ProductionTester {
 
   async testEmailService() {
     console.log('\n📧 Testing Email Service...');
-    
+
     if (!env.SENDGRID_API_KEY) {
       this.addResult({
         service: 'Email (SendGrid)',
@@ -82,12 +82,12 @@ class ProductionTester {
     try {
       // Test email configuration (don't actually send)
       const testEmail = 'test@example.com';
-      
+
       this.addResult({
         service: 'Email (SendGrid)',
         status: 'pass',
         message: 'Configuration valid',
-        details: { 
+        details: {
           apiKeyConfigured: true,
           fromEmail: env.FROM_EMAIL,
         },
@@ -103,7 +103,7 @@ class ProductionTester {
 
   async testOAuthProviders() {
     console.log('\n🔐 Testing OAuth Providers...');
-    
+
     // Test Google OAuth
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
       this.addResult({
@@ -145,7 +145,7 @@ class ProductionTester {
 
   async testPlaidIntegration() {
     console.log('\n🏦 Testing Plaid Integration...');
-    
+
     if (!env.PLAID_CLIENT_ID || !env.PLAID_SECRET) {
       this.addResult({
         service: 'Plaid',
@@ -157,10 +157,13 @@ class ProductionTester {
 
     try {
       // Import Plaid client dynamically
-      const { Configuration, PlaidApi, PlaidEnvironments } = await import('plaid');
-      
+      const { Configuration, PlaidApi, PlaidEnvironments } = await import(
+        'plaid'
+      );
+
       const configuration = new Configuration({
-        basePath: PlaidEnvironments[env.PLAID_ENV as keyof typeof PlaidEnvironments],
+        basePath:
+          PlaidEnvironments[env.PLAID_ENV as keyof typeof PlaidEnvironments],
         baseOptions: {
           headers: {
             'PLAID-CLIENT-ID': env.PLAID_CLIENT_ID,
@@ -168,12 +171,12 @@ class ProductionTester {
           },
         },
       });
-      
+
       const client = new PlaidApi(configuration);
-      
+
       // Test API connectivity (this endpoint doesn't require authentication)
       // In production, you might want to make a simple API call to verify connectivity
-      
+
       this.addResult({
         service: 'Plaid',
         status: 'pass',
@@ -195,7 +198,7 @@ class ProductionTester {
 
   async testSentryIntegration() {
     console.log('\n🐛 Testing Sentry Integration...');
-    
+
     if (!env.SENTRY_DSN) {
       this.addResult({
         service: 'Sentry',
@@ -209,7 +212,7 @@ class ProductionTester {
       // Test Sentry configuration
       const dsnParts = env.SENTRY_DSN.split('/');
       const projectId = dsnParts[dsnParts.length - 1];
-      
+
       this.addResult({
         service: 'Sentry',
         status: 'pass',
@@ -230,13 +233,13 @@ class ProductionTester {
 
   async testHealthEndpoint() {
     console.log('\n🩺 Testing Health Endpoint...');
-    
+
     try {
       const healthUrl = `${env.NEXTAUTH_URL}/api/health`;
-      
+
       // In a real production test, you'd make an HTTP request here
       // For now, we'll just verify the URL is configured
-      
+
       this.addResult({
         service: 'Health Endpoint',
         status: 'pass',
@@ -256,12 +259,8 @@ class ProductionTester {
 
   async testEnvironmentVariables() {
     console.log('\n🌍 Testing Environment Variables...');
-    
-    const requiredVars = [
-      'DATABASE_URL',
-      'NEXTAUTH_SECRET',
-      'NEXTAUTH_URL',
-    ];
+
+    const requiredVars = ['DATABASE_URL', 'NEXTAUTH_SECRET', 'NEXTAUTH_URL'];
 
     const optionalVars = [
       'GOOGLE_CLIENT_ID',
@@ -324,7 +323,7 @@ class ProductionTester {
   private printSummary() {
     console.log('\n📊 Test Summary');
     console.log('================');
-    
+
     const summary = this.results.reduce(
       (acc, result) => {
         acc[result.status]++;
@@ -341,7 +340,9 @@ class ProductionTester {
 
     if (summary.fail > 0) {
       console.log('\n❌ CRITICAL ISSUES DETECTED');
-      console.log('Please resolve failed tests before deploying to production.');
+      console.log(
+        'Please resolve failed tests before deploying to production.'
+      );
       process.exit(1);
     } else if (summary.warning > 0) {
       console.log('\n⚠️  WARNINGS DETECTED');

@@ -2,7 +2,7 @@ import {
   type User,
   type Subscription,
   type Transaction,
-  Prisma,
+  type Prisma,
 } from '@prisma/client';
 import { sendEmail } from '@/lib/email';
 import { db } from '@/server/db';

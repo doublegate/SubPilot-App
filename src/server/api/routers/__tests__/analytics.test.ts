@@ -125,10 +125,26 @@ describe('Analytics Router', () => {
 
     it('should handle different frequency calculations', async () => {
       const testSubs = [
-        { amount: { toNumber: () => 12.0 }, frequency: 'monthly', category: 'Test1' },
-        { amount: { toNumber: () => 120.0 }, frequency: 'yearly', category: 'Test2' },
-        { amount: { toNumber: () => 30.0 }, frequency: 'quarterly', category: 'Test3' },
-        { amount: { toNumber: () => 3.0 }, frequency: 'weekly', category: 'Test4' },
+        {
+          amount: { toNumber: () => 12.0 },
+          frequency: 'monthly',
+          category: 'Test1',
+        },
+        {
+          amount: { toNumber: () => 120.0 },
+          frequency: 'yearly',
+          category: 'Test2',
+        },
+        {
+          amount: { toNumber: () => 30.0 },
+          frequency: 'quarterly',
+          category: 'Test3',
+        },
+        {
+          amount: { toNumber: () => 3.0 },
+          frequency: 'weekly',
+          category: 'Test4',
+        },
       ];
 
       mockDb.subscription.findMany.mockResolvedValue(testSubs);

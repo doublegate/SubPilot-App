@@ -27,7 +27,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       toast.success('Profile updated successfully');
       router.refresh();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message || 'Failed to update profile');
     },
   });

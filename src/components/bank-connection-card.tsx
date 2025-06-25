@@ -95,9 +95,16 @@ export function BankConnectionCard({
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`More options for ${connection.institutionName}`}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label={`More options for ${connection.institutionName}`}
+              >
                 <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">More options for {connection.institutionName}</span>
+                <span className="sr-only">
+                  More options for {connection.institutionName}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

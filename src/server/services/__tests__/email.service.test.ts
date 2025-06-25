@@ -165,7 +165,7 @@ describe('EmailNotificationService', () => {
         user: mockUser,
         type: 'monthly_summary',
         spendingData: {
-          totalSpent: 150.50,
+          totalSpent: 150.5,
           subscriptionCount: 8,
           topCategories: ['Entertainment', 'Software'],
         },
@@ -218,7 +218,9 @@ describe('EmailNotificationService', () => {
         },
       ];
 
-      (db.notification.findMany as Mock).mockResolvedValueOnce(mockNotifications);
+      (db.notification.findMany as Mock).mockResolvedValueOnce(
+        mockNotifications
+      );
       (db.user.findUnique as Mock).mockResolvedValueOnce({
         ...mockUser,
         notificationPreferences: { emailAlerts: true },
@@ -249,7 +251,9 @@ describe('EmailNotificationService', () => {
         },
       ];
 
-      (db.notification.findMany as Mock).mockResolvedValueOnce(mockNotifications);
+      (db.notification.findMany as Mock).mockResolvedValueOnce(
+        mockNotifications
+      );
       (db.user.findUnique as Mock).mockResolvedValueOnce({
         ...mockUser,
         notificationPreferences: { emailAlerts: false },

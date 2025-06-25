@@ -557,30 +557,36 @@ export const analyticsRouter = createTRPCRouter({
 
       // Convert arrays to CSV string
       const csvToString = (data: string[][]) => {
-        return data.map(row => 
-          row.map(cell => 
-            // Escape quotes and wrap in quotes if cell contains comma, quote, or newline
-            cell.includes(',') || cell.includes('"') || cell.includes('\n')
-              ? `"${cell.replace(/"/g, '""')}"`
-              : cell
-          ).join(',')
-        ).join('\n');
+        return data
+          .map(row =>
+            row
+              .map(cell =>
+                // Escape quotes and wrap in quotes if cell contains comma, quote, or newline
+                cell.includes(',') || cell.includes('"') || cell.includes('\n')
+                  ? `"${cell.replace(/"/g, '""')}"`
+                  : cell
+              )
+              .join(',')
+          )
+          .join('\n');
       };
 
       const subscriptionsCsvContent = csvToString(subscriptionsCsv);
-      const transactionsCsvContent = input.includeTransactions 
-        ? csvToString(transactionsCsv) 
+      const transactionsCsvContent = input.includeTransactions
+        ? csvToString(transactionsCsv)
         : '';
 
       return {
         format: input.format,
         data: {
-          subscriptions: input.format === 'csv' 
-            ? subscriptionsCsvContent
-            : subscriptions.map(s => ({...s, amount: s.amount.toNumber()})),
-          transactions: input.format === 'csv'
-            ? transactionsCsvContent
-            : transactions.map(t => ({...t, amount: t.amount.toNumber()})),
+          subscriptions:
+            input.format === 'csv'
+              ? subscriptionsCsvContent
+              : subscriptions.map(s => ({ ...s, amount: s.amount.toNumber() })),
+          transactions:
+            input.format === 'csv'
+              ? transactionsCsvContent
+              : transactions.map(t => ({ ...t, amount: t.amount.toNumber() })),
         },
         filename: `subpilot-export-${new Date().toISOString().split('T')[0]}.${input.format}`,
         contentType: input.format === 'csv' ? 'text/csv' : 'application/json',

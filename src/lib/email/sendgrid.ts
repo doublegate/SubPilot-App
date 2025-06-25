@@ -1,6 +1,10 @@
 import sgMail from '@sendgrid/mail';
 import { env } from '@/env.js';
-import { SENDGRID_TEMPLATES, HTML_TEMPLATES, TEXT_TEMPLATES } from '@/lib/email-templates/production';
+import {
+  SENDGRID_TEMPLATES,
+  HTML_TEMPLATES,
+  TEXT_TEMPLATES,
+} from '@/lib/email-templates/production';
 
 // Initialize SendGrid
 if (env.SENDGRID_API_KEY) {
@@ -12,9 +16,7 @@ export interface EmailRecipient {
   name?: string;
 }
 
-export interface EmailData {
-  [key: string]: unknown;
-}
+export type EmailData = Record<string, unknown>;
 
 /**
  * Production email service using SendGrid
@@ -47,7 +49,7 @@ export class SendGridEmailService {
     }
 
     const template = SENDGRID_TEMPLATES[templateKey];
-    
+
     try {
       const msg = {
         to: recipients,
@@ -68,8 +70,10 @@ export class SendGridEmailService {
       };
 
       await sgMail.send(msg);
-      
-      console.log(`Email sent successfully: ${templateKey} to ${recipients.length} recipients`);
+
+      console.log(
+        `Email sent successfully: ${templateKey} to ${recipients.length} recipients`
+      );
     } catch (error) {
       console.error(`Failed to send ${templateKey} email:`, error);
       throw new Error(`Email delivery failed: ${templateKey}`);
@@ -115,8 +119,10 @@ export class SendGridEmailService {
       };
 
       await sgMail.send(msg);
-      
-      console.log(`HTML email sent successfully to ${recipients.length} recipients`);
+
+      console.log(
+        `HTML email sent successfully to ${recipients.length} recipients`
+      );
     } catch (error) {
       console.error('Failed to send HTML email:', error);
       throw new Error('HTML email delivery failed');
@@ -126,7 +132,11 @@ export class SendGridEmailService {
   /**
    * Send welcome email to new users
    */
-  async sendWelcomeEmail(user: { id: string; email: string; name: string | null }): Promise<void> {
+  async sendWelcomeEmail(user: {
+    id: string;
+    email: string;
+    name: string | null;
+  }): Promise<void> {
     const recipient = {
       email: user.email,
       name: user.name || undefined,
@@ -146,12 +156,12 @@ export class SendGridEmailService {
     } catch (error) {
       // Fallback to HTML email
       console.log('Falling back to HTML email for welcome message');
-      
+
       const htmlContent = HTML_TEMPLATES.welcome({
         userName: user.name || 'there',
         loginUrl: dynamicData.login_url,
       });
-      
+
       const textContent = TEXT_TEMPLATES.welcome({
         userName: user.name || 'there',
         loginUrl: dynamicData.login_url,
@@ -196,13 +206,13 @@ export class SendGridEmailService {
     } catch (error) {
       // Fallback to HTML email
       console.log('Falling back to HTML email for magic link');
-      
+
       const htmlContent = HTML_TEMPLATES.magicLink({
         userName: user.name || 'there',
         magicLink,
         expiresAt: expiresAt.toLocaleString(),
       });
-      
+
       const textContent = TEXT_TEMPLATES.magicLink({
         userName: user.name || 'there',
         magicLink,
@@ -246,17 +256,22 @@ export class SendGridEmailService {
     };
 
     try {
-      await this.sendTemplateEmail('SUBSCRIPTION_ALERT', [recipient], dynamicData, {
-        categories: ['alert', 'subscription'],
-        customArgs: { 
-          user_id: user.id,
-          subscription_name: subscription.name,
-        },
-      });
+      await this.sendTemplateEmail(
+        'SUBSCRIPTION_ALERT',
+        [recipient],
+        dynamicData,
+        {
+          categories: ['alert', 'subscription'],
+          customArgs: {
+            user_id: user.id,
+            subscription_name: subscription.name,
+          },
+        }
+      );
     } catch (error) {
       // Fallback to HTML email
       console.log('Falling back to HTML email for subscription alert');
-      
+
       const htmlContent = HTML_TEMPLATES.subscriptionAlert({
         userName: user.name || 'there',
         subscriptionName: subscription.name,
@@ -264,7 +279,7 @@ export class SendGridEmailService {
         nextBilling: subscription.nextBilling.toLocaleDateString(),
         cancelUrl: dynamicData.cancel_url,
       });
-      
+
       const textContent = TEXT_TEMPLATES.subscriptionAlert({
         userName: user.name || 'there',
         subscriptionName: subscription.name,
@@ -280,7 +295,7 @@ export class SendGridEmailService {
         [recipient],
         {
           categories: ['alert', 'subscription'],
-          customArgs: { 
+          customArgs: {
             user_id: user.id,
             subscription_name: subscription.name,
           },
@@ -337,7 +352,7 @@ export class SendGridEmailService {
           categories: ['test'],
         }
       );
-      
+
       return true;
     } catch (error) {
       console.error('Email test failed:', error);

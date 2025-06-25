@@ -198,12 +198,14 @@ export const subscriptionsRouter = createTRPCRouter({
       return {
         ...subscription,
         amount: subscription.amount.toNumber(),
-        lastTransaction: subscription.transactions?.[0] ? {
-          id: subscription.transactions[0].id,
-          amount: subscription.transactions[0].amount.toNumber(),
-          date: subscription.transactions[0].date,
-          description: subscription.transactions[0].description,
-        } : null,
+        lastTransaction: subscription.transactions?.[0]
+          ? {
+              id: subscription.transactions[0].id,
+              amount: subscription.transactions[0].amount.toNumber(),
+              date: subscription.transactions[0].date,
+              description: subscription.transactions[0].description,
+            }
+          : null,
         provider:
           subscription.provider && typeof subscription.provider === 'object'
             ? {

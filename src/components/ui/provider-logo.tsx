@@ -34,7 +34,9 @@ export function ProviderLogo({
       <div
         className={`${sizeClass} flex items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 ${className}`}
       >
-        <span className={`font-bold text-white ${size === 'lg' ? 'text-2xl' : size === 'md' ? 'text-lg' : 'text-sm'}`}>
+        <span
+          className={`font-bold text-white ${size === 'lg' ? 'text-2xl' : size === 'md' ? 'text-lg' : 'text-sm'}`}
+        >
           {fallbackText.charAt(0).toUpperCase()}
         </span>
       </div>
@@ -42,10 +44,12 @@ export function ProviderLogo({
   }
 
   return (
-    <div className={`${sizeClass} relative overflow-hidden rounded-lg ${className}`}>
+    <div
+      className={`${sizeClass} relative overflow-hidden rounded-lg ${className}`}
+    >
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-          <div className="animate-spin rounded-full border-2 border-cyan-500 border-t-transparent h-4 w-4" />
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
         </div>
       )}
       <Image
