@@ -9,11 +9,11 @@
 - **Phase 2**: 📋 Planned (Advanced Features)
 - **Phase 3**: 📋 Planned (Automation)
 - **Phase 4**: 📋 Planned (Launch)
-- **Current Version**: v0.1.6 (Released 2025-06-22)
-- **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) (Bank sync working, subscriptions detected, CSS fixed)
+- **Current Version**: v0.1.7 (Released 2025-06-24)
+- **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) (Dashboard aggregation fixed, debugging tools added)
 - **Test Coverage**: 100% pass rate (147/147 tests passing)
-- **CI/CD Status**: ✅ All pipelines passing (Dashboard debugging fixes applied)
-- **Last Updated**: 2025-06-24 08:15 PM EDT
+- **CI/CD Status**: ✅ All pipelines passing with automatic release generation
+- **Last Updated**: 2025-06-25 01:57 AM EDT
 
 ## 🎯 Current Sprint Focus
 

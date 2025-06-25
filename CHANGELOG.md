@@ -5,6 +5,22 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-06-25
+
+### Changed
+
+- **Project Organization** - Reorganized configuration files for cleaner structure
+  - Moved build configs to `config/build/` directory
+  - Moved test configs to `config/testing/` directory
+  - Moved documentation files to appropriate subdirectories
+  - Created symlinks to maintain build tool compatibility
+  - Updated `config/README.md` with new structure documentation
+
+### Added
+
+- `docs/FILE-ORGANIZATION-2025-06-24.md` - Documentation of file reorganization
+- Added `usage_tracking.json` to `.gitignore`
+
 ## [0.1.7] - 2025-06-24
 
 ### Fixed
@@ -49,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.6] - 2025-06-22
 
-### Added
+### Added - (v0.1.6)
 
 - **Comprehensive Test & Code Quality Improvements**
   - Achieved 100% test pass rate (147/147 tests passing)
@@ -73,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Changed to use BUILD_AUTH_TOKEN for build-time auth
   - Fixed Prisma schema copy issue during Docker build
 
-### Fixed
+### Fixed - (v0.1.6)
 
 - **Critical CSS Loading Issue** - PostCSS configuration incompatibility with ES modules
   - Fixed PostCSS config being treated as ES module due to package.json "type": "module"
@@ -100,7 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added 5% amount tolerance for subscription variations
   - Improved confidence scoring for better accuracy
 
-### Changed
+### Changed - (v0.1.6)
 
 - **Build Configuration**
   - Updated PostCSS to use CommonJS configuration format
@@ -108,7 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.5] - 2025-06-21
 
-### Added
+### Added - (v0.1.5)
 
 - **Dashboard UI and Bank Sync Implementation** - 2025-06-21 05:39 PM - 06:52 PM
   - Fixed dashboard layout issues with proper Tailwind container configuration
@@ -122,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added automatic subscription detection on initial bank connection
   - Dashboard now displays real statistics from synced data
 
-### Fixed
+### Fixed - (v0.1.5)
 
 - Dashboard layout no longer crammed to left side
 - Dropdown menus in bank cards now functional
@@ -655,7 +671,6 @@ Planned features:
 
 *For detailed task tracking, see the [TODO files](./to-dos/) in the project repository.*
 
-[Unreleased]: https://github.com/doublegate/SubPilot-App/compare/v0.1.7...HEAD
 [0.1.7]: https://github.com/doublegate/SubPilot-App/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/doublegate/SubPilot-App/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/doublegate/SubPilot-App/compare/v0.1.0...v0.1.5

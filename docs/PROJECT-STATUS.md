@@ -1,11 +1,11 @@
 # SubPilot Project Status
 
-**Last Updated**: 2025-06-24 08:15 PM EDT  
-**Current Version**: 0.1.6 (Released)  
+**Last Updated**: 2025-06-25 01:57 AM EDT  
+**Current Version**: 0.1.7 (Released)  
 **Current Phase**: Phase 1 - MVP Development (Week 1-2 Complete, 70% of Phase 1 Complete)  
 **Test Coverage**: 100% pass rate (147/147 tests passing)  
-**CI/CD Status**: ✅ All pipelines passing after TypeScript fixes  
-**Latest Release**: [v0.1.6 - Maintenance Release](https://github.com/doublegate/SubPilot-App/releases/tag/v0.1.6)  
+**CI/CD Status**: ✅ All pipelines passing with automatic release generation  
+**Latest Release**: [v0.1.7 - Dashboard Debugging Release](https://github.com/doublegate/SubPilot-App/releases/tag/v0.1.7)  
 **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)
 
 ## 🎯 Project Overview
@@ -458,6 +458,18 @@ npm run test:e2e     # E2E tests
   - Enhanced mock data generator
   - Build system optimizations
   
+- **v0.1.7** (2025-06-24): Dashboard Debugging
+  - Fixed dashboard aggregation showing zeros
+  - Added debugging scripts for data flow analysis
+  - Created test data population for Plaid sandbox
+  - Improved subscription detection accuracy
+  
+- **v0.1.6** (2025-06-22): Maintenance Release
+  - Fixed CSS loading issues
+  - Achieved 100% test pass rate
+  - Resolved all ESLint errors
+  - Improved code quality
+  
 - **v0.1.5** (2025-06-21): Bank Sync & Dashboard
   - Complete Plaid integration
   - Automatic subscription detection
@@ -471,7 +483,21 @@ npm run test:e2e     # E2E tests
   - CI/CD pipeline
   - Docker support
 
+## Recent Development Sessions
+
+### File Organization Session (2025-06-25 01:57 AM EDT)
+- ✅ Reorganized configuration files into `config/` directory
+- ✅ Moved documentation files to appropriate subdirectories
+- ✅ Created symlinks for build tool compatibility
+- ✅ Cleaned up root directory structure
+
+### Dashboard Debugging Session (2025-06-24 06:11 PM - 08:41 PM EDT)
+- ✅ Fixed critical dashboard aggregation bug
+- ✅ Created comprehensive debugging scripts
+- ✅ Released v0.1.7 with all fixes
+- ✅ CI/CD pipeline automatically generated release artifacts
+
 ---
 
-*This document reflects the current state of the SubPilot project as of 2025-06-22 02:28 PM EDT.*
-*Application is live at [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) with v0.1.6 maintenance release deployed, fixing critical CSS issues and improving dashboard functionality.*
+*This document reflects the current state of the SubPilot project as of 2025-06-25 01:57 AM EDT.*
+*Application is live at [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) with v0.1.7 release deployed, featuring dashboard fixes and debugging tools.*

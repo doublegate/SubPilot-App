@@ -4,7 +4,7 @@
 
 SubPilot is a modern subscription management platform built with the T3 Stack. It helps users monitor, manage, and cancel recurring subscriptions by automatically detecting them from bank transactions.
 
-**Current Status**: Phase 1 70% Complete ✅ (Week 1-2 Done, Week 3 Starting) - v0.1.6 Released with CSS fixes and 100% test pass rate (147/147 tests). CI/CD pipeline fixed with proper TypeScript test type safety. Live demo fully functional. Last updated: 2025-06-24 06:06 PM EDT.
+**Current Status**: Phase 1 70% Complete ✅ (Week 1-2 Done, Week 3 Starting) - v0.1.7 Released with dashboard debugging fixes. Dashboard aggregation now working correctly. CI/CD pipeline fully operational with comprehensive release automation. Live demo fully functional. Last updated: 2025-06-24 08:41 PM EDT.
 
 ## 🏗️ Architecture Overview
 
@@ -284,7 +284,7 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 - **GitHub URL**: <https://github.com/doublegate/SubPilot-App>
 - **Visibility**: Public repository
 - **License**: MIT License
-- **Current Version**: 0.1.6
+- **Current Version**: 0.1.7
 
 ## 🛠️ Common Development Tasks
 
@@ -351,18 +351,18 @@ gh run watch <run-id>
 
 **Remember**: This is a T3 Stack project with full implementation completed for Week 1 of Phase 1. When in doubt, refer to the T3 Stack documentation and best practices. The project follows standard T3 conventions with some customizations for the subscription management domain.
 
-## 🎯 Current Session Context (2025-06-24 06:11 PM EDT)
+## 🎯 Current Session Context (2025-06-24 08:41 PM EDT)
 
 - **Phase 1 Progress**: 70% Complete (Weeks 1-2 Done, Week 3 Starting)
 - **Velocity**: 250% of target (consistent high performance)
 - **Live Demo**: https://subpilot-test.vercel.app (fully functional with bank sync)
-- **Latest Release**: v0.1.6 with CSS fixes and 100% test coverage
+- **Latest Release**: v0.1.7 with dashboard debugging fixes and test data scripts
 - **Documentation**: All 40+ files synchronized and current
-- **CI/CD**: Fully operational with automatic deployments - TypeScript test fixes applied
+- **CI/CD**: Fully operational with automatic deployments and release artifact generation
 - **Testing**: 147/147 tests passing (100% pass rate)
 - **Code Quality**: Zero ESLint errors, Prettier formatted, TypeScript fully compliant
-- **Key Features Working**: Authentication, Bank Sync, Transactions, Auto-Detection
-- **Recent Fixes**: CI/CD pipeline TypeScript compilation errors resolved with proper test mock data typing
+- **Key Features Working**: Authentication, Bank Sync, Transactions, Auto-Detection, Dashboard Aggregation
+- **Recent Fixes**: Dashboard aggregation showing correct values after Plaid sandbox fix
 
 ## 🧪 Test Data Best Practices
 
@@ -381,3 +381,85 @@ const account = mockAccount1; // Type: Account (guaranteed)
 ```
 
 This pattern eliminates the need for non-null assertions and improves test maintainability.
+
+## 🏦 Bank Integration Patterns
+
+### Dashboard Debugging Patterns
+- **Systematic Data Flow Analysis**: Create comprehensive debugging scripts to analyze full data flow
+- **Sandbox Environment Limitations**: Plaid sandbox has no default transactions
+- **Test Data Generation**: Generate test data population scripts for development environments
+- **Multiple Worktrees**: Use different debugging approaches in parallel
+- **Detection Thresholds**: Lower thresholds and widen windows for better results
+- **Account ID Mapping**: Fix bugs that prevent data relationships
+- **Pipeline Verification**: Always verify data at each step of the pipeline
+
+### Plaid Integration Best Practices
+- Use Plaid sandbox environment for safe development testing
+- Create comprehensive mock data generators for testing without real accounts
+- Implement proper webhook handling for real-time updates
+- Store encrypted access tokens with proper key rotation
+- Handle token refresh and re-authentication flows gracefully
+- Test with multiple account types (checking, savings, credit)
+
+### Subscription Detection Algorithms
+- Analyze transaction patterns for merchant name consistency
+- Implement amount tolerance (±5%) for variable subscriptions
+- Use rolling window analysis (90 days) for pattern detection
+- Calculate confidence scores based on multiple factors
+- Handle edge cases (annual, quarterly, bi-weekly payments)
+- Group related transactions by merchant for better accuracy
+
+## 🎨 UI State Management
+
+### Dashboard UI Patterns
+- Implement skeleton loaders for better perceived performance
+- Use optimistic updates for user actions
+- Handle partial data loading gracefully
+- Implement proper error boundaries for fault isolation
+- Cache data appropriately with invalidation strategies
+- Show meaningful empty states with actionable CTAs
+
+## 🧪 Test Framework Patterns
+
+### Test Implementation Achievements
+- **Vitest + React Testing Library**: Configuration for Next.js projects
+- **API Router Testing**: tRPC patterns with comprehensive coverage
+- **Component Testing**: User interactions and state management
+- **Utility Function Testing**: 100% pass rates achieved
+- **Mocking Strategies**: External services (Plaid, auth providers)
+- **Coverage Integration**: CI/CD pipelines with reports
+- **Test Organization**: By domain (analytics, notifications, components, utilities)
+
+### Test Framework Restoration
+- **Simplified Logic Tests**: tRPC routers avoid complex mocking setup
+- **Business Logic Focus**: Rather than framework integration
+- **Radix UI Handling**: Special test handling for dropdown menus
+- **TypeScript First**: Fix compilation errors before running tests
+- **Component Props**: Always verify against implementation
+- **Target Pass Rate**: 80%+ rather than perfect coverage
+- **High-Value Tests**: Prioritize over complete coverage
+- **Aria-Label Workarounds**: Use getAllByRole('button') with className filtering
+- **Method Name Fixes**: detectFromTransaction → detectSingleTransaction
+- **Array Parameter Handling**: Wrap single objects in arrays when needed
+- **Optional Chaining**: Use ?. for potentially undefined array access
+- **Mock Object Cleanup**: Remove extra properties not in interfaces
+
+### 100% Test Coverage Achievement
+- Create new test files for 0% coverage components first
+- Use userEvent over fireEvent for better async handling
+- Add findBy queries for portal-rendered content (dropdowns, modals)
+- Mock DOM APIs in setup for Radix UI compatibility
+- Fix all failing tests before enabling skipped tests
+- Comprehensive test creation adds 40+ tests in single session
+- Always run tests after ESLint/Prettier fixes
+
+## 🛠️ TypeScript Compilation Patterns
+
+### Systematic Compilation Fixes
+- **Prisma Schema Alignment**: Field name consistency across API routers
+- **React 19 Compatibility**: JSX syntax requirements
+- **Auth.js v5 Structure**: sessionToken not available client-side
+- **Nullish Coalescing**: ??= and ?? preferred over || for assignments
+- **JSON Field Access**: Type guards for database fields
+- **Component Dependencies**: Install all required UI library components
+- **Edge Runtime**: Separate auth utilities for middleware compatibility
