@@ -24,18 +24,26 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
-> **Current Status**: Active Development (Phase 1 - MVP, 70% Complete) | Version 0.1.6 | **Live Demo Available** | Last Updated: 2025-06-24 08:15 PM EDT | [View Changelog](./CHANGELOG.md)
+> **Current Status**: Active Development (Phase 1 - MVP, 70% Complete) | Version 0.1.7 | **Live Demo Available** | Last Updated: 2025-06-24 08:30 PM EDT | [View Changelog](./CHANGELOG.md)
 > **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) - Bank sync working, subscription detection active, real-time dashboard
 
-## 🔥 Recent Updates (v0.1.6 - June 22, 2025)
+## 🔥 Recent Updates (v0.1.7 - June 24, 2025)
 
-### 🎉 v0.1.6 Maintenance Release
+### 🎉 v0.1.7 Dashboard Debugging Release
+
+- ✅ **Dashboard Aggregation Fix** - Fixed zero-value display issue for all metrics
+- ✅ **Plaid Sandbox Solution** - Created test data population for development
+- ✅ **Subscription Detection** - Improved thresholds and frequency windows
+- ✅ **Debugging Tools** - Comprehensive scripts for data flow analysis
+- ✅ **CI/CD Pipeline** - Fixed TypeScript compilation errors in test mocks
+
+### 📊 v0.1.6 Maintenance Release (June 22, 2025)
 
 - ✅ **CSS Loading Fix** - Resolved critical issue preventing styles from loading
-- ✅ **Dashboard Improvements** - Fixed statistics display and data consistency
-- ✅ **Mock Data Enhancements** - More realistic test subscriptions and amounts
-- ✅ **Build System** - Optimized CSS output configuration
-- ✅ **Development Experience** - Improved local development workflow
+- ✅ **Test Coverage** - Achieved 100% pass rate (147/147 tests)
+- ✅ **ESLint Fixes** - Resolved all 147 ESLint errors
+- ✅ **Docker Security** - Fixed ARG/ENV warnings for secrets
+- ✅ **Code Quality** - Prettier formatting applied throughout
 
 ### 📊 v0.1.5 Major Features (June 21, 2025)
 

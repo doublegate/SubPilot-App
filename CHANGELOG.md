@@ -5,7 +5,7 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-06-24
+## [0.1.7] - 2025-06-24
 
 ### Fixed
 
@@ -17,10 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Lowered subscription detection confidence threshold from 0.7 to 0.5
   - Widened frequency detection windows for billing date variations
   - Added explicit isActive=true when creating subscriptions
+  - Dashboard now shows correct values: 8 subscriptions, $183.93/month, $2,207.16/year
 
 - **CI/CD Pipeline TypeScript Errors** - Fixed compilation errors in debugging scripts
   - Fixed accessing non-existent 'name' field on Transaction type
   - Changed to use 'description' field instead
+  - Fixed test mock data type safety issues preventing CI/CD builds
+  - Implemented typed constants pattern for test mocks
   - All TypeScript compilation now passes in CI/CD
 
 ### Added
@@ -31,16 +34,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `scripts/populate-test-data.ts` - Generate realistic test subscription data
   - All scripts help diagnose and resolve data flow issues
 
+- **Test Mock Data Type Safety**
+  - Defined individual typed constants for mock data (mockAccount1, mockTransaction1, etc.)
+  - Eliminated need for non-null assertions in tests
+  - Improved test maintainability and TypeScript inference
+
 ### Changed
 
-- **Subscription Detection**
+- **Subscription Detection Algorithm**
   - Lowered confidence threshold from 70% to 50% for better detection
   - Widened frequency windows (e.g., monthly: 24-38 days instead of 25-35)
   - Better handling of billing date variations and edge cases
+  - Improved account ID mapping to prevent transaction loss
 
 ## [0.1.6] - 2025-06-22
 
-### Fixed (0.1.6)
+### Added
+
+- **Comprehensive Test & Code Quality Improvements**
+  - Achieved 100% test pass rate (147/147 tests passing)
+  - Fixed all failing tests in subscription-card.test.tsx
+  - Created new comprehensive test suites for components with 0% coverage:
+    - transaction-list.test.tsx: 12 tests for transaction display and filtering
+    - subscription-list.test.tsx: 14 tests for subscription management UI
+    - account-list.test.tsx: 14 tests for bank account display
+  - Enabled previously skipped tests after fixing implementations
+  - Fixed all 147 ESLint errors across the codebase:
+    - Replaced unsafe `any` types with proper TypeScript types
+    - Fixed unescaped entities in JSX
+    - Added `void` operator to floating promises
+    - Removed unused variables and imports
+    - Fixed unbound method warnings
+  - Fixed all Prettier formatting issues in 19 files
+  - Improved test infrastructure with DOM API mocks for Radix UI
+
+- **Docker Security Warnings**
+  - Fixed ARG/ENV warnings for NEXTAUTH_SECRET in Dockerfile
+  - Changed to use BUILD_AUTH_TOKEN for build-time auth
+  - Fixed Prisma schema copy issue during Docker build
+
+### Fixed
 
 - **Critical CSS Loading Issue** - PostCSS configuration incompatibility with ES modules
   - Fixed PostCSS config being treated as ES module due to package.json "type": "module"
@@ -67,7 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added 5% amount tolerance for subscription variations
   - Improved confidence scoring for better accuracy
 
-### Changed (0.1.6)
+### Changed
 
 - **Build Configuration**
   - Updated PostCSS to use CommonJS configuration format
@@ -75,7 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.5] - 2025-06-21
 
-### Added (0.1.5)
+### Added
 
 - **Dashboard UI and Bank Sync Implementation** - 2025-06-21 05:39 PM - 06:52 PM
   - Fixed dashboard layout issues with proper Tailwind container configuration
@@ -89,34 +122,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added automatic subscription detection on initial bank connection
   - Dashboard now displays real statistics from synced data
 
-### Fixed (0.1.5)
+### Fixed
 
 - Dashboard layout no longer crammed to left side
 - Dropdown menus in bank cards now functional
 - Bank accounts properly grouped by institution
 - CSP blocking Plaid scripts resolved
 - Plaid API configuration issues fixed
-
-## [Unreleased]
-
-### Added (Unreleased)
-
-- **Comprehensive Test & Code Quality Improvements** - 2025-06-22 04:00 PM
-  - Achieved 100% test pass rate (147/147 tests passing)
-  - Fixed all failing tests in subscription-card.test.tsx
-  - Created new comprehensive test suites for components with 0% coverage:
-    - transaction-list.test.tsx: 12 tests for transaction display and filtering
-    - subscription-list.test.tsx: 14 tests for subscription management UI
-    - account-list.test.tsx: 14 tests for bank account display
-  - Enabled previously skipped tests after fixing implementations
-  - Fixed all 147 ESLint errors across the codebase:
-    - Replaced unsafe `any` types with proper TypeScript types
-    - Fixed unescaped entities in JSX
-    - Added `void` operator to floating promises
-    - Removed unused variables and imports
-    - Fixed unbound method warnings
-  - Fixed all Prettier formatting issues in 19 files
-  - Improved test infrastructure with DOM API mocks for Radix UI
 
 - **Test Framework Restoration** - 2025-06-21 04:36 PM - 05:39 PM
   - Restored testing framework to achieve 83.2% test pass rate (89/107 tests passing - exceeded 80% target)
@@ -642,3 +654,9 @@ Planned features:
 ---
 
 *For detailed task tracking, see the [TODO files](./to-dos/) in the project repository.*
+
+[Unreleased]: https://github.com/doublegate/SubPilot-App/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/doublegate/SubPilot-App/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/doublegate/SubPilot-App/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/doublegate/SubPilot-App/compare/v0.1.0...v0.1.5
+[0.1.0]: https://github.com/doublegate/SubPilot-App/releases/tag/v0.1.0
