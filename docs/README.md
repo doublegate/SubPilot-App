@@ -5,6 +5,10 @@
   <img src="../images/SubPilot_Logo.png" alt="SubPilot Logo" width="200">
   <h3>Your command center for recurring finances</h3>
   <p>A modern web platform for monitoring, managing, and canceling subscriptions</p>
+  
+  <p><strong>🎉 Phase 1 MVP: 95% Complete - Production Ready!</strong></p>
+  <p><strong>Current Version:</strong> v0.1.8 | <strong>Live Demo:</strong> <a href="https://subpilot-test.vercel.app">subpilot-test.vercel.app</a></p>
+  <p><strong>Features:</strong> Bank Integration ✅ | Auto-Detection ✅ | Theme System ✅ | Email Notifications ✅</p>
 </div>
 
 ## 🚀 Quick Start

@@ -13,8 +13,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/trpc/react';
-import { Loader2, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import {
+  Loader2,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  Plus,
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { AddSubscriptionModal } from '@/components/add-subscription-modal';
+import { EditSubscriptionModal } from '@/components/edit-subscription-modal';
+import { CancellationAssistant } from '@/components/cancellation-assistant';
+import { ArchiveSubscriptionModal } from '@/components/archive-subscription-modal';
 
 export default function SubscriptionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,6 +34,13 @@ export default function SubscriptionsPage() {
     'nextBilling'
   );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // Modal states
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [cancellationModalOpen, setCancellationModalOpen] = useState(false);
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
 
   // Fetch subscriptions with filters
   const { data: subscriptionsData, isLoading } =
@@ -69,6 +86,37 @@ export default function SubscriptionsPage() {
         sub.description?.toLowerCase().includes(searchQuery.toLowerCase())
     ) ?? [];
 
+  // Modal handlers
+  const handleEditSubscription = (subscription: any) => {
+    setSelectedSubscription(subscription);
+    setEditModalOpen(true);
+  };
+
+  const handleCancelSubscription = (subscription: any) => {
+    setSelectedSubscription(subscription);
+    setArchiveModalOpen(true);
+  };
+
+  const handleCancellationGuide = (subscription: any) => {
+    setSelectedSubscription(subscription);
+    setCancellationModalOpen(true);
+  };
+
+  const handleMarkCancelled = (subscriptionId: string) => {
+    const subscription = subscriptionsData?.subscriptions.find(
+      s => s.id === subscriptionId
+    );
+    if (subscription) {
+      setSelectedSubscription(subscription);
+      setArchiveModalOpen(true);
+    }
+  };
+
+  const refreshData = () => {
+    // Refresh all queries
+    void detectSubscriptions.mutate({});
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -79,22 +127,28 @@ export default function SubscriptionsPage() {
             Manage and track all your recurring payments
           </p>
         </div>
-        <Button
-          onClick={() => detectSubscriptions.mutate({})}
-          disabled={detectSubscriptions.isPending}
-        >
-          {detectSubscriptions.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Detecting...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Detect Subscriptions
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setAddModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Subscription
+          </Button>
+          <Button
+            onClick={() => detectSubscriptions.mutate({})}
+            disabled={detectSubscriptions.isPending}
+          >
+            {detectSubscriptions.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Detecting...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Detect Subscriptions
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -194,7 +248,10 @@ export default function SubscriptionsPage() {
             nextBilling: sub.nextBilling,
             status: sub.isActive ? ('active' as const) : ('cancelled' as const),
             category: sub.category,
+            provider: sub.provider,
           }))}
+          onUpdate={handleEditSubscription}
+          onCancel={handleCancelSubscription}
         />
       ) : (
         <div className="rounded-lg border border-dashed p-12 text-center">
@@ -205,6 +262,59 @@ export default function SubscriptionsPage() {
               : 'Connect a bank account and run detection to find your subscriptions'}
           </p>
         </div>
+      )}
+
+      {/* Modals */}
+      <AddSubscriptionModal
+        open={addModalOpen}
+        onOpenChange={setAddModalOpen}
+        onSuccess={refreshData}
+      />
+
+      {selectedSubscription && (
+        <>
+          <EditSubscriptionModal
+            subscription={{
+              id: selectedSubscription.id,
+              name: selectedSubscription.name,
+              category: selectedSubscription.category,
+              notes: selectedSubscription.notes,
+              isActive: selectedSubscription.isActive,
+              amount: selectedSubscription.amount,
+            }}
+            open={editModalOpen}
+            onOpenChange={setEditModalOpen}
+            onSuccess={refreshData}
+          />
+
+          <ArchiveSubscriptionModal
+            subscription={{
+              id: selectedSubscription.id,
+              name: selectedSubscription.name,
+              amount: selectedSubscription.amount,
+              currency: selectedSubscription.currency,
+              frequency: selectedSubscription.frequency,
+              provider: selectedSubscription.provider,
+            }}
+            open={archiveModalOpen}
+            onOpenChange={setArchiveModalOpen}
+            onSuccess={refreshData}
+          />
+
+          <CancellationAssistant
+            subscription={{
+              id: selectedSubscription.id,
+              name: selectedSubscription.name,
+              provider: selectedSubscription.provider,
+              amount: selectedSubscription.amount,
+              currency: selectedSubscription.currency,
+              frequency: selectedSubscription.frequency,
+            }}
+            open={cancellationModalOpen}
+            onOpenChange={setCancellationModalOpen}
+            onMarkCancelled={handleMarkCancelled}
+          />
+        </>
       )}
     </div>
   );

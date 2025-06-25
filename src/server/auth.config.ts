@@ -159,6 +159,18 @@ export const authConfig: NextAuthConfig = {
               scheduledFor: new Date(),
             },
           });
+
+          // Send welcome email
+          try {
+            const { emailNotificationService } = await import(
+              '@/server/services/email.service'
+            );
+            await emailNotificationService.sendWelcomeEmail({
+              user: { id: user.id, email: user.email, name: user.name ?? null },
+            });
+          } catch (error) {
+            console.error('Failed to send welcome email:', error);
+          }
         }
       }
     },

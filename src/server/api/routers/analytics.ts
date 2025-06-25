@@ -2,6 +2,36 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { type Prisma } from '@prisma/client';
 
+// Simple in-memory cache for expensive calculations
+const analyticsCache = new Map<
+  string,
+  { data: any; timestamp: number; ttl: number }
+>();
+
+const getCacheKey = (userId: string, endpoint: string, params: any) => {
+  return `${userId}:${endpoint}:${JSON.stringify(params)}`;
+};
+
+const getFromCache = (key: string) => {
+  const cached = analyticsCache.get(key);
+  if (!cached) return null;
+
+  if (Date.now() - cached.timestamp > cached.ttl) {
+    analyticsCache.delete(key);
+    return null;
+  }
+
+  return cached.data;
+};
+
+const setCache = (key: string, data: any, ttlMinutes = 15) => {
+  analyticsCache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl: ttlMinutes * 60 * 1000,
+  });
+};
+
 const timeRangeEnum = z.enum(['week', 'month', 'quarter', 'year', 'all']);
 
 export const analyticsRouter = createTRPCRouter({
@@ -16,6 +46,14 @@ export const analyticsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      // Check cache first
+      const cacheKey = getCacheKey(
+        ctx.session.user.id,
+        'spendingOverview',
+        input
+      );
+      const cached = getFromCache(cacheKey);
+      if (cached) return cached;
       // Calculate date range
       const endDate = new Date();
       const startDate = new Date();
@@ -111,7 +149,7 @@ export const analyticsRouter = createTRPCRouter({
       );
       const monthlyAverage = totalSpent / monthsBetween;
 
-      return {
+      const result = {
         subscriptionSpending: {
           monthly: Math.round(monthlyTotal * 100) / 100,
           yearly: Math.round(monthlyTotal * 12 * 100) / 100,
@@ -132,6 +170,10 @@ export const analyticsRouter = createTRPCRouter({
           }))
           .sort((a, b) => b.amount - a.amount),
       };
+
+      // Cache the result for 15 minutes
+      setCache(cacheKey, result, 15);
+      return result;
     }),
 
   /**
@@ -145,6 +187,14 @@ export const analyticsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
+      // Check cache first
+      const cacheKey = getCacheKey(
+        ctx.session.user.id,
+        'spendingTrends',
+        input
+      );
+      const cached = getFromCache(cacheKey);
+      if (cached) return cached;
       // Calculate date range
       const endDate = new Date();
       const startDate = new Date();
@@ -228,6 +278,8 @@ export const analyticsRouter = createTRPCRouter({
         }))
         .sort((a, b) => a.period.localeCompare(b.period));
 
+      // Cache the result for 10 minutes (trends change less frequently)
+      setCache(cacheKey, trendData, 10);
       return trendData;
     }),
 

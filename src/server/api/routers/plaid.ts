@@ -6,13 +6,17 @@ import {
   plaid,
   isPlaidConfigured,
   handlePlaidError,
+  plaidWithRetry,
 } from '@/server/plaid-client';
+import { encrypt, decrypt } from '@/server/lib/crypto';
+import { InstitutionService } from '@/server/services/institution.service';
 import type {
   CountryCode,
   Products,
   LinkTokenCreateRequest,
   AccountsGetRequest,
   TransactionsGetRequest,
+  TransactionsSyncRequest,
 } from 'plaid';
 
 export const plaidRouter = createTRPCRouter({
@@ -92,7 +96,10 @@ export const plaidRouter = createTRPCRouter({
         configs.webhook = env.PLAID_WEBHOOK_URL;
       }
 
-      const response = await plaidClient.linkTokenCreate(configs);
+      const response = await plaidWithRetry(
+        () => plaidClient.linkTokenCreate(configs),
+        'linkTokenCreate'
+      );
 
       return {
         linkToken: response.data.link_token,
@@ -150,21 +157,34 @@ export const plaidRouter = createTRPCRouter({
 
       try {
         // Exchange public token for access token
-        const exchangeResponse = await plaidClient.itemPublicTokenExchange({
-          public_token: input.publicToken,
-        });
+        const exchangeResponse = await plaidWithRetry(
+          () =>
+            plaidClient.itemPublicTokenExchange({
+              public_token: input.publicToken,
+            }),
+          'itemPublicTokenExchange'
+        );
 
         const accessToken = exchangeResponse.data.access_token;
         const itemId = exchangeResponse.data.item_id;
+
+        // Encrypt the access token before storing
+        const encryptedAccessToken = await encrypt(accessToken);
+
+        // Get institution details including logo
+        const institutionData = await InstitutionService.getInstitution(
+          input.metadata.institution.institution_id
+        );
 
         // Store the item in database
         const plaidItem = await ctx.db.plaidItem.create({
           data: {
             userId: ctx.session.user.id,
             plaidItemId: itemId,
-            accessToken: accessToken, // In production, this should be encrypted
+            accessToken: encryptedAccessToken,
             institutionId: input.metadata.institution.institution_id,
             institutionName: input.metadata.institution.name,
+            institutionLogo: institutionData?.logo,
             status: 'good',
           },
         });
@@ -173,7 +193,10 @@ export const plaidRouter = createTRPCRouter({
         const accountsRequest: AccountsGetRequest = {
           access_token: accessToken,
         };
-        const accountsResponse = await plaidClient.accountsGet(accountsRequest);
+        const accountsResponse = await plaidWithRetry(
+          () => plaidClient.accountsGet(accountsRequest),
+          'accountsGet'
+        );
 
         // Store accounts in database
         const accounts = await Promise.all(
@@ -210,8 +233,10 @@ export const plaidRouter = createTRPCRouter({
         };
 
         try {
-          const transactionsResponse =
-            await plaidClient.transactionsGet(transactionsRequest);
+          const transactionsResponse = await plaidWithRetry(
+            () => plaidClient.transactionsGet(transactionsRequest),
+            'transactionsGet'
+          );
 
           // Store transactions
           if (transactionsResponse.data.transactions.length > 0) {
@@ -330,7 +355,7 @@ export const plaidRouter = createTRPCRouter({
         currency: account.isoCurrencyCode || 'USD',
         institution: {
           name: item.institutionName,
-          logo: null, // TODO: Add institution logos
+          logo: item.institutionLogo,
         },
         isActive: account.isActive,
         lastSync: account.lastSync,
@@ -395,26 +420,45 @@ export const plaidRouter = createTRPCRouter({
       // Sync transactions for each Plaid item
       for (const item of plaidItems) {
         try {
-          // Use transactions sync endpoint for efficient updates
-          // For now, we'll use the regular transactions endpoint
-          const lastSync =
-            item.bankAccounts[0]?.lastSync ??
-            new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-          const now = new Date();
+          // Decrypt access token for API calls
+          const accessToken = await decrypt(item.accessToken);
 
-          const transactionsRequest: TransactionsGetRequest = {
-            access_token: item.accessToken,
-            start_date: lastSync.toISOString().split('T')[0]!,
-            end_date: now.toISOString().split('T')[0]!,
-          };
+          // Use transactions/sync endpoint for efficient incremental updates
+          let cursor = item.syncCursor || '';
+          let hasMore = true;
+          let added: any[] = [];
+          let modified: any[] = [];
+          let removed: any[] = [];
 
-          const transactionsResponse =
-            await plaidClient.transactionsGet(transactionsRequest);
-          totalTransactionsSynced +=
-            transactionsResponse.data.transactions.length;
+          while (hasMore) {
+            const syncRequest: TransactionsSyncRequest = {
+              access_token: accessToken,
+              cursor: cursor,
+            };
+
+            const syncResponse = await plaidWithRetry(
+              () => plaidClient.transactionsSync(syncRequest),
+              'transactionsSync'
+            );
+
+            added = added.concat(syncResponse.data.added);
+            modified = modified.concat(syncResponse.data.modified);
+            removed = removed.concat(syncResponse.data.removed);
+
+            hasMore = syncResponse.data.has_more;
+            cursor = syncResponse.data.next_cursor;
+          }
+
+          // Update sync cursor
+          await ctx.db.plaidItem.update({
+            where: { id: item.id },
+            data: { syncCursor: cursor },
+          });
+
+          totalTransactionsSynced += added.length + modified.length;
 
           console.log(
-            `Fetched ${transactionsResponse.data.transactions.length} transactions from Plaid`
+            `Fetched ${added.length} new, ${modified.length} modified, ${removed.length} removed transactions from Plaid`
           );
 
           // Map account IDs
@@ -422,20 +466,26 @@ export const plaidRouter = createTRPCRouter({
             item.bankAccounts.map(acc => [acc.plaidAccountId, acc.id])
           );
 
-          // Store new transactions
-          if (transactionsResponse.data.transactions.length > 0) {
-            console.log(
-              'Sample transaction:',
-              transactionsResponse.data.transactions[0]
-            );
+          // Handle removed transactions
+          if (removed.length > 0) {
+            const removedIds = removed.map(txn => txn.transaction_id);
+            await ctx.db.transaction.deleteMany({
+              where: {
+                plaidTransactionId: { in: removedIds },
+                userId: ctx.session.user.id,
+              },
+            });
+            console.log(`Removed ${removed.length} transactions`);
+          }
 
-            // Filter out transactions without valid account mapping
-            const validTransactions = transactionsResponse.data.transactions
+          // Process added transactions
+          if (added.length > 0) {
+            const validTransactions = added
               .map(txn => {
                 const accountId = accountIdMap.get(txn.account_id);
                 if (!accountId) {
                   console.warn(
-                    `Skipping transaction ${txn.transaction_id}: Account ${txn.account_id} not found in map`
+                    `Skipping added transaction ${txn.transaction_id}: Account ${txn.account_id} not found`
                   );
                   return null;
                 }
@@ -464,11 +514,53 @@ export const plaidRouter = createTRPCRouter({
                 skipDuplicates: true,
               });
               totalNewTransactions += count;
-
-              console.log(
-                `Stored ${count} new transactions in database (${transactionsResponse.data.transactions.length - validTransactions.length} skipped)`
-              );
+              console.log(`Added ${count} new transactions`);
             }
+          }
+
+          // Process modified transactions
+          if (modified.length > 0) {
+            for (const txn of modified) {
+              const accountId = accountIdMap.get(txn.account_id);
+              if (!accountId) {
+                console.warn(
+                  `Skipping modified transaction ${txn.transaction_id}: Account ${txn.account_id} not found`
+                );
+                continue;
+              }
+
+              await ctx.db.transaction.upsert({
+                where: { plaidTransactionId: txn.transaction_id },
+                update: {
+                  amount: Math.abs(txn.amount),
+                  description: txn.name,
+                  date: new Date(txn.date),
+                  pending: txn.pending,
+                  category: txn.category ?? [],
+                  subcategory: txn.category?.[1] ?? null,
+                  merchantName: txn.merchant_name,
+                  paymentChannel: txn.payment_channel,
+                  transactionType: txn.transaction_type ?? 'other',
+                },
+                create: {
+                  userId: ctx.session.user.id,
+                  accountId,
+                  plaidTransactionId: txn.transaction_id,
+                  amount: Math.abs(txn.amount),
+                  isoCurrencyCode: txn.iso_currency_code ?? 'USD',
+                  description: txn.name,
+                  date: new Date(txn.date),
+                  pending: txn.pending,
+                  category: txn.category ?? [],
+                  subcategory: txn.category?.[1] ?? null,
+                  merchantName: txn.merchant_name,
+                  paymentChannel: txn.payment_channel,
+                  transactionType: txn.transaction_type ?? 'other',
+                  isSubscription: false,
+                },
+              });
+            }
+            console.log(`Updated ${modified.length} modified transactions`);
           }
 
           // Update last sync time
@@ -484,10 +576,12 @@ export const plaidRouter = createTRPCRouter({
 
           // Update account balances
           const accountsRequest: AccountsGetRequest = {
-            access_token: item.accessToken,
+            access_token: accessToken,
           };
-          const accountsResponse =
-            await plaidClient.accountsGet(accountsRequest);
+          const accountsResponse = await plaidWithRetry(
+            () => plaidClient.accountsGet(accountsRequest),
+            'accountsGet'
+          );
 
           for (const account of accountsResponse.data.accounts) {
             const dbAccountId = accountIdMap.get(account.account_id);
@@ -591,9 +685,14 @@ export const plaidRouter = createTRPCRouter({
         const plaidClient = plaid();
         if (plaidClient) {
           try {
-            await plaidClient.itemRemove({
-              access_token: plaidItem.accessToken,
-            });
+            const accessToken = await decrypt(plaidItem.accessToken);
+            await plaidWithRetry(
+              () =>
+                plaidClient.itemRemove({
+                  access_token: accessToken,
+                }),
+              'itemRemove'
+            );
           } catch (error) {
             console.error('Failed to remove item from Plaid:', error);
             // Continue with local cleanup even if Plaid removal fails

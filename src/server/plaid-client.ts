@@ -1,6 +1,11 @@
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 import { env } from '@/env.js';
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+const RETRY_MULTIPLIER = 2;
+
 /**
  * Plaid client configuration
  * This client is used for all server-side Plaid API calls
@@ -37,6 +42,56 @@ export const plaid = () => {
 };
 
 /**
+ * Execute Plaid API call with retry logic
+ */
+export const plaidWithRetry = async <T>(
+  operation: () => Promise<T>,
+  operationName: string
+): Promise<T> => {
+  let lastError: unknown;
+  let delay = RETRY_DELAY_MS;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      const plaidError = error as PlaidErrorResponse;
+
+      // Don't retry on certain error types
+      const nonRetryableErrors = [
+        'INVALID_CREDENTIALS',
+        'INVALID_ACCESS_TOKEN',
+        'ITEM_LOGIN_REQUIRED',
+        'INSUFFICIENT_CREDENTIALS',
+        'USER_SETUP_REQUIRED',
+      ];
+
+      if (
+        plaidError.response?.data?.error_code &&
+        nonRetryableErrors.includes(plaidError.response.data.error_code)
+      ) {
+        throw error;
+      }
+
+      // Log retry attempt
+      console.warn(
+        `Plaid API call failed (attempt ${attempt}/${MAX_RETRIES}) for ${operationName}:`,
+        plaidError.response?.data?.error_message || 'Unknown error'
+      );
+
+      // Don't retry on the last attempt
+      if (attempt < MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= RETRY_MULTIPLIER;
+      }
+    }
+  }
+
+  throw lastError;
+};
+
+/**
  * Helper to check if Plaid is configured
  */
 export const isPlaidConfigured = () => {
@@ -48,18 +103,43 @@ export const isPlaidConfigured = () => {
  * Verifies the JWT signature from Plaid webhooks
  */
 export const verifyPlaidWebhook = async (
-  _body: string,
-  _headers: Record<string, string | string[] | undefined>
+  body: string,
+  headers: Record<string, string | string[] | undefined>
 ): Promise<boolean> => {
-  // TODO: Implement webhook verification using plaid.webhookVerificationKeyGet()
-  // For now, return true in development
-  if (env.NODE_ENV === 'development') {
+  // In development/sandbox, allow unverified webhooks for testing
+  if (env.NODE_ENV === 'development' || env.PLAID_ENV === 'sandbox') {
     return true;
   }
 
-  // In production, we should verify the webhook signature
-  console.warn('Plaid webhook verification not implemented');
-  return false;
+  try {
+    const client = plaid();
+    if (!client) {
+      console.error('Plaid client not configured');
+      return false;
+    }
+
+    // Get the webhook verification key from Plaid
+    const verificationResponse = await plaidWithRetry(
+      () => client.webhookVerificationKeyGet({}),
+      'webhookVerificationKeyGet'
+    );
+
+    const { key } = verificationResponse.data;
+
+    // Extract JWT from the body
+    const jwt = body;
+
+    // Verify the JWT signature
+    const { verify } = await import('jsonwebtoken');
+    const payload = verify(jwt, key.value, {
+      algorithms: ['ES256'],
+    });
+
+    return !!payload;
+  } catch (error) {
+    console.error('Webhook verification failed:', error);
+    return false;
+  }
 };
 
 /**

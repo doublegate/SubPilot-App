@@ -119,6 +119,7 @@ model PlaidItem {
   isActive          Boolean  @default(true)
   errorCode         String?
   errorMessage      String?
+  syncCursor        String?  // Cursor for incremental transaction sync
 
   // Timestamps
   createdAt         DateTime @default(now())
@@ -188,7 +189,8 @@ model Subscription {
   // Subscription Details
   name                  String
   description           String?
-  category              String
+  category              String?
+  notes                 String?
   amount                Decimal
   currency              String   @default("USD")
   frequency             String   // monthly, yearly, weekly, quarterly

@@ -84,6 +84,86 @@ vi.mock('next-auth/react', () => ({
   signOut: vi.fn(),
 }));
 
+// Mock server-side auth
+vi.mock('@/server/auth', () => ({
+  auth: vi.fn().mockResolvedValue(null),
+  authConfig: {
+    session: { strategy: 'jwt' },
+    callbacks: {},
+    providers: [],
+  },
+}));
+
+// Mock database
+vi.mock('@/server/db', () => ({
+  db: {
+    user: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
+    subscription: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
+    },
+    transaction: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      aggregate: vi.fn(),
+    },
+    plaidItem: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    account: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    notification: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
+    },
+  },
+}));
+
+// Mock Plaid client
+vi.mock('@/server/plaid-client', () => ({
+  plaid: vi.fn(() => null), // Return null by default (client not configured)
+  plaidWithRetry: vi.fn().mockImplementation(async (operation) => operation()),
+  isPlaidConfigured: vi.fn(() => false),
+  verifyPlaidWebhook: vi.fn().mockResolvedValue(true),
+  handlePlaidError: vi.fn((error) => console.error('Plaid error:', error)),
+}));
+
+// Mock email service
+vi.mock('@/server/services/email.service', () => ({
+  EmailService: {
+    sendNotification: vi.fn().mockResolvedValue(true),
+    sendWelcomeEmail: vi.fn().mockResolvedValue(true),
+    sendSubscriptionAlert: vi.fn().mockResolvedValue(true),
+    validateEmailTemplate: vi.fn(() => true),
+  },
+}));
+
+// Mock subscription detector
+vi.mock('@/server/services/subscription-detector', () => ({
+  SubscriptionDetector: vi.fn().mockImplementation(() => ({
+    detectUserSubscriptions: vi.fn().mockResolvedValue([]),
+    detectSingleTransaction: vi.fn().mockResolvedValue(null),
+    createSubscriptionsFromDetection: vi.fn().mockResolvedValue([]),
+  })),
+}));
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -116,6 +196,25 @@ Object.defineProperty(global, 'IntersectionObserver', {
   writable: true,
   configurable: true,
   value: IntersectionObserver,
+});
+
+// Mock ResizeObserver
+class ResizeObserver {
+  observe = vi.fn();
+  disconnect = vi.fn();
+  unobserve = vi.fn();
+}
+
+Object.defineProperty(window, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: ResizeObserver,
+});
+
+Object.defineProperty(global, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: ResizeObserver,
 });
 
 // Mock pointer capture for Radix UI

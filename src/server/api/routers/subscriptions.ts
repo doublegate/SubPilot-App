@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { Prisma } from '@prisma/client';
 import { SubscriptionDetector } from '@/server/services/subscription-detector';
+import { emailNotificationService } from '@/server/services/email.service';
 
 const subscriptionStatusEnum = z.enum(['active', 'cancelled', 'pending']);
 // Removed frequencyEnum as it's not currently used
@@ -10,6 +11,57 @@ const sortByEnum = z.enum(['name', 'amount', 'nextBilling', 'createdAt']);
 const sortOrderEnum = z.enum(['asc', 'desc']);
 
 export const subscriptionsRouter = createTRPCRouter({
+  /**
+   * Create a new manual subscription
+   */
+  create: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(100),
+        description: z.string().optional(),
+        amount: z.number().positive(),
+        currency: z.string().min(1),
+        frequency: z.enum(['monthly', 'yearly', 'weekly', 'quarterly']),
+        category: z.string().optional(),
+        notes: z.string().max(500).optional(),
+        nextBilling: z.date().optional(),
+        provider: z
+          .object({
+            name: z.string(),
+            website: z.string().nullable().optional(),
+          })
+          .optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const subscription = await ctx.db.subscription.create({
+        data: {
+          userId: ctx.session.user.id,
+          name: input.name,
+          description: input.description ?? null,
+          amount: new Prisma.Decimal(input.amount),
+          currency: input.currency,
+          frequency: input.frequency,
+          category: input.category ?? null,
+          notes: input.notes ?? null,
+          nextBilling: input.nextBilling ?? null,
+          status: 'active',
+          isActive: true,
+          confidence: 1.0, // Manual subscriptions have 100% confidence
+          provider: input.provider
+            ? {
+                name: input.provider.name,
+                website: input.provider.website ?? null,
+                logo: null,
+              }
+            : null,
+          detectedAt: new Date(),
+        },
+      });
+
+      return subscription;
+    }),
+
   /**
    * Get all subscriptions with filtering and pagination
    */
@@ -294,7 +346,17 @@ export const subscriptionsRouter = createTRPCRouter({
         },
       });
 
-      // TODO: Create notification for cancelled subscription
+      // Send cancellation confirmation email
+      const user = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+      });
+
+      if (user) {
+        await emailNotificationService.sendCancellationEmail({
+          user: { id: user.id, email: user.email, name: user.name },
+          subscription: updated,
+        });
+      }
 
       return updated;
     }),
@@ -425,10 +487,26 @@ export const subscriptionsRouter = createTRPCRouter({
       );
 
       // Create/update subscription records
-      await detector.createSubscriptionsFromDetection(
-        ctx.session.user.id,
-        results
-      );
+      const createdSubscriptions =
+        await detector.createSubscriptionsFromDetection(
+          ctx.session.user.id,
+          results
+        );
+
+      // Get user for email notifications
+      const user = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+      });
+
+      // Send email notifications for new subscriptions
+      if (user && createdSubscriptions.length > 0) {
+        for (const subscription of createdSubscriptions) {
+          await emailNotificationService.sendNewSubscriptionEmail({
+            user: { id: user.id, email: user.email, name: user.name },
+            subscription,
+          });
+        }
+      }
 
       // Create notification for new subscriptions found
       const newSubscriptionsCount = results.filter(

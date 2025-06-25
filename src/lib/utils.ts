@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { format } from 'date-fns';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -153,4 +154,24 @@ export function generateId(prefix?: string, length = 12): string {
   }
 
   return prefix ? `${prefix}-${result}` : result;
+}
+
+/**
+ * Format date for display
+ */
+export function formatDate(
+  date: Date | string | null | undefined,
+  formatStr: string = 'MMM d, yyyy'
+): string {
+  if (!date) return '';
+
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) return '';
+
+    return format(dateObj, formatStr);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '';
+  }
 }

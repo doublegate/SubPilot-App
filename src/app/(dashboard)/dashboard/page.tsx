@@ -38,6 +38,23 @@ export default function DashboardPage() {
   const { data: notificationData, refetch: refetchNotifications } =
     api.notifications.getUnreadCount.useQuery();
 
+  // Fetch analytics data for enhanced dashboard
+  const { data: insights, isLoading: insightsLoading } =
+    api.analytics.getSubscriptionInsights.useQuery();
+  const { data: renewals, isLoading: renewalsLoading } =
+    api.analytics.getUpcomingRenewals.useQuery({
+      days: 30,
+    });
+  const { data: overview, isLoading: overviewLoading } =
+    api.analytics.getSpendingOverview.useQuery({
+      timeRange: 'month',
+    });
+  const { data: trends, isLoading: trendsLoading } =
+    api.analytics.getSpendingTrends.useQuery({
+      timeRange: 'quarter',
+      groupBy: 'month',
+    });
+
   // Mutations
   const syncMutation = api.plaid.syncTransactions.useMutation({
     onSuccess: data => {
@@ -141,29 +158,45 @@ export default function DashboardPage() {
     toast.info('Disconnect functionality will be available soon');
   };
 
-  if (statsLoading || subsLoading || plaidLoading) {
+  const isLoading =
+    statsLoading ||
+    subsLoading ||
+    plaidLoading ||
+    insightsLoading ||
+    renewalsLoading ||
+    overviewLoading ||
+    trendsLoading;
+
+  if (isLoading) {
     return <DashboardSkeleton />;
   }
 
   const notifications = notificationData?.count ?? 0;
 
-  // Calculate upcoming renewals (next 30 days)
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+  // Calculate spending trend from analytics data
+  const calculateSpendingTrend = () => {
+    if (!trends || trends.length < 2) return 0;
 
-  const upcomingRenewals =
-    subscriptionsData?.subscriptions.filter(sub => {
-      if (!sub.nextBilling) return false;
-      return new Date(sub.nextBilling) <= thirtyDaysFromNow;
-    }).length ?? 0;
+    const recent = trends.slice(-2);
+    const [previous, current] = recent;
+
+    if (!previous || !current) return 0;
+
+    const prevTotal = previous.total;
+    const currentTotal = current.total;
+
+    if (prevTotal === 0) return 0;
+
+    return ((currentTotal - prevTotal) / prevTotal) * 100;
+  };
 
   const dashboardStats = {
     totalActive: stats?.totalActive ?? 0,
     monthlySpend: stats?.monthlySpend ?? 0,
     yearlySpend: stats?.yearlySpend ?? 0,
-    percentageChange: 0, // TODO: Calculate from historical data
-    upcomingRenewals,
-    unusedSubscriptions: 0, // TODO: Implement unused subscription detection
+    percentageChange: calculateSpendingTrend(),
+    upcomingRenewals: renewals?.totalCount ?? 0,
+    unusedSubscriptions: insights?.unusedCount ?? 0,
   };
 
   return (
@@ -315,6 +348,162 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
+
+      {/* Insights and Alerts */}
+      {insights && insights.insights.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              Insights & Recommendations
+            </h2>
+            <a
+              href="/analytics"
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              View all analytics →
+            </a>
+          </div>
+          <div className="space-y-4">
+            {insights.insights.slice(0, 2).map((insight, index) => (
+              <div
+                key={index}
+                className="rounded-lg border border-yellow-200 bg-yellow-50/50 p-4 dark:border-yellow-900 dark:bg-yellow-900/10"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-yellow-100 p-2 dark:bg-yellow-900/20">
+                    {insight.type === 'unused' ? (
+                      <svg
+                        className="h-4 w-4 text-yellow-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.662-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="h-4 w-4 text-yellow-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium">{insight.title}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {insight.message}
+                    </p>
+                    {insight.type === 'unused' && insight.subscriptions && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium">
+                          Potential monthly savings:
+                        </p>
+                        <p className="text-lg font-bold text-green-600">
+                          $
+                          {insight.subscriptions
+                            .reduce((sum, sub) => sum + sub.amount, 0)
+                            .toFixed(2)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Quick Analytics Summary */}
+      {overview && (
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Spending Overview</h2>
+            <a
+              href="/analytics"
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              View detailed analytics →
+            </a>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/20">
+                  <svg
+                    className="h-4 w-4 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Subscription vs Total
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {overview.subscriptionPercentage}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    of spending is subscriptions
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {overview.categoryBreakdown.slice(0, 2).map((category, index) => (
+              <div key={category.category} className="rounded-lg border p-4">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/20">
+                    <svg
+                      className="h-4 w-4 text-purple-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Top Category {index + 1}
+                    </p>
+                    <p className="text-lg font-bold">{category.category}</p>
+                    <p className="text-xs text-muted-foreground">
+                      ${category.amount}/mo ({category.percentage}%)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

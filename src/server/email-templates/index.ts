@@ -1,0 +1,9 @@
+export { welcomeEmailTemplate } from './welcome';
+export { newSubscriptionTemplate } from './new-subscription';
+export { priceChangeTemplate } from './price-change';
+export { monthlySpendingTemplate } from './monthly-spending';
+export { cancellationConfirmationTemplate } from './cancellation-confirmation';
+export { renewalReminderTemplate } from './renewal-reminder';
+export { trialEndingTemplate } from './trial-ending';
+export { paymentFailedTemplate } from './payment-failed';
+export { baseEmailTemplate } from './base-template';

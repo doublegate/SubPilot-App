@@ -1,4 +1,8 @@
-import { type Transaction, type PrismaClient } from '@prisma/client';
+import {
+  type Transaction,
+  type PrismaClient,
+  type Subscription,
+} from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
 
 interface DetectionResult {
@@ -114,7 +118,7 @@ export class SubscriptionDetector {
   /**
    * Group transactions by merchant name
    */
-  private groupByMerchant(transactions: Transaction[]): TransactionGroup[] {
+  protected groupByMerchant(transactions: Transaction[]): TransactionGroup[] {
     const groups = new Map<string, Transaction[]>();
 
     for (const transaction of transactions) {
@@ -154,7 +158,7 @@ export class SubscriptionDetector {
   /**
    * Analyze a group of transactions from the same merchant
    */
-  private analyzeTransactionGroup(
+  protected analyzeTransactionGroup(
     group: TransactionGroup
   ): DetectionResult | null {
     const { transactions } = group;
@@ -217,7 +221,7 @@ export class SubscriptionDetector {
   /**
    * Detect frequency pattern from intervals
    */
-  private detectFrequency(
+  protected detectFrequency(
     intervals: number[]
   ): { frequency: DetectionResult['frequency']; confidence: number } | null {
     if (intervals.length === 0) return null;
@@ -255,7 +259,7 @@ export class SubscriptionDetector {
   /**
    * Calculate how consistent the amounts are
    */
-  private calculateAmountConsistency(amounts: number[]): number {
+  protected calculateAmountConsistency(amounts: number[]): number {
     if (amounts.length === 0) return 0;
     if (amounts.length === 1) return 1; // Single amount is perfectly consistent
 
@@ -286,7 +290,7 @@ export class SubscriptionDetector {
   /**
    * Calculate overall confidence score
    */
-  private calculateConfidence(
+  protected calculateConfidence(
     frequencyConfidence: number,
     amountConsistency: number,
     transactionCount: number
@@ -374,11 +378,12 @@ export class SubscriptionDetector {
   async createSubscriptionsFromDetection(
     userId: string,
     results: DetectionResult[]
-  ): Promise<void> {
+  ): Promise<Subscription[]> {
     console.log(
       `Creating subscriptions for user ${userId} from ${results.length} detection results`
     );
 
+    const createdSubscriptions: Subscription[] = [];
     let created = 0;
     let updated = 0;
     let skipped = 0;
@@ -402,7 +407,7 @@ export class SubscriptionDetector {
 
         if (!existing) {
           // Create new subscription
-          await this.db.subscription.create({
+          const newSubscription = await this.db.subscription.create({
             data: {
               userId,
               name: result.merchantName,
@@ -421,6 +426,7 @@ export class SubscriptionDetector {
               detectionConfidence: result.confidence,
             },
           });
+          createdSubscriptions.push(newSubscription);
           created++;
           console.log(
             `Created subscription: ${result.merchantName} (${result.frequency}, confidence: ${result.confidence})`
@@ -454,5 +460,7 @@ export class SubscriptionDetector {
     console.log(
       `Subscription processing complete: ${created} created, ${updated} updated, ${skipped} skipped, ${errors} errors`
     );
+
+    return createdSubscriptions;
   }
 }

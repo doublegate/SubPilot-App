@@ -12,6 +12,8 @@ import {
   Phone,
 } from 'lucide-react';
 import Link from 'next/link';
+import { SubscriptionActions } from '@/components/subscription-actions';
+import { SubscriptionNotes } from '@/components/subscription-notes';
 
 interface PageProps {
   params: Promise<{
@@ -220,7 +222,7 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
       )}
 
       {/* Main Content */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Billing History */}
         <Card>
           <CardHeader>
@@ -298,6 +300,13 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
             )}
           </CardContent>
         </Card>
+
+        {/* Notes & Tags */}
+        <SubscriptionNotes
+          subscriptionId={subscription.id}
+          notes={subscription.notes}
+          tags={[]}
+        />
       </div>
 
       {/* Cancellation Info */}
@@ -353,17 +362,7 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
       })()}
 
       {/* Actions */}
-      <div className="flex gap-4">
-        <Button asChild>
-          <Link href="/subscriptions">← Back to Subscriptions</Link>
-        </Button>
-        {subscription.status === 'active' && (
-          <>
-            <Button variant="outline">Edit Details</Button>
-            <Button variant="destructive">Cancel Subscription</Button>
-          </>
-        )}
-      </div>
+      <SubscriptionActions subscription={subscription} />
     </div>
   );
 }
