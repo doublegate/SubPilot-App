@@ -66,7 +66,7 @@ export const notificationsRouter = createTRPCRouter({
           message: n.message,
           read: n.read,
           createdAt: n.createdAt,
-          metadata: n.metadata,
+          metadata: n.data,
           subscription: n.subscription
             ? {
                 id: n.subscription.id,

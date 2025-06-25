@@ -22,8 +22,8 @@ async function populateTestData() {
 
     console.log(`✓ Found user: ${user.email}`);
 
-    // Get the first account
-    const account = await prisma.account.findFirst({
+    // Get the first bank account
+    const account = await prisma.bankAccount.findFirst({
       where: { userId: user.id }
     });
 

@@ -60,7 +60,7 @@ async function debugDashboard() {
       include: {
         plaidItems: {
           include: {
-            accounts: true
+            bankAccounts: true
           }
         },
         subscriptions: true,
@@ -73,12 +73,12 @@ async function debugDashboard() {
     for (const user of users) {
       console.log(`\nUser: ${user.email || user.id}`);
       console.log(`  - Plaid Items: ${user.plaidItems.length}`);
-      console.log(`  - Total Accounts: ${user.plaidItems.reduce((sum, item) => sum + item.accounts.length, 0)}`);
+      console.log(`  - Total Accounts: ${user.plaidItems.reduce((sum: number, item: any) => sum + item.bankAccounts.length, 0)}`);
       console.log(`  - Total Transactions: ${user.transactions.length}`);
       console.log(`  - Total Subscriptions: ${user.subscriptions.length}`);
       
       if (user.subscriptions.length > 0) {
-        const active = user.subscriptions.filter(s => s.isActive && s.status === 'active');
+        const active = user.subscriptions.filter((s: any) => s.isActive && s.status === 'active');
         console.log(`  - Active Subscriptions: ${active.length}`);
         console.log(`  - Inactive Subscriptions: ${user.subscriptions.length - active.length}`);
       }

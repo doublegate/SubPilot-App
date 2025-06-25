@@ -20,7 +20,7 @@ async function manualSync() {
       },
       include: {
         user: true,
-        accounts: true,
+        bankAccounts: true,
       },
     });
 
@@ -34,15 +34,15 @@ async function manualSync() {
     // For each Plaid item, check its status
     for (const item of plaidItems) {
       console.log(`\n📊 Plaid Item: ${item.institutionName}`);
-      console.log(`   User: ${item.user.email}`);
+      console.log(`   User: ${(item as any).user.email}`);
       console.log(`   Status: ${item.status}`);
-      console.log(`   Accounts: ${item.accounts.length}`);
+      console.log(`   Accounts: ${item.bankAccounts.length}`);
       console.log(`   Last Webhook: ${item.lastWebhook || 'Never'}`);
       console.log(`   Needs Sync: ${item.needsSync}`);
       console.log(`   Access Token: ${item.accessToken ? '✓ Present' : '✗ Missing'}`);
       
       // Check when accounts were last synced
-      for (const account of item.accounts) {
+      for (const account of item.bankAccounts) {
         const transactionCount = await prisma.transaction.count({
           where: { accountId: account.id }
         });
