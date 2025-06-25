@@ -64,8 +64,9 @@ export const notificationsRouter = createTRPCRouter({
           type: n.type,
           title: n.title,
           message: n.message,
-          isRead: n.read,
+          read: n.read,
           createdAt: n.createdAt,
+          metadata: n.metadata,
           subscription: n.subscription
             ? {
                 id: n.subscription.id,
@@ -84,13 +85,13 @@ export const notificationsRouter = createTRPCRouter({
   markAsRead: protectedProcedure
     .input(
       z.object({
-        notificationId: z.string(),
+        id: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const notification = await ctx.db.notification.findFirst({
         where: {
-          id: input.notificationId,
+          id: input.id,
           userId: ctx.session.user.id,
         },
       });
@@ -103,7 +104,7 @@ export const notificationsRouter = createTRPCRouter({
       }
 
       const updated = await ctx.db.notification.update({
-        where: { id: input.notificationId },
+        where: { id: input.id },
         data: { read: true },
       });
 
@@ -145,13 +146,13 @@ export const notificationsRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(
       z.object({
-        notificationId: z.string(),
+        id: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const notification = await ctx.db.notification.findFirst({
         where: {
-          id: input.notificationId,
+          id: input.id,
           userId: ctx.session.user.id,
         },
       });
@@ -164,7 +165,7 @@ export const notificationsRouter = createTRPCRouter({
       }
 
       await ctx.db.notification.delete({
-        where: { id: input.notificationId },
+        where: { id: input.id },
       });
 
       return { success: true };

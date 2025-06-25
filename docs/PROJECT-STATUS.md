@@ -1,6 +1,6 @@
 # SubPilot Project Status
 
-**Last Updated**: 2025-06-25 03:16 AM EDT  
+**Last Updated**: 2025-06-25 03:34 AM EDT  
 **Current Version**: 0.1.7 (Released)  
 **Current Phase**: Phase 1 - MVP Development (Week 1-2 Complete, 70% of Phase 1 Complete)  
 **Test Coverage**: 100% pass rate (147/147 tests passing)  
@@ -366,6 +366,32 @@ SubPilot is a comprehensive subscription management application that helps users
 - ✅ **CI/CD Pipeline Fix**
   - Fixed TypeScript error in debug script (txn.name → txn.description)
   - All compilation checks now pass in CI/CD
+
+### OAuth Authentication Fix Session (2025-06-25 03:00 - 03:34 AM EDT)
+
+- ✅ **Fixed Google/GitHub OAuth Login**
+  - **Root Cause**: Prisma schema conflict - Auth.js expected OAuth Account model
+  - Added proper OAuth `Account` model to Prisma schema
+  - Renamed existing `Account` model to `BankAccount` to avoid conflicts
+  - Updated all code references throughout codebase (7 files)
+  - Fixed dashboard plaid.getAccounts errors after OAuth fix
+  - Fixed transaction creation errors (removed invalid 'name' field)
+  - Fixed mock data generator transaction field mapping
+
+- ✅ **Notification System Improvements**
+  - Made notification button clickable in dashboard
+  - Fixed capitalization to "New Notifications"
+  - Created full notifications page with CRUD functionality
+  - Fixed notification deletion API parameter mismatch
+  - Changed router inputs from `notificationId` to `id`
+  - Fixed response field from `isRead` to `read`
+  - Notifications now fully functional with delete/mark as read
+
+- ✅ **Documentation Updates**
+  - Created comprehensive AUTH_SETUP.md guide
+  - Updated all timestamps to 2025-06-25 03:34 AM EDT
+  - Updated PROJECT-STATUS.md, CHANGELOG.md, README.md
+  - Updated all TODO files with completion status
 
 ## 🚀 Next Actions (Week 2)
 

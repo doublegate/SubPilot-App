@@ -2,6 +2,7 @@ import { type Config } from 'tailwindcss';
 import { fontFamily } from 'tailwindcss/defaultTheme';
 
 export default {
+  darkMode: ['class'],
   content: ['./src/**/*.tsx'],
   theme: {
     container: {
@@ -46,8 +47,7 @@ export default {
           800: '#6B21A8',
           900: '#581C87',
         },
-        background: '#F9FAFB',
-        surface: '#FFFFFF',
+        background: 'hsl(var(--background))',
         text: {
           primary: '#111827',
           muted: '#6B7280',

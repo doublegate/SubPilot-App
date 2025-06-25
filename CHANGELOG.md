@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed "Unknown field `accounts`" errors in Plaid API router
   - OAuth login now works correctly with Google and GitHub providers
 
+- **Notification Deletion** - Fixed API parameter mismatch errors
+  - Changed notification router input parameters from `notificationId` to `id`
+  - Fixed response field from `isRead` to `read` for consistency
+  - Added `metadata` field to notification response
+  - Notifications can now be deleted and marked as read properly
+
 ### Changed
 
 - **Project Organization** - Reorganized configuration files for cleaner structure
