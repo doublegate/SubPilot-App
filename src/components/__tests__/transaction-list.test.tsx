@@ -74,10 +74,7 @@ const mockTransaction3: Transaction = {
     name: 'Checking Account',
     institution: 'Chase Bank',
   },
-  subscription: {
-    id: 'sub-2',
-    name: 'Spotify',
-  },
+  subscription: null,  // Changed to null to show "Recurring" badge
 };
 
 const mockTransactions: Transaction[] = [
