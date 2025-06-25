@@ -52,10 +52,11 @@ interface SpendingOverview {
   }>;
 }
 
-interface SpendingTrends {
-  date: string;
-  subscriptionAmount: number;
-  totalAmount: number;
+interface SpendingTrend {
+  period: string;
+  total: number;
+  recurring: number;
+  nonRecurring: number;
 }
 
 interface SubscriptionInsights {
@@ -108,7 +109,7 @@ export default function AnalyticsPage() {
           : timeRange === 'year' || timeRange === 'all'
             ? 'month'
             : 'week',
-    }) as { data: SpendingTrends[] | undefined; isLoading: boolean };
+    });
   const { data: insights, isLoading: insightsLoading } =
     api.analytics.getSubscriptionInsights.useQuery() as {
       data: SubscriptionInsights | undefined;
@@ -117,7 +118,7 @@ export default function AnalyticsPage() {
   const { data: renewals, isLoading: renewalsLoading } =
     api.analytics.getUpcomingRenewals.useQuery({
       days: 30,
-    }) as { data: UpcomingRenewal[] | undefined; isLoading: boolean };
+    });
 
   // Export data query
   const [exportFormat, setExportFormat] = useState<'csv' | 'json' | null>(null);
@@ -130,31 +131,33 @@ export default function AnalyticsPage() {
   // Handle export completion
   React.useEffect(() => {
     if (exportData && exportFormat) {
-      if (
-        'subscriptions' in exportData &&
-        exportData.subscriptions &&
-        Array.isArray(exportData.subscriptions)
-      ) {
+      if ('format' in exportData && exportData.format === 'csv' && 'data' in exportData && exportData.data) {
         // CSV export
-        const csvContent = exportData.subscriptions
-          .map((row: unknown) =>
-            Array.isArray(row) ? row.join(',') : String(row)
-          )
-          .join('\n');
+        const csvContent = typeof exportData.data.subscriptions === 'string' 
+          ? exportData.data.subscriptions 
+          : '';
 
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `subpilot-export-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = 'filename' in exportData && exportData.filename ? exportData.filename : `subpilot-export-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
 
         toast.success('Data exported successfully');
-      } else if ('error' in exportData) {
-        toast.error(
-          'Export failed: ' + (exportData as { error: string }).error
-        );
+      } else if ('format' in exportData && exportData.format === 'json' && 'data' in exportData && exportData.data) {
+        // JSON export
+        const jsonContent = JSON.stringify(exportData.data, null, 2);
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'filename' in exportData && exportData.filename ? exportData.filename : `subpilot-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        toast.success('Data exported successfully');
       }
       setExportFormat(null); // Reset export state
     }
@@ -308,14 +311,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               {trends && trends.length > 0 ? (
-                <SpendingTrendsChart
-                  data={trends.map(trend => ({
-                    period: trend.date,
-                    total: trend.totalAmount,
-                    recurring: trend.subscriptionAmount,
-                    nonRecurring: trend.totalAmount - trend.subscriptionAmount,
-                  }))}
-                />
+                <SpendingTrendsChart data={trends} />
               ) : (
                 <div className="flex h-[400px] items-center justify-center text-muted-foreground">
                   No spending trend data available
@@ -378,17 +374,8 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {renewals && renewals.length > 0 ? (
-                <UpcomingRenewalsCalendar
-                  renewals={{
-                    renewals: [],
-                    totalCount: renewals.length,
-                    totalAmount: renewals.reduce(
-                      (sum: number, r: UpcomingRenewal) => sum + r.amount,
-                      0
-                    ),
-                  }}
-                />
+              {renewals && renewals.totalCount > 0 ? (
+                <UpcomingRenewalsCalendar renewals={renewals} />
               ) : (
                 <div className="flex h-[400px] items-center justify-center text-muted-foreground">
                   No upcoming renewals

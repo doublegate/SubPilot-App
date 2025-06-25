@@ -359,5 +359,5 @@ class ProductionTester {
 // Run tests if script is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   const tester = new ProductionTester();
-  await tester.runAllTests();
+  void tester.runAllTests();
 }

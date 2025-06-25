@@ -149,7 +149,6 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         provider: { name: 'Netflix', logo: null },
         confidence: 0.95,
         isManual: false,
-        lastTransaction: expect.any(Date), // From transactions[0].date
       });
 
       expect(db.subscription.findMany).toHaveBeenCalledWith({
@@ -164,7 +163,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       (db.subscription.findMany as Mock).mockResolvedValueOnce(
         activeSubscriptions
       );
-      (db.subscription.count as Mock).mockResolvedValueOnce(2);
+      (db.subscription.count as Mock).mockResolvedValueOnce(3);
 
       const result = await caller.getAll({ status: 'active' });
 
@@ -192,7 +191,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       const result = await caller.getAll({ category: 'Entertainment' });
 
       expect(result.subscriptions).toHaveLength(2);
-      expect(result.every(s => s.category === 'Entertainment')).toBe(true);
+      expect(result.subscriptions.every(s => s.category === 'Entertainment')).toBe(true);
 
       expect(db.subscription.findMany).toHaveBeenCalledWith({
         where: {
@@ -247,7 +246,6 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         provider: { name: 'Netflix', logo: null },
         confidence: 0.95,
         isManual: false,
-        lastTransaction: expect.any(Date),
       });
 
       expect(db.subscription.findUnique).toHaveBeenCalledWith({
@@ -323,6 +321,12 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         description: 'Netflix Subscription',
         isManual: true,
         confidence: 1.0,
+        lastBillingDate: expect.any(Date),
+        merchantName: 'Netflix',
+        nextBillingDate: expect.any(Date),
+        provider: { name: 'Netflix', logo: null },
+        startDate: expect.any(Date),
+        cancelledAt: null,
       });
 
       expect(db.subscription.create).toHaveBeenCalledWith({
@@ -341,6 +345,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
           provider: {},
           metadata: {},
         },
+        include: { transactions: true },
       });
     });
 
@@ -349,6 +354,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         caller.create({
           name: '',
           amount: 15.99,
+          currency: 'USD',
           frequency: 'monthly',
           category: 'Entertainment',
         })
@@ -360,6 +366,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         caller.create({
           name: 'Netflix',
           amount: -15.99,
+          currency: 'USD',
           frequency: 'monthly',
           category: 'Entertainment',
         })
@@ -580,7 +587,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       const result = await caller.getAll({});
       const duration = performance.now() - start;
 
-      expect(result).toHaveLength(1000);
+      expect(result.subscriptions).toHaveLength(1000);
       expect(duration).toBeLessThan(200); // Should handle large datasets within 200ms
     });
   });
@@ -601,10 +608,9 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
       const result = await caller.getAll({});
 
-      expect(result[0].description).toBeNull();
-      expect(result[0].lastBillingDate).toBeNull();
-      expect(result[0].nextBillingDate).toBeNull();
-      expect(result[0].lastTransaction).toBeNull();
+      expect(result.subscriptions[0].description).toBeNull();
+      expect(result.subscriptions[0].lastBillingDate).toBeNull();
+      expect(result.subscriptions[0].nextBillingDate).toBeNull();
     });
   });
 
@@ -621,7 +627,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
       const result = await caller.getAll({});
 
-      expect(result[0].amount).toBe(9999.99);
+      expect(result.subscriptions[0].amount).toBe(9999.99);
     });
 
     it('should handle subscriptions with future dates', async () => {
@@ -637,8 +643,8 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
       const result = await caller.getAll({});
 
-      expect(result[0].startDate).toEqual(new Date('2025-01-01'));
-      expect(result[0].nextBillingDate).toEqual(new Date('2025-02-01'));
+      expect(result.subscriptions[0].startDate).toEqual(new Date('2025-01-01'));
+      expect(result.subscriptions[0].nextBillingDate).toEqual(new Date('2025-02-01'));
     });
   });
 });

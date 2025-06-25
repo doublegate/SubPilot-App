@@ -621,13 +621,23 @@ function generateIssuesByCategory(issues: AccessibilityIssue[]): string {
       if (!acc[issue.category]) {
         acc[issue.category] = { errors: 0, warnings: 0, info: 0 };
       }
-      if (!acc[issue.category]) {
-        acc[issue.category] = { errors: 0, warnings: 0, info: 0 };
+      const categoryStats = acc[issue.category];
+      if (categoryStats) {
+        switch (issue.type) {
+          case 'error':
+            categoryStats.errors++;
+            break;
+          case 'warning':
+            categoryStats.warnings++;
+            break;
+          case 'info':
+            categoryStats.info++;
+            break;
+        }
       }
-      acc[issue.category]![issue.type]++;
       return acc;
     },
-    {} as Record<string, Record<string, number>>
+    {} as Record<string, { errors: number; warnings: number; info: number }>
   );
 
   return Object.entries(categories)
@@ -674,4 +684,4 @@ async function main() {
   }
 }
 
-main();
+void main();

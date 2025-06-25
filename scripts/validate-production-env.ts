@@ -520,5 +520,5 @@ class ProductionEnvironmentValidator {
 // Run validation if script is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   const validator = new ProductionEnvironmentValidator();
-  await validator.runValidation();
+  void validator.runValidation();
 }

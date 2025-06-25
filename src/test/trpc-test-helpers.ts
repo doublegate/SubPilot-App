@@ -2,7 +2,6 @@ import { appRouter } from '@/server/api/root';
 import type { Session } from 'next-auth';
 import { db } from '@/server/db';
 
-// @ts-expect-error - createCallerFactory might not be exported
 const createCaller = appRouter.createCaller;
 
 /**

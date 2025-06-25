@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { plaidRouter } from '../plaid';
-import { createTRPCMsw } from 'msw-trpc';
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
+import { createInnerTRPCContext } from '@/server/api/trpc';
 import type { PlaidApi } from 'plaid';
+import type { Session } from 'next-auth';
 
 // Mock environment
 vi.mock('@/env.js', () => ({
@@ -62,7 +61,7 @@ vi.mock('@/server/plaid-client', () => ({
 }));
 
 // Mock database
-const mockDb = {
+const mockDb: any = {
   plaidItem: {
     create: vi.fn(),
     findMany: vi.fn(),
@@ -85,10 +84,14 @@ const mockDb = {
   },
 };
 
-// Mock context
-const mockContext = {
-  session: { user: { id: 'user123' } },
-  db: mockDb,
+// Mock session
+const mockSession: Session = {
+  user: {
+    id: 'user123',  
+    email: 'test@example.com',
+    name: 'Test User',
+  },
+  expires: new Date(Date.now() + 86400000).toISOString(),
 };
 
 describe('Plaid Router', () => {
@@ -107,7 +110,10 @@ describe('Plaid Router', () => {
 
       mockPlaidClient.linkTokenCreate = vi.fn().mockResolvedValue(mockResponse);
 
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       const result = await caller.createLinkToken();
 
       expect(result).toEqual({
@@ -127,10 +133,13 @@ describe('Plaid Router', () => {
     });
 
     it('should throw error when Plaid is not configured', async () => {
-      const { isPlaidConfigured } = await import('@/server/plaid-client');
-      vi.mocked(isPlaidConfigured).mockReturnValue(false);
+      const plaidClient = await import('@/server/plaid-client');
+      vi.mocked(plaidClient.isPlaidConfigured).mockReturnValue(false);
 
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
 
       await expect(caller.createLinkToken()).rejects.toThrow(TRPCError);
       await expect(caller.createLinkToken()).rejects.toThrow(
@@ -223,7 +232,10 @@ describe('Plaid Router', () => {
     });
 
     it('should exchange public token and set up bank connection', async () => {
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       const result = await caller.exchangePublicToken(mockInput);
 
       expect(result.success).toBe(true);
@@ -256,7 +268,10 @@ describe('Plaid Router', () => {
         .fn()
         .mockRejectedValue(new Error('Transaction fetch failed'));
 
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       const result = await caller.exchangePublicToken(mockInput);
 
       // Should still succeed despite transaction fetch failure
@@ -321,7 +336,10 @@ describe('Plaid Router', () => {
     });
 
     it('should sync transactions using sync endpoint', async () => {
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       const result = await caller.syncTransactions({});
 
       expect(result.success).toBe(true);
@@ -354,7 +372,10 @@ describe('Plaid Router', () => {
         },
       });
 
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       await caller.syncTransactions({});
 
       expect(mockDb.transaction.deleteMany).toHaveBeenCalledWith({
@@ -386,7 +407,10 @@ describe('Plaid Router', () => {
         },
       });
 
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       await caller.syncTransactions({});
 
       expect(mockDb.transaction.upsert).toHaveBeenCalledWith({
@@ -428,7 +452,10 @@ describe('Plaid Router', () => {
         },
       ]);
 
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       const result = await caller.getAccounts();
 
       expect(result).toHaveLength(1);
@@ -460,7 +487,10 @@ describe('Plaid Router', () => {
     });
 
     it('should disconnect account and remove from Plaid', async () => {
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       const result = await caller.disconnectAccount({
         plaidItemId: 'plaid-item-1',
       });
@@ -489,7 +519,10 @@ describe('Plaid Router', () => {
         .fn()
         .mockRejectedValue(new Error('Plaid removal failed'));
 
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       const result = await caller.disconnectAccount({
         plaidItemId: 'plaid-item-1',
       });
@@ -502,7 +535,10 @@ describe('Plaid Router', () => {
     it('should throw error if account not found', async () => {
       mockDb.plaidItem.findFirst.mockResolvedValue(null);
 
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
 
       await expect(
         caller.disconnectAccount({ plaidItemId: 'non-existent' })
@@ -527,7 +563,10 @@ describe('Plaid Router', () => {
         },
       ]);
 
-      const caller = plaidRouter.createCaller(mockContext);
+      const ctx = createInnerTRPCContext({ session: mockSession });
+      // @ts-expect-error - Mocking db for tests
+      ctx.db = mockDb as any;
+      const caller = plaidRouter.createCaller(ctx);
       const result = await caller.getSyncStatus();
 
       expect(result).toHaveLength(2);

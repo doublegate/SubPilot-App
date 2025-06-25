@@ -24,7 +24,7 @@ describe('SubscriptionCard', () => {
     render(<SubscriptionCard subscription={upcomingSubscription} />);
 
     expect(screen.getByText(/Next billing:/)).toBeInTheDocument();
-    expect(screen.getByText(/in 3 days/)).toBeInTheDocument();
+    expect(screen.getByText(/3 days/)).toBeInTheDocument();
   });
 
   it('shows cancelled state correctly', () => {

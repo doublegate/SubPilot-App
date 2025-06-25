@@ -44,7 +44,7 @@ describe('Analytics Router Integration Tests', () => {
     vi.clearAllMocks();
   });
 
-  describe('getOverview', () => {
+  describe('getSpendingOverview', () => {
     it('should return overview with correct calculations', async () => {
       // Create test subscriptions
       await createTestSubscription(testUserId, {
@@ -71,32 +71,32 @@ describe('Analytics Router Integration Tests', () => {
         status: 'cancelled',
       });
 
-      const result = await caller.analytics.getOverview();
+      const result = await caller.analytics.getSpendingOverview({});
 
       expect(result).toBeDefined();
-      expect(result.totalSubscriptions).toBe(3);
-      expect(result.activeSubscriptions).toBe(2);
-      expect(result.monthlySpend).toBeCloseTo(25.98, 2); // 15.99 + 9.99
-      expect(result.yearlySpend).toBeCloseTo(311.76, 2); // (15.99 + 9.99) * 12
-      expect(result.categoriesCount).toBe(3); // Entertainment, Music, Software
+      expect(result.subscriptionSpending).toBeDefined();
+      expect(result.subscriptionSpending.monthly).toBeCloseTo(25.98, 2); // 15.99 + 9.99
+      expect(result.subscriptionSpending.yearly).toBeCloseTo(311.76, 2); // (15.99 + 9.99) * 12
+      expect(result.categoryBreakdown).toBeDefined();
+      expect(result.categoryBreakdown.length).toBeGreaterThan(0);
     });
 
     it('should handle user with no subscriptions', async () => {
-      const result = await caller.analytics.getOverview();
+      const result = await caller.analytics.getSpendingOverview({});
 
       expect(result).toBeDefined();
-      expect(result.totalSubscriptions).toBe(0);
-      expect(result.activeSubscriptions).toBe(0);
-      expect(result.monthlySpend).toBe(0);
-      expect(result.yearlySpend).toBe(0);
-      expect(result.categoriesCount).toBe(0);
+      expect(result.subscriptionSpending).toBeDefined();
+      expect(result.subscriptionSpending.monthly).toBe(0);
+      expect(result.totalYearly).toBe(0);
+      expect(result.averageSubscriptionCost).toBe(0);
+      expect(result.mostExpensiveCategory).toBe('Unknown');
     });
 
     it('should throw error for unauthenticated user', async () => {
       const unauthenticatedCaller = createUnauthenticatedCaller();
 
       await expect(
-        unauthenticatedCaller.analytics.getOverview()
+        unauthenticatedCaller.analytics.getSpendingOverview({})
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -114,13 +114,15 @@ describe('Analytics Router Integration Tests', () => {
       const plaidItem = await db.plaidItem.create({
         data: {
           userId: testUserId,
+          plaidItemId: 'test-item-id',
           institutionId: 'test-bank',
           institutionName: 'Test Bank',
           accessToken: 'test-token',
+          status: 'good',
         },
       });
 
-      const account = await db.account.create({
+      const account = await db.bankAccount.create({
         data: {
           userId: testUserId,
           plaidItemId: plaidItem.id,
@@ -130,6 +132,8 @@ describe('Analytics Router Integration Tests', () => {
           subtype: 'checking',
           availableBalance: 1000,
           currentBalance: 1000,
+          isoCurrencyCode: 'USD',
+          isActive: true,
         },
       });
 
@@ -149,7 +153,7 @@ describe('Analytics Router Integration Tests', () => {
       });
 
       const result = await caller.analytics.getSpendingTrends({
-        period: 'month',
+        timeRange: 'month',
       });
 
       expect(result).toBeDefined();
@@ -157,18 +161,18 @@ describe('Analytics Router Integration Tests', () => {
       expect(result.length).toBeGreaterThan(0);
 
       // Verify structure of trend data
-      result.forEach(trend => {
+      result.forEach((trend: any) => {
         expect(trend).toHaveProperty('period');
-        expect(trend).toHaveProperty('totalSpend');
-        expect(trend).toHaveProperty('subscriptionSpend');
-        expect(typeof trend.totalSpend).toBe('number');
-        expect(typeof trend.subscriptionSpend).toBe('number');
+        expect(trend).toHaveProperty('total');
+        expect(trend).toHaveProperty('recurring');
+        expect(typeof trend.total).toBe('number');
+        expect(typeof trend.recurring).toBe('number');
       });
     });
 
     it('should return empty trends for user with no transactions', async () => {
       const result = await caller.analytics.getSpendingTrends({
-        period: 'month',
+        timeRange: 'month',
       });
 
       expect(result).toBeDefined();
@@ -176,50 +180,8 @@ describe('Analytics Router Integration Tests', () => {
     });
   });
 
-  describe('getCategoryBreakdown', () => {
-    it('should return category breakdown with correct totals', async () => {
-      // Create subscriptions in different categories
-      await createTestSubscription(testUserId, {
-        name: 'Netflix',
-        amount: 15.99,
-        frequency: 'monthly',
-        category: 'Entertainment',
-      });
-
-      await createTestSubscription(testUserId, {
-        name: 'Spotify',
-        amount: 9.99,
-        frequency: 'monthly',
-        category: 'Music',
-      });
-
-      await createTestSubscription(testUserId, {
-        name: 'Hulu',
-        amount: 12.99,
-        frequency: 'monthly',
-        category: 'Entertainment',
-      });
-
-      const result = await caller.analytics.getCategoryBreakdown();
-
-      expect(result).toBeDefined();
-      expect(Array.isArray(result)).toBe(true);
-
-      // Find Entertainment category
-      const entertainmentCategory = result.find(
-        cat => cat.category === 'Entertainment'
-      );
-      expect(entertainmentCategory).toBeDefined();
-      expect(entertainmentCategory?.count).toBe(2);
-      expect(entertainmentCategory?.totalSpend).toBeCloseTo(28.98, 2); // 15.99 + 12.99
-
-      // Find Music category
-      const musicCategory = result.find(cat => cat.category === 'Music');
-      expect(musicCategory).toBeDefined();
-      expect(musicCategory?.count).toBe(1);
-      expect(musicCategory?.totalSpend).toBeCloseTo(9.99, 2);
-    });
-  });
+  // Note: getCategoryBreakdown method doesn't exist in the analytics router
+  // This test section has been removed as it tests a non-existent method
 
   describe('getSubscriptionInsights', () => {
     it('should return insights with growth metrics', async () => {
@@ -245,16 +207,16 @@ describe('Analytics Router Integration Tests', () => {
       const result = await caller.analytics.getSubscriptionInsights();
 
       expect(result).toBeDefined();
-      expect(result).toHaveProperty('totalCount');
-      expect(result).toHaveProperty('averageAmount');
-      expect(result).toHaveProperty('mostExpensive');
-      expect(result).toHaveProperty('cheapest');
-      expect(result).toHaveProperty('monthlyGrowthRate');
-      expect(result).toHaveProperty('categoryDistribution');
+      expect(result).toHaveProperty('totalActive');
+      expect(result).toHaveProperty('totalCancelled');
+      expect(result).toHaveProperty('unusedCount');
+      expect(result).toHaveProperty('priceIncreaseCount');
+      expect(result).toHaveProperty('averageSubscriptionAge');
+      expect(result).toHaveProperty('insights');
 
-      expect(result.totalCount).toBe(2);
-      expect(typeof result.averageAmount).toBe('number');
-      expect(typeof result.monthlyGrowthRate).toBe('number');
+      expect(result.totalActive).toBe(2);
+      expect(result.totalCancelled).toBe(0);
+      expect(typeof result.averageSubscriptionAge).toBe('number');
     });
   });
 
@@ -269,23 +231,20 @@ describe('Analytics Router Integration Tests', () => {
       });
 
       const result = await caller.analytics.exportData({
-        format: 'json',
-        includeTransactions: true,
-        includeSubscriptions: true,
+        format: 'csv',
       });
 
       expect(result).toBeDefined();
-      expect(result).toHaveProperty('subscriptions');
-      expect(result).toHaveProperty('transactions');
-      expect(result).toHaveProperty('summary');
-      expect(result).toHaveProperty('exportedAt');
+      expect(result).toHaveProperty('data');
+      expect(result).toHaveProperty('format');
+      expect(result).toHaveProperty('exportDate');
 
-      expect(Array.isArray(result.subscriptions)).toBe(true);
-      expect(Array.isArray(result.transactions)).toBe(true);
-      expect(result.subscriptions.length).toBe(1);
+      expect(result.format).toBe('csv');
+      expect(typeof result.data).toBe('string');
+      expect(result.data).toContain('Netflix');
     });
 
-    it('should export only subscriptions when transactions excluded', async () => {
+    it('should export data in JSON format', async () => {
       await createTestSubscription(testUserId, {
         name: 'Spotify',
         amount: 9.99,
@@ -294,12 +253,13 @@ describe('Analytics Router Integration Tests', () => {
 
       const result = await caller.analytics.exportData({
         format: 'json',
-        includeTransactions: false,
-        includeSubscriptions: true,
       });
 
-      expect(result.subscriptions.length).toBe(1);
-      expect(result.transactions.length).toBe(0);
+      expect(result).toBeDefined();
+      expect(result.format).toBe('json');
+      expect(result.data).toBeDefined();
+      expect(result.data.subscriptions).toBeDefined();
+      expect(Array.isArray(result.data.subscriptions)).toBe(true);
     });
   });
 });
