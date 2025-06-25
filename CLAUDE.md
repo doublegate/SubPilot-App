@@ -260,6 +260,9 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 - Use sandbox environment for development
 - Test credentials available in Plaid dashboard
 - Webhook support for real-time updates
+- **Important**: Plaid sandbox accounts have NO transactions by default
+  - Use `scripts/populate-test-data.ts` to generate test subscriptions
+  - Production accounts will have real transaction history
 
 ### Email Service
 
@@ -272,6 +275,9 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 2. **Type Errors**: Run `npm run type-check`
 3. **API Issues**: Check tRPC error messages in browser console
 4. **Auth Issues**: Check Auth.js logs and session data
+5. **Dashboard Shows Zeros**: Run `npx tsx scripts/debug-dashboard-comprehensive.ts`
+6. **Plaid Sandbox**: Use `npx tsx scripts/populate-test-data.ts` to generate test data
+7. **Transaction Sync**: Check with `npx tsx scripts/manual-sync-transactions.ts`
 
 ## 📝 Repository Information
 

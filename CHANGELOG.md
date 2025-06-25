@@ -9,11 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **CI/CD Pipeline TypeScript Errors** - Fixed test compilation errors blocking deployment
-  - Added proper type annotations to all test mock data arrays
-  - Refactored test files to use individual typed constants instead of array access
-  - Removed need for non-null assertions by improving TypeScript type inference
-  - Fixed all "Validate project configuration" CI/CD pipeline failures
+- **Dashboard Aggregation Issues** - Fixed dashboard showing zeros despite bank connections
+  - Root cause: Plaid sandbox accounts don't have transactions by default
+  - Created comprehensive debugging scripts to analyze data flow
+  - Added test data population script for development/testing
+  - Fixed account ID mapping bugs in transaction sync
+  - Lowered subscription detection confidence threshold from 0.7 to 0.5
+  - Widened frequency detection windows for billing date variations
+  - Added explicit isActive=true when creating subscriptions
+
+- **CI/CD Pipeline TypeScript Errors** - Fixed compilation errors in debugging scripts
+  - Fixed accessing non-existent 'name' field on Transaction type
+  - Changed to use 'description' field instead
+  - All TypeScript compilation now passes in CI/CD
+
+### Added
+
+- **Debugging Scripts**
+  - `scripts/debug-dashboard-comprehensive.ts` - Full system analysis tool
+  - `scripts/manual-sync-transactions.ts` - Check Plaid sync status
+  - `scripts/populate-test-data.ts` - Generate realistic test subscription data
+  - All scripts help diagnose and resolve data flow issues
+
+### Changed
+
+- **Subscription Detection**
+  - Lowered confidence threshold from 70% to 50% for better detection
+  - Widened frequency windows (e.g., monthly: 24-38 days instead of 25-35)
+  - Better handling of billing date variations and edge cases
 
 ## [0.1.6] - 2025-06-22
 
