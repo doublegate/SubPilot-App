@@ -191,7 +191,9 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       const result = await caller.getAll({ category: 'Entertainment' });
 
       expect(result.subscriptions).toHaveLength(2);
-      expect(result.subscriptions.every(s => s.category === 'Entertainment')).toBe(true);
+      expect(
+        result.subscriptions.every(s => s.category === 'Entertainment')
+      ).toBe(true);
 
       expect(db.subscription.findMany).toHaveBeenCalledWith({
         where: {
@@ -644,7 +646,9 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       const result = await caller.getAll({});
 
       expect(result.subscriptions[0].startDate).toEqual(new Date('2025-01-01'));
-      expect(result.subscriptions[0].nextBillingDate).toEqual(new Date('2025-02-01'));
+      expect(result.subscriptions[0].nextBillingDate).toEqual(
+        new Date('2025-02-01')
+      );
     });
   });
 });

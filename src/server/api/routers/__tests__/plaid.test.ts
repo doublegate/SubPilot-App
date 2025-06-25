@@ -87,7 +87,7 @@ const mockDb: any = {
 // Mock session
 const mockSession: Session = {
   user: {
-    id: 'user123',  
+    id: 'user123',
     email: 'test@example.com',
     name: 'Test User',
   },

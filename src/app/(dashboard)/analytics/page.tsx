@@ -131,29 +131,46 @@ export default function AnalyticsPage() {
   // Handle export completion
   React.useEffect(() => {
     if (exportData && exportFormat) {
-      if ('format' in exportData && exportData.format === 'csv' && 'data' in exportData && exportData.data) {
+      if (
+        'format' in exportData &&
+        exportData.format === 'csv' &&
+        'data' in exportData &&
+        exportData.data
+      ) {
         // CSV export
-        const csvContent = typeof exportData.data.subscriptions === 'string' 
-          ? exportData.data.subscriptions 
-          : '';
+        const csvContent =
+          typeof exportData.data.subscriptions === 'string'
+            ? exportData.data.subscriptions
+            : '';
 
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'filename' in exportData && exportData.filename ? exportData.filename : `subpilot-export-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download =
+          'filename' in exportData && exportData.filename
+            ? exportData.filename
+            : `subpilot-export-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
 
         toast.success('Data exported successfully');
-      } else if ('format' in exportData && exportData.format === 'json' && 'data' in exportData && exportData.data) {
+      } else if (
+        'format' in exportData &&
+        exportData.format === 'json' &&
+        'data' in exportData &&
+        exportData.data
+      ) {
         // JSON export
         const jsonContent = JSON.stringify(exportData.data, null, 2);
         const blob = new Blob([jsonContent], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'filename' in exportData && exportData.filename ? exportData.filename : `subpilot-export-${new Date().toISOString().split('T')[0]}.json`;
+        a.download =
+          'filename' in exportData && exportData.filename
+            ? exportData.filename
+            : `subpilot-export-${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
 
