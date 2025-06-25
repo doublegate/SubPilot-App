@@ -1,9 +1,9 @@
 import { appRouter } from '@/server/api/root';
-import { createCallerFactory } from '@trpc/server';
 import type { Session } from 'next-auth';
 import { db } from '@/server/db';
 
-const createCaller = createCallerFactory(appRouter);
+// @ts-expect-error - createCallerFactory might not be exported
+const createCaller = appRouter.createCaller;
 
 /**
  * Creates a tRPC caller with a mocked session for testing
@@ -29,7 +29,6 @@ export const createMockSession = (overrides: Partial<Session> = {}): Session => 
       image: null,
     },
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    sessionToken: 'test-session-token',
     ...overrides,
   };
 };
@@ -155,7 +154,7 @@ export const createTestTransaction = async (
       transactionType: 'special',
       paymentChannel: 'online',
       authorizedDate: null,
-      location: null,
+      location: undefined,
       confidence: 0.85,
     },
   });

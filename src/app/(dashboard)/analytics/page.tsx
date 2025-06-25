@@ -31,8 +31,8 @@ type TimeRange = 'week' | 'month' | 'quarter' | 'year' | 'all';
 
 interface AnalyticsFilters {
   categories: string[];
-  minAmount: number | undefined;
-  maxAmount: number | undefined;
+  minAmount?: number;
+  maxAmount?: number;
   status: 'all' | 'active' | 'cancelled';
 }
 

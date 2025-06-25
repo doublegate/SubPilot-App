@@ -322,6 +322,7 @@ export const notificationsRouter = createTRPCRouter({
               lastBilling: new Date(),
               provider: {},
               cancellationInfo: {},
+              notes: null,
             },
           });
           break;
@@ -348,6 +349,7 @@ export const notificationsRouter = createTRPCRouter({
               lastBilling: new Date(),
               provider: {},
               cancellationInfo: {},
+              notes: null,
             },
             oldAmount: 14.99,
             newAmount: 15.99,
@@ -392,6 +394,7 @@ export const notificationsRouter = createTRPCRouter({
               lastBilling: new Date(),
               provider: {},
               cancellationInfo: {},
+              notes: null,
             },
           });
           break;
@@ -418,6 +421,7 @@ export const notificationsRouter = createTRPCRouter({
               lastBilling: new Date(),
               provider: {},
               cancellationInfo: {},
+              notes: null,
             },
             renewalDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
           });
@@ -445,6 +449,7 @@ export const notificationsRouter = createTRPCRouter({
               lastBilling: null,
               provider: {},
               cancellationInfo: {},
+              notes: null,
             },
             trialEndDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
           });
@@ -472,6 +477,7 @@ export const notificationsRouter = createTRPCRouter({
               lastBilling: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
               provider: {},
               cancellationInfo: {},
+              notes: null,
             },
             errorMessage: 'Card declined - insufficient funds',
           });

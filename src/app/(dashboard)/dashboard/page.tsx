@@ -371,7 +371,7 @@ export default function DashboardPage() {
               status: sub.isActive
                 ? ('active' as const)
                 : ('cancelled' as const),
-              category: sub.category,
+              category: sub.category ?? undefined,
             }))}
           />
         ) : (

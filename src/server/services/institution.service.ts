@@ -64,7 +64,7 @@ export class InstitutionService {
 
       const request: InstitutionsGetByIdRequest = {
         institution_id: institutionId,
-        country_codes: ['US', 'CA'],
+        country_codes: ['US' as any, 'CA' as any],
         options: {
           include_optional_metadata: true,
           include_status: true,
@@ -81,8 +81,8 @@ export class InstitutionService {
       const institutionData: InstitutionData = {
         id: institution.institution_id,
         name: institution.name,
-        logo: institution.logo,
-        url: institution.url,
+        logo: institution.logo ?? undefined,
+        url: institution.url ?? undefined,
         colors: institution.primary_color
           ? {
               primary: institution.primary_color,
@@ -91,8 +91,8 @@ export class InstitutionService {
             }
           : undefined,
         oauth: institution.oauth,
-        mfa: institution.mfa || [],
-        status: institution.status,
+        mfa: (institution as any).mfa || [],
+        status: institution.status ?? undefined,
       };
 
       // Cache the result
@@ -158,7 +158,7 @@ export class InstitutionService {
         () =>
           client.institutionsSearch({
             query,
-            country_codes: [countryCode],
+            country_codes: [countryCode as any],
             options: {
               include_optional_metadata: true,
             },
@@ -169,8 +169,8 @@ export class InstitutionService {
       return response.data.institutions.map(institution => ({
         id: institution.institution_id,
         name: institution.name,
-        logo: institution.logo,
-        url: institution.url,
+        logo: institution.logo ?? undefined,
+        url: institution.url ?? undefined,
         colors: institution.primary_color
           ? {
               primary: institution.primary_color,
@@ -179,7 +179,7 @@ export class InstitutionService {
             }
           : undefined,
         oauth: institution.oauth,
-        mfa: institution.mfa || [],
+        mfa: (institution as any).mfa || [],
         status: institution.status,
       }));
     } catch (error) {

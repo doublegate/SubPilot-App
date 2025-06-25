@@ -54,7 +54,7 @@ export const subscriptionsRouter = createTRPCRouter({
                 website: input.provider.website ?? null,
                 logo: null,
               }
-            : null,
+            : Prisma.JsonNull,
           detectedAt: new Date(),
         },
       });

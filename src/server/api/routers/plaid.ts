@@ -570,7 +570,7 @@ export const plaidRouter = createTRPCRouter({
               ...(input.accountId ? { id: input.accountId } : {}),
             },
             data: {
-              lastSync: now,
+              lastSync: new Date(),
             },
           });
 

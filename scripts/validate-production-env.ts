@@ -8,6 +8,7 @@
  * provides actionable feedback.
  */
 
+// @ts-expect-error - env.js is a module, not env.d.ts
 import { env } from '../src/env.js';
 
 interface ValidationResult {

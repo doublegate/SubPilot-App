@@ -260,8 +260,8 @@ export default function SubscriptionsPage() {
               | 'quarterly',
             nextBilling: sub.nextBilling,
             status: sub.isActive ? ('active' as const) : ('cancelled' as const),
-            category: sub.category,
-            provider: sub.provider,
+            category: sub.category ?? undefined,
+            provider: sub.provider ?? undefined,
           }))}
           onUpdate={(id: string) => {
             const subscription = filteredSubscriptions.find(s => s.id === id);

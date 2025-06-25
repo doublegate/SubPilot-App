@@ -12,6 +12,7 @@
  * - Health endpoints
  */
 
+// @ts-expect-error - env.js is a module, not env.d.ts
 import { env } from '../src/env.js';
 import { db } from '../src/server/db.js';
 import { sendGridEmailService } from '../src/lib/email/sendgrid.js';

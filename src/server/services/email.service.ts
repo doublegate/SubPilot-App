@@ -74,7 +74,7 @@ export class EmailNotificationService {
         name: data.subscription.name,
         amount: formatCurrency(Number(data.subscription.amount)),
         frequency: data.subscription.frequency,
-        category: data.subscription.category,
+        category: data.subscription.category ?? 'Uncategorized',
       },
     });
 

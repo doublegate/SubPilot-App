@@ -575,15 +575,15 @@ export const analyticsRouter = createTRPCRouter({
       return {
         format: input.format,
         data: {
-          subscriptions: input.format === 'json' 
-            ? subscriptions.map(s => ({...s, amount: s.amount.toNumber()}))
-            : subscriptionsCsvContent,
-          transactions: input.format === 'json'
-            ? transactions.map(t => ({...t, amount: t.amount.toNumber()}))
-            : transactionsCsvContent,
+          subscriptions: input.format === 'csv' 
+            ? subscriptionsCsvContent
+            : subscriptions.map(s => ({...s, amount: s.amount.toNumber()})),
+          transactions: input.format === 'csv'
+            ? transactionsCsvContent
+            : transactions.map(t => ({...t, amount: t.amount.toNumber()})),
         },
         filename: `subpilot-export-${new Date().toISOString().split('T')[0]}.${input.format}`,
-        contentType: input.format === 'json' ? 'application/json' : 'text/csv',
+        contentType: input.format === 'csv' ? 'text/csv' : 'application/json',
         exportDate: new Date(),
       };
     }),

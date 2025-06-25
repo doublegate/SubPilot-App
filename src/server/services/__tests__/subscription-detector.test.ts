@@ -23,6 +23,7 @@ vi.mock('@/server/db', () => ({
 // Full test suite for SubscriptionDetector with proper typing
 
 // Test class that extends SubscriptionDetector to access protected methods
+// @ts-expect-error - Accessing private methods for testing
 class TestableSubscriptionDetector extends SubscriptionDetector {
   // Expose protected methods for testing
   public testGroupByMerchant(transactions: Transaction[]) {

@@ -259,7 +259,7 @@ class AccessibilityAuditor {
 
     // Check for heading hierarchy issues
     for (let i = 1; i < headings.length; i++) {
-      if (headings[i] > headings[i - 1] + 1) {
+      if (headings[i]! > headings[i - 1]! + 1) {
         this.addIssue({
           file: filePath,
           line: 0, // Line number not available for this check
@@ -548,13 +548,16 @@ function generateIssuesByCategory(issues: AccessibilityIssue[]): string {
     if (!acc[issue.category]) {
       acc[issue.category] = { errors: 0, warnings: 0, info: 0 };
     }
-    acc[issue.category][issue.type]++;
+    if (!acc[issue.category]) {
+      acc[issue.category] = { errors: 0, warnings: 0, info: 0 };
+    }
+    acc[issue.category]![issue.type]++;
     return acc;
   }, {} as Record<string, Record<string, number>>);
 
   return Object.entries(categories)
     .map(([category, counts]) => 
-      `- **${category}**: ${counts.errors} errors, ${counts.warnings} warnings, ${counts.info} info`
+      `- **${category}**: ${counts?.errors ?? 0} errors, ${counts?.warnings ?? 0} warnings, ${counts?.info ?? 0} info`
     )
     .join('\n');
 }

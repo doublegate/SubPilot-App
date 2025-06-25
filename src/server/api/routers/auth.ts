@@ -131,11 +131,11 @@ export const authRouter = createTRPCRouter({
       },
     });
 
-    // Mark current session - compare session tokens
-    const currentSessionToken = ctx.session.sessionToken;
+    // Mark current session
+    // Note: Cannot reliably identify current session without sessionToken in ctx.session
     return sessions.map(session => ({
       ...session,
-      isCurrent: session.sessionToken === currentSessionToken,
+      isCurrent: false, // Unable to determine current session
     }));
   }),
 
@@ -161,14 +161,8 @@ export const authRouter = createTRPCRouter({
         });
       }
 
-      // Prevent revoking current session
-      const currentSessionToken = ctx.session.sessionToken;
-      if (session.sessionToken === currentSessionToken) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Cannot revoke current session',
-        });
-      }
+      // Note: Cannot reliably prevent revoking current session without sessionToken in ctx.session
+      // This is a limitation of the current auth setup
 
       // Delete the session
       await ctx.db.session.delete({

@@ -96,7 +96,7 @@ export function SubscriptionTimeline({ filters }: SubscriptionTimelineProps) {
           id: sub.id,
           name: sub.name,
           amount: sub.amount,
-          category: sub.category,
+          category: sub.category ?? undefined,
           status: sub.status,
         },
       });
@@ -114,7 +114,7 @@ export function SubscriptionTimeline({ filters }: SubscriptionTimelineProps) {
             id: sub.id,
             name: sub.name,
             amount: sub.amount,
-            category: sub.category,
+            category: sub.category ?? undefined,
             status: sub.status,
           },
         });
@@ -130,7 +130,7 @@ export function SubscriptionTimeline({ filters }: SubscriptionTimelineProps) {
             id: sub.id,
             name: sub.name,
             amount: sub.amount,
-            category: sub.category,
+            category: sub.category ?? undefined,
             status: sub.status,
           },
         });

@@ -5,8 +5,8 @@ import React from 'react';
 
 // Extend Vitest matchers with jest-dom matchers
 declare module 'vitest' {
-  interface Assertion<T = unknown> extends jest.Matchers<void, T> {}
-  interface AsymmetricMatchersContaining extends jest.AsymmetricMatchers {}
+  interface Assertion<T = any> extends jest.Matchers<void, T> {}
+  interface AsymmetricMatchersContaining {}
 }
 
 // Clean up after each test
