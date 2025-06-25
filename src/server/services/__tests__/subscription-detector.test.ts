@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { SubscriptionDetector } from '@/server/services/subscription-detector';
 import { db } from '@/server/db';
+import type { Transaction } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 // Mock Prisma client
 vi.mock('@/server/db', () => ({
@@ -17,23 +19,31 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */
+
 describe('SubscriptionDetector', () => {
   let detector: SubscriptionDetector;
 
-  const mockTransaction = {
+  const mockTransaction: Transaction = {
     id: 'txn-1',
     userId: 'user-1',
     merchantName: 'Netflix',
-    amount: -15.99,
+    amount: new Decimal(-15.99),
     date: new Date('2024-07-15'),
     description: 'Netflix Monthly Subscription',
     category: ['Entertainment'],
+    subcategory: null,
     pending: false,
     isSubscription: false,
     plaidTransactionId: 'plaid_txn_1',
     accountId: 'acc-1',
-    name: 'Netflix',
+    subscriptionId: null,
     isoCurrencyCode: 'USD',
+    transactionType: 'special',
+    paymentChannel: 'online',
+    authorizedDate: null,
+    location: null,
+    confidence: new Decimal(0),
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -69,19 +79,19 @@ describe('SubscriptionDetector', () => {
           ...mockTransaction,
           id: 'txn-2',
           date: new Date('2024-06-15'),
-          amount: -15.99,
+          amount: new Decimal(-15.99),
         },
         {
           ...mockTransaction,
           id: 'txn-3',
           date: new Date('2024-05-15'),
-          amount: -15.99,
+          amount: new Decimal(-15.99),
         },
         {
           ...mockTransaction,
           id: 'txn-4',
           date: new Date('2024-04-15'),
-          amount: -15.99,
+          amount: new Decimal(-15.99),
         },
       ];
 
@@ -141,19 +151,19 @@ describe('SubscriptionDetector', () => {
           ...mockTransaction,
           id: 'txn-2',
           date: new Date('2023-07-15'),
-          amount: -99.99,
+          amount: new Decimal(-99.99),
         },
         {
           ...mockTransaction,
           id: 'txn-3',
           date: new Date('2022-07-15'),
-          amount: -99.99,
+          amount: new Decimal(-99.99),
         },
       ];
 
       (db.transaction.findUnique as Mock).mockResolvedValueOnce({
         ...mockTransaction,
-        amount: -99.99,
+        amount: new Decimal(-99.99),
       });
       (db.transaction.findMany as Mock).mockResolvedValueOnce(
         yearlyTransactions
@@ -170,13 +180,13 @@ describe('SubscriptionDetector', () => {
           ...mockTransaction,
           id: 'txn-2',
           date: new Date('2024-06-20'), // 25 days ago
-          amount: -15.99,
+          amount: new Decimal(-15.99),
         },
         {
           ...mockTransaction,
           id: 'txn-3',
           date: new Date('2024-05-10'), // 41 days before that
-          amount: -15.99,
+          amount: new Decimal(-15.99),
         },
       ];
 
@@ -202,13 +212,13 @@ describe('SubscriptionDetector', () => {
           ...mockTransaction,
           id: 'txn-2',
           date: new Date('2024-06-15'),
-          amount: -16.99, // $1 more
+          amount: new Decimal(-16.99), // $1 more
         },
         {
           ...mockTransaction,
           id: 'txn-3',
           date: new Date('2024-05-15'),
-          amount: -14.99, // $1 less
+          amount: new Decimal(-14.99), // $1 less
         },
       ];
 
@@ -262,27 +272,41 @@ describe('SubscriptionDetector', () => {
   describe('detectUserSubscriptions', () => {
     it('processes all user transactions and detects subscriptions', async () => {
       const allTransactions = [
-        { ...mockTransaction, amount: 15.99 }, // Positive amount for charges
+        { ...mockTransaction, amount: new Decimal(15.99) }, // Positive amount for charges
         {
           ...mockTransaction,
           id: 'txn-2',
           merchantName: 'Spotify',
-          amount: 9.99, // Positive amount for charges
+          amount: new Decimal(9.99), // Positive amount for charges
         },
       ];
 
       (db.transaction.findMany as Mock).mockResolvedValueOnce(allTransactions);
 
       // Mock private methods
-      vi.spyOn(
-        detector,
-        'groupByMerchant' as keyof typeof detector
+      (
+        vi.spyOn(detector, 'groupByMerchant' as keyof typeof detector) as any
       ).mockReturnValue([
-        { merchantName: 'Netflix', transactions: [allTransactions[0]!] },
-        { merchantName: 'Spotify', transactions: [allTransactions[1]!] },
-      ] as ReturnType<typeof detector.groupByMerchant>);
+        {
+          merchantName: 'Netflix',
+          transactions: allTransactions.filter(
+            t => t.merchantName === 'Netflix'
+          ),
+        },
+        {
+          merchantName: 'Spotify',
+          transactions: allTransactions.filter(
+            t => t.merchantName === 'Spotify'
+          ),
+        },
+      ]);
 
-      vi.spyOn(detector, 'analyzeTransactionGroup' as keyof typeof detector)
+      (
+        vi.spyOn(
+          detector,
+          'analyzeTransactionGroup' as keyof typeof detector
+        ) as any
+      )
         .mockReturnValueOnce({
           isSubscription: true,
           confidence: 0.9,
@@ -290,7 +314,7 @@ describe('SubscriptionDetector', () => {
           averageAmount: 15.99,
           nextBillingDate: new Date(),
           merchantName: 'Netflix',
-        } as ReturnType<typeof detector.analyzeTransactionGroup>)
+        })
         .mockReturnValueOnce({
           isSubscription: true,
           confidence: 0.85,
@@ -298,11 +322,13 @@ describe('SubscriptionDetector', () => {
           averageAmount: 9.99,
           nextBillingDate: new Date(),
           merchantName: 'Spotify',
-        } as ReturnType<typeof detector.analyzeTransactionGroup>);
+        });
 
-      vi.spyOn(
-        detector,
-        'updateTransactionDetection' as keyof typeof detector
+      (
+        vi.spyOn(
+          detector,
+          'updateTransactionDetection' as keyof typeof detector
+        ) as any
       ).mockResolvedValue(undefined);
 
       const results = await detector.detectUserSubscriptions('user-1');
@@ -317,16 +343,17 @@ describe('SubscriptionDetector', () => {
 
       (db.transaction.findMany as Mock).mockResolvedValueOnce(allTransactions);
 
-      vi.spyOn(
-        detector,
-        'groupByMerchant' as keyof typeof detector
+      (
+        vi.spyOn(detector, 'groupByMerchant' as keyof typeof detector) as any
       ).mockReturnValue([
         { merchantName: 'Netflix', transactions: allTransactions },
-      ] as ReturnType<typeof detector.groupByMerchant>);
+      ]);
 
-      vi.spyOn(
-        detector,
-        'analyzeTransactionGroup' as keyof typeof detector
+      (
+        vi.spyOn(
+          detector,
+          'analyzeTransactionGroup' as keyof typeof detector
+        ) as any
       ).mockReturnValueOnce({
         isSubscription: true,
         confidence: 0.3, // Low confidence
@@ -334,7 +361,7 @@ describe('SubscriptionDetector', () => {
         averageAmount: 15.99,
         nextBillingDate: new Date(),
         merchantName: 'Netflix',
-      } as ReturnType<typeof detector.analyzeTransactionGroup>);
+      });
 
       const results = await detector.detectUserSubscriptions('user-1');
 
@@ -358,7 +385,7 @@ describe('SubscriptionDetector', () => {
         id: 'sub-1',
         userId: 'user-1',
         name: 'Netflix',
-        amount: 15.99,
+        amount: new Decimal(15.99),
         frequency: 'monthly',
         category: 'Entertainment',
         nextBilling: new Date('2024-08-15'),
@@ -375,11 +402,19 @@ describe('SubscriptionDetector', () => {
         data: expect.objectContaining({
           userId: 'user-1',
           name: 'Netflix',
-          amount: 15.99,
+          description: 'Recurring payment to Netflix',
+          category: 'general',
+          amount: 15.99, // The implementation uses number, not Decimal
           currency: 'USD',
           frequency: 'monthly',
           nextBilling: new Date('2024-08-15'),
           status: 'active',
+          isActive: true,
+          provider: {
+            name: 'Netflix',
+            detected: true,
+          },
+          detectionConfidence: 0.9,
         }),
       });
     });
@@ -450,3 +485,5 @@ describe('SubscriptionDetector', () => {
     });
   });
 });
+
+/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any */

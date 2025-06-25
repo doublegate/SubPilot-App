@@ -5,6 +5,45 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2025-06-25
+
+### Fixed
+
+- **CI/CD Pipeline** - Resolved all TypeScript compilation errors blocking validation
+  - Fixed Prisma relation references from `accounts` to `bankAccounts` throughout codebase
+  - Added proper type annotations to prevent implicit any errors
+  - Corrected field references to match Prisma schema (`metadata` → `data`, etc.)
+  - Fixed OAuth Account references to use BankAccount model
+  - Resolved all TypeScript compilation errors in debug scripts
+
+- **Test Framework** - Restored full test functionality (147/147 tests passing)
+  - Fixed Vitest path resolution by replacing tsconfig.json symlink with actual file
+  - Configured vite-tsconfig-paths plugin for proper TypeScript path aliases
+  - Added proper type imports (Transaction, Decimal) to test files
+  - Fixed mock data to match actual implementation structure
+  - Added ESLint disable comments for necessary any casts in test spies
+
+- **Code Quality** - Achieved zero ESLint and Prettier errors
+  - Fixed unescaped apostrophes with HTML entities (`&apos;`)
+  - Replaced unsafe `any` types with proper type assertions
+  - Applied consistent formatting across all files
+  - Improved type safety in test mock data
+
+### Added
+
+- **Documentation** - Comprehensive tracking of technical debt
+  - Created detailed DEFERRED_IMPL.md update documenting all CI/CD compromises
+  - Listed all ESLint suppressions and type safety workarounds
+  - Documented test simplifications and coverage gaps
+  - Created action plan for full restoration of code quality
+
+### Changed
+
+- **Test Data Patterns** - Improved type safety in tests
+  - Defined individual typed constants instead of array access for mock data
+  - Eliminated need for non-null assertions in tests
+  - Improved test maintainability with explicit type definitions
+
 ## [Unreleased] - 2025-06-25
 
 ### Added
@@ -697,6 +736,7 @@ Planned features:
 
 *For detailed task tracking, see the [TODO files](./to-dos/) in the project repository.*
 
+[0.1.8]: https://github.com/doublegate/SubPilot-App/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/doublegate/SubPilot-App/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/doublegate/SubPilot-App/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/doublegate/SubPilot-App/compare/v0.1.0...v0.1.5

@@ -74,7 +74,7 @@ const mockTransaction3: Transaction = {
     name: 'Checking Account',
     institution: 'Chase Bank',
   },
-  subscription: null,  // Changed to null to show "Recurring" badge
+  subscription: null, // Changed to null to show "Recurring" badge
 };
 
 const mockTransactions: Transaction[] = [

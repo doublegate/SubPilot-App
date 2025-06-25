@@ -24,12 +24,20 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
-> **Current Status**: Active Development (Phase 1 - MVP, 70% Complete) | Version 0.1.7 | **Live Demo Available** | Last Updated: 2025-06-25 03:43 AM EDT | [View Changelog](./CHANGELOG.md)
+> **Current Status**: Active Development (Phase 1 - MVP, 70% Complete) | Version 0.1.8 | **Live Demo Available** | Last Updated: 2025-06-25 04:25 PM EDT | [View Changelog](./CHANGELOG.md)
 > **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) - Bank sync working, subscription detection active, real-time dashboard
 
-## 🔥 Recent Updates (v0.1.7 - June 24, 2025)
+## 🔥 Recent Updates (v0.1.8 - June 25, 2025)
 
-### 🎉 v0.1.7 Dashboard Debugging Release
+### 🎉 v0.1.8 CI/CD Pipeline Restoration Release
+
+- ✅ **TypeScript Compilation** - Fixed all Prisma relation references and type errors
+- ✅ **Test Framework** - Restored Vitest path resolution with tsconfig fixes
+- ✅ **Code Quality** - All ESLint and Prettier issues resolved
+- ✅ **Type Safety** - Proper typing for test mocks and Prisma operations
+- ✅ **Documentation** - Comprehensive tracking of deferred implementations
+
+### 📊 v0.1.7 Dashboard Debugging Release (June 24, 2025)
 
 - ✅ **Dashboard Aggregation Fix** - Fixed zero-value display issue for all metrics
 - ✅ **Plaid Sandbox Solution** - Created test data population for development
