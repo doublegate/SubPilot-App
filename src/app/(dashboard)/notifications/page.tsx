@@ -2,7 +2,13 @@
 
 import { api } from '@/trpc/react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Bell, BellOff, Check, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -77,17 +83,19 @@ export default function NotificationsPage() {
             <BellOff className="mb-4 h-12 w-12 text-muted-foreground/50" />
             <p className="text-lg font-medium">No notifications yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              We'll notify you when something important happens
+              We&apos;ll notify you when something important happens
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-2">
-          {notifications.map((notification) => (
+          {notifications.map(notification => (
             <Card
               key={notification.id}
               className={`transition-colors ${
-                !notification.read ? 'border-cyan-200 bg-cyan-50/50 dark:border-cyan-900 dark:bg-cyan-950/20' : ''
+                !notification.read
+                  ? 'border-cyan-200 bg-cyan-50/50 dark:border-cyan-900 dark:bg-cyan-950/20'
+                  : ''
               }`}
             >
               <CardHeader className="pb-3">
@@ -108,7 +116,9 @@ export default function NotificationsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => markAsReadMutation.mutate({ id: notification.id })}
+                        onClick={() =>
+                          markAsReadMutation.mutate({ id: notification.id })
+                        }
                         disabled={markAsReadMutation.isPending}
                       >
                         <Check className="h-4 w-4" />
@@ -117,7 +127,9 @@ export default function NotificationsPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteMutation.mutate({ id: notification.id })}
+                      onClick={() =>
+                        deleteMutation.mutate({ id: notification.id })
+                      }
                       disabled={deleteMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -125,28 +137,31 @@ export default function NotificationsPage() {
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(notification.createdAt), {
+                    addSuffix: true,
+                  })}
                 </p>
               </CardHeader>
-              {notification.type === 'subscription_detected' && notification.metadata && (
-                <CardContent className="pt-0">
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="h-auto p-0 text-xs"
-                    onClick={() => {
-                      // Mark as read first
-                      if (!notification.read) {
-                        markAsReadMutation.mutate({ id: notification.id });
-                      }
-                      // Navigate to subscriptions
-                      router.push('/subscriptions');
-                    }}
-                  >
-                    View detected subscriptions →
-                  </Button>
-                </CardContent>
-              )}
+              {notification.type === 'subscription_detected' &&
+                notification.metadata && (
+                  <CardContent className="pt-0">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs"
+                      onClick={() => {
+                        // Mark as read first
+                        if (!notification.read) {
+                          markAsReadMutation.mutate({ id: notification.id });
+                        }
+                        // Navigate to subscriptions
+                        router.push('/subscriptions');
+                      }}
+                    >
+                      View detected subscriptions →
+                    </Button>
+                  </CardContent>
+                )}
             </Card>
           ))}
         </div>

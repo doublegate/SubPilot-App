@@ -375,8 +375,10 @@ export class SubscriptionDetector {
     userId: string,
     results: DetectionResult[]
   ): Promise<void> {
-    console.log(`Creating subscriptions for user ${userId} from ${results.length} detection results`);
-    
+    console.log(
+      `Creating subscriptions for user ${userId} from ${results.length} detection results`
+    );
+
     let created = 0;
     let updated = 0;
     let skipped = 0;
@@ -420,7 +422,9 @@ export class SubscriptionDetector {
             },
           });
           created++;
-          console.log(`Created subscription: ${result.merchantName} (${result.frequency}, confidence: ${result.confidence})`);
+          console.log(
+            `Created subscription: ${result.merchantName} (${result.frequency}, confidence: ${result.confidence})`
+          );
         } else {
           // Update existing subscription - reactivate if needed
           await this.db.subscription.update({
@@ -434,14 +438,21 @@ export class SubscriptionDetector {
             },
           });
           updated++;
-          console.log(`Updated subscription: ${result.merchantName} (${result.frequency})`);
+          console.log(
+            `Updated subscription: ${result.merchantName} (${result.frequency})`
+          );
         }
       } catch (error) {
         errors++;
-        console.error(`Failed to create/update subscription for ${result.merchantName}:`, error);
+        console.error(
+          `Failed to create/update subscription for ${result.merchantName}:`,
+          error
+        );
       }
     }
 
-    console.log(`Subscription processing complete: ${created} created, ${updated} updated, ${skipped} skipped, ${errors} errors`);
+    console.log(
+      `Subscription processing complete: ${created} created, ${updated} updated, ${skipped} skipped, ${errors} errors`
+    );
   }
 }

@@ -218,9 +218,13 @@ export const plaidRouter = createTRPCRouter({
             // Filter out transactions without valid account mapping
             const validTransactions = transactionsResponse.data.transactions
               .map(txn => {
-                const account = accounts.find(a => a.plaidAccountId === txn.account_id);
+                const account = accounts.find(
+                  a => a.plaidAccountId === txn.account_id
+                );
                 if (!account) {
-                  console.warn(`Skipping transaction ${txn.transaction_id}: Account ${txn.account_id} not found`);
+                  console.warn(
+                    `Skipping transaction ${txn.transaction_id}: Account ${txn.account_id} not found`
+                  );
                   return null;
                 }
                 return {
@@ -247,8 +251,10 @@ export const plaidRouter = createTRPCRouter({
                 data: validTransactions,
                 skipDuplicates: true,
               });
-              
-              console.log(`Imported ${validTransactions.length} transactions (${transactionsResponse.data.transactions.length - validTransactions.length} skipped)`);
+
+              console.log(
+                `Imported ${validTransactions.length} transactions (${transactionsResponse.data.transactions.length - validTransactions.length} skipped)`
+              );
             }
 
             // Run subscription detection on initial transactions
@@ -428,7 +434,9 @@ export const plaidRouter = createTRPCRouter({
               .map(txn => {
                 const accountId = accountIdMap.get(txn.account_id);
                 if (!accountId) {
-                  console.warn(`Skipping transaction ${txn.transaction_id}: Account ${txn.account_id} not found in map`);
+                  console.warn(
+                    `Skipping transaction ${txn.transaction_id}: Account ${txn.account_id} not found in map`
+                  );
                   return null;
                 }
                 return {
@@ -457,7 +465,9 @@ export const plaidRouter = createTRPCRouter({
               });
               totalNewTransactions += count;
 
-              console.log(`Stored ${count} new transactions in database (${transactionsResponse.data.transactions.length - validTransactions.length} skipped)`);
+              console.log(
+                `Stored ${count} new transactions in database (${transactionsResponse.data.transactions.length - validTransactions.length} skipped)`
+              );
             }
           }
 

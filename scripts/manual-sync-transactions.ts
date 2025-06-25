@@ -1,8 +1,8 @@
 #!/usr/bin/env npx tsx
 
-import { PrismaClient } from "@prisma/client";
-import dotenv from "dotenv";
-import path from "path";
+import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
+import path from 'path';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -39,14 +39,16 @@ async function manualSync() {
       console.log(`   Accounts: ${item.bankAccounts.length}`);
       console.log(`   Last Webhook: ${item.lastWebhook || 'Never'}`);
       console.log(`   Needs Sync: ${item.needsSync}`);
-      console.log(`   Access Token: ${item.accessToken ? '✓ Present' : '✗ Missing'}`);
-      
+      console.log(
+        `   Access Token: ${item.accessToken ? '✓ Present' : '✗ Missing'}`
+      );
+
       // Check when accounts were last synced
       for (const account of item.bankAccounts) {
         const transactionCount = await prisma.transaction.count({
-          where: { accountId: account.id }
+          where: { accountId: account.id },
         });
-        
+
         console.log(`\n   📁 Account: ${account.name} (${account.mask})`);
         console.log(`      Type: ${account.type}/${account.subtype}`);
         console.log(`      Last Sync: ${account.lastSync || 'Never'}`);
@@ -57,7 +59,9 @@ async function manualSync() {
     // Check if there's a sync endpoint we can call
     console.log('\n\n💡 To sync transactions, you can:');
     console.log('1. Go to the dashboard and click "Sync Transactions" button');
-    console.log('2. Use the API endpoint: POST /api/trpc/plaid.syncTransactions');
+    console.log(
+      '2. Use the API endpoint: POST /api/trpc/plaid.syncTransactions'
+    );
     console.log('3. Generate mock data for testing');
 
     // Check for any errors
@@ -70,10 +74,11 @@ async function manualSync() {
     if (errorItems.length > 0) {
       console.log(`\n⚠️  ${errorItems.length} Plaid items have errors:`);
       for (const item of errorItems) {
-        console.log(`   - ${item.institutionName}: ${item.errorMessage || 'Unknown error'}`);
+        console.log(
+          `   - ${item.institutionName}: ${item.errorMessage || 'Unknown error'}`
+        );
       }
     }
-
   } catch (error) {
     console.error('❌ Error:', error);
   } finally {

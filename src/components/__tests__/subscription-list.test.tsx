@@ -64,7 +64,11 @@ const mockSubscription3: Subscription = {
   lastTransaction: new Date('2024-06-01'),
 };
 
-const mockSubscriptions: Subscription[] = [mockSubscription1, mockSubscription2, mockSubscription3];
+const mockSubscriptions: Subscription[] = [
+  mockSubscription1,
+  mockSubscription2,
+  mockSubscription3,
+];
 
 describe('SubscriptionList', () => {
   it('renders loading state correctly', () => {

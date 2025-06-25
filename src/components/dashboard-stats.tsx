@@ -104,7 +104,7 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
       ))}
 
       {stats.unusedSubscriptions && stats.unusedSubscriptions > 0 && (
-        <Card className="border-yellow-200 bg-yellow-50/50 md:col-span-2 lg:col-span-4 dark:border-yellow-900 dark:bg-yellow-900/10">
+        <Card className="border-yellow-200 bg-yellow-50/50 dark:border-yellow-900 dark:bg-yellow-900/10 md:col-span-2 lg:col-span-4">
           <CardHeader className="flex flex-row items-center space-x-2 pb-2">
             <AlertCircle className="h-5 w-5 text-yellow-600" />
             <CardTitle className="text-base">

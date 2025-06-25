@@ -80,7 +80,11 @@ const mockTransaction3: Transaction = {
   },
 };
 
-const mockTransactions: Transaction[] = [mockTransaction1, mockTransaction2, mockTransaction3];
+const mockTransactions: Transaction[] = [
+  mockTransaction1,
+  mockTransaction2,
+  mockTransaction3,
+];
 
 describe('TransactionList', () => {
   it('renders loading skeleton when isLoading is true', () => {
