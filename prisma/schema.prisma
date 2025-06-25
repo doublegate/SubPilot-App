@@ -27,7 +27,8 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  accounts      Account[]
+  accounts      Account[]      // OAuth accounts for authentication
+  bankAccounts  BankAccount[]  // Bank accounts from Plaid
   sessions      Session[]
   plaidItems    PlaidItem[]
   subscriptions Subscription[]
@@ -37,8 +38,29 @@ model User {
   @@map("users")
 }
 
-// Bank Account Information
+// OAuth Account (for Auth.js)
 model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// Bank Account Information (from Plaid)
+model BankAccount {
   id                String  @id @default(cuid())
   userId            String
   plaidAccountId    String  @unique
@@ -71,7 +93,7 @@ model Account {
 
   @@index([userId])
   @@index([plaidAccountId])
-  @@map("accounts")
+  @@map("bank_accounts")
 }
 
 // Plaid Item (Bank Connection)
@@ -104,7 +126,7 @@ model PlaidItem {
 
   // Relations
   user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accounts          Account[]
+  bankAccounts      BankAccount[]
 
   @@index([userId])
   @@index([plaidItemId])
@@ -147,7 +169,7 @@ model Transaction {
 
   // Relations
   user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  account               Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  bankAccount           BankAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   subscription          Subscription? @relation(fields: [subscriptionId], references: [id])
 
   @@index([userId])

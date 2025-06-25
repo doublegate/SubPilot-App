@@ -20,8 +20,8 @@ export const plaidRouter = createTRPCRouter({
    * Generate mock transactions for testing
    */
   generateMockData: protectedProcedure.mutation(async ({ ctx }) => {
-    // Check if user has any accounts
-    const accounts = await ctx.db.account.findMany({
+    // Check if user has any bank accounts
+    const accounts = await ctx.db.bankAccount.findMany({
       where: { userId: ctx.session.user.id },
       take: 1,
     });
@@ -178,7 +178,7 @@ export const plaidRouter = createTRPCRouter({
         // Store accounts in database
         const accounts = await Promise.all(
           accountsResponse.data.accounts.map(async account => {
-            return await ctx.db.account.create({
+            return await ctx.db.bankAccount.create({
               data: {
                 userId: ctx.session.user.id,
                 plaidItemId: plaidItem.id,
@@ -306,7 +306,7 @@ export const plaidRouter = createTRPCRouter({
     const plaidItems = await ctx.db.plaidItem.findMany({
       where: { userId: ctx.session.user.id },
       include: {
-        accounts: {
+        bankAccounts: {
           where: { isActive: true },
           orderBy: { name: 'asc' },
         },
@@ -315,7 +315,7 @@ export const plaidRouter = createTRPCRouter({
 
     // Flatten accounts with institution info
     const accounts = plaidItems.flatMap(item =>
-      item.accounts.map(account => ({
+      item.bankAccounts.map(account => ({
         id: account.id,
         plaidAccountId: account.plaidAccountId,
         name: account.name,
@@ -369,7 +369,7 @@ export const plaidRouter = createTRPCRouter({
           status: 'good',
         },
         include: {
-          accounts: {
+          bankAccounts: {
             where: input.accountId
               ? { id: input.accountId }
               : { isActive: true },
@@ -393,7 +393,7 @@ export const plaidRouter = createTRPCRouter({
           // Use transactions sync endpoint for efficient updates
           // For now, we'll use the regular transactions endpoint
           const lastSync =
-            item.accounts[0]?.lastSync ??
+            item.bankAccounts[0]?.lastSync ??
             new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
           const now = new Date();
 
@@ -414,7 +414,7 @@ export const plaidRouter = createTRPCRouter({
 
           // Map account IDs
           const accountIdMap = new Map(
-            item.accounts.map(acc => [acc.plaidAccountId, acc.id])
+            item.bankAccounts.map(acc => [acc.plaidAccountId, acc.id])
           );
 
           // Store new transactions
@@ -484,7 +484,7 @@ export const plaidRouter = createTRPCRouter({
           for (const account of accountsResponse.data.accounts) {
             const dbAccountId = accountIdMap.get(account.account_id);
             if (dbAccountId) {
-              await ctx.db.account.update({
+              await ctx.db.bankAccount.update({
                 where: { id: dbAccountId },
                 data: {
                   currentBalance: account.balances.current ?? 0,

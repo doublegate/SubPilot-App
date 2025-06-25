@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-06-25
 
+### Fixed
+
+- **OAuth Authentication** - Fixed Google and GitHub login errors
+  - Added proper OAuth `Account` model to Prisma schema for Auth.js
+  - Renamed existing `Account` model to `BankAccount` to avoid conflicts
+  - Updated all code references from `Account` to `BankAccount`
+  - Fixed "Unknown field `accounts`" errors in Plaid API router
+  - OAuth login now works correctly with Google and GitHub providers
+
 ### Changed
 
 - **Project Organization** - Reorganized configuration files for cleaner structure
@@ -20,10 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `docs/FILE-ORGANIZATION-2025-06-24.md` - Documentation of file reorganization
 - Added `usage_tracking.json` to `.gitignore`
+- OAuth `Account` model in Prisma schema for authentication providers
 
 ## [0.1.7] - 2025-06-24
 
-### Fixed
+### Fixed - (v0.1.7)
 
 - **Dashboard Aggregation Issues** - Fixed dashboard showing zeros despite bank connections
   - Root cause: Plaid sandbox accounts don't have transactions by default
@@ -42,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Implemented typed constants pattern for test mocks
   - All TypeScript compilation now passes in CI/CD
 
-### Added
+### Added - (v0.1.7)
 
 - **Debugging Scripts**
   - `scripts/debug-dashboard-comprehensive.ts` - Full system analysis tool
@@ -55,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Eliminated need for non-null assertions in tests
   - Improved test maintainability and TypeScript inference
 
-### Changed
+### Changed - (v0.1.7)
 
 - **Subscription Detection Algorithm**
   - Lowered confidence threshold from 70% to 50% for better detection

@@ -81,7 +81,7 @@ export const analyticsRouter = createTRPCRouter({
 
       // Get transaction spending for comparison
       const transactionWhere: Prisma.TransactionWhereInput = {
-        account: {
+        bankAccount: {
           user: {
             id: ctx.session.user.id,
           },
@@ -170,10 +170,8 @@ export const analyticsRouter = createTRPCRouter({
       // Get all transactions in range
       const transactions = await ctx.db.transaction.findMany({
         where: {
-          account: {
-            user: {
-              id: ctx.session.user.id,
-            },
+          bankAccount: {
+            userId: ctx.session.user.id,
           },
           date: {
             gte: startDate,
@@ -415,14 +413,12 @@ export const analyticsRouter = createTRPCRouter({
         input.includeTransactions
           ? ctx.db.transaction.findMany({
               where: {
-                account: {
-                  user: {
-                    id: ctx.session.user.id,
-                  },
+                bankAccount: {
+                  userId: ctx.session.user.id,
                 },
               },
               include: {
-                account: {
+                bankAccount: {
                   select: {
                     name: true,
                     isoCurrencyCode: true,
@@ -495,14 +491,14 @@ export const analyticsRouter = createTRPCRouter({
               t.date.toISOString(),
               t.description,
               t.amount.toString(),
-              t.account.isoCurrencyCode ?? 'USD',
+              t.bankAccount.isoCurrencyCode ?? 'USD',
               Array.isArray(t.category) &&
               t.category.length > 0 &&
               typeof t.category[0] === 'string'
                 ? t.category[0]
                 : '',
-              t.account.name,
-              t.account.plaidItem.institutionName,
+              t.bankAccount.name,
+              t.bankAccount.plaidItem.institutionName,
             ]),
           ]
         : [];

@@ -23,7 +23,7 @@ export const transactionsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       // Build where clause
       const where: Prisma.TransactionWhereInput = {
-        account: {
+        bankAccount: {
           userId: ctx.session.user.id,
         },
       };
@@ -66,7 +66,7 @@ export const transactionsRouter = createTRPCRouter({
           take: input.limit,
           skip: input.offset,
           include: {
-            account: {
+            bankAccount: {
               select: {
                 name: true,
                 isoCurrencyCode: true,
@@ -95,13 +95,13 @@ export const transactionsRouter = createTRPCRouter({
           name: t.description,
           merchantName: t.merchantName,
           amount: t.amount.toNumber(),
-          currency: t.account.isoCurrencyCode ?? 'USD',
+          currency: t.bankAccount.isoCurrencyCode ?? 'USD',
           category: t.category,
           pending: t.pending,
           isRecurring: t.isSubscription,
           account: {
-            name: t.account.name,
-            institution: t.account.plaidItem.institutionName,
+            name: t.bankAccount.name,
+            institution: t.bankAccount.plaidItem.institutionName,
           },
           subscription: t.subscription
             ? {
@@ -124,12 +124,12 @@ export const transactionsRouter = createTRPCRouter({
       const transaction = await ctx.db.transaction.findFirst({
         where: {
           id: input.id,
-          account: {
+          bankAccount: {
             userId: ctx.session.user.id,
           },
         },
         include: {
-          account: true,
+          bankAccount: true,
           subscription: true,
         },
       });
@@ -163,10 +163,8 @@ export const transactionsRouter = createTRPCRouter({
         ctx.db.transaction.findFirst({
           where: {
             id: input.transactionId,
-            account: {
-              user: {
-                id: ctx.session.user.id,
-              },
+            bankAccount: {
+              userId: ctx.session.user.id,
             },
           },
         }),
@@ -221,7 +219,7 @@ export const transactionsRouter = createTRPCRouter({
       const transaction = await ctx.db.transaction.findFirst({
         where: {
           id: input.transactionId,
-          account: {
+          bankAccount: {
             userId: ctx.session.user.id,
           },
         },
@@ -259,7 +257,7 @@ export const transactionsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const where: Prisma.TransactionWhereInput = {
-        account: {
+        bankAccount: {
           userId: ctx.session.user.id,
         },
         date: {
@@ -322,7 +320,7 @@ export const transactionsRouter = createTRPCRouter({
       // more sophisticated pattern matching algorithms
 
       const where: Prisma.TransactionWhereInput = {
-        account: {
+        bankAccount: {
           userId: ctx.session.user.id,
         },
         isSubscription: false, // Only look at unlinked transactions

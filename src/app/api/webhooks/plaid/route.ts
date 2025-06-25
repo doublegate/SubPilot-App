@@ -133,8 +133,8 @@ async function handleItemWebhook(
         },
       });
 
-      // Deactivate all accounts
-      await db.account.updateMany({
+      // Deactivate all bank accounts
+      await db.bankAccount.updateMany({
         where: {
           plaidItem: { plaidItemId: itemId },
         },
