@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+// import { useState } from 'react';  // TODO: Will be used for step navigation
 import {
   Dialog,
   DialogContent,
@@ -189,13 +189,13 @@ export function CancellationAssistant({
   onOpenChange,
   onMarkCancelled,
 }: CancellationAssistantProps) {
-  const [currentStep, setCurrentStep] = useState(0);
+  // const [currentStep, setCurrentStep] = useState(0);  // TODO: Implement step navigation
 
   const providerKey =
-    subscription.provider?.name?.toLowerCase().replace(/\s+/g, ' ') ||
+    subscription.provider?.name?.toLowerCase().replace(/\s+/g, ' ') ??
     'default';
   const instructions =
-    cancellationInstructions[providerKey] || cancellationInstructions.default;
+    cancellationInstructions[providerKey] ?? cancellationInstructions.default;
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
@@ -267,10 +267,10 @@ export function CancellationAssistant({
                 <span className="text-muted-foreground">Difficulty:</span>
                 <Badge
                   className={getDifficultyColor(
-                    instructions?.difficulty || 'medium'
+                    instructions?.difficulty ?? 'medium'
                   )}
                 >
-                  {instructions?.difficulty || 'medium'}
+                  {instructions?.difficulty ?? 'medium'}
                 </Badge>
               </div>
             </CardContent>
@@ -333,7 +333,7 @@ export function CancellationAssistant({
           </div>
 
           {/* Tips */}
-          {(instructions?.tips?.length || 0) > 0 && (
+          {(instructions?.tips?.length ?? 0) > 0 && (
             <div className="space-y-3">
               <h3 className="flex items-center gap-2 text-lg font-semibold">
                 <CheckCircle className="h-5 w-5 text-green-600" />
@@ -351,7 +351,7 @@ export function CancellationAssistant({
           )}
 
           {/* Retention Warnings */}
-          {(instructions?.retention?.length || 0) > 0 && (
+          {(instructions?.retention?.length ?? 0) > 0 && (
             <div className="space-y-3">
               <h3 className="flex items-center gap-2 text-lg font-semibold">
                 <AlertTriangle className="h-5 w-5 text-orange-500" />

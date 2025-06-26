@@ -1,8 +1,8 @@
 #!/usr/bin/env npx tsx
 
 import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
-import path from 'path';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -91,7 +91,23 @@ async function populateTestData() {
     // Create 3 months of transactions for each subscription
     const now = new Date();
     for (const sub of subscriptions) {
-      const transactions = [];
+      const transactions: {
+        userId: string;
+        accountId: string;
+        plaidTransactionId: string;
+        amount: number;
+        isoCurrencyCode: string;
+        description: string;
+        merchantName: string;
+        category: string[];
+        subcategory: null;
+        transactionType: string;
+        date: Date;
+        pending: boolean;
+        paymentChannel: string;
+        isSubscription: boolean;
+        confidence: number;
+      }[] = [];
 
       // Create transactions for the last 3 months
       for (let i = 0; i < 3; i++) {
@@ -176,10 +192,19 @@ async function populateTestData() {
     console.log('\n✅ Test data populated successfully!');
     console.log('🎯 Go to the dashboard to see the results.');
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error(
+      '❌ Error:',
+      error instanceof Error ? error.message : String(error)
+    );
   } finally {
     await prisma.$disconnect();
   }
 }
 
-populateTestData().catch(console.error);
+void populateTestData().catch((error: unknown) => {
+  console.error(
+    'Failed to populate test data:',
+    error instanceof Error ? error.message : String(error)
+  );
+  process.exit(1);
+});

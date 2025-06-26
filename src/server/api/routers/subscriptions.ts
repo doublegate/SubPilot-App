@@ -128,23 +128,16 @@ export const subscriptionsRouter = createTRPCRouter({
             sub.provider !== null
               ? {
                   name:
-                    'name' in sub.provider &&
-                    typeof (sub.provider as { name?: unknown }).name ===
-                      'string'
-                      ? (sub.provider as { name: string }).name
-                      : 'Unknown',
+                    ((sub.provider as Record<string, unknown>)
+                      .name as string) ?? 'Unknown',
                   website:
-                    'website' in sub.provider &&
-                    typeof (sub.provider as { website?: unknown }).website ===
-                      'string'
-                      ? (sub.provider as { website: string }).website
-                      : null,
+                    ((sub.provider as Record<string, unknown>).website as
+                      | string
+                      | null) ?? null,
                   logo:
-                    'logo' in sub.provider &&
-                    typeof (sub.provider as { logo?: unknown }).logo ===
-                      'string'
-                      ? (sub.provider as { logo: string }).logo
-                      : null,
+                    ((sub.provider as Record<string, unknown>).logo as
+                      | string
+                      | null) ?? null,
                 }
               : null,
           detectedAt: sub.detectedAt,

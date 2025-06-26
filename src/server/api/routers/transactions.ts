@@ -4,7 +4,7 @@ import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { type Prisma } from '@prisma/client';
 
 // Types for transaction processing
-interface TransactionWithDetails {
+interface _TransactionWithDetails {
   id: string;
   merchantName: string | null;
   amount: number;
@@ -304,7 +304,7 @@ export const transactionsRouter = createTRPCRouter({
               ? t.category[0]
               : 'Other';
           acc[category] ??= 0;
-          acc[category] += t.amount.toNumber();
+          acc[category] = (acc[category] ?? 0) + t.amount.toNumber();
           return acc;
         },
         {} as Record<string, number>

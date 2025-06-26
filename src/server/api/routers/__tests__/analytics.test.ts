@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { analyticsRouter } from '../analytics';
 // import { createTRPCMsw } from 'msw-trpc'; // Package not available
-import { type AppRouter } from '../../root';
 
 // Mock Prisma client
 const mockDb = {
@@ -93,7 +92,8 @@ describe('Analytics Router', () => {
         _sum: { amount: { toNumber: () => 275.98 } },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -119,8 +119,11 @@ describe('Analytics Router', () => {
 
       // Verify subscription spending calculation
       // Monthly: 15.99 + (99.99/12) = 24.32
-      expect(result.subscriptionSpending.monthly).toBeCloseTo(24.32, 1);
-      expect(result.subscriptionSpending.yearly).toBeCloseTo(291.88, 1);
+      const typedResult = result as {
+        subscriptionSpending?: { monthly?: number; yearly?: number };
+      };
+      expect(typedResult.subscriptionSpending?.monthly).toBeCloseTo(24.32, 1);
+      expect(typedResult.subscriptionSpending?.yearly).toBeCloseTo(291.88, 1);
     });
 
     it('should handle different frequency calculations', async () => {
@@ -152,13 +155,17 @@ describe('Analytics Router', () => {
         _sum: { amount: { toNumber: () => 100 } },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
 
       // Expected monthly: 12 + (120/12) + (30/3) + (3*4.33) = 12 + 10 + 10 + 12.99 = 44.99
-      expect(result.subscriptionSpending.monthly).toBeCloseTo(44.99, 1);
+      const typedResult = result as {
+        subscriptionSpending?: { monthly?: number };
+      };
+      expect(typedResult.subscriptionSpending?.monthly).toBeCloseTo(44.99, 1);
     });
 
     it('should group categories correctly', async () => {
@@ -183,15 +190,23 @@ describe('Analytics Router', () => {
         _sum: { amount: { toNumber: () => 100 } },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
 
-      const streamingCategory = result.categoryBreakdown.find(
+      const typedResult = result as {
+        categoryBreakdown?: Array<{
+          category?: string;
+          amount?: number;
+          percentage?: number;
+        }>;
+      };
+      const streamingCategory = typedResult.categoryBreakdown?.find(
         c => c.category === 'Streaming'
       );
-      const softwareCategory = result.categoryBreakdown.find(
+      const softwareCategory = typedResult.categoryBreakdown?.find(
         c => c.category === 'Software'
       );
 
@@ -205,7 +220,8 @@ describe('Analytics Router', () => {
     it('should calculate trends correctly', async () => {
       mockDb.transaction.findMany.mockResolvedValue(mockTransactions);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getSpendingTrends({
         timeRange: 'month',
         groupBy: 'day',
@@ -223,14 +239,18 @@ describe('Analytics Router', () => {
       );
 
       // Verify calculations
-      const dayData = result.find(r => r.period === '2024-06-01');
+      const dayData = (result as any[]).find(
+        (r: any) => r.period === '2024-06-01'
+      );
       if (dayData) {
         expect(dayData.total).toBe(15.99);
         expect(dayData.recurring).toBe(15.99);
         expect(dayData.nonRecurring).toBe(0);
       }
 
-      const anotherDay = result.find(r => r.period === '2024-06-05');
+      const anotherDay = (result as any[]).find(
+        (r: any) => r.period === '2024-06-05'
+      );
       if (anotherDay) {
         expect(anotherDay.total).toBe(50);
         expect(anotherDay.recurring).toBe(0);
@@ -259,14 +279,19 @@ describe('Analytics Router', () => {
 
       mockDb.transaction.findMany.mockResolvedValue(monthlyTransactions);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getSpendingTrends({
         timeRange: 'quarter',
         groupBy: 'month',
       });
 
-      const jan2024 = result.find(r => r.period === '2024-01');
-      const feb2024 = result.find(r => r.period === '2024-02');
+      const jan2024 = (result as any[]).find(
+        (r: any) => r.period === '2024-01'
+      );
+      const feb2024 = (result as any[]).find(
+        (r: any) => r.period === '2024-02'
+      );
 
       expect(jan2024?.total).toBe(150); // 100 + 50
       expect(jan2024?.recurring).toBe(100);
@@ -303,7 +328,8 @@ describe('Analytics Router', () => {
         subscriptionsWithTransactions
       );
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getSubscriptionInsights();
 
       expect(result.unusedCount).toBe(1);
@@ -338,7 +364,8 @@ describe('Analytics Router', () => {
         subscriptionsWithPriceChanges
       );
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getSubscriptionInsights();
 
       expect(result.priceIncreaseCount).toBe(1);
@@ -377,7 +404,8 @@ describe('Analytics Router', () => {
 
       mockDb.subscription.findMany.mockResolvedValue(subscriptionsWithAges);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getSubscriptionInsights();
 
       // Average of 30 and 10 days = 20 days
@@ -419,7 +447,8 @@ describe('Analytics Router', () => {
 
       mockDb.subscription.findMany.mockResolvedValue(upcomingSubscriptions);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
       expect(result.totalCount).toBe(3);
@@ -436,7 +465,8 @@ describe('Analytics Router', () => {
     it('should handle empty renewals', async () => {
       mockDb.subscription.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
       expect(result.totalCount).toBe(0);
@@ -450,7 +480,8 @@ describe('Analytics Router', () => {
       mockDb.subscription.findMany.mockResolvedValue(mockSubscriptions);
       mockDb.transaction.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.exportData({});
 
       expect(result.subscriptions).toEqual(
@@ -475,7 +506,8 @@ describe('Analytics Router', () => {
       mockDb.subscription.findMany.mockResolvedValue([mockSubscriptions[0]]);
       mockDb.transaction.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.exportData({ format: 'json' });
 
       expect(result.subscriptions).toEqual(
@@ -503,7 +535,8 @@ describe('Analytics Router', () => {
         },
       ]);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
       const result = await caller.exportData({
         includeTransactions: true,
         format: 'csv',
@@ -532,7 +565,8 @@ describe('Analytics Router', () => {
         _sum: { amount: { toNumber: () => 100 } },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
 
       // First call
       await caller.getSpendingOverview({ timeRange: 'month' });
@@ -546,7 +580,8 @@ describe('Analytics Router', () => {
     it('should cache spending trends results', async () => {
       mockDb.transaction.findMany.mockResolvedValue(mockTransactions);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      type MockContext = typeof mockContext;
+      const caller = analyticsRouter.createCaller(mockContext as MockContext);
 
       // First call
       await caller.getSpendingTrends({ timeRange: 'month', groupBy: 'day' });

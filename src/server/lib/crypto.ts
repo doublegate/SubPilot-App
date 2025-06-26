@@ -12,7 +12,7 @@ const scryptAsync = promisify(scrypt);
 // Use NEXTAUTH_SECRET as the base for encryption key
 // In production, you should use a separate encryption key
 const getEncryptionKey = async (): Promise<Buffer> => {
-  const secret = env.NEXTAUTH_SECRET || 'development-secret-key';
+  const secret = env.NEXTAUTH_SECRET ?? 'development-secret-key';
   const salt = 'subpilot-encryption-salt'; // Fixed salt for deterministic key derivation
   const key = (await scryptAsync(secret, salt, 32)) as Buffer;
   return key;

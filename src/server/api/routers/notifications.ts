@@ -228,14 +228,17 @@ export const notificationsRouter = createTRPCRouter({
       select: { notificationPreferences: true },
     });
 
-    const preferences = user?.notificationPreferences as {
+    type NotificationPreferences = {
       emailAlerts?: boolean;
       pushNotifications?: boolean;
       renewalReminders?: boolean;
       priceChangeAlerts?: boolean;
       cancelledServiceAlerts?: boolean;
       weeklyReports?: boolean;
-    } | null;
+    };
+
+    const preferences =
+      user?.notificationPreferences as NotificationPreferences | null;
 
     return {
       emailEnabled: preferences?.emailAlerts ?? true,
@@ -292,7 +295,11 @@ export const notificationsRouter = createTRPCRouter({
 
       // Create test data based on type
       const testData = {
-        user: { id: user.id, email: user.email, name: user.name },
+        user: {
+          id: user.id,
+          email: user.email ?? '',
+          name: user.name ?? null,
+        },
       };
 
       switch (input.type) {
@@ -493,7 +500,7 @@ export const notificationsRouter = createTRPCRouter({
   /**
    * Process scheduled email notifications
    */
-  processScheduledEmails: protectedProcedure.mutation(async ({ }) => {
+  processScheduledEmails: protectedProcedure.mutation(async ({}) => {
     // This would typically be called by a cron job or background worker
     // For now, manual trigger for testing
     if (process.env.NODE_ENV !== 'development') {

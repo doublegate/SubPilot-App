@@ -169,7 +169,8 @@ describe('API Performance Benchmarks', () => {
       });
       const duration = performance.now() - start;
 
-      expect(result.length).toBeGreaterThan(0);
+      expect(Array.isArray(result)).toBe(true);
+      expect((result as Array<unknown>).length).toBeGreaterThan(0);
       expect(duration).toBeLessThan(500); // Complex aggregation should complete within 500ms
     });
 
@@ -226,7 +227,9 @@ describe('API Performance Benchmarks', () => {
       });
       const duration = performance.now() - start;
 
-      expect(result.length).toBe(10); // 10 categories
+      expect(
+        (result as { categoryBreakdown?: unknown[] }).categoryBreakdown?.length
+      ).toBe(10); // 10 categories
       expect(duration).toBeLessThan(300); // Category calculations should complete within 300ms
     });
 
@@ -302,11 +305,19 @@ describe('API Performance Benchmarks', () => {
       vi.doMock('@/server/db', () => ({
         db: {
           notification: {
-            findMany: vi.fn().mockImplementation(({ take, skip }) => {
-              return Promise.resolve(
-                hugeNotificationSet.slice(skip, skip + take)
-              );
-            }),
+            findMany: vi
+              .fn()
+              .mockImplementation(
+                ({ take, skip }: { take?: number; skip?: number }) => {
+                  const startIndex = skip ?? 0;
+                  const endIndex = take
+                    ? startIndex + take
+                    : hugeNotificationSet.length;
+                  return Promise.resolve(
+                    hugeNotificationSet.slice(startIndex, endIndex)
+                  );
+                }
+              ),
           },
         },
       }));

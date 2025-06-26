@@ -1,4 +1,4 @@
-import sgMail from '@sendgrid/mail';
+import * as sgMail from '@sendgrid/mail';
 import { env } from '@/env.js';
 import {
   SENDGRID_TEMPLATES,
@@ -16,7 +16,16 @@ export interface EmailRecipient {
   name?: string;
 }
 
-export type EmailData = Record<string, unknown>;
+export type EmailData = Record<
+  string,
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Array<unknown>
+  | Record<string, unknown>
+>;
 
 /**
  * Production email service using SendGrid
@@ -72,11 +81,11 @@ export class SendGridEmailService {
       await sgMail.send(msg);
 
       console.log(
-        `Email sent successfully: ${templateKey} to ${recipients.length} recipients`
+        `Email sent successfully: ${String(templateKey)} to ${recipients.length} recipients`
       );
     } catch (error) {
-      console.error(`Failed to send ${templateKey} email:`, error);
-      throw new Error(`Email delivery failed: ${templateKey}`);
+      console.error(`Failed to send ${String(templateKey)} email:`, error);
+      throw new Error(`Email delivery failed: ${String(templateKey)}`);
     }
   }
 
@@ -139,11 +148,11 @@ export class SendGridEmailService {
   }): Promise<void> {
     const recipient = {
       email: user.email,
-      name: user.name || undefined,
+      name: user.name ?? undefined,
     };
 
     const dynamicData = {
-      user_name: user.name || 'there',
+      user_name: user.name ?? 'there',
       login_url: `${env.NEXTAUTH_URL}/login`,
       dashboard_url: `${env.NEXTAUTH_URL}/dashboard`,
     };
@@ -153,17 +162,17 @@ export class SendGridEmailService {
         categories: ['welcome', 'onboarding'],
         customArgs: { user_id: user.id },
       });
-    } catch (error) {
+    } catch {
       // Fallback to HTML email
       console.log('Falling back to HTML email for welcome message');
 
       const htmlContent = HTML_TEMPLATES.welcome({
-        userName: user.name || 'there',
+        userName: user.name ?? 'there',
         loginUrl: dynamicData.login_url,
       });
 
       const textContent = TEXT_TEMPLATES.welcome({
-        userName: user.name || 'there',
+        userName: user.name ?? 'there',
         loginUrl: dynamicData.login_url,
       });
 
@@ -190,11 +199,11 @@ export class SendGridEmailService {
   ): Promise<void> {
     const recipient = {
       email: user.email,
-      name: user.name || undefined,
+      name: user.name ?? undefined,
     };
 
     const dynamicData = {
-      user_name: user.name || 'there',
+      user_name: user.name ?? 'there',
       magic_link: magicLink,
       expires_at: expiresAt.toLocaleString(),
     };
@@ -203,18 +212,18 @@ export class SendGridEmailService {
       await this.sendTemplateEmail('MAGIC_LINK', [recipient], dynamicData, {
         categories: ['auth', 'magic-link'],
       });
-    } catch (error) {
+    } catch {
       // Fallback to HTML email
       console.log('Falling back to HTML email for magic link');
 
       const htmlContent = HTML_TEMPLATES.magicLink({
-        userName: user.name || 'there',
+        userName: user.name ?? 'there',
         magicLink,
         expiresAt: expiresAt.toLocaleString(),
       });
 
       const textContent = TEXT_TEMPLATES.magicLink({
-        userName: user.name || 'there',
+        userName: user.name ?? 'there',
         magicLink,
         expiresAt: expiresAt.toLocaleString(),
       });
@@ -244,11 +253,11 @@ export class SendGridEmailService {
   ): Promise<void> {
     const recipient = {
       email: user.email,
-      name: user.name || undefined,
+      name: user.name ?? undefined,
     };
 
     const dynamicData = {
-      user_name: user.name || 'there',
+      user_name: user.name ?? 'there',
       subscription_name: subscription.name,
       amount: `$${subscription.amount.toFixed(2)}`,
       next_billing: subscription.nextBilling.toLocaleDateString(),
@@ -268,12 +277,12 @@ export class SendGridEmailService {
           },
         }
       );
-    } catch (error) {
+    } catch {
       // Fallback to HTML email
       console.log('Falling back to HTML email for subscription alert');
 
       const htmlContent = HTML_TEMPLATES.subscriptionAlert({
-        userName: user.name || 'there',
+        userName: user.name ?? 'there',
         subscriptionName: subscription.name,
         amount: `$${subscription.amount.toFixed(2)}`,
         nextBilling: subscription.nextBilling.toLocaleDateString(),
@@ -281,7 +290,7 @@ export class SendGridEmailService {
       });
 
       const textContent = TEXT_TEMPLATES.subscriptionAlert({
-        userName: user.name || 'there',
+        userName: user.name ?? 'there',
         subscriptionName: subscription.name,
         amount: `$${subscription.amount.toFixed(2)}`,
         nextBilling: subscription.nextBilling.toLocaleDateString(),
@@ -318,11 +327,11 @@ export class SendGridEmailService {
   ): Promise<void> {
     const recipient = {
       email: user.email,
-      name: user.name || undefined,
+      name: user.name ?? undefined,
     };
 
     const dynamicData = {
-      user_name: user.name || 'there',
+      user_name: user.name ?? 'there',
       total_subscriptions: summary.totalSubscriptions,
       monthly_total: `$${summary.monthlyTotal.toFixed(2)}`,
       new_subscriptions: summary.newSubscriptions,

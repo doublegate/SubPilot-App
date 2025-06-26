@@ -77,7 +77,7 @@ export const plaidWithRetry = async <T>(
       // Log retry attempt
       console.warn(
         `Plaid API call failed (attempt ${attempt}/${MAX_RETRIES}) for ${operationName}:`,
-        plaidError.response?.data?.error_message || 'Unknown error'
+        plaidError.response?.data?.error_message ?? 'Unknown error'
       );
 
       // Don't retry on the last attempt
@@ -103,8 +103,8 @@ export const isPlaidConfigured = () => {
  * Verifies the JWT signature from Plaid webhooks
  */
 export const verifyPlaidWebhook = async (
-  body: string,
-  headers: Record<string, string | string[] | undefined>
+  _body: string,
+  _headers: Record<string, string | string[] | undefined>
 ): Promise<boolean> => {
   // In development/sandbox, allow unverified webhooks for testing
   if (env.NODE_ENV === 'development' || env.PLAID_ENV === 'sandbox') {

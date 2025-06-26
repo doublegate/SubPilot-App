@@ -101,7 +101,13 @@ export function CategoryBreakdownChart({
   };
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{ payload: CategoryData; value: number }>;
+  }) => {
     if (!active || !payload?.length) return null;
 
     const data = payload[0].payload;
@@ -117,10 +123,13 @@ export function CategoryBreakdownChart({
   };
 
   // Custom legend
-  const renderLegend = (props: any) => {
+  const renderLegend = (props: {
+    payload?: Array<{ value: string; color: string }>;
+  }) => {
+    if (!props.payload) return null;
     return (
       <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {props.payload.map((entry: any, index: number) => (
+        {props.payload.map((entry, index: number) => (
           <div key={index} className="flex items-center gap-2">
             <div
               className="h-3 w-3 rounded-full"

@@ -522,7 +522,13 @@ class AccessibilityAuditor {
     };
   }
 
-  private calculateScore(stats: any): number {
+  private calculateScore(stats: {
+    totalFiles: number;
+    filesWithIssues: number;
+    errorCount: number;
+    warningCount: number;
+    infoCount: number;
+  }): number {
     // Calculate score based on severity and file coverage
     const maxPenalty = 100;
     const errorPenalty = stats.errorCount * 5;
@@ -679,7 +685,10 @@ async function main() {
       process.exit(1);
     }
   } catch (error) {
-    console.error('❌ Audit failed:', error);
+    console.error(
+      '❌ Audit failed:',
+      error instanceof Error ? error.message : String(error)
+    );
     process.exit(1);
   }
 }

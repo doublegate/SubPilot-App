@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Simple placeholder test for AddSubscriptionModal
 // This component requires complex form mocking that would be better tested in integration tests

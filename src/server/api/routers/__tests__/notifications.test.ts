@@ -106,7 +106,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         mockNotifications
       );
 
-      const result = await caller.notifications.getAll({});
+      const result = await caller.getAll({});
 
       expect(result.notifications).toHaveLength(3);
       expect(result.notifications[0]).toEqual({
@@ -132,7 +132,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         mockNotifications[1],
       ]);
 
-      const result = await caller.getNotifications({
+      const result = await caller.getAll({
         limit: 10,
         offset: 1,
       });
@@ -152,12 +152,12 @@ describe('Notifications Router - Full tRPC Integration', () => {
         unreadNotifications
       );
 
-      const result = await caller.getNotifications({
+      const result = await caller.getAll({
         unreadOnly: true,
       });
 
       expect(result).toHaveLength(2);
-      expect(result.every(n => !n.read)).toBe(true);
+      expect(result.notifications.every((n: any) => !n.read)).toBe(true);
 
       expect(db.notification.findMany).toHaveBeenCalledWith({
         where: {
@@ -176,17 +176,17 @@ describe('Notifications Router - Full tRPC Integration', () => {
       );
       (db.notification.findMany as Mock).mockResolvedValueOnce(priceAlerts);
 
-      const result = await caller.getNotifications({
-        type: 'price_increase',
+      const result = await caller.getAll({
+        type: 'price_change',
       });
 
-      expect(result).toHaveLength(1);
-      expect(result[0].type).toBe('price_increase');
+      expect(result.notifications).toHaveLength(1);
+      expect(result.notifications[0]?.type).toBe('price_change');
 
       expect(db.notification.findMany).toHaveBeenCalledWith({
         where: {
           userId: 'user-1',
-          type: 'price_increase',
+          type: 'price_change',
         },
         orderBy: { createdAt: 'desc' },
         take: 50,
@@ -199,15 +199,13 @@ describe('Notifications Router - Full tRPC Integration', () => {
       const unauthenticatedCaller =
         notificationsRouter.createCaller(unauthenticatedCtx);
 
-      await expect(unauthenticatedCaller.getNotifications({})).rejects.toThrow(
-        TRPCError
-      );
+      await expect(unauthenticatedCaller.getAll({})).rejects.toThrow(TRPCError);
     });
 
     it('should enforce maximum limit', async () => {
       (db.notification.findMany as Mock).mockResolvedValueOnce([]);
 
-      await caller.getNotifications({ limit: 200 });
+      await caller.getAll({ limit: 200 });
 
       expect(db.notification.findMany).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
@@ -250,7 +248,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
       );
 
       const result = await caller.markAsRead({
-        notificationId: 'notif-1',
+        id: 'notif-1',
       });
 
       expect(result).toEqual({ success: true });
@@ -268,9 +266,9 @@ describe('Notifications Router - Full tRPC Integration', () => {
         new Error('Record not found')
       );
 
-      await expect(
-        caller.markAsRead({ notificationId: 'invalid-id' })
-      ).rejects.toThrow('Record not found');
+      await expect(caller.markAsRead({ id: 'invalid-id' })).rejects.toThrow(
+        'Record not found'
+      );
     });
 
     it('should prevent marking other users notifications', async () => {
@@ -287,7 +285,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
       );
 
       await expect(
-        otherUserCaller.markAsRead({ notificationId: 'notif-1' })
+        otherUserCaller.markAsRead({ id: 'notif-1' })
       ).rejects.toThrow('Record not found');
 
       expect(db.notification.update).toHaveBeenCalledWith({
@@ -331,8 +329,8 @@ describe('Notifications Router - Full tRPC Integration', () => {
         mockNotifications[0]
       );
 
-      const result = await caller.deleteNotification({
-        notificationId: 'notif-1',
+      const result = await caller.delete({
+        id: 'notif-1',
       });
 
       expect(result).toEqual({ success: true });
@@ -349,9 +347,9 @@ describe('Notifications Router - Full tRPC Integration', () => {
         new Error('Record not found')
       );
 
-      await expect(
-        caller.deleteNotification({ notificationId: 'invalid-id' })
-      ).rejects.toThrow('Record not found');
+      await expect(caller.delete({ id: 'invalid-id' })).rejects.toThrow(
+        'Record not found'
+      );
     });
   });
 
@@ -359,7 +357,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     it('should delete all notifications for user', async () => {
       (db.notification.deleteMany as Mock).mockResolvedValueOnce({ count: 5 });
 
-      const result = await caller.clearAllNotifications();
+      const result = await caller.deleteAllRead();
 
       expect(result).toEqual({ success: true, count: 5 });
       expect(db.notification.deleteMany).toHaveBeenCalledWith({
@@ -370,7 +368,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     it('should handle user with no notifications', async () => {
       (db.notification.deleteMany as Mock).mockResolvedValueOnce({ count: 0 });
 
-      const result = await caller.clearAllNotifications();
+      const result = await caller.deleteAllRead();
 
       expect(result).toEqual({ success: true, count: 0 });
     });
@@ -387,7 +385,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         .mockResolvedValueOnce(1) // unused_subscription
         .mockResolvedValueOnce(2); // system
 
-      const result = await caller.getNotificationStats();
+      const result = await caller.getPreferencesSummary();
 
       expect(result).toEqual({
         total: 10,
@@ -418,7 +416,11 @@ describe('Notifications Router - Full tRPC Integration', () => {
         createdNotification
       );
 
-      const result = await caller.testNotification();
+      const result = await caller.createTestNotification({
+        type: 'general',
+        title: 'Test Notification',
+        message: 'This is a test message',
+      });
 
       expect(result).toEqual({ success: true });
 
@@ -438,7 +440,13 @@ describe('Notifications Router - Full tRPC Integration', () => {
     it('should handle user not found', async () => {
       (db.user.findUnique as Mock).mockResolvedValueOnce(null);
 
-      await expect(caller.testNotification()).rejects.toThrow('User not found');
+      await expect(
+        caller.createTestNotification({
+          type: 'general',
+          title: 'Test',
+          message: 'Test',
+        })
+      ).rejects.toThrow('User not found');
     });
   });
 
@@ -455,7 +463,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
       );
 
       const start = performance.now();
-      const result = await caller.getNotifications({ limit: 50 });
+      const result = await caller.getAll({ limit: 50 });
       const duration = performance.now() - start;
 
       expect(result).toHaveLength(50);
@@ -478,7 +486,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
   describe('data validation', () => {
     it('should validate notification type filter', async () => {
       await expect(
-        caller.getNotifications({ type: 'invalid_type' as any })
+        caller.getAll({ type: 'invalid_type' as any })
       ).rejects.toThrow();
     });
 
@@ -486,7 +494,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
       // Test negative limit
       (db.notification.findMany as Mock).mockResolvedValueOnce([]);
 
-      await caller.getNotifications({ limit: -5 });
+      await caller.getAll({ limit: -5 });
 
       expect(db.notification.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -498,7 +506,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     it('should validate offset boundaries', async () => {
       (db.notification.findMany as Mock).mockResolvedValueOnce([]);
 
-      await caller.getNotifications({ offset: -10 });
+      await caller.getAll({ offset: -10 });
 
       expect(db.notification.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -514,7 +522,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         new Error('Database connection failed')
       );
 
-      await expect(caller.getNotifications({})).rejects.toThrow(
+      await expect(caller.getAll({})).rejects.toThrow(
         'Database connection failed'
       );
     });
@@ -524,9 +532,9 @@ describe('Notifications Router - Full tRPC Integration', () => {
         new Error('Optimistic lock failed')
       );
 
-      await expect(
-        caller.markAsRead({ notificationId: 'notif-1' })
-      ).rejects.toThrow('Optimistic lock failed');
+      await expect(caller.markAsRead({ id: 'notif-1' })).rejects.toThrow(
+        'Optimistic lock failed'
+      );
     });
   });
 
@@ -541,9 +549,9 @@ describe('Notifications Router - Full tRPC Integration', () => {
         malformedNotification,
       ]);
 
-      const result = await caller.notifications.getAll({});
+      const result = await caller.getAll({});
 
-      expect(result[0].data).toBeNull();
+      expect((result.notifications[0] as any).metadata).toBeNull();
     });
 
     it('should handle very old notifications', async () => {
@@ -556,9 +564,11 @@ describe('Notifications Router - Full tRPC Integration', () => {
         oldNotification,
       ]);
 
-      const result = await caller.notifications.getAll({});
+      const result = await caller.getAll({});
 
-      expect(result[0].createdAt).toEqual(new Date('2020-01-01'));
+      expect((result.notifications[0] as any).createdAt).toEqual(
+        new Date('2020-01-01')
+      );
     });
   });
 });

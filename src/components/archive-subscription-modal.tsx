@@ -97,9 +97,9 @@ export function ArchiveSubscriptionModal({
       onOpenChange(false);
       form.reset();
       setSelectedReason('');
-      utils.subscriptions.getAll.invalidate();
-      utils.subscriptions.getById.invalidate({ id: subscription.id });
-      utils.subscriptions.getStats.invalidate();
+      void utils.subscriptions.getAll.invalidate();
+      void utils.subscriptions.getById.invalidate({ id: subscription.id });
+      void utils.subscriptions.getStats.invalidate();
       onSuccess?.();
     },
     onError: error => {

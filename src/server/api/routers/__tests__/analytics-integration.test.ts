@@ -74,22 +74,32 @@ describe('Analytics Router Integration Tests', () => {
       const result = await caller.analytics.getSpendingOverview({});
 
       expect(result).toBeDefined();
-      expect(result.subscriptionSpending).toBeDefined();
-      expect(result.subscriptionSpending.monthly).toBeCloseTo(25.98, 2); // 15.99 + 9.99
-      expect(result.subscriptionSpending.yearly).toBeCloseTo(311.76, 2); // (15.99 + 9.99) * 12
-      expect(result.categoryBreakdown).toBeDefined();
-      expect(result.categoryBreakdown.length).toBeGreaterThan(0);
+      const typedResult = result as {
+        subscriptionSpending?: { monthly?: number; yearly?: number };
+        categoryBreakdown?: unknown[];
+      };
+      expect(typedResult.subscriptionSpending).toBeDefined();
+      expect(typedResult.subscriptionSpending?.monthly).toBeCloseTo(25.98, 2); // 15.99 + 9.99
+      expect(typedResult.subscriptionSpending?.yearly).toBeCloseTo(311.76, 2); // (15.99 + 9.99) * 12
+      expect(typedResult.categoryBreakdown).toBeDefined();
+      expect(typedResult.categoryBreakdown?.length).toBeGreaterThan(0);
     });
 
     it('should handle user with no subscriptions', async () => {
       const result = await caller.analytics.getSpendingOverview({});
 
       expect(result).toBeDefined();
-      expect(result.subscriptionSpending).toBeDefined();
-      expect(result.subscriptionSpending.monthly).toBe(0);
-      expect(result.totalYearly).toBe(0);
-      expect(result.averageSubscriptionCost).toBe(0);
-      expect(result.mostExpensiveCategory).toBe('Unknown');
+      const typedResult = result as {
+        subscriptionSpending?: { monthly?: number };
+        totalYearly?: number;
+        averageSubscriptionCost?: number;
+        mostExpensiveCategory?: string;
+      };
+      expect(typedResult.subscriptionSpending).toBeDefined();
+      expect(typedResult.subscriptionSpending?.monthly).toBe(0);
+      expect(typedResult.totalYearly).toBe(0);
+      expect(typedResult.averageSubscriptionCost).toBe(0);
+      expect(typedResult.mostExpensiveCategory).toBe('Unknown');
     });
 
     it('should throw error for unauthenticated user', async () => {
@@ -104,7 +114,7 @@ describe('Analytics Router Integration Tests', () => {
   describe('getSpendingTrends', () => {
     it('should return spending trends by month', async () => {
       // Create test subscription
-      const subscription = await createTestSubscription(testUserId, {
+      const _subscription = await createTestSubscription(testUserId, {
         name: 'Netflix',
         amount: 15.99,
         frequency: 'monthly',
@@ -159,10 +169,12 @@ describe('Analytics Router Integration Tests', () => {
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
+      expect((result as Array<unknown>).length).toBeGreaterThan(0);
 
       // Verify structure of trend data
-      result.forEach((trend: any) => {
+      (
+        result as Array<{ period?: string; total?: number; recurring?: number }>
+      ).forEach(trend => {
         expect(trend).toHaveProperty('period');
         expect(trend).toHaveProperty('total');
         expect(trend).toHaveProperty('recurring');

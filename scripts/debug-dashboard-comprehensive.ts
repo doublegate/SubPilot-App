@@ -2,8 +2,8 @@
 
 import { PrismaClient } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
-import dotenv from 'dotenv';
-import path from 'path';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -48,12 +48,12 @@ async function debugDashboard() {
     // Step 1: Basic Database Check
     log.subheader('1. Database Connection & Schema Check');
 
-    const tableCheck = (await prisma.$queryRaw`
+    const tableCheck = await prisma.$queryRaw<{ table_name: string }[]>`
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
       AND table_name IN ('users', 'subscriptions', 'transactions', 'accounts', 'plaid_items')
-    `) as any[];
+    `;
 
     log.info(`Found ${tableCheck.length} required tables`);
     if (tableCheck.length < 5) {
@@ -82,14 +82,14 @@ async function debugDashboard() {
       console.log(`\nUser: ${user.email || user.id}`);
       console.log(`  - Plaid Items: ${user.plaidItems.length}`);
       console.log(
-        `  - Total Accounts: ${user.plaidItems.reduce((sum: number, item: any) => sum + item.bankAccounts.length, 0)}`
+        `  - Total Accounts: ${user.plaidItems.reduce((sum, item) => sum + item.bankAccounts.length, 0)}`
       );
       console.log(`  - Total Transactions: ${user.transactions.length}`);
       console.log(`  - Total Subscriptions: ${user.subscriptions.length}`);
 
       if (user.subscriptions.length > 0) {
         const active = user.subscriptions.filter(
-          (s: any) => s.isActive && s.status === 'active'
+          s => s.isActive && s.status === 'active'
         );
         console.log(`  - Active Subscriptions: ${active.length}`);
         console.log(
@@ -233,15 +233,14 @@ async function debugDashboard() {
     );
 
     // Group by merchant to find recurring patterns
-    const merchantGroups = recentTransactions.reduce(
-      (acc, txn) => {
-        const merchant = txn.merchantName || txn.description || 'Unknown';
-        if (!acc[merchant]) acc[merchant] = [];
-        acc[merchant].push(txn);
-        return acc;
-      },
-      {} as Record<string, typeof recentTransactions>
-    );
+    const merchantGroups = recentTransactions.reduce<
+      Record<string, typeof recentTransactions>
+    >((acc, txn) => {
+      const merchant = txn.merchantName || txn.description || 'Unknown';
+      if (!acc[merchant]) acc[merchant] = [];
+      acc[merchant].push(txn);
+      return acc;
+    }, {});
 
     console.log('\nTransactions by merchant:');
     Object.entries(merchantGroups)
@@ -262,7 +261,9 @@ async function debugDashboard() {
     // Step 6: Raw SQL Verification
     log.subheader('6. Raw SQL Verification');
 
-    const rawStats = (await prisma.$queryRaw`
+    const rawStats = await prisma.$queryRaw<
+      { total_active: bigint; monthly_spend: number }[]
+    >`
       SELECT 
         COUNT(*) as total_active,
         COALESCE(SUM(
@@ -277,16 +278,18 @@ async function debugDashboard() {
         ), 0) as monthly_spend
       FROM subscriptions
       WHERE "isActive" = true AND status = 'active'
-    `) as any[];
+    `;
 
     const stats = rawStats[0];
     console.log('\nRaw SQL Results:');
-    console.log(`  - Total Active Subscriptions: ${stats.total_active}`);
     console.log(
-      `  - Monthly Spend: $${parseFloat(stats.monthly_spend).toFixed(2)}`
+      `  - Total Active Subscriptions: ${stats.total_active.toString()}`
     );
     console.log(
-      `  - Yearly Projection: $${(parseFloat(stats.monthly_spend) * 12).toFixed(2)}`
+      `  - Monthly Spend: $${parseFloat(stats.monthly_spend.toString()).toFixed(2)}`
+    );
+    console.log(
+      `  - Yearly Projection: $${(parseFloat(stats.monthly_spend.toString()) * 12).toFixed(2)}`
     );
 
     // Step 7: Recommendations
@@ -323,12 +326,20 @@ async function debugDashboard() {
       console.log('  4. Check browser console for API errors');
     }
   } catch (error) {
-    log.error(`Error during analysis: ${error}`);
-    console.error(error);
+    log.error(
+      `Error during analysis: ${error instanceof Error ? error.message : String(error)}`
+    );
+    console.error(error instanceof Error ? error.stack : error);
   } finally {
     await prisma.$disconnect();
   }
 }
 
 // Run the debug script
-debugDashboard().catch(console.error);
+void debugDashboard().catch((error: unknown) => {
+  console.error(
+    'Failed to run debug script:',
+    error instanceof Error ? error.message : String(error)
+  );
+  process.exit(1);
+});

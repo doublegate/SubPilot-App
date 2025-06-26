@@ -44,9 +44,17 @@ export const plaidRouter = createTRPCRouter({
     await generator.clearUserTransactions(ctx.session.user.id);
 
     // Generate mock transactions
+    const firstAccount = accounts[0];
+    if (!firstAccount) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'No bank account found',
+      });
+    }
+
     const count = await generator.generateMockTransactions(
       ctx.session.user.id,
-      accounts[0]!.id
+      firstAccount.id
     );
 
     return {
@@ -424,11 +432,11 @@ export const plaidRouter = createTRPCRouter({
           const accessToken = await decrypt(item.accessToken);
 
           // Use transactions/sync endpoint for efficient incremental updates
-          let cursor = item.syncCursor || '';
+          let cursor = item.syncCursor ?? '';
           let hasMore = true;
-          let added: any[] = [];
-          let modified: any[] = [];
-          let removed: any[] = [];
+          let added: Array<Record<string, unknown>> = [];
+          let modified: Array<Record<string, unknown>> = [];
+          let removed: Array<Record<string, unknown>> = [];
 
           while (hasMore) {
             const syncRequest: TransactionsSyncRequest = {
@@ -482,27 +490,36 @@ export const plaidRouter = createTRPCRouter({
           if (added.length > 0) {
             const validTransactions = added
               .map(txn => {
-                const accountId = accountIdMap.get(txn.account_id);
+                const accountId = accountIdMap.get(String(txn.account_id));
                 if (!accountId) {
                   console.warn(
-                    `Skipping added transaction ${txn.transaction_id}: Account ${txn.account_id} not found`
+                    `Skipping added transaction ${String(txn.transaction_id)}: Account ${String(txn.account_id)} not found`
                   );
                   return null;
                 }
                 return {
                   userId: ctx.session.user.id,
                   accountId,
-                  plaidTransactionId: (txn as any).transaction_id as string,
-                  amount: Math.abs((txn as any).amount as number),
-                  isoCurrencyCode: (txn as any).iso_currency_code as string ?? 'USD',
-                  description: (txn as any).name as string,
-                  date: new Date((txn as any).date as string),
-                  pending: txn.pending,
-                  category: txn.category ?? [],
-                  subcategory: txn.category?.[1] ?? null,
-                  merchantName: txn.merchant_name,
-                  paymentChannel: txn.payment_channel,
-                  transactionType: txn.transaction_type ?? 'other',
+                  plaidTransactionId: String(txn.transaction_id),
+                  amount: Math.abs(Number(txn.amount)),
+                  isoCurrencyCode: String(txn.iso_currency_code) ?? 'USD',
+                  description: String(txn.name),
+                  date: new Date(String(txn.date)),
+                  pending: Boolean(txn.pending),
+                  category: Array.isArray(txn.category) ? txn.category : [],
+                  subcategory: Array.isArray(txn.category)
+                    ? ((txn.category[1] as string) ?? null)
+                    : null,
+                  merchantName:
+                    txn.merchant_name && typeof txn.merchant_name === 'string'
+                      ? txn.merchant_name
+                      : null,
+                  paymentChannel:
+                    txn.payment_channel &&
+                    typeof txn.payment_channel === 'string'
+                      ? txn.payment_channel
+                      : null,
+                  transactionType: String(txn.transaction_type) ?? 'other',
                   isSubscription: false, // Will be determined by detection algorithm
                 };
               })
@@ -521,41 +538,59 @@ export const plaidRouter = createTRPCRouter({
           // Process modified transactions
           if (modified.length > 0) {
             for (const txn of modified) {
-              const accountId = accountIdMap.get(txn.account_id);
+              const accountId = accountIdMap.get(String(txn.account_id));
               if (!accountId) {
                 console.warn(
-                  `Skipping modified transaction ${txn.transaction_id}: Account ${txn.account_id} not found`
+                  `Skipping modified transaction ${String(txn.transaction_id)}: Account ${String(txn.account_id)} not found`
                 );
                 continue;
               }
 
               await ctx.db.transaction.upsert({
-                where: { plaidTransactionId: txn.transaction_id },
+                where: { plaidTransactionId: String(txn.transaction_id) },
                 update: {
-                  amount: Math.abs(txn.amount),
-                  description: txn.name,
-                  date: new Date(txn.date),
-                  pending: txn.pending,
-                  category: txn.category ?? [],
-                  subcategory: txn.category?.[1] ?? null,
-                  merchantName: txn.merchant_name,
-                  paymentChannel: txn.payment_channel,
-                  transactionType: txn.transaction_type ?? 'other',
+                  amount: Math.abs(Number(txn.amount)),
+                  description: String(txn.name),
+                  date: new Date(String(txn.date)),
+                  pending: Boolean(txn.pending),
+                  category: Array.isArray(txn.category) ? txn.category : [],
+                  subcategory: Array.isArray(txn.category)
+                    ? ((txn.category[1] as string) ?? null)
+                    : null,
+                  merchantName:
+                    txn.merchant_name && typeof txn.merchant_name === 'string'
+                      ? txn.merchant_name
+                      : null,
+                  paymentChannel:
+                    txn.payment_channel &&
+                    typeof txn.payment_channel === 'string'
+                      ? txn.payment_channel
+                      : null,
+                  transactionType: String(txn.transaction_type) ?? 'other',
                 },
                 create: {
                   userId: ctx.session.user.id,
                   accountId,
-                  plaidTransactionId: txn.transaction_id,
-                  amount: Math.abs(txn.amount),
-                  isoCurrencyCode: txn.iso_currency_code ?? 'USD',
-                  description: txn.name,
-                  date: new Date(txn.date),
-                  pending: txn.pending,
-                  category: txn.category ?? [],
-                  subcategory: txn.category?.[1] ?? null,
-                  merchantName: txn.merchant_name,
-                  paymentChannel: txn.payment_channel,
-                  transactionType: txn.transaction_type ?? 'other',
+                  plaidTransactionId: String(txn.transaction_id),
+                  amount: Math.abs(Number(txn.amount)),
+                  isoCurrencyCode: String(txn.iso_currency_code) ?? 'USD',
+                  description: String(txn.name),
+                  date: new Date(String(txn.date)),
+                  pending: Boolean(txn.pending),
+                  category: Array.isArray(txn.category) ? txn.category : [],
+                  subcategory: Array.isArray(txn.category)
+                    ? ((txn.category[1] as string) ?? null)
+                    : null,
+                  merchantName:
+                    txn.merchant_name && typeof txn.merchant_name === 'string'
+                      ? txn.merchant_name
+                      : null,
+                  paymentChannel:
+                    txn.payment_channel &&
+                    typeof txn.payment_channel === 'string'
+                      ? txn.payment_channel
+                      : null,
+                  transactionType: String(txn.transaction_type) ?? 'other',
                   isSubscription: false,
                 },
               });

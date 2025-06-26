@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 import { env } from '@/env.js';
 
 type SendVerificationRequestParams = {
@@ -6,7 +6,7 @@ type SendVerificationRequestParams = {
   url: string;
   expires: Date;
   provider: {
-    server?: unknown;
+    server?: nodemailer.TransportOptions | string;
     from?: string;
   };
   token: string;
@@ -15,7 +15,7 @@ type SendVerificationRequestParams = {
 };
 
 // Create transporter based on environment
-const createTransporter = () => {
+const createTransporter = (): nodemailer.Transporter => {
   if (env.NODE_ENV === 'development') {
     // Use Mailhog for development
     return nodemailer.createTransport({
@@ -40,7 +40,7 @@ const createTransporter = () => {
 
 export async function sendVerificationRequest(
   params: SendVerificationRequestParams
-) {
+): Promise<void> {
   const { identifier: email, url } = params;
   const { host } = new URL(url);
   const transporter = createTransporter();
@@ -151,7 +151,7 @@ export async function sendEmail({
   subject: string;
   html: string;
   text: string;
-}) {
+}): Promise<void> {
   const transporter = createTransporter();
 
   await transporter.sendMail({

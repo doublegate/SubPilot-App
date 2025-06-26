@@ -65,9 +65,9 @@ async function main() {
   console.log('   Password: testpassword123');
 }
 
-main()
-  .catch(e => {
-    console.error('❌ Error:', e);
+void main()
+  .catch((e: unknown) => {
+    console.error('❌ Error:', e instanceof Error ? e.message : String(e));
     process.exit(1);
   })
   .finally(async () => {

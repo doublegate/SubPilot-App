@@ -1,8 +1,8 @@
 #!/usr/bin/env npx tsx
 
 import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
-import path from 'path';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -34,7 +34,7 @@ async function manualSync() {
     // For each Plaid item, check its status
     for (const item of plaidItems) {
       console.log(`\n📊 Plaid Item: ${item.institutionName}`);
-      console.log(`   User: ${(item as any).user.email}`);
+      console.log(`   User: ${item.user.email}`);
       console.log(`   Status: ${item.status}`);
       console.log(`   Accounts: ${item.bankAccounts.length}`);
       console.log(`   Last Webhook: ${item.lastWebhook || 'Never'}`);
@@ -80,10 +80,19 @@ async function manualSync() {
       }
     }
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error(
+      '❌ Error:',
+      error instanceof Error ? error.message : String(error)
+    );
   } finally {
     await prisma.$disconnect();
   }
 }
 
-manualSync().catch(console.error);
+void manualSync().catch((error: unknown) => {
+  console.error(
+    'Failed to run manual sync:',
+    error instanceof Error ? error.message : String(error)
+  );
+  process.exit(1);
+});

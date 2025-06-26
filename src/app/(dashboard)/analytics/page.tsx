@@ -36,55 +36,6 @@ interface AnalyticsFilters {
   status: 'all' | 'active' | 'cancelled';
 }
 
-interface SpendingOverview {
-  subscriptionSpending: {
-    monthly: number;
-    yearly: number;
-  };
-  totalSpending: {
-    monthlyAverage: number;
-  };
-  subscriptionPercentage: number;
-  categoryBreakdown: Array<{
-    category: string;
-    amount: number;
-    percentage: number;
-  }>;
-}
-
-interface SpendingTrend {
-  period: string;
-  total: number;
-  recurring: number;
-  nonRecurring: number;
-}
-
-interface SubscriptionInsights {
-  totalActive: number;
-  unusedCount: number;
-  averageSubscriptionAge: number;
-  priceIncreaseCount: number;
-  insights: Array<{
-    type: string;
-    title: string;
-    message: string;
-    subscriptions?: Array<{
-      id: string;
-      name: string;
-      amount: number;
-      oldAmount?: number;
-      newAmount?: number;
-    }>;
-  }>;
-}
-
-interface UpcomingRenewal {
-  id: string;
-  name: string;
-  amount: number;
-  nextBilling: Date;
-}
-
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const [filters, setFilters] = useState<AnalyticsFilters>({
@@ -99,7 +50,7 @@ export default function AnalyticsPage() {
   const { data: overview, isLoading: overviewLoading } =
     api.analytics.getSpendingOverview.useQuery({
       timeRange,
-    }) as { data: SpendingOverview | undefined; isLoading: boolean };
+    });
   const { data: trends, isLoading: trendsLoading } =
     api.analytics.getSpendingTrends.useQuery({
       timeRange,
@@ -111,10 +62,7 @@ export default function AnalyticsPage() {
             : 'week',
     });
   const { data: insights, isLoading: insightsLoading } =
-    api.analytics.getSubscriptionInsights.useQuery() as {
-      data: SubscriptionInsights | undefined;
-      isLoading: boolean;
-    };
+    api.analytics.getSubscriptionInsights.useQuery();
   const { data: renewals, isLoading: renewalsLoading } =
     api.analytics.getUpcomingRenewals.useQuery({
       days: 30,
@@ -138,7 +86,10 @@ export default function AnalyticsPage() {
         exportData.data
       ) {
         // CSV export
-        const dataObj = exportData as { data: { subscriptions?: string } };
+        interface CsvExportData {
+          data: { subscriptions?: string };
+        }
+        const dataObj = exportData as CsvExportData;
         const csvContent =
           typeof dataObj.data?.subscriptions === 'string'
             ? dataObj.data.subscriptions
@@ -148,11 +99,13 @@ export default function AnalyticsPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const filenameObj = exportData as { filename?: string };
+        interface ExportDataWithFilename {
+          filename?: string;
+        }
+        const filenameObj = exportData as ExportDataWithFilename;
         a.download =
-          filenameObj.filename
-            ? filenameObj.filename
-            : `subpilot-export-${new Date().toISOString().split('T')[0]}.csv`;
+          filenameObj.filename ??
+          `subpilot-export-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
 
@@ -164,17 +117,22 @@ export default function AnalyticsPage() {
         exportData.data
       ) {
         // JSON export
-        const dataObj = exportData as { data: unknown };
+        interface JsonExportData {
+          data: unknown;
+        }
+        const dataObj = exportData as JsonExportData;
         const jsonContent = JSON.stringify(dataObj.data, null, 2);
         const blob = new Blob([jsonContent], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const filenameObj = exportData as { filename?: string };
+        interface ExportDataWithFilename {
+          filename?: string;
+        }
+        const filenameObj = exportData as ExportDataWithFilename;
         a.download =
-          filenameObj.filename
-            ? filenameObj.filename
-            : `subpilot-export-${new Date().toISOString().split('T')[0]}.json`;
+          filenameObj.filename ??
+          `subpilot-export-${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
 
@@ -245,11 +203,23 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${overview?.subscriptionSpending?.monthly?.toFixed(2) ?? '0.00'}
+                $
+                {overview &&
+                'subscriptionSpending' in overview &&
+                overview.subscriptionSpending &&
+                'monthly' in overview.subscriptionSpending
+                  ? overview.subscriptionSpending.monthly.toFixed(2)
+                  : '0.00'}
                 /mo
               </div>
               <p className="text-xs text-muted-foreground">
-                ${overview?.subscriptionSpending?.yearly?.toFixed(2) ?? '0.00'}{' '}
+                $
+                {overview &&
+                'subscriptionSpending' in overview &&
+                overview.subscriptionSpending &&
+                'yearly' in overview.subscriptionSpending
+                  ? overview.subscriptionSpending.yearly.toFixed(2)
+                  : '0.00'}{' '}
                 yearly
               </p>
             </CardContent>
@@ -264,11 +234,20 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${overview?.totalSpending?.monthlyAverage?.toFixed(2) ?? '0.00'}
+                $
+                {overview &&
+                'totalSpending' in overview &&
+                overview.totalSpending &&
+                'monthlyAverage' in overview.totalSpending
+                  ? overview.totalSpending.monthlyAverage.toFixed(2)
+                  : '0.00'}
                 /mo
               </div>
               <p className="text-xs text-muted-foreground">
-                {overview?.subscriptionPercentage ?? 0}% is subscriptions
+                {overview && 'subscriptionPercentage' in overview
+                  ? overview.subscriptionPercentage
+                  : 0}
+                % is subscriptions
               </p>
             </CardContent>
           </Card>
@@ -331,7 +310,7 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {trends && trends.length > 0 ? (
+              {trends && Array.isArray(trends) && trends.length > 0 ? (
                 <SpendingTrendsChart data={trends} />
               ) : (
                 <div className="flex h-[400px] items-center justify-center text-muted-foreground">
@@ -351,7 +330,9 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {overview?.categoryBreakdown &&
+              {overview &&
+              'categoryBreakdown' in overview &&
+              Array.isArray(overview.categoryBreakdown) &&
               overview.categoryBreakdown.length > 0 ? (
                 <CategoryBreakdownChart data={overview.categoryBreakdown} />
               ) : (

@@ -26,7 +26,7 @@ export function formatCurrency(
 /**
  * Format subscription frequency for display
  */
-export function formatFrequency(frequency: string): string {
+export function formatFrequency(frequency: string | null | undefined): string {
   if (frequency == null) return String(frequency);
 
   const frequencies: Record<string, string> = {

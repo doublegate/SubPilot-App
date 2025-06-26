@@ -22,7 +22,6 @@ import {
   addMonths,
   subMonths,
   parseISO,
-  isSameDay,
 } from 'date-fns';
 
 interface RenewalData {
@@ -33,7 +32,7 @@ interface RenewalData {
       name: string;
       amount: number;
       currency: string;
-      provider: any;
+      provider: { name?: string } | null;
     }>;
     dailyTotal: number;
   }>;

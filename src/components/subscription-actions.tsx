@@ -5,14 +5,7 @@ import { Button } from '@/components/ui/button';
 import { EditSubscriptionModal } from '@/components/edit-subscription-modal';
 import { ArchiveSubscriptionModal } from '@/components/archive-subscription-modal';
 import { CancellationAssistant } from '@/components/cancellation-assistant';
-import {
-  Edit,
-  Archive,
-  HelpCircle,
-  ArrowLeft,
-  Tag,
-  FileText,
-} from 'lucide-react';
+import { Edit, Archive, HelpCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -43,7 +36,7 @@ export function SubscriptionActions({
   const [cancellationModalOpen, setCancellationModalOpen] = useState(false);
   const router = useRouter();
 
-  const handleMarkCancelled = (id: string) => {
+  const handleMarkCancelled = (_id: string) => {
     setArchiveModalOpen(true);
   };
 

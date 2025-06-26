@@ -52,8 +52,8 @@ describe('ThemeProvider', () => {
 
     const providerElement = screen.getByTestId('next-themes-provider');
     const props = JSON.parse(
-      providerElement.getAttribute('data-props') || '{}'
-    );
+      providerElement.getAttribute('data-props') ?? '{}'
+    ) as Record<string, unknown>;
 
     expect(props).toEqual({
       attribute: 'class',
@@ -72,8 +72,8 @@ describe('ThemeProvider', () => {
 
     const providerElement = screen.getByTestId('next-themes-provider');
     const props = JSON.parse(
-      providerElement.getAttribute('data-props') || '{}'
-    );
+      providerElement.getAttribute('data-props') ?? '{}'
+    ) as Record<string, unknown>;
 
     expect(props.attribute).toBe('class');
   });
@@ -87,8 +87,8 @@ describe('ThemeProvider', () => {
 
     const providerElement = screen.getByTestId('next-themes-provider');
     const props = JSON.parse(
-      providerElement.getAttribute('data-props') || '{}'
-    );
+      providerElement.getAttribute('data-props') ?? '{}'
+    ) as Record<string, unknown>;
 
     expect(props.defaultTheme).toBe('system');
   });
@@ -102,8 +102,8 @@ describe('ThemeProvider', () => {
 
     const providerElement = screen.getByTestId('next-themes-provider');
     const props = JSON.parse(
-      providerElement.getAttribute('data-props') || '{}'
-    );
+      providerElement.getAttribute('data-props') ?? '{}'
+    ) as Record<string, unknown>;
 
     expect(props.enableSystem).toBe(true);
   });
@@ -117,8 +117,8 @@ describe('ThemeProvider', () => {
 
     const providerElement = screen.getByTestId('next-themes-provider');
     const props = JSON.parse(
-      providerElement.getAttribute('data-props') || '{}'
-    );
+      providerElement.getAttribute('data-props') ?? '{}'
+    ) as Record<string, unknown>;
 
     expect(props.disableTransitionOnChange).toBe(true);
   });
@@ -205,8 +205,8 @@ describe('ThemeProvider', () => {
 
       const providerElement = screen.getByTestId('next-themes-provider');
       const props = JSON.parse(
-        providerElement.getAttribute('data-props') || '{}'
-      );
+        providerElement.getAttribute('data-props') ?? '{}'
+      ) as Record<string, unknown>;
 
       // These settings are optimized for Next.js SSR
       expect(props.attribute).toBe('class'); // Uses CSS classes for theme switching
@@ -229,8 +229,8 @@ describe('ThemeProvider', () => {
 
       const providerElement = screen.getByTestId('next-themes-provider');
       const props = JSON.parse(
-        providerElement.getAttribute('data-props') || '{}'
-      );
+        providerElement.getAttribute('data-props') ?? '{}'
+      ) as Record<string, unknown>;
 
       // Configuration that prevents FOUC
       expect(props.disableTransitionOnChange).toBe(true);
@@ -248,8 +248,8 @@ describe('ThemeProvider', () => {
 
       const providerElement = screen.getByTestId('next-themes-provider');
       const props = JSON.parse(
-        providerElement.getAttribute('data-props') || '{}'
-      );
+        providerElement.getAttribute('data-props') ?? '{}'
+      ) as Record<string, unknown>;
 
       // Should support light, dark, and system themes
       expect(props.defaultTheme).toBe('dark');
@@ -262,10 +262,16 @@ describe('ThemeProvider', () => {
       // Mock console.error to suppress error logging during test
       const consoleSpy = vi
         .spyOn(console, 'error')
-        .mockImplementation(() => {});
+        .mockImplementation(() => undefined);
 
       // Test that the ThemeProvider can handle NextThemesProvider prop validation issues
-      const MockProvider = ({ children, ...props }: any) => {
+      const MockProvider = ({
+        children,
+        ...props
+      }: {
+        children: React.ReactNode;
+        invalidProp?: boolean;
+      }) => {
         // Simulate a provider that validates props strictly
         if (props.invalidProp) {
           console.error('Invalid prop provided to NextThemesProvider');
@@ -273,7 +279,9 @@ describe('ThemeProvider', () => {
         return <div data-testid="mock-provider">{children}</div>;
       };
 
-      vi.mocked(NextThemesProvider).mockImplementationOnce(MockProvider);
+      vi.mocked(NextThemesProvider).mockImplementationOnce(
+        MockProvider as unknown as typeof NextThemesProvider
+      );
 
       // Should render without throwing, even with potential prop validation warnings
       const { getByTestId } = render(

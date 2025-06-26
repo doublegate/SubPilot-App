@@ -50,7 +50,7 @@ export class ScheduledNotificationService {
               subscriptionId: subscription.id,
               type: 'renewal_reminder',
               title: `${subscription.name} renews in ${daysBeforeRenewal} days`,
-              message: `Your subscription will renew for ${subscription.amount} ${subscription.currency}`,
+              message: `Your subscription will renew for ${subscription.amount.toString()} ${subscription.currency}`,
               scheduledFor: new Date(),
               data: {
                 daysUntilRenewal: daysBeforeRenewal,
@@ -75,8 +75,8 @@ export class ScheduledNotificationService {
     }
 
     const lastMonth = subDays(now, 1);
-    const monthStart = startOfMonth(lastMonth);
-    const monthEnd = endOfMonth(lastMonth);
+    const _monthStart = startOfMonth(lastMonth);
+    const _monthEnd = endOfMonth(lastMonth);
 
     // Get all users with active subscriptions
     const users = await db.user.findMany({

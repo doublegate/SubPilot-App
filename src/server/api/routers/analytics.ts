@@ -1,18 +1,52 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-import { type Prisma } from '@prisma/client';
+import {
+  type Prisma,
+  type Subscription,
+  type Transaction,
+} from '@prisma/client';
+
+// Type-safe cache data structures
+interface SpendingOverviewData {
+  subscriptionSpending: {
+    monthly: number;
+    yearly: number;
+  };
+  totalSpending: {
+    period: number;
+    monthlyAverage: number;
+  };
+  subscriptionPercentage: number;
+  categoryBreakdown: Array<{
+    category: string;
+    amount: number;
+    percentage: number;
+  }>;
+}
+
+interface SpendingTrendData {
+  period: string;
+  total: number;
+  recurring: number;
+  nonRecurring: number;
+}
+
+type CacheData =
+  | SpendingOverviewData
+  | SpendingTrendData[]
+  | Record<string, unknown>;
 
 // Simple in-memory cache for expensive calculations
 const analyticsCache = new Map<
   string,
-  { data: any; timestamp: number; ttl: number }
+  { data: CacheData; timestamp: number; ttl: number }
 >();
 
-const getCacheKey = (userId: string, endpoint: string, params: any) => {
+const getCacheKey = (userId: string, endpoint: string, params: unknown) => {
   return `${userId}:${endpoint}:${JSON.stringify(params)}`;
 };
 
-const getFromCache = (key: string) => {
+const getFromCache = <T extends CacheData>(key: string): T | null => {
   const cached = analyticsCache.get(key);
   if (!cached) return null;
 
@@ -21,10 +55,14 @@ const getFromCache = (key: string) => {
     return null;
   }
 
-  return cached.data;
+  return cached.data as T;
 };
 
-const setCache = (key: string, data: any, ttlMinutes = 15) => {
+const setCache = <T extends CacheData>(
+  key: string,
+  data: T,
+  ttlMinutes = 15
+) => {
   analyticsCache.set(key, {
     data,
     timestamp: Date.now(),
@@ -52,7 +90,7 @@ export const analyticsRouter = createTRPCRouter({
         'spendingOverview',
         input
       );
-      const cached = getFromCache(cacheKey);
+      const cached = getFromCache<SpendingOverviewData>(cacheKey);
       if (cached) return cached;
       // Calculate date range
       const endDate = new Date();
@@ -172,7 +210,7 @@ export const analyticsRouter = createTRPCRouter({
       };
 
       // Cache the result for 15 minutes
-      setCache(cacheKey, result, 15);
+      setCache<SpendingOverviewData>(cacheKey, result, 15);
       return result;
     }),
 
@@ -193,7 +231,7 @@ export const analyticsRouter = createTRPCRouter({
         'spendingTrends',
         input
       );
-      const cached = getFromCache(cacheKey);
+      const cached = getFromCache<SpendingTrendData[]>(cacheKey);
       if (cached) return cached;
       // Calculate date range
       const endDate = new Date();
@@ -279,7 +317,7 @@ export const analyticsRouter = createTRPCRouter({
         .sort((a, b) => a.period.localeCompare(b.period));
 
       // Cache the result for 10 minutes (trends change less frequently)
-      setCache(cacheKey, trendData, 10);
+      setCache<SpendingTrendData[]>(cacheKey, trendData, 10);
       return trendData;
     }),
 
@@ -287,7 +325,11 @@ export const analyticsRouter = createTRPCRouter({
    * Get subscription insights
    */
   getSubscriptionInsights: protectedProcedure.query(async ({ ctx }) => {
-    const subscriptions = await ctx.db.subscription.findMany({
+    type SubscriptionWithTransactions = Subscription & {
+      transactions: Transaction[];
+    };
+
+    const subscriptions = (await ctx.db.subscription.findMany({
       where: {
         userId: ctx.session.user.id,
       },
@@ -297,7 +339,7 @@ export const analyticsRouter = createTRPCRouter({
           take: 3,
         },
       },
-    });
+    })) as SubscriptionWithTransactions[];
 
     // Calculate insights
     const activeCount = subscriptions.filter(s => s.isActive).length;
@@ -316,9 +358,10 @@ export const analyticsRouter = createTRPCRouter({
     // Find price increases
     const priceIncreases = subscriptions.filter(s => {
       if (s.transactions.length < 2) return false;
-      const recent = s.transactions[0]?.amount.toNumber() ?? 0;
-      const previous = s.transactions[1]?.amount.toNumber() ?? 0;
-      return recent > previous;
+      const recent = s.transactions[0];
+      const previous = s.transactions[1];
+      if (!recent || !previous) return false;
+      return recent.amount.toNumber() > previous.amount.toNumber();
     });
 
     // Calculate average subscription age
@@ -361,12 +404,16 @@ export const analyticsRouter = createTRPCRouter({
                 type: 'price_increase' as const,
                 title: 'Price Increases Detected',
                 message: `${priceIncreases.length} subscription${priceIncreases.length > 1 ? 's have' : ' has'} increased in price recently`,
-                subscriptions: priceIncreases.map(s => ({
-                  id: s.id,
-                  name: s.name,
-                  oldAmount: s.transactions[1]?.amount.toNumber() ?? 0,
-                  newAmount: s.transactions[0]?.amount.toNumber() ?? 0,
-                })),
+                subscriptions: priceIncreases.map(s => {
+                  const recent = s.transactions[0];
+                  const previous = s.transactions[1];
+                  return {
+                    id: s.id,
+                    name: s.name,
+                    oldAmount: previous ? previous.amount.toNumber() : 0,
+                    newAmount: recent ? recent.amount.toNumber() : 0,
+                  };
+                }),
               },
             ]
           : []),
@@ -413,14 +460,11 @@ export const analyticsRouter = createTRPCRouter({
       subscriptions.forEach(sub => {
         if (!sub.nextBilling) return;
 
-        const dateKey = sub.nextBilling.toISOString().split('T')[0];
-        if (dateKey) {
-          renewalsByDate[dateKey] ??= [];
-          const dateRenewals = renewalsByDate[dateKey];
-          if (dateRenewals) {
-            dateRenewals.push(sub);
-          }
-        }
+        const dateKey = sub.nextBilling.toISOString().split('T')[0] ?? '';
+        if (!dateKey) return;
+
+        renewalsByDate[dateKey] ??= [];
+        renewalsByDate[dateKey].push(sub);
       });
 
       // Calculate totals
@@ -519,11 +563,8 @@ export const analyticsRouter = createTRPCRouter({
           s.status,
           s.category ?? '',
           s.nextBilling?.toISOString() ?? '',
-          typeof s.provider === 'object' &&
-          s.provider !== null &&
-          'name' in s.provider &&
-          typeof (s.provider as { name?: unknown }).name === 'string'
-            ? (s.provider as { name: string }).name
+          s.provider && typeof s.provider === 'object' && 'name' in s.provider
+            ? String((s.provider as Record<string, unknown>).name || '')
             : '',
         ]),
       ];
@@ -544,10 +585,8 @@ export const analyticsRouter = createTRPCRouter({
               t.description,
               t.amount.toString(),
               t.bankAccount.isoCurrencyCode ?? 'USD',
-              Array.isArray(t.category) &&
-              t.category.length > 0 &&
-              typeof t.category[0] === 'string'
-                ? t.category[0]
+              Array.isArray(t.category) && t.category.length > 0
+                ? String(t.category[0] || '')
                 : '',
               t.bankAccount.name,
               t.bankAccount.plaidItem.institutionName,

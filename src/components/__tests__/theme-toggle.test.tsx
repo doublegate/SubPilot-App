@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -11,7 +11,17 @@ vi.mock('next-themes', () => ({
 
 // Mock UI components
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, onClick, variant, size, className, ...props }: any) => (
+  Button: ({
+    children,
+    onClick,
+    variant,
+    size,
+    className,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    variant?: string;
+    size?: string;
+  }) => (
     <button
       onClick={onClick}
       className={`btn ${variant} ${size} ${className}`}
@@ -23,20 +33,32 @@ vi.mock('@/components/ui/button', () => ({
 }));
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
-  DropdownMenu: ({ children }: any) => (
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dropdown-menu">{children}</div>
   ),
-  DropdownMenuContent: ({ children, align }: any) => (
+  DropdownMenuContent: ({
+    children,
+    align,
+  }: {
+    children: React.ReactNode;
+    align?: string;
+  }) => (
     <div data-testid="dropdown-content" data-align={align}>
       {children}
     </div>
   ),
-  DropdownMenuItem: ({ children, onClick }: any) => (
+  DropdownMenuItem: ({
+    children,
+    onClick,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+  }) => (
     <div data-testid="dropdown-item" onClick={onClick} role="menuitem">
       {children}
     </div>
   ),
-  DropdownMenuTrigger: ({ children }: any) => (
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dropdown-trigger">{children}</div>
   ),
 }));
@@ -50,7 +72,12 @@ vi.mock('lucide-react', () => ({
 
 describe('ThemeToggle', () => {
   const mockSetTheme = vi.fn();
-  const mockUseTheme = useTheme as any;
+  const mockUseTheme = useTheme as unknown as {
+    mockReturnValue: (value: {
+      theme: string;
+      setTheme: typeof mockSetTheme;
+    }) => void;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -189,7 +216,6 @@ describe('ThemeToggle', () => {
 
     render(<ThemeToggle />);
 
-    const button = screen.getByRole('button');
     // The component uses sr-only span for screen readers
     expect(screen.getByText('Toggle theme')).toBeInTheDocument();
 

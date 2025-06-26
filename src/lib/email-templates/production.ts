@@ -4,84 +4,115 @@
  * and referenced by their template IDs in production
  */
 
-export const SENDGRID_TEMPLATES = {
-  // Welcome email template
-  WELCOME: {
-    id: 'd-welcome-template-id', // Replace with actual SendGrid template ID
-    subject: 'Welcome to SubPilot! 🎉',
-    dynamicData: {
-      user_name: 'string',
-      login_url: 'string',
-      dashboard_url: 'string',
-    },
-  },
+interface SendGridTemplate {
+  id: string;
+  subject: string;
+  dynamicData: Record<string, string>;
+}
 
-  // Magic link authentication
-  MAGIC_LINK: {
-    id: 'd-magic-link-template-id', // Replace with actual SendGrid template ID
-    subject: 'Sign in to SubPilot',
-    dynamicData: {
-      user_name: 'string',
-      magic_link: 'string',
-      expires_at: 'string',
-    },
-  },
+type SendGridTemplateKey =
+  | 'WELCOME'
+  | 'MAGIC_LINK'
+  | 'PASSWORD_RESET'
+  | 'SUBSCRIPTION_ALERT'
+  | 'WEEKLY_SUMMARY'
+  | 'CANCELLATION_CONFIRMATION';
 
-  // Password reset
-  PASSWORD_RESET: {
-    id: 'd-password-reset-template-id', // Replace with actual SendGrid template ID
-    subject: 'Reset your SubPilot password',
-    dynamicData: {
-      user_name: 'string',
-      reset_link: 'string',
-      expires_at: 'string',
+export const SENDGRID_TEMPLATES: Record<SendGridTemplateKey, SendGridTemplate> =
+  {
+    // Welcome email template
+    WELCOME: {
+      id: 'd-welcome-template-id', // Replace with actual SendGrid template ID
+      subject: 'Welcome to SubPilot! 🎉',
+      dynamicData: {
+        user_name: 'string',
+        login_url: 'string',
+        dashboard_url: 'string',
+      },
     },
-  },
 
-  // Subscription alert
-  SUBSCRIPTION_ALERT: {
-    id: 'd-subscription-alert-template-id', // Replace with actual SendGrid template ID
-    subject: 'New subscription detected: {{subscription_name}}',
-    dynamicData: {
-      user_name: 'string',
-      subscription_name: 'string',
-      amount: 'string',
-      next_billing: 'string',
-      cancel_url: 'string',
+    // Magic link authentication
+    MAGIC_LINK: {
+      id: 'd-magic-link-template-id', // Replace with actual SendGrid template ID
+      subject: 'Sign in to SubPilot',
+      dynamicData: {
+        user_name: 'string',
+        magic_link: 'string',
+        expires_at: 'string',
+      },
     },
-  },
 
-  // Weekly summary
-  WEEKLY_SUMMARY: {
-    id: 'd-weekly-summary-template-id', // Replace with actual SendGrid template ID
-    subject: 'Your weekly subscription summary',
-    dynamicData: {
-      user_name: 'string',
-      total_subscriptions: 'number',
-      monthly_total: 'string',
-      new_subscriptions: 'array',
-      upcoming_renewals: 'array',
+    // Password reset
+    PASSWORD_RESET: {
+      id: 'd-password-reset-template-id', // Replace with actual SendGrid template ID
+      subject: 'Reset your SubPilot password',
+      dynamicData: {
+        user_name: 'string',
+        reset_link: 'string',
+        expires_at: 'string',
+      },
     },
-  },
 
-  // Cancellation confirmation
-  CANCELLATION_CONFIRMATION: {
-    id: 'd-cancellation-confirmation-template-id', // Replace with actual SendGrid template ID
-    subject: 'Subscription cancelled: {{subscription_name}}',
-    dynamicData: {
-      user_name: 'string',
-      subscription_name: 'string',
-      cancellation_date: 'string',
-      final_billing_date: 'string',
+    // Subscription alert
+    SUBSCRIPTION_ALERT: {
+      id: 'd-subscription-alert-template-id', // Replace with actual SendGrid template ID
+      subject: 'New subscription detected: {{subscription_name}}',
+      dynamicData: {
+        user_name: 'string',
+        subscription_name: 'string',
+        amount: 'string',
+        next_billing: 'string',
+        cancel_url: 'string',
+      },
     },
-  },
-} as const;
+
+    // Weekly summary
+    WEEKLY_SUMMARY: {
+      id: 'd-weekly-summary-template-id', // Replace with actual SendGrid template ID
+      subject: 'Your weekly subscription summary',
+      dynamicData: {
+        user_name: 'string',
+        total_subscriptions: 'number',
+        monthly_total: 'string',
+        new_subscriptions: 'array',
+        upcoming_renewals: 'array',
+      },
+    },
+
+    // Cancellation confirmation
+    CANCELLATION_CONFIRMATION: {
+      id: 'd-cancellation-confirmation-template-id', // Replace with actual SendGrid template ID
+      subject: 'Subscription cancelled: {{subscription_name}}',
+      dynamicData: {
+        user_name: 'string',
+        subscription_name: 'string',
+        cancellation_date: 'string',
+        final_billing_date: 'string',
+      },
+    },
+  };
+
+interface HtmlTemplateData {
+  welcome: (data: { userName: string; loginUrl: string }) => string;
+  magicLink: (data: {
+    userName: string;
+    magicLink: string;
+    expiresAt: string;
+  }) => string;
+  subscriptionAlert: (data: {
+    userName: string;
+    subscriptionName: string;
+    amount: string;
+    nextBilling: string;
+    cancelUrl: string;
+  }) => string;
+}
 
 /**
  * HTML email templates for fallback/development
  * Use these when SendGrid templates are not available
  */
-export const HTML_TEMPLATES = {
+export const HTML_TEMPLATES: HtmlTemplateData = {
   welcome: (data: { userName: string; loginUrl: string }) => `
     <!DOCTYPE html>
     <html>
@@ -278,10 +309,26 @@ export const HTML_TEMPLATES = {
   `,
 };
 
+interface TextTemplateData {
+  welcome: (data: { userName: string; loginUrl: string }) => string;
+  magicLink: (data: {
+    userName: string;
+    magicLink: string;
+    expiresAt: string;
+  }) => string;
+  subscriptionAlert: (data: {
+    userName: string;
+    subscriptionName: string;
+    amount: string;
+    nextBilling: string;
+    cancelUrl: string;
+  }) => string;
+}
+
 /**
  * Text-only email templates for fallback
  */
-export const TEXT_TEMPLATES = {
+export const TEXT_TEMPLATES: TextTemplateData = {
   welcome: (data: { userName: string; loginUrl: string }) => `
 Welcome to SubPilot, ${data.userName}!
 

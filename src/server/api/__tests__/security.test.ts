@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { appRouter } from '@/server/api/root';
 import type { Session } from 'next-auth';
@@ -79,11 +79,15 @@ describe('API Security Tests', () => {
       vi.doMock('@/server/db', () => ({
         db: {
           subscription: {
-            findUnique: vi.fn().mockImplementation(({ where }) => {
-              return where.userId === 'user-1' && where.id === 'sub-1'
-                ? { id: 'sub-1', userId: 'user-1' }
-                : null;
-            }),
+            findUnique: vi
+              .fn()
+              .mockImplementation(
+                ({ where }: { where: { userId?: string; id?: string } }) => {
+                  return where.userId === 'user-1' && where.id === 'sub-1'
+                    ? { id: 'sub-1', userId: 'user-1' }
+                    : null;
+                }
+              ),
           },
         },
       }));
@@ -114,11 +118,15 @@ describe('API Security Tests', () => {
       vi.doMock('@/server/db', () => ({
         db: {
           transaction: {
-            findMany: vi.fn().mockImplementation(({ where }) => {
-              return where.userId === 'user-1'
-                ? [{ id: 'txn-1', userId: 'user-1' }]
-                : [];
-            }),
+            findMany: vi
+              .fn()
+              .mockImplementation(
+                ({ where }: { where: { userId?: string } }) => {
+                  return where.userId === 'user-1'
+                    ? [{ id: 'txn-1', userId: 'user-1' }]
+                    : [];
+                }
+              ),
           },
         },
       }));
@@ -145,11 +153,15 @@ describe('API Security Tests', () => {
       vi.doMock('@/server/db', () => ({
         db: {
           notification: {
-            findMany: vi.fn().mockImplementation(({ where }) => {
-              return where.userId === 'user-1'
-                ? [{ id: 'notif-1', userId: 'user-1' }]
-                : [];
-            }),
+            findMany: vi
+              .fn()
+              .mockImplementation(
+                ({ where }: { where: { userId?: string } }) => {
+                  return where.userId === 'user-1'
+                    ? [{ id: 'notif-1', userId: 'user-1' }]
+                    : [];
+                }
+              ),
           },
         },
       }));
@@ -195,7 +207,7 @@ describe('API Security Tests', () => {
           name: 'Netflix',
           amount: 15.99,
           currency: 'USD',
-          frequency: 'invalid' as any,
+          frequency: 'invalid' as 'weekly' | 'monthly' | 'quarterly' | 'yearly',
           category: 'Entertainment',
         })
       ).rejects.toThrow();
@@ -223,7 +235,7 @@ describe('API Security Tests', () => {
 
     it('should sanitize search inputs', async () => {
       const ctx = createInnerTRPCContext({ session: mockSession });
-      const caller = appRouter.createCaller(ctx);
+      const _caller = appRouter.createCaller(ctx);
 
       vi.doMock('@/server/db', () => ({
         db: {
@@ -232,7 +244,7 @@ describe('API Security Tests', () => {
       }));
 
       // Test with potentially malicious search strings
-      const maliciousInputs = [
+      const _maliciousInputs = [
         "'; DROP TABLE subscriptions; --",
         '<script>alert("xss")</script>',
         '../../../../etc/passwd',
@@ -277,10 +289,14 @@ describe('API Security Tests', () => {
       vi.doMock('@/server/db', () => ({
         db: {
           subscription: {
-            create: vi.fn().mockImplementation(({ data }) => ({
-              ...data,
-              id: 'sub-1',
-            })),
+            create: vi
+              .fn()
+              .mockImplementation(
+                ({ data }: { data: Record<string, unknown> }) => ({
+                  ...data,
+                  id: 'sub-1',
+                })
+              ),
           },
         },
       }));
@@ -335,13 +351,17 @@ describe('API Security Tests', () => {
       vi.doMock('@/server/db', () => ({
         db: {
           session: {
-            delete: vi.fn().mockImplementation(({ where }) => {
-              // Simulate database constraint that prevents deleting other users' sessions
-              if (where.userId !== 'user-1') {
-                throw new Error('Record not found');
-              }
-              return { id: where.id };
-            }),
+            delete: vi
+              .fn()
+              .mockImplementation(
+                ({ where }: { where: { userId?: string; id?: string } }) => {
+                  // Simulate database constraint that prevents deleting other users' sessions
+                  if (where.userId !== 'user-1') {
+                    throw new Error('Record not found');
+                  }
+                  return { id: where.id };
+                }
+              ),
           },
         },
       }));
@@ -468,7 +488,7 @@ describe('API Security Tests', () => {
   describe('Performance DoS Protection', () => {
     it('should handle large query parameters efficiently', async () => {
       const ctx = createInnerTRPCContext({ session: mockSession });
-      const caller = appRouter.createCaller(ctx);
+      const _caller = appRouter.createCaller(ctx);
 
       vi.doMock('@/server/db', () => ({
         db: {

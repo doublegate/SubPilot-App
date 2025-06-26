@@ -9,10 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Calendar,
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Play,
-  Pause,
   StopCircle,
   AlertTriangle,
 } from 'lucide-react';
@@ -61,7 +59,15 @@ export function SubscriptionTimeline({ filters }: SubscriptionTimelineProps) {
 
   // Fetch subscriptions data
   const { data: subscriptions, isLoading } = api.subscriptions.getAll.useQuery({
-    status: filters.status === 'all' ? undefined : (filters.status as any),
+    status:
+      filters.status === 'all'
+        ? undefined
+        : (filters.status as
+            | 'active'
+            | 'paused'
+            | 'cancelled'
+            | 'trial'
+            | 'expiring_soon'),
     limit: 100,
   });
 
@@ -239,7 +245,7 @@ export function SubscriptionTimeline({ filters }: SubscriptionTimelineProps) {
       case 'cancelled':
         return `Cancelled ${subscription.name} (was ${formatCurrency(subscription.amount)}/month)`;
       case 'price_change':
-        return `${subscription.name} price changed from ${formatCurrency(details?.oldAmount || 0)} to ${formatCurrency(details?.newAmount || subscription.amount)}`;
+        return `${subscription.name} price changed from ${formatCurrency(details?.oldAmount ?? 0)} to ${formatCurrency(details?.newAmount ?? subscription.amount)}`;
       case 'payment':
         return `Paid ${formatCurrency(subscription.amount)} for ${subscription.name}`;
       case 'detected':

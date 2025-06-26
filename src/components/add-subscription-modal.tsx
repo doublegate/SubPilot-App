@@ -104,9 +104,9 @@ export function AddSubscriptionModal({
       toast.success('Subscription added successfully');
       onOpenChange(false);
       form.reset();
-      utils.subscriptions.getAll.invalidate();
-      utils.subscriptions.getStats.invalidate();
-      utils.subscriptions.getCategories.invalidate();
+      void utils.subscriptions.getAll.invalidate();
+      void utils.subscriptions.getStats.invalidate();
+      void utils.subscriptions.getCategories.invalidate();
       onSuccess?.();
     },
     onError: error => {

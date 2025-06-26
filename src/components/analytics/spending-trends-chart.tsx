@@ -59,7 +59,7 @@ export function SpendingTrendsChart({
     if (period.includes('-')) {
       // Monthly format: 2025-01
       const [year, month] = period.split('-');
-      const date = new Date(parseInt(year || '0'), parseInt(month || '0') - 1);
+      const date = new Date(parseInt(year ?? '0'), parseInt(month ?? '0') - 1);
       return date.toLocaleDateString('en-US', {
         month: 'short',
         year: '2-digit',
@@ -84,13 +84,21 @@ export function SpendingTrendsChart({
     }).format(value);
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null;
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{ name: string; value: number; color: string }>;
+    label?: string;
+  }) => {
+    if (!active || !payload?.length || !label) return null;
 
     return (
       <div className="rounded-lg border bg-background p-3 shadow-md">
         <p className="font-medium">{formatPeriod(label)}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}: {formatCurrency(entry.value)}
           </p>

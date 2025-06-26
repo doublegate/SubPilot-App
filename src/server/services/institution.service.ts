@@ -49,7 +49,7 @@ export class InstitutionService {
   ): Promise<InstitutionData | null> {
     // Check cache first
     const cached = this.institutionCache.get(institutionId);
-    const cacheTime = this.cacheTimestamp.get(institutionId) || 0;
+    const cacheTime = this.cacheTimestamp.get(institutionId) ?? 0;
 
     if (cached && Date.now() - cacheTime < this.CACHE_DURATION) {
       return cached;
@@ -64,7 +64,7 @@ export class InstitutionService {
 
       const request: InstitutionsGetByIdRequest = {
         institution_id: institutionId,
-        country_codes: ['US' as any, 'CA' as any],
+        country_codes: ['US', 'CA'] as CountryCode[],
         options: {
           include_optional_metadata: true,
           include_status: true,
@@ -91,7 +91,7 @@ export class InstitutionService {
             }
           : undefined,
         oauth: institution.oauth,
-        mfa: (institution as any).mfa || [],
+        mfa: (institution as { mfa?: string[] }).mfa ?? [],
         status: institution.status ?? undefined,
       };
 
@@ -158,7 +158,7 @@ export class InstitutionService {
         () =>
           client.institutionsSearch({
             query,
-            country_codes: [countryCode as any],
+            country_codes: [countryCode as CountryCode],
             options: {
               include_optional_metadata: true,
             },
@@ -179,7 +179,7 @@ export class InstitutionService {
             }
           : undefined,
         oauth: institution.oauth,
-        mfa: (institution as any).mfa || [],
+        mfa: (institution as { mfa?: string[] }).mfa ?? [],
         status: institution.status,
       }));
     } catch (error) {

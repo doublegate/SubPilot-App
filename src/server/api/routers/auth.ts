@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-
 // Types for session detection
-interface SessionWithCurrent {
+interface _SessionWithCurrent {
   id: string;
   sessionToken: string;
   expires: Date;
@@ -98,7 +97,19 @@ export const authRouter = createTRPCRouter({
     });
 
     // Return defaults if not set
-    const defaultPreferences = {
+    type NotificationPreferences = {
+      emailAlerts: boolean;
+      pushNotifications: boolean;
+      weeklyReports: boolean;
+      renewalReminders: boolean;
+      priceChangeAlerts: boolean;
+      cancelledServiceAlerts: boolean;
+      digestFrequency: string;
+      quietHoursStart: string | null;
+      quietHoursEnd: string | null;
+    };
+
+    const defaultPreferences: NotificationPreferences = {
       emailAlerts: true,
       pushNotifications: false,
       weeklyReports: true,
@@ -110,10 +121,14 @@ export const authRouter = createTRPCRouter({
       quietHoursEnd: null,
     };
 
-    return (
-      (user?.notificationPreferences as typeof defaultPreferences) ??
-      defaultPreferences
-    );
+    if (
+      user?.notificationPreferences &&
+      typeof user.notificationPreferences === 'object'
+    ) {
+      return user.notificationPreferences as NotificationPreferences;
+    }
+
+    return defaultPreferences;
   }),
 
   /**

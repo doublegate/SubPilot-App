@@ -64,10 +64,19 @@ async function testDetection() {
       `\nExisting subscriptions in database: ${existingSubscriptions}`
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error(
+      'Error:',
+      error instanceof Error ? error.message : String(error)
+    );
   } finally {
     await db.$disconnect();
   }
 }
 
-testDetection();
+void testDetection().catch((error: unknown) => {
+  console.error(
+    'Failed to run test detection:',
+    error instanceof Error ? error.message : String(error)
+  );
+  process.exit(1);
+});
