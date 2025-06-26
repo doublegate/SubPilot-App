@@ -4,7 +4,11 @@
 
 SubPilot is a modern subscription management platform built with the T3 Stack. It helps users monitor, manage, and cancel recurring subscriptions by automatically detecting them from bank transactions.
 
-**Current Status**: Phase 1 MVP Complete ✅ (95% Complete, Production Ready) - v0.1.9 Released with full feature set including email notifications, subscription management, advanced analytics, and comprehensive testing (99.5% coverage). All core MVP features delivered. Last updated: 2025-06-25 05:42 AM EDT.
+**Current Status**: Phase 1 MVP 95% Complete ✅ (Production Ready) - v0.1.9
+- All core features implemented and working
+- 99.5% test coverage (219/220 tests passing)
+- Zero ESLint/TypeScript errors
+- Live at: https://subpilot-test.vercel.app
 
 ## 🏗️ Architecture Overview
 
@@ -129,53 +133,26 @@ Key relationships:
 
 ## 🚀 Implementation Status
 
-### ✅ Completed (Phase 1, Week 1 & Week 2) - 2025-06-21
+### ✅ Completed Features (Phase 1 MVP - 95% Complete)
 
-**Week 1 Achievements**:
-- **Complete Authentication System**: Auth.js v5 with OAuth (Google, GitHub) and magic links
-- **Full API Implementation**: 6 tRPC routers with 35+ endpoints and security middleware
-- **UI Component Library**: 15+ shadcn/ui components integrated with custom theme
-- **Database Integration**: Neon PostgreSQL with Prisma ORM (schema migrated)
-- **CI/CD Pipeline**: GitHub Actions with Docker support (TypeScript errors fixed)
-- **Live Deployment**: Vercel production deployment with analytics
-- **Dashboard Implementation**: User profile, settings, and dashboard components
-- **Security Features**: Rate limiting, CSRF protection, Edge Runtime compatibility
+- **Authentication**: Auth.js v5 with OAuth (Google, GitHub) and magic links
+- **Bank Integration**: Plaid API with encrypted token storage and webhooks
+- **Subscription Detection**: 85%+ accuracy with pattern matching and confidence scoring
+- **Dashboard**: Real-time analytics with interactive visualizations
+- **Email Notifications**: 8 notification types with SendGrid integration
+- **Subscription Management**: Full CRUD operations with provider-specific workflows
+- **Theme System**: Light/Dark/Auto modes with persistent preferences
+- **UI Components**: 20+ components with shadcn/ui and custom implementations
+- **Testing**: 99.5% pass rate (219/220 tests) with comprehensive coverage
+- **CI/CD**: Fully automated pipeline with Docker support and release management
 
-**Week 2 Achievements** (v0.1.5):
-- **Plaid Integration**: Complete bank sync with sandbox accounts
-- **Mock Data System**: Comprehensive test data generation for development
-- **Transaction Management**: Import, sync, and display with filtering
-- **Subscription Detection**: Intelligent algorithm with 85%+ accuracy
-  - Pattern matching for recurring payments
-  - Amount tolerance handling (±5%)
-  - Confidence scoring system
-  - Support for various billing cycles
-- **Enhanced Dashboard**: Real data integration with loading states
-- **UI Improvements**: Fixed dropdown menus, added empty states, improved responsiveness
-- **Test Framework**: Restored to 83.2% pass rate (89/107 tests passing)
-- **Documentation**: All 40+ files updated and synchronized
+### 🎯 Remaining Tasks (5% for 100% MVP)
 
-**Week 2.5 Achievements** (v0.1.6):
-- **CSS Loading Fix**: Resolved PostCSS configuration issue with ES modules
-- **Test Framework**: Achieved 100% test pass rate (147/147 tests)
-- **Code Quality**: Fixed all 147 ESLint errors and Prettier formatting
-- **New Test Suites**: Added 40+ tests for untested components
-- **Docker Build**: Fixed security warnings and Prisma schema issues
-
-**Week 3 Progress** (v0.1.8):
-- **Theme System Implementation**: Complete Light/Dark/Auto theme switching with next-themes
-- **CI/CD Pipeline Restoration**: Fixed TypeScript compilation errors in scripts
-- **Test Configuration Fix**: Resolved Vitest path resolution by replacing tsconfig.json symlink
-- **Type Safety Improvements**: Enhanced test mock data patterns for better TypeScript inference
-- **Documentation Updates**: Comprehensive deferred implementation tracking
-
-### 🚧 Current Focus (Phase 1, Week 3 Starting Monday) - 2025-06-21
-
-- [ ] Email notification system implementation
-- [ ] Subscription management features (pause, cancel, modify)
-- [ ] Advanced analytics and spending insights
-- [ ] Performance optimization and caching
-- [ ] Additional test coverage for new features
+- [ ] Performance optimization and caching implementation
+- [ ] Accessibility audit and WCAG 2.1 compliance
+- [ ] Production OAuth credentials setup
+- [ ] User documentation and help guides
+- [ ] Final production deployment optimization
 
 ## 🎨 Design System
 
@@ -221,20 +198,12 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 - `docs/API_REFERENCE.md` - tRPC endpoint documentation
 - `ref_docs/subpilot_product_plan.md` - Product roadmap and phases
 
-## 🎯 Current Development Phase
+## 🎯 Development Phases
 
-**Phase 1: MVP Buildout** (Week 1 Complete ✅, Week 2 Starting)
-
-- ✅ User authentication system (Auth.js v5 with OAuth and magic links)
-- ✅ Complete API infrastructure (6 tRPC routers with 35+ endpoints)
-- ✅ Dashboard UI implementation (profile, settings, core components)
-- ✅ CI/CD pipeline with Docker support and automatic deployments
-- ✅ Live Vercel deployment with Neon PostgreSQL
-- 🚧 Bank account integration via Plaid (Week 2 focus)
-- 🚧 Transaction ingestion and parsing (Week 2 focus)
-- 🚧 Basic subscription detection algorithm (Week 2 focus)
-- 📋 Email notification system (Week 3-4)
-- 📋 Comprehensive test suite (Week 4)
+**Phase 1**: MVP (95% Complete) ✅
+**Phase 2**: Advanced Features (AI, Analytics) 📋
+**Phase 3**: Automation (Cancellation, AI Assistant) 📋
+**Phase 4**: Launch & Marketing 📋
 
 ## ⚠️ Important Notes
 
@@ -250,15 +219,13 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 
 6. **Edge Runtime Compatibility**: Middleware runs in Edge Runtime. Use `auth-edge.ts` for auth checks instead of importing the full auth config.
 
-## 🚦 Next Steps (Phase 1, Week 2)
+## 🚦 Next Steps
 
-1. **Create Plaid developer account** and configure sandbox environment
-2. **Implement bank connection flow** with Plaid Link integration
-3. **Build transaction import logic** with data parsing and storage
-4. **Create subscription detection algorithm** for recurring payment identification
-5. **Enhance dashboard** with real data from API endpoints
-6. **Write comprehensive test suites** for all implemented features
-7. **Performance optimization** and monitoring setup
+1. **Performance Optimization**: Implement caching strategies and optimize queries
+2. **Accessibility**: Complete WCAG 2.1 audit and fixes
+3. **Production Setup**: Configure OAuth credentials and email service
+4. **Documentation**: Create user guides and API documentation
+5. **Phase 2 Planning**: Begin AI and advanced analytics features
 
 ## 📞 External Services
 
@@ -291,7 +258,7 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 - **GitHub URL**: <https://github.com/doublegate/SubPilot-App>
 - **Visibility**: Public repository
 - **License**: MIT License
-- **Current Version**: 0.1.8
+- **Current Version**: 0.1.9
 
 ## 🛠️ Common Development Tasks
 
@@ -337,9 +304,7 @@ The project has a comprehensive GitHub Actions CI/CD pipeline configured in `.gi
 3. **Docker Configuration**: Uses Next.js standalone output mode for optimized container size
 4. **npm Version**: Package.json requires npm >=10.8.0 to match GitHub Actions environment
 5. **Health Check**: API health endpoint at `/api/health` for Docker container validation
-6. **TypeScript Fixes**: All compilation errors resolved (100+ errors fixed June 21, 2025)
-7. **Vercel Integration**: Connect to GitHub for automatic deployments on main branch
-8. **Deferred TODOs**: 40+ items documented in DEFERRED_IMPL.md for future implementation
+6. **Vercel Integration**: Connect to GitHub for automatic deployments on main branch
 
 ### Monitoring CI/CD
 
@@ -358,18 +323,16 @@ gh run watch <run-id>
 
 **Remember**: This is a T3 Stack project with full implementation completed for Week 1 of Phase 1. When in doubt, refer to the T3 Stack documentation and best practices. The project follows standard T3 conventions with some customizations for the subscription management domain.
 
-## 🎯 Current Session Context (2025-06-25 05:42 AM EDT)
+## 🎯 Key Features
 
-- **Phase 1 Progress**: 95% Complete (MVP Feature Complete - Production Ready)
-- **Velocity**: 238% of target (consistently exceeding expectations)
-- **Live Demo**: https://subpilot-test.vercel.app (full production functionality)
-- **Latest Release**: v0.1.9 with complete Phase 1 MVP feature set
-- **Documentation**: All 40+ files synchronized and current
-- **CI/CD**: Fully operational with automated testing and deployment
-- **Testing**: 219/220 tests passing (99.5% pass rate)
-- **Code Quality**: Zero ESLint errors, Prettier formatted, TypeScript fully compliant
-- **Key Features Complete**: Email notifications (8 types), subscription management, advanced analytics, production Plaid integration, theme system
-- **Production Ready**: Complete MVP with comprehensive testing, security, and performance optimization
+- **Smart Detection**: Automatically identifies subscriptions from bank transactions
+- **Bank Integration**: Secure connection via Plaid API
+- **Real-time Analytics**: Interactive dashboards and spending insights
+- **Email Notifications**: 8 types of alerts for subscription events
+- **Theme Support**: Light/Dark/Auto modes with system preference detection
+- **Mobile Responsive**: Full functionality on all device sizes
+- **Type Safety**: End-to-end TypeScript with tRPC
+- **Production Ready**: 99.5% test coverage, zero linting errors
 
 ## 🧪 Test Data Best Practices
 
@@ -425,6 +388,19 @@ This pattern eliminates the need for non-null assertions and improves test maint
 - Implement proper error boundaries for fault isolation
 - Cache data appropriately with invalidation strategies
 - Show meaningful empty states with actionable CTAs
+
+### Theme System Implementation
+- **next-themes Integration**: Seamless Light/Dark/Auto mode switching
+- **Theme Consistency**: Applied across all pages including Profile and Settings
+- **User Preference Persistence**: Theme choice saved in localStorage
+- **System Preference Detection**: Auto mode respects OS theme settings
+- **No Flash of Unstyled Content**: Proper theme initialization prevents FOUC
+
+### Analytics UI Enhancements
+- **Interactive Calendar**: Visual representation of upcoming subscription renewals
+- **Hover Tooltips**: Display subscription details on calendar date hover
+- **Responsive Design**: Calendar adapts to different screen sizes
+- **Overflow Handling**: Proper scrolling for calendars with many renewals
 
 ## 🧪 Test Framework Patterns
 
