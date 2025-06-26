@@ -5,6 +5,22 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed - (post-v0.1.9)
+
+- **Theme System Fixes** - Fixed dark/light theme issues on Profile and Settings pages
+  - Fixed text input fields not following theme on Profile page
+  - Fixed text input fields not following theme on Settings/Billing page
+  - Removed "Settings" from "Profile Settings" title (now just "Profile")
+  - All form inputs now properly respect dark/light theme settings
+
+- **Analytics Page UI** - Fixed calendar overflow issues
+  - Fixed upcoming renewals calendar where long subscription lists were overlapping date boxes
+  - Implemented hover tooltips to show full subscription lists when hovering over calendar dates
+  - Calendar now shows truncated lists with "..." indicator for dates with many subscriptions
+  - Improved calendar layout to prevent content overflow
+
 ## [0.1.9] - 2025-06-25
 
 ### 🎉 Phase 1 MVP Complete - Production Ready Release

@@ -408,7 +408,7 @@ export default function AnalyticsPage() {
                   <div className="mt-2 space-y-1">
                     {insight.subscriptions.map(sub => (
                       <div key={sub.id} className="text-sm">
-                        • {sub.name} - ${sub.amount}/mo
+                        • {sub.name} - ${sub.amount.toFixed(2)}/mo
                       </div>
                     ))}
                   </div>
@@ -417,8 +417,8 @@ export default function AnalyticsPage() {
                   <div className="mt-2 space-y-1">
                     {insight.subscriptions.map(sub => (
                       <div key={sub.id} className="text-sm">
-                        • {sub.name}: ${sub.oldAmount ?? 0} → $
-                        {sub.newAmount ?? 0}
+                        • {sub.name}: ${(sub.oldAmount ?? 0).toFixed(2)} → $
+                        {(sub.newAmount ?? 0).toFixed(2)}
                       </div>
                     ))}
                   </div>

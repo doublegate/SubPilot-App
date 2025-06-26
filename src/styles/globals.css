@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -72,6 +74,9 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  html {
+    font-size: 18px; /* Increased from default 16px */
   }
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,6 +49,9 @@ export function UpcomingRenewalsCalendar({
 }: UpcomingRenewalsCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const calendarRef = useRef<HTMLDivElement>(null);
 
   const formatCurrency = (amount: number, currency = 'USD') => {
     return new Intl.NumberFormat('en-US', {
@@ -98,7 +101,7 @@ export function UpcomingRenewalsCalendar({
     const isCurrentDay = isToday(date);
     const renewal = getRenewalForDate(date);
 
-    let classes = 'relative h-24 p-2 border rounded-lg transition-colors ';
+    let classes = 'relative h-24 p-2 border rounded-lg transition-colors overflow-hidden cursor-pointer ';
 
     if (!isCurrentMonth) {
       classes += 'text-muted-foreground bg-muted/30 ';
@@ -252,7 +255,7 @@ export function UpcomingRenewalsCalendar({
       {/* Calendar or List View */}
       {view === 'calendar' ? (
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="relative p-4" ref={calendarRef}>
             {/* Day headers */}
             <div className="mb-2 grid grid-cols-7 gap-2">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
@@ -266,42 +269,103 @@ export function UpcomingRenewalsCalendar({
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="relative grid grid-cols-7 gap-2 overflow-visible">
               {allDays.map((date, index) => {
                 const renewal = getRenewalForDate(date);
                 const isCurrentMonth = isSameMonth(date, currentDate);
 
                 return (
-                  <div key={index} className={getDayClasses(date)}>
+                  <div 
+                    key={index} 
+                    className={getDayClasses(date)}
+                    onMouseEnter={(e) => {
+                      if (renewal && isCurrentMonth) {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const calendarRect = calendarRef.current?.getBoundingClientRect();
+                        if (calendarRect) {
+                          setTooltipPosition({
+                            top: rect.top - calendarRect.top - 10,
+                            left: rect.left - calendarRect.left + rect.width / 2,
+                          });
+                          setHoveredDate(format(date, 'yyyy-MM-dd'));
+                        }
+                      }
+                    }}
+                    onMouseLeave={() => setHoveredDate(null)}
+                  >
                     <div className="text-sm font-medium">
                       {format(date, 'd')}
                     </div>
 
                     {renewal && isCurrentMonth && (
-                      <div className="mt-1 space-y-1">
-                        <div className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                          {formatCurrency(renewal.dailyTotal)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {renewal.subscriptions.length} renewal
-                          {renewal.subscriptions.length !== 1 ? 's' : ''}
-                        </div>
-                        {renewal.subscriptions.slice(0, 2).map(sub => (
-                          <div key={sub.id} className="truncate text-xs">
-                            {sub.name}
+                      <>
+                        <div className="mt-1 space-y-0.5">
+                          <div className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                            {formatCurrency(renewal.dailyTotal)}
                           </div>
-                        ))}
-                        {renewal.subscriptions.length > 2 && (
                           <div className="text-xs text-muted-foreground">
-                            +{renewal.subscriptions.length - 2} more
+                            {renewal.subscriptions.length} renewal
+                            {renewal.subscriptions.length !== 1 ? 's' : ''}
                           </div>
-                        )}
-                      </div>
+                          <div className="overflow-hidden">
+                            {renewal.subscriptions.slice(0, 1).map(sub => (
+                              <div key={sub.id} className="truncate text-xs">
+                                {sub.name}
+                              </div>
+                            ))}
+                            {renewal.subscriptions.length > 1 && (
+                              <div className="text-xs text-muted-foreground">
+                                +{renewal.subscriptions.length - 1} more
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Tooltip will be rendered at the end */}
+                      </>
                     )}
                   </div>
                 );
               })}
             </div>
+            
+            {/* Floating Tooltip */}
+            {hoveredDate && (() => {
+              const renewal = renewalMap.get(hoveredDate);
+              if (!renewal) return null;
+              
+              return (
+                <div 
+                  className="pointer-events-none absolute z-[100] w-64 rounded-lg border bg-popover p-3 shadow-lg"
+                  style={{
+                    top: `${tooltipPosition.top}px`,
+                    left: `${tooltipPosition.left}px`,
+                    transform: 'translate(-50%, -100%)',
+                  }}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between border-b pb-2">
+                      <span className="text-sm font-medium">
+                        {format(parseISO(hoveredDate), 'MMM d, yyyy')}
+                      </span>
+                      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                        {formatCurrency(renewal.dailyTotal)}
+                      </span>
+                    </div>
+                    <div className="max-h-64 space-y-1 overflow-y-auto">
+                      {renewal.subscriptions.map(sub => (
+                        <div key={sub.id} className="flex items-center justify-between py-1">
+                          <span className="text-sm">{sub.name}</span>
+                          <span className="text-sm font-medium">
+                            {formatCurrency(sub.amount, sub.currency)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       ) : (

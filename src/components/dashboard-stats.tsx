@@ -69,33 +69,33 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
       {statsCards.map((stat, index) => (
         <Card key={index}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-lg font-semibold text-foreground">
               {stat.title}
             </CardTitle>
             <div className={`rounded-lg p-2 ${stat.bgColor}`}>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <stat.icon className={`h-5 w-5 ${stat.color}`} />
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="text-center">
             <div className="text-2xl font-bold">{stat.value}</div>
             {stat.change !== undefined && (
-              <p className="mt-1 flex items-center text-xs text-muted-foreground">
+              <p className="mt-1 flex items-center justify-center text-sm text-muted-foreground">
                 {stat.change > 0 ? (
                   <>
                     <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
-                    <span className="text-green-600">+{stat.change}%</span>
+                    <span className="text-green-600">+{stat.change.toFixed(2)}%</span>
                   </>
                 ) : (
                   <>
                     <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
-                    <span className="text-red-600">{stat.change}%</span>
+                    <span className="text-red-600">{stat.change.toFixed(2)}%</span>
                   </>
                 )}
                 <span className="ml-1">from last month</span>
               </p>
             )}
             {stat.subtitle && (
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {stat.subtitle}
               </p>
             )}

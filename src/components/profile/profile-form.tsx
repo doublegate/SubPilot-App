@@ -57,7 +57,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </div>
         </div>
         <div className="flex-1">
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             Profile Picture
           </label>
           <button
@@ -73,7 +73,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       <div>
         <label
           htmlFor="name"
-          className="mb-1 block text-sm font-medium text-gray-700"
+          className="mb-1 block text-sm font-medium text-foreground"
         >
           Display Name
         </label>
@@ -82,7 +82,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
           type="text"
           value={formData.name}
           onChange={e => setFormData({ ...formData, name: e.target.value })}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
           disabled={isLoading}
         />
       </div>
@@ -90,7 +90,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
       <div>
         <label
           htmlFor="email"
-          className="mb-1 block text-sm font-medium text-gray-700"
+          className="mb-1 block text-sm font-medium text-foreground"
         >
           Email Address
         </label>
@@ -99,10 +99,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
           type="email"
           value={formData.email}
           onChange={e => setFormData({ ...formData, email: e.target.value })}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
           disabled={isLoading}
         />
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Changing your email will require re-verification
         </p>
       </div>
@@ -111,7 +111,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
+          className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground shadow-sm hover:bg-muted focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
           disabled={isLoading}
         >
           Cancel

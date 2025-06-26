@@ -1,5 +1,8 @@
 # Dashboard Fixes Summary
 
+**Last Updated**: 2025-06-26 12:24 AM EDT  
+**Version**: v0.1.9
+
 ## Issues Fixed
 
 ### 1. CSS Container Styling
@@ -58,6 +61,24 @@
 - Confidence scoring more lenient
 - Minimum transactions requirement still 2
 
+## Recent UI Fixes (2025-06-26)
+
+### Theme System Consistency
+- **Fixed**: Input fields on Profile page not following dark/light theme
+- **Fixed**: Input fields on Settings/Billing page not following theme
+- **Solution**: Added proper dark mode classes to all input components
+- **Result**: Complete theme consistency across all forms
+
+### Analytics Calendar Improvements
+- **Fixed**: Calendar date overflow with long subscription lists
+- **Added**: Hover tooltips showing full subscription details
+- **Solution**: Truncate display to 2 items with "..." indicator
+- **Result**: Clean calendar layout with full information on hover
+
+### UI Polish
+- **Fixed**: Removed redundant "Settings" from "Profile Settings" title
+- **Result**: Cleaner, more consistent page titles
+
 ## Next Steps
 
 1. Test with real Plaid data to ensure it works with actual transactions
@@ -65,3 +86,5 @@
 3. Add more sophisticated merchant categorization
 4. Implement subscription management features (pause, cancel)
 5. Add spending analytics and insights
+6. Consider adding theme transition animations
+7. Monitor user feedback on calendar tooltips

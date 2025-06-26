@@ -1,16 +1,10 @@
 import '@/styles/globals.css';
 import { Analytics } from '@vercel/analytics/next';
-import { Inter } from 'next/font/google';
 import { type Metadata } from 'next';
 import { Toaster } from 'sonner';
 
 import { TRPCReactProvider } from '@/trpc/react';
 import { ThemeProvider } from '@/components/theme-provider';
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-});
 
 export const metadata: Metadata = {
   title: {
@@ -28,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="font-sans">
         <ThemeProvider
           attribute="class"

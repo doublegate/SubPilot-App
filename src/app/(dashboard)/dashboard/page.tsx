@@ -496,10 +496,10 @@ export default function DashboardPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-lg border p-4">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/20">
+              <div className="flex flex-col items-center text-center">
+                <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/20 mb-3">
                   <svg
-                    className="h-4 w-4 text-blue-600"
+                    className="h-5 w-5 text-blue-600"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -513,13 +513,13 @@ export default function DashboardPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-lg font-semibold text-foreground">
                     Subscription vs Total
                   </p>
                   <p className="text-2xl font-bold">
                     {overview?.subscriptionPercentage ?? 0}%
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     of spending is subscriptions
                   </p>
                 </div>
@@ -528,10 +528,10 @@ export default function DashboardPage() {
 
             {overview?.categoryBreakdown?.slice(0, 2).map((category, index) => (
               <div key={category.category} className="rounded-lg border p-4">
-                <div className="flex items-center gap-2">
-                  <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/20">
+                <div className="flex flex-col items-center text-center">
+                  <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/20 mb-3">
                     <svg
-                      className="h-4 w-4 text-purple-600"
+                      className="h-5 w-5 text-purple-600"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -545,13 +545,12 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Top Category {index + 1}
+                    <p className="text-lg font-semibold text-foreground">
+                      Top Category<sup className="text-xs font-normal ml-1">{index + 1}</sup>
                     </p>
                     <p className="text-lg font-bold">{category.category}</p>
-                    <p className="text-xs text-muted-foreground">
-                      ${category.amount.toFixed(2)}/mo (
-                      {category.percentage.toFixed(1)}%)
+                    <p className="text-sm text-muted-foreground">
+                      ${category.amount.toFixed(2)}/mo ({category.percentage.toFixed(1)}%)
                     </p>
                   </div>
                 </div>

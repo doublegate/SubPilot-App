@@ -7,26 +7,26 @@ export default async function ProfilePage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Profile Settings</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold">Profile</h1>
+        <p className="mt-2 text-muted-foreground">
           Manage your account settings and preferences
         </p>
       </div>
 
       <div className="space-y-8">
         {/* Profile Information */}
-        <div className="rounded-lg bg-white p-6 shadow">
+        <div className="rounded-lg bg-card p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold">Profile Information</h2>
           <ProfileForm user={session!.user} />
         </div>
 
         {/* Connected Accounts */}
-        <div className="rounded-lg bg-white p-6 shadow">
+        <div className="rounded-lg bg-card p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold">Connected Accounts</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center space-x-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                   <svg className="h-6 w-6" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
@@ -48,7 +48,7 @@ export default async function ProfilePage() {
                 </div>
                 <div>
                   <p className="font-medium">Google</p>
-                  <p className="text-sm text-gray-500">Connected</p>
+                  <p className="text-sm text-muted-foreground">Connected</p>
                 </div>
               </div>
               <button
@@ -62,7 +62,7 @@ export default async function ProfilePage() {
         </div>
 
         {/* Notification Preferences */}
-        <div className="rounded-lg bg-white p-6 shadow">
+        <div className="rounded-lg bg-card p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold">
             Notification Preferences
           </h2>
@@ -70,7 +70,7 @@ export default async function ProfilePage() {
             <label className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Receive email updates about your subscriptions
                 </p>
               </div>
@@ -78,13 +78,13 @@ export default async function ProfilePage() {
                 type="checkbox"
                 defaultChecked
                 aria-label="Enable email notifications for subscription updates"
-                className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
+                className="h-4 w-4 rounded border-border text-cyan-600 focus:ring-cyan-500"
               />
             </label>
             <label className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Renewal Reminders</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Get notified before subscriptions renew
                 </p>
               </div>
@@ -92,13 +92,13 @@ export default async function ProfilePage() {
                 type="checkbox"
                 defaultChecked
                 aria-label="Enable renewal reminder notifications before subscriptions renew"
-                className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
+                className="h-4 w-4 rounded border-border text-cyan-600 focus:ring-cyan-500"
               />
             </label>
             <label className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Price Change Alerts</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Alert when subscription prices change
                 </p>
               </div>
@@ -106,14 +106,14 @@ export default async function ProfilePage() {
                 type="checkbox"
                 defaultChecked
                 aria-label="Enable alerts for subscription price changes"
-                className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
+                className="h-4 w-4 rounded border-border text-cyan-600 focus:ring-cyan-500"
               />
             </label>
           </div>
         </div>
 
         {/* Danger Zone */}
-        <div className="rounded-lg border border-red-200 bg-white p-6 shadow">
+        <div className="rounded-lg border border-red-200 bg-card p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold text-red-600">
             Danger Zone
           </h2>
@@ -121,7 +121,7 @@ export default async function ProfilePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Delete Account</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   Permanently delete your account and all data
                 </p>
               </div>

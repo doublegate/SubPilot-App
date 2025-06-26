@@ -7,7 +7,7 @@
   <p>A modern web platform for monitoring, managing, and canceling subscriptions</p>
   
   <p><strong>🎉 Phase 1 MVP: 95% Complete - Production Ready!</strong></p>
-  <p><strong>Current Version:</strong> v0.1.8 | <strong>Live Demo:</strong> <a href="https://subpilot-test.vercel.app">subpilot-test.vercel.app</a></p>
+  <p><strong>Current Version:</strong> v0.1.9 | <strong>Live Demo:</strong> <a href="https://subpilot-test.vercel.app">subpilot-test.vercel.app</a></p>
   <p><strong>Features:</strong> Bank Integration ✅ | Auto-Detection ✅ | Theme System ✅ | Email Notifications ✅</p>
 </div>
 
@@ -74,13 +74,13 @@ subpilot-app/
 
 ## 🎯 Development Phases
 
-### Phase 1: MVP (Current Focus)
+### Phase 1: MVP (95% Complete)
 
 - ✅ Project setup and branding
-- 🚧 User authentication
-- 🚧 Bank integration (Plaid)
-- 🚧 Subscription dashboard
-- 🚧 Basic notifications
+- ✅ User authentication (OAuth + Magic Links)
+- ✅ Bank integration (Plaid)
+- ✅ Subscription dashboard with analytics
+- ✅ Email notifications system
 
 ### Phase 2: Advanced Features
 
@@ -155,5 +155,15 @@ This project is licensed under the MIT License - see the [LICENSE](../LICENSE) f
 
 ---
 
+## Recent Updates (2025-06-26)
+
+- **Theme System Fixes**: Fixed text input fields not following dark/light theme on Profile and Settings pages
+- **UI Improvements**: Removed redundant "Settings" from Profile page title
+- **Analytics Calendar**: Fixed overflow issues and added hover tooltips for dates with many subscriptions
+
+---
+
 ## Made with ❤️ by the SubPilot Team
+
+*Last Updated: 2025-06-26 12:24 AM EDT*
 <!-- markdownlint-enable MD033 -->

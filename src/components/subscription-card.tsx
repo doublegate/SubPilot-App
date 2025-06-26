@@ -173,24 +173,22 @@ export function SubscriptionCard({
               <Calendar
                 className={`h-4 w-4 ${isUpcomingSoon ? 'text-yellow-600' : 'text-muted-foreground'}`}
               />
-              <span
+              <div
                 className={
                   isUpcomingSoon
                     ? 'font-medium text-yellow-600'
                     : 'text-muted-foreground'
                 }
               >
-                Next billing: {format(subscription.nextBilling, 'MMM d, yyyy')}
-                {isUpcomingSoon && (
-                  <span className="ml-1">
-                    (
-                    {formatDistanceToNow(subscription.nextBilling, {
-                      addSuffix: true,
-                    })}
-                    )
-                  </span>
-                )}
-              </span>
+                <div>Next billing: {format(subscription.nextBilling, 'MMM d, yyyy')}</div>
+                <div className="text-xs">
+                  (
+                  {formatDistanceToNow(subscription.nextBilling, {
+                    addSuffix: true,
+                  })}
+                  )
+                </div>
+              </div>
               {isUpcomingSoon && (
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
               )}

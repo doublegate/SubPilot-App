@@ -23,7 +23,7 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-2 text-muted-foreground">
           Manage your account settings and preferences
         </p>
       </div>
@@ -48,7 +48,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="renewal-reminders">Renewal Reminders</Label>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Get notified before subscriptions renew
                   </p>
                 </div>
@@ -58,7 +58,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="price-changes">Price Change Alerts</Label>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Alert when subscription prices change
                   </p>
                 </div>
@@ -70,7 +70,7 @@ export default function SettingsPage() {
                   <Label htmlFor="new-subscriptions">
                     New Subscription Detected
                   </Label>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Notify when new recurring payments are found
                   </p>
                 </div>
@@ -80,7 +80,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="weekly-summary">Weekly Summary</Label>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Receive a weekly overview of your subscriptions
                   </p>
                 </div>
@@ -114,7 +114,7 @@ export default function SettingsPage() {
 
               <div>
                 <Label htmlFor="quiet-hours">Quiet hours</Label>
-                <p className="mb-2 text-sm text-gray-500">
+                <p className="mb-2 text-sm text-muted-foreground">
                   Don&apos;t send notifications during these hours
                 </p>
                 <div className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <p className="font-medium">Status</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Two-factor authentication is currently disabled
                   </p>
                 </div>
@@ -181,10 +181,10 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div>
                   <p className="font-medium">Current Session</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Chrome on MacOS • Los Angeles, CA
                   </p>
-                  <p className="text-xs text-gray-400">Last active: Just now</p>
+                  <p className="text-xs text-muted-foreground/70">Last active: Just now</p>
                 </div>
                 <Badge variant="secondary">This device</Badge>
               </div>
@@ -205,12 +205,12 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="rounded-lg border bg-gradient-to-r from-cyan-50 to-purple-50 p-4">
+                <div className="rounded-lg border bg-gradient-to-r from-cyan-50/10 to-purple-50/10 dark:from-cyan-900/20 dark:to-purple-900/20 p-4">
                   <h3 className="font-medium">Free Plan</h3>
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Track up to 10 subscriptions
                   </p>
-                  <ul className="mt-2 space-y-1 text-sm text-gray-500">
+                  <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
                     <li>• Basic subscription tracking</li>
                     <li>• Email notifications</li>
                     <li>• 1 bank account connection</li>
@@ -249,7 +249,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Delete Account</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Permanently delete your account and all data
                   </p>
                 </div>

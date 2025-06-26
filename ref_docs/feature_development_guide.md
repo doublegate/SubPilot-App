@@ -1,5 +1,7 @@
 # SubPilot Feature Development Guide
 
+**Last Updated**: 2025-06-26 12:24 AM EDT
+
 ## Overview
 
 This guide provides detailed implementation strategies for building SubPilot's core features using the Next.js, tRPC, Prisma, and Radix UI stack. Each feature is broken down into implementation steps with code examples.
@@ -1009,5 +1011,92 @@ export class AnalyticsService {
   }
 }
 ```
+
+## 6. Analytics Dashboard UI Components
+
+### Upcoming Renewals Calendar
+
+The calendar component provides a visual representation of upcoming subscription renewals with proper overflow handling.
+
+```typescript
+// components/analytics/upcoming-renewals-calendar.tsx
+import { Calendar } from '@/components/ui/calendar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { formatCurrency } from '@/lib/utils';
+
+export function UpcomingRenewalsCalendar({ subscriptions }) {
+  const getSubscriptionsForDate = (date: Date) => {
+    return subscriptions.filter(sub => 
+      isSameDay(new Date(sub.nextPaymentDate), date)
+    );
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Upcoming Renewals</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Calendar
+          mode="single"
+          className="rounded-md border"
+          components={{
+            Day: ({ date, ...props }) => {
+              const daySubscriptions = getSubscriptionsForDate(date);
+              
+              return (
+                <div className="relative h-24 overflow-hidden p-1">
+                  <DayNumber>{date.getDate()}</DayNumber>
+                  
+                  {/* Show first 2 subscriptions */}
+                  {daySubscriptions.slice(0, 2).map((sub) => (
+                    <div
+                      key={sub.id}
+                      className="text-xs p-1 mb-1 bg-primary/10 rounded truncate"
+                      title={`${sub.name} - ${formatCurrency(sub.amount)}`}
+                    >
+                      {sub.name}
+                    </div>
+                  ))}
+                  
+                  {/* Overflow indicator with tooltip */}
+                  {daySubscriptions.length > 2 && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="text-xs text-muted-foreground hover:text-foreground cursor-help">
+                            +{daySubscriptions.length - 2} more
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-xs">
+                          <div className="space-y-1">
+                            {daySubscriptions.slice(2).map((sub) => (
+                              <div key={sub.id} className="text-sm">
+                                {sub.name} - {formatCurrency(sub.amount)}
+                              </div>
+                            ))}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+              );
+            },
+          }}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+### Key Analytics UI Features (Updated 2025-06-26)
+
+1. **Calendar Overflow Handling**: Fixed height cells with tooltip for overflow items
+2. **Theme Integration**: Full support for light/dark themes across all analytics components
+3. **Responsive Design**: Calendar adapts to different screen sizes
+4. **Interactive Tooltips**: Hover interactions for detailed information
+5. **Performance Optimization**: Efficient rendering of subscription data
 
 This comprehensive feature development guide provides the foundation for building SubPilot's core functionality with proper architecture, security, and scalability considerations.

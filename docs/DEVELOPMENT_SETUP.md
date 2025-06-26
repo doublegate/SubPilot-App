@@ -1,7 +1,7 @@
 # 🛠️ SubPilot Development Setup
 
-**Last Updated**: 2025-06-25 05:42 AM EDT  
-**Project Status**: Production Ready (v0.1.8)  
+**Last Updated**: 2025-06-26 12:24 AM EDT  
+**Project Status**: Production Ready (v0.1.9)  
 **Phase 1**: 95% Complete
 
 Complete guide for setting up your local development environment for SubPilot.
@@ -631,6 +631,21 @@ Once your development environment is set up:
 2. **[Bank Integration](./BANK_INTEGRATION.md)** - Set up Plaid
 3. **[Testing Guide](./TESTING_GUIDE.md)** - Write and run tests
 4. **[API Reference](./API_REFERENCE.md)** - Explore tRPC endpoints
+
+---
+
+## Recent Fixes (2025-06-26)
+
+### Theme System Improvements
+- Fixed text input fields not following dark/light theme on Profile page
+- Fixed text input fields not following dark/light theme on Settings/Billing page
+- All form inputs now properly respect theme settings across all pages
+
+### UI Enhancements
+- Removed redundant "Settings" from "Profile Settings" title (now just "Profile")
+- Fixed upcoming renewals calendar overflow issues in Analytics page
+- Implemented hover tooltips for calendar dates with many subscriptions
+- Calendar now shows truncated lists with "..." indicator
 
 ---
 

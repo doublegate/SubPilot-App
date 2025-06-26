@@ -1,5 +1,7 @@
 # Radix UI Component Library Guide for SubPilot
 
+**Last Updated**: 2025-06-26 12:24 AM EDT
+
 ## Overview
 
 This guide demonstrates how to effectively use Radix UI to build a consistent, accessible, and beautiful interface for SubPilot. It covers component patterns, theming strategies, accessibility best practices, and custom component development.
@@ -8,10 +10,11 @@ This guide demonstrates how to effectively use Radix UI to build a consistent, a
 
 ### Theme Configuration
 
+**Note**: SubPilot uses a custom theme system with next-themes for Light/Dark/Auto mode support. The theme provider is integrated at the root layout level.
+
 ```typescript
-// app/layout.tsx - Root theme setup
-import { Theme } from '@radix-ui/themes';
-import '@radix-ui/themes/styles.css';
+// app/layout.tsx - Root theme setup with next-themes
+import { ThemeProvider } from '@/components/theme/theme-provider';
 
 export default function RootLayout({
   children,
@@ -19,21 +22,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <Theme
-          accentColor="blue"      // Primary brand color
-          grayColor="slate"       // Neutral color palette
-          radius="medium"         // Border radius consistency
-          scaling="100%"          // Default scaling
-          panelBackground="solid" // Panel styling
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
         >
           {children}
-        </Theme>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+
+// Theme fixes implemented (2025-06-26):
+// - Fixed theme rendering on Profile and Settings pages
+// - Added suppressHydrationWarning to prevent FOUC
+// - Proper theme inheritance across all dashboard pages
 ```
 
 ### Custom Theme Tokens
@@ -1070,5 +1077,82 @@ export function SubscriptionTable({ subscriptions }) {
   );
 }
 ```
+
+## Analytics Components
+
+### Calendar Component with Overflow Handling
+
+The analytics calendar component displays upcoming subscription renewals with proper overflow handling for dates with many subscriptions.
+
+```typescript
+// components/analytics/upcoming-renewals-calendar.tsx
+// Key implementation details (2025-06-26):
+
+// Overflow handling with hover tooltips
+export function UpcomingRenewalsCalendar() {
+  return (
+    <div className="p-1">
+      {/* Show first 2 subscriptions */}
+      {subscriptions.slice(0, 2).map((sub) => (
+        <div
+          key={sub.id}
+          className="text-xs p-1 mb-1 bg-primary/10 rounded truncate"
+          title={`${sub.name} - ${formatCurrency(sub.amount)}`}
+        >
+          {sub.name}
+        </div>
+      ))}
+      
+      {/* Show overflow indicator with tooltip */}
+      {subscriptions.length > 2 && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="text-xs text-muted-foreground hover:text-foreground cursor-help">
+                +{subscriptions.length - 2} more
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <div className="space-y-1">
+                {subscriptions.slice(2).map((sub) => (
+                  <div key={sub.id} className="text-sm">
+                    {sub.name} - {formatCurrency(sub.amount)}
+                  </div>
+                ))}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  );
+}
+
+// Calendar cell height management
+<Calendar
+  mode="single"
+  selected={selectedDate}
+  onSelect={setSelectedDate}
+  className="rounded-md border"
+  components={{
+    Day: ({ date, ...props }) => {
+      const daySubscriptions = getSubscriptionsForDate(date);
+      return (
+        <div className="relative h-24 overflow-hidden">
+          {/* Calendar day content with fixed height */}
+        </div>
+      );
+    },
+  }}
+/>
+```
+
+### Key UI/UX Improvements
+
+1. **Fixed Calendar Cell Heights**: Each calendar cell has a fixed height of `h-24` to maintain consistent grid layout
+2. **Overflow Indicators**: Shows first 2 subscriptions, then "+X more" for additional items
+3. **Interactive Tooltips**: Hover over "+X more" to see all subscriptions for that date
+4. **Responsive Design**: Calendar adapts to different screen sizes while maintaining readability
+5. **Theme Compatibility**: Works seamlessly with light/dark theme switching
 
 This comprehensive UI guide provides the foundation for building a consistent, accessible, and beautiful interface for SubPilot using Radix UI components and patterns.

@@ -1,5 +1,9 @@
 # 📚 SubPilot Documentation Reference Index
 
+**Last Updated**: 2025-06-26 12:24 AM EDT  
+**Version**: v0.1.9  
+**Status**: Complete Reference Guide
+
 ## Quick Navigation by Context
 
 This index provides Context7-style documentation references organized by implementation context, feature area, and development needs.
@@ -184,6 +188,20 @@ This index provides Context7-style documentation references organized by impleme
 - **Frontend**: Architecture patterns and component guides
 - **Testing**: Unit, integration, and E2E strategies
 - **Deployment**: Development and production setup
+
+## Recent Documentation Additions (2025-06-26)
+
+### New Documentation
+- **[`UI_COMPONENTS.md`](./UI_COMPONENTS.md)** - Comprehensive UI component guide
+  - Theme system documentation
+  - Component usage examples
+  - Recent theme fixes documentation
+  - Calendar improvements guide
+
+### Updated References
+- **Theme System**: See [`UI_COMPONENTS.md#theme-system`](./UI_COMPONENTS.md#theme-system) for implementation
+- **Calendar Components**: See [`UI_COMPONENTS.md#analytics-components`](./UI_COMPONENTS.md#analytics-components) for tooltips
+- **Input Components**: See [`UI_COMPONENTS.md#recent-theme-fixes`](./UI_COMPONENTS.md#recent-theme-fixes) for dark mode support
 
 ---
 

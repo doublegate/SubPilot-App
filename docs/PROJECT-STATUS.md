@@ -1,6 +1,6 @@
 # SubPilot Project Status
 
-**Last Updated**: 2025-06-25 10:31 PM EDT  
+**Last Updated**: 2025-06-26 12:24 AM EDT  
 **Current Version**: 0.1.9 (MVP Complete)  
 **Current Phase**: Phase 1 - MVP COMPLETE (95% Production Ready)  
 **Test Coverage**: 99.5% test pass rate (219/220 tests passing)  
@@ -540,6 +540,22 @@ npm run test:e2e     # E2E tests
 
 ---
 
-*This document reflects the current state of the SubPilot project as of 2025-06-25 05:42 AM EDT.*
-*Phase 1 MVP is 95% complete with v0.1.8 released, featuring theme switching system and comprehensive functionality.*
+## Recent UI Fixes (2025-06-26)
+
+### Theme System Fixes
+- ✅ Fixed text input fields not following dark/light theme on Profile page
+- ✅ Fixed text input fields not following dark/light theme on Settings/Billing page
+- ✅ Removed redundant "Settings" from "Profile Settings" title (now just "Profile")
+- ✅ All form inputs now properly respect theme settings across all pages
+
+### Analytics Page Improvements
+- ✅ Fixed upcoming renewals calendar overflow issues
+- ✅ Implemented hover tooltips for calendar dates with many subscriptions
+- ✅ Calendar now shows truncated lists with "..." indicator
+- ✅ Improved calendar layout to prevent content overlap
+
+---
+
+*This document reflects the current state of the SubPilot project as of 2025-06-26 12:24 AM EDT.*
+*Phase 1 MVP is 95% complete with v0.1.9 released, featuring theme switching system and comprehensive functionality.*
 *Application is live at [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) with full subscription management capabilities.*
