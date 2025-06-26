@@ -1,6 +1,7 @@
 import { db } from '@/server/db';
 import { emailNotificationService } from './email.service';
 import { subDays, startOfMonth, endOfMonth, addDays } from 'date-fns';
+import { randomInt } from 'crypto';
 
 export class ScheduledNotificationService {
   /**
@@ -165,7 +166,7 @@ export class ScheduledNotificationService {
 
       // Calculate month-over-month change
       // For now, just use a placeholder - would need historical data
-      const monthlyChange = Math.random() * 20 - 10; // -10% to +10%
+      const monthlyChange = crypto.randomInt(-10, 11); // -10% to +10%
 
       // Calculate variance for better insights
       const variance = actualSpent - expectedSpent;
