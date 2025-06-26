@@ -11,7 +11,7 @@ export async function GET() {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       service: 'subpilot-app',
-      version: process.env.npm_package_version ?? '0.1.8',
+      version: process.env.npm_package_version ?? '0.1.9',
       environment: env.NODE_ENV,
       checks: {
         database: 'unknown',
