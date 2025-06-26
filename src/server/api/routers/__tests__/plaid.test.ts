@@ -1,4 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { plaidRouter } from '../plaid';
 import { createInnerTRPCContext } from '@/server/api/trpc';
@@ -57,21 +63,57 @@ vi.mock('@/server/plaid-client', () => ({
     code: 'TEST_ERROR',
     type: 'API_ERROR',
   }),
-  plaidWithRetry: vi.fn().mockImplementation(async operation => operation()),
+  plaidWithRetry: vi
+    .fn()
+    .mockImplementation(async (operation: () => Promise<unknown>) =>
+      operation()
+    ),
 }));
 
 // Mock database
-const mockDb: any = {
+interface MockDb {
+  plaidItem: {
+    create: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+    findFirst: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    updateMany: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
+  bankAccount: {
+    create: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    updateMany: ReturnType<typeof vi.fn>;
+  };
+  transaction: {
+    createMany: ReturnType<typeof vi.fn>;
+    deleteMany: ReturnType<typeof vi.fn>;
+    upsert: ReturnType<typeof vi.fn>;
+  };
+  notification: {
+    create: ReturnType<typeof vi.fn>;
+  };
+  user: {
+    findUnique: ReturnType<typeof vi.fn>;
+  };
+}
+
+const mockDb: MockDb = {
   plaidItem: {
     create: vi.fn(),
     findMany: vi.fn(),
     findFirst: vi.fn(),
+    findUnique: vi.fn(),
     update: vi.fn(),
     updateMany: vi.fn(),
+    delete: vi.fn(),
   },
   bankAccount: {
     create: vi.fn(),
     findMany: vi.fn(),
+    update: vi.fn(),
     updateMany: vi.fn(),
   },
   transaction: {
@@ -81,6 +123,9 @@ const mockDb: any = {
   },
   notification: {
     create: vi.fn(),
+  },
+  user: {
+    findUnique: vi.fn(),
   },
 };
 
@@ -112,7 +157,7 @@ describe('Plaid Router', () => {
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.createLinkToken();
 
@@ -138,7 +183,7 @@ describe('Plaid Router', () => {
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
 
       await expect(caller.createLinkToken()).rejects.toThrow(TRPCError);
@@ -234,7 +279,7 @@ describe('Plaid Router', () => {
     it('should exchange public token and set up bank connection', async () => {
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.exchangePublicToken(mockInput);
 
@@ -270,7 +315,7 @@ describe('Plaid Router', () => {
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.exchangePublicToken(mockInput);
 
@@ -338,7 +383,7 @@ describe('Plaid Router', () => {
     it('should sync transactions using sync endpoint', async () => {
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.syncTransactions({});
 
@@ -374,7 +419,7 @@ describe('Plaid Router', () => {
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       await caller.syncTransactions({});
 
@@ -409,7 +454,7 @@ describe('Plaid Router', () => {
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       await caller.syncTransactions({});
 
@@ -454,7 +499,7 @@ describe('Plaid Router', () => {
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.getAccounts();
 
@@ -489,7 +534,7 @@ describe('Plaid Router', () => {
     it('should disconnect account and remove from Plaid', async () => {
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.disconnectAccount({
         plaidItemId: 'plaid-item-1',
@@ -521,7 +566,7 @@ describe('Plaid Router', () => {
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.disconnectAccount({
         plaidItemId: 'plaid-item-1',
@@ -537,7 +582,7 @@ describe('Plaid Router', () => {
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
 
       await expect(
@@ -565,7 +610,7 @@ describe('Plaid Router', () => {
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
-      ctx.db = mockDb as any;
+      ctx.db = mockDb as unknown as typeof ctx.db;
       const caller = plaidRouter.createCaller(ctx);
       const result = await caller.getSyncStatus();
 

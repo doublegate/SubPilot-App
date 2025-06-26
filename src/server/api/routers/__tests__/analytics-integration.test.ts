@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import {
@@ -13,10 +14,16 @@ import { db } from '@/server/db';
 // Mock Plaid client
 vi.mock('@/server/plaid-client', () => ({
   plaid: vi.fn(() => null),
-  plaidWithRetry: vi.fn().mockImplementation(async operation => operation()),
+  plaidWithRetry: vi
+    .fn()
+    .mockImplementation(async (operation: () => Promise<unknown>) =>
+      operation()
+    ),
   isPlaidConfigured: vi.fn(() => false),
   verifyPlaidWebhook: vi.fn().mockResolvedValue(true),
-  handlePlaidError: vi.fn(error => console.error('Plaid error:', error)),
+  handlePlaidError: vi.fn((error: unknown) =>
+    console.error('Plaid error:', error)
+  ),
 }));
 
 describe('Analytics Router Integration Tests', () => {

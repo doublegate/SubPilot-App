@@ -282,15 +282,19 @@ async function debugDashboard() {
 
     const stats = rawStats[0];
     console.log('\nRaw SQL Results:');
-    console.log(
-      `  - Total Active Subscriptions: ${stats.total_active.toString()}`
-    );
-    console.log(
-      `  - Monthly Spend: $${parseFloat(stats.monthly_spend.toString()).toFixed(2)}`
-    );
-    console.log(
-      `  - Yearly Projection: $${(parseFloat(stats.monthly_spend.toString()) * 12).toFixed(2)}`
-    );
+    if (stats) {
+      console.log(
+        `  - Total Active Subscriptions: ${stats.total_active.toString()}`
+      );
+      console.log(
+        `  - Monthly Spend: $${parseFloat(stats.monthly_spend.toString()).toFixed(2)}`
+      );
+      console.log(
+        `  - Yearly Projection: $${(parseFloat(stats.monthly_spend.toString()) * 12).toFixed(2)}`
+      );
+    } else {
+      console.log('  - No stats available from database');
+    }
 
     // Step 7: Recommendations
     log.subheader('7. Analysis Results & Recommendations');
@@ -317,7 +321,7 @@ async function debugDashboard() {
       console.log('  1. Check why subscriptions are being created as inactive');
       console.log('  2. Update existing subscriptions to active status');
       console.log('  3. Fix the subscription creation logic');
-    } else if (stats.total_active > 0) {
+    } else if (stats && stats.total_active > 0) {
       log.success('Active subscriptions exist in the database!');
       log.warning('Dashboard may have a different issue:');
       console.log('  1. User session context might be wrong');

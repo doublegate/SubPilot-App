@@ -133,7 +133,30 @@ export const authConfig: NextAuthConfig = {
             : undefined,
       },
       from: env.FROM_EMAIL ?? 'noreply@subpilot.com',
-      sendVerificationRequest,
+      sendVerificationRequest: async params => {
+        await sendVerificationRequest({
+          identifier: params.identifier,
+          url: params.url,
+          expires: params.expires,
+          provider: {
+            server: {
+              host: env.SMTP_HOST ?? 'smtp.sendgrid.net',
+              port: parseInt(env.SMTP_PORT ?? '587'),
+              auth:
+                env.SMTP_USER && env.SMTP_PASS
+                  ? {
+                      user: env.SMTP_USER,
+                      pass: env.SMTP_PASS,
+                    }
+                  : undefined,
+            },
+            from: env.FROM_EMAIL ?? 'noreply@subpilot.com',
+          },
+          token: params.token,
+          theme: params.theme,
+          request: params.request,
+        });
+      },
       maxAge: 24 * 60 * 60, // 24 hours
     }),
   ],

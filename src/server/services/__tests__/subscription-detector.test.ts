@@ -1,4 +1,10 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SubscriptionDetector } from '@/server/services/subscription-detector';
 import { db } from '@/server/db';
 import type { Transaction } from '@prisma/client';
@@ -131,13 +137,13 @@ describe('SubscriptionDetector', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Set up default mocks
-    (db.transaction.updateMany as Mock).mockResolvedValue({ count: 0 });
+    vi.mocked(db.transaction.updateMany).mockResolvedValue({ count: 0 });
     detector = new TestableSubscriptionDetector(db);
   });
 
   describe('detectSingleTransaction', () => {
     it('returns null for non-existent transaction', async () => {
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(null);
+      vi.mocked(db.transaction.findUnique).mockResolvedValueOnce(null);
 
       const result = await detector.detectSingleTransaction('invalid-id');
 
@@ -145,7 +151,7 @@ describe('SubscriptionDetector', () => {
     });
 
     it('returns null for transaction without merchant name', async () => {
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce({
+      vi.mocked(db.transaction.findUnique).mockResolvedValueOnce({
         ...mockTransaction,
         merchantName: null,
       });
@@ -177,10 +183,10 @@ describe('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findUnique).mockResolvedValueOnce(
         mockTransaction
       );
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findMany).mockResolvedValueOnce(
         similarTransactions
       );
 
@@ -215,10 +221,10 @@ describe('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findUnique).mockResolvedValueOnce(
         mockTransaction
       );
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findMany).mockResolvedValueOnce(
         weeklyTransactions
       );
 
@@ -243,11 +249,11 @@ describe('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce({
+      vi.mocked(db.transaction.findUnique).mockResolvedValueOnce({
         ...mockTransaction,
         amount: new Decimal(-99.99),
       });
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findMany).mockResolvedValueOnce(
         yearlyTransactions
       );
 
@@ -272,10 +278,10 @@ describe('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findUnique).mockResolvedValueOnce(
         mockTransaction
       );
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findMany).mockResolvedValueOnce(
         irregularTransactions
       );
 
@@ -304,10 +310,10 @@ describe('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findUnique).mockResolvedValueOnce(
         mockTransaction
       );
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findMany).mockResolvedValueOnce(
         varyingTransactions
       );
 
@@ -323,20 +329,20 @@ describe('SubscriptionDetector', () => {
           ...mockTransaction,
           id: 'txn-2',
           date: new Date('2024-06-15'),
-          amount: -25.99, // Over 50% difference
+          amount: new Decimal(-25.99), // Over 50% difference
         },
         {
           ...mockTransaction,
           id: 'txn-3',
           date: new Date('2024-05-15'),
-          amount: -5.99, // Over 50% difference
+          amount: new Decimal(-5.99), // Over 50% difference
         },
       ];
 
-      (db.transaction.findUnique as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findUnique).mockResolvedValueOnce(
         mockTransaction
       );
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.transaction.findMany).mockResolvedValueOnce(
         highVarianceTransactions
       );
 
@@ -383,7 +389,7 @@ describe('SubscriptionDetector', () => {
         },
       ];
 
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(allTransactions);
+      vi.mocked(db.transaction.findMany).mockResolvedValueOnce(allTransactions);
 
       const results = await detector.detectUserSubscriptions('user-1');
 
@@ -407,7 +413,7 @@ describe('SubscriptionDetector', () => {
     it('filters out low confidence detections', async () => {
       const allTransactions = [mockTransaction];
 
-      (db.transaction.findMany as Mock).mockResolvedValueOnce(allTransactions);
+      vi.mocked(db.transaction.findMany).mockResolvedValueOnce(allTransactions);
 
       vi.spyOn(detector, 'testGroupByMerchant').mockReturnValue([
         { merchantName: 'Netflix', transactions: allTransactions },
@@ -439,24 +445,34 @@ describe('SubscriptionDetector', () => {
     };
 
     it('creates new subscription from detection', async () => {
-      (db.subscription.findFirst as Mock).mockResolvedValueOnce(null);
-      (db.subscription.create as Mock).mockResolvedValueOnce({
+      vi.mocked(db.subscription.findFirst).mockResolvedValueOnce(null);
+      vi.mocked(db.subscription.create).mockResolvedValueOnce({
         id: 'sub-1',
         userId: 'user-1',
         name: 'Netflix',
+        description: 'Netflix Monthly Subscription',
         amount: new Decimal(15.99),
+        currency: 'USD',
         frequency: 'monthly',
         category: 'Entertainment',
         nextBilling: new Date('2024-08-15'),
+        lastBilling: null,
+        status: 'active',
         isActive: true,
+        provider: {},
+        cancellationInfo: {},
+        detectionConfidence: new Decimal(0.9),
+        detectedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        notes: null,
       });
 
       await detector.createSubscriptionsFromDetection('user-1', [
         mockDetection,
       ]);
 
-      const createMock = db.subscription.create as Mock;
-      expect(createMock).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.create)).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId: 'user-1',
           name: 'Netflix',
@@ -478,17 +494,33 @@ describe('SubscriptionDetector', () => {
     });
 
     it('skips creation if subscription already exists', async () => {
-      (db.subscription.findFirst as Mock).mockResolvedValueOnce({
+      vi.mocked(db.subscription.findFirst).mockResolvedValueOnce({
         id: 'existing-sub',
+        userId: 'user-1',
         name: 'Netflix',
+        description: 'Existing Netflix Subscription',
+        amount: new Decimal(15.99),
+        currency: 'USD',
+        frequency: 'monthly',
+        category: 'Entertainment',
+        nextBilling: new Date('2024-08-15'),
+        lastBilling: null,
+        status: 'active',
+        isActive: true,
+        provider: {},
+        cancellationInfo: {},
+        detectionConfidence: new Decimal(0.9),
+        detectedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        notes: null,
       });
 
       await detector.createSubscriptionsFromDetection('user-1', [
         mockDetection,
       ]);
 
-      const createMock = db.subscription.create as Mock;
-      expect(createMock).not.toHaveBeenCalled();
+      expect(vi.mocked(db.subscription.create)).not.toHaveBeenCalled();
     });
   });
 

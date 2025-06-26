@@ -1,16 +1,31 @@
 import * as nodemailer from 'nodemailer';
 import { env } from '@/env.js';
 
+// Custom type for verification request parameters
+interface EmailProvider {
+  server?: {
+    host?: string;
+    port?: number;
+    auth?: {
+      user: string;
+      pass: string;
+    };
+  };
+  from?: string;
+}
+
+interface EmailTheme {
+  brandColor?: string;
+  colorScheme?: 'auto' | 'dark' | 'light';
+}
+
 type SendVerificationRequestParams = {
   identifier: string;
   url: string;
   expires: Date;
-  provider: {
-    server?: nodemailer.TransportOptions | string;
-    from?: string;
-  };
+  provider: EmailProvider;
   token: string;
-  theme: unknown;
+  theme: EmailTheme;
   request: Request;
 };
 

@@ -110,7 +110,9 @@ export function CategoryBreakdownChart({
   }) => {
     if (!active || !payload?.length) return null;
 
-    const data = payload[0].payload;
+    const data = payload[0]?.payload;
+    if (!data) return null;
+
     return (
       <div className="rounded-lg border bg-background p-3 shadow-md">
         <p className="font-medium">{data.category}</p>
@@ -123,17 +125,23 @@ export function CategoryBreakdownChart({
   };
 
   // Custom legend
-  const renderLegend = (props: {
-    payload?: Array<{ value: string; color: string }>;
-  }) => {
+  interface LegendEntry {
+    color: string;
+    value: string;
+  }
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-disable @typescript-eslint/no-unsafe-call */
+  const renderLegend = (props: any) => {
     if (!props.payload) return null;
     return (
       <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {props.payload.map((entry, index: number) => (
+        {props.payload.map((entry: LegendEntry, index: number) => (
           <div key={index} className="flex items-center gap-2">
             <div
               className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
+              style={{ backgroundColor: entry.color || '#000' }}
             />
             <span className="text-sm">{entry.value}</span>
           </div>

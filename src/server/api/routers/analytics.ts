@@ -481,7 +481,12 @@ export const analyticsRouter = createTRPCRouter({
             name: s.name,
             amount: s.amount.toNumber(),
             currency: s.currency,
-            provider: s.provider,
+            provider:
+              s.provider &&
+              typeof s.provider === 'object' &&
+              'name' in s.provider
+                ? { name: s.provider.name as string | undefined }
+                : null,
           })),
           dailyTotal: subs.reduce((sum, s) => sum + s.amount.toNumber(), 0),
         })),
@@ -564,7 +569,9 @@ export const analyticsRouter = createTRPCRouter({
           s.category ?? '',
           s.nextBilling?.toISOString() ?? '',
           s.provider && typeof s.provider === 'object' && 'name' in s.provider
-            ? String((s.provider as Record<string, unknown>).name || '')
+            ? typeof (s.provider as Record<string, unknown>).name === 'string'
+              ? ((s.provider as Record<string, unknown>).name as string)
+              : ''
             : '',
         ]),
       ];
@@ -586,7 +593,9 @@ export const analyticsRouter = createTRPCRouter({
               t.amount.toString(),
               t.bankAccount.isoCurrencyCode ?? 'USD',
               Array.isArray(t.category) && t.category.length > 0
-                ? String(t.category[0] || '')
+                ? typeof t.category[0] === 'string'
+                  ? t.category[0]
+                  : ''
                 : '',
               t.bankAccount.name,
               t.bankAccount.plaidItem.institutionName,

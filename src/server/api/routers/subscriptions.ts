@@ -42,12 +42,12 @@ export const subscriptionsRouter = createTRPCRouter({
           amount: new Prisma.Decimal(input.amount),
           currency: input.currency,
           frequency: input.frequency,
-          category: input.category ?? null,
+          ...(input.category && { category: input.category }),
           notes: input.notes ?? null,
           nextBilling: input.nextBilling ?? null,
           status: 'active',
           isActive: true,
-          confidence: 1.0, // Manual subscriptions have 100% confidence
+          detectionConfidence: 1.0, // Manual subscriptions have 100% confidence
           provider: input.provider
             ? {
                 name: input.provider.name,

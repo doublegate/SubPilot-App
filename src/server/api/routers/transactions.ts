@@ -3,13 +3,13 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { type Prisma } from '@prisma/client';
 
-// Types for transaction processing
-interface _TransactionWithDetails {
-  id: string;
-  merchantName: string | null;
-  amount: number;
-  date: Date;
-}
+// Types for transaction processing (unused but kept for future reference)
+// interface _TransactionWithDetails {
+//   id: string;
+//   merchantName: string | null;
+//   amount: number;
+//   date: Date;
+// }
 
 export const transactionsRouter = createTRPCRouter({
   /**

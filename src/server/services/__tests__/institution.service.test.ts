@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { InstitutionService } from '../institution.service';
-import type { PlaidApi } from 'plaid';
+// import type { PlaidApi } from 'plaid';
 
 // Create mock plaid client instance
 const mockPlaidInstance = {
@@ -11,7 +12,11 @@ const mockPlaidInstance = {
 // Mock the plaid client
 vi.mock('@/server/plaid-client', () => ({
   plaid: vi.fn(() => mockPlaidInstance),
-  plaidWithRetry: vi.fn().mockImplementation(async operation => operation()),
+  plaidWithRetry: vi
+    .fn()
+    .mockImplementation(async (operation: () => Promise<unknown>) =>
+      operation()
+    ),
 }));
 
 describe('InstitutionService', () => {
@@ -73,8 +78,8 @@ describe('InstitutionService', () => {
         url: 'https://testbank.com',
         colors: {
           primary: '#1E88E5',
-          darker: expect.stringMatching(/^#[0-9A-F]{6}$/i),
-          lighter: expect.stringMatching(/^#[0-9A-F]{6}$/i),
+          darker: expect.stringMatching(/^#[0-9A-F]{6}$/i) as string,
+          lighter: expect.stringMatching(/^#[0-9A-F]{6}$/i) as string,
         },
         oauth: false,
         mfa: ['sms', 'email'],
@@ -341,8 +346,8 @@ describe('InstitutionService', () => {
         url: undefined,
         colors: {
           primary: '#FF5722',
-          darker: expect.stringMatching(/^#[0-9A-F]{6}$/i),
-          lighter: expect.stringMatching(/^#[0-9A-F]{6}$/i),
+          darker: expect.stringMatching(/^#[0-9A-F]{6}$/i) as string,
+          lighter: expect.stringMatching(/^#[0-9A-F]{6}$/i) as string,
         },
         oauth: true,
         mfa: ['sms'],

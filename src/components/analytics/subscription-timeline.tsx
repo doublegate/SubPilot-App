@@ -62,12 +62,11 @@ export function SubscriptionTimeline({ filters }: SubscriptionTimelineProps) {
     status:
       filters.status === 'all'
         ? undefined
-        : (filters.status as
-            | 'active'
-            | 'paused'
-            | 'cancelled'
-            | 'trial'
-            | 'expiring_soon'),
+        : (['paused', 'trial', 'expiring_soon'] as string[]).includes(
+              filters.status
+            )
+          ? 'active' // Map unsupported statuses to active
+          : (filters.status as 'pending' | 'active' | 'cancelled'),
     limit: 100,
   });
 

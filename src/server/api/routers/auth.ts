@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-// Types for session detection
-interface _SessionWithCurrent {
-  id: string;
-  sessionToken: string;
-  expires: Date;
-  createdAt: Date;
-  isCurrent: boolean;
-}
+// Types for session detection (unused but kept for future reference)
+// interface _SessionWithCurrent {
+//   id: string;
+//   sessionToken: string;
+//   expires: Date;
+//   createdAt: Date;
+//   isCurrent: boolean;
+// }
 
 export const authRouter = createTRPCRouter({
   /**

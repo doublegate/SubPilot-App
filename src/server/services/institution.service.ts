@@ -1,5 +1,9 @@
 import { plaid, plaidWithRetry } from '@/server/plaid-client';
-import type { InstitutionsGetByIdRequest } from 'plaid';
+import type {
+  InstitutionsGetByIdRequest,
+  CountryCode,
+  InstitutionStatus,
+} from 'plaid';
 
 export interface InstitutionData {
   id: string;
@@ -13,24 +17,26 @@ export interface InstitutionData {
   };
   oauth: boolean;
   mfa: string[];
-  status: {
-    item_logins: {
-      status: string;
-      last_status_change: string;
-    };
-    transactions_updates: {
-      status: string;
-      last_status_change: string;
-    };
-    auth: {
-      status: string;
-      last_status_change: string;
-    };
-    identity: {
-      status: string;
-      last_status_change: string;
-    };
-  };
+  status:
+    | InstitutionStatus
+    | {
+        item_logins: {
+          status: string;
+          last_status_change: string;
+        };
+        transactions_updates: {
+          status: string;
+          last_status_change: string;
+        };
+        auth: {
+          status: string;
+          last_status_change: string;
+        };
+        identity: {
+          status: string;
+          last_status_change: string;
+        };
+      };
 }
 
 /**
@@ -92,7 +98,12 @@ export class InstitutionService {
           : undefined,
         oauth: institution.oauth,
         mfa: (institution as { mfa?: string[] }).mfa ?? [],
-        status: institution.status ?? undefined,
+        status: institution.status ?? {
+          item_logins: { status: 'unknown', last_status_change: '' },
+          transactions_updates: { status: 'unknown', last_status_change: '' },
+          auth: { status: 'unknown', last_status_change: '' },
+          identity: { status: 'unknown', last_status_change: '' },
+        },
       };
 
       // Cache the result
@@ -180,7 +191,12 @@ export class InstitutionService {
           : undefined,
         oauth: institution.oauth,
         mfa: (institution as { mfa?: string[] }).mfa ?? [],
-        status: institution.status,
+        status: institution.status ?? {
+          item_logins: { status: 'unknown', last_status_change: '' },
+          transactions_updates: { status: 'unknown', last_status_change: '' },
+          auth: { status: 'unknown', last_status_change: '' },
+          identity: { status: 'unknown', last_status_change: '' },
+        },
       }));
     } catch (error) {
       console.error(

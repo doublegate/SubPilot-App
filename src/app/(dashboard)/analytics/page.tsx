@@ -110,33 +110,33 @@ export default function AnalyticsPage() {
         URL.revokeObjectURL(url);
 
         toast.success('Data exported successfully');
-      } else if (
-        'format' in exportData &&
-        exportData.format === 'json' &&
-        'data' in exportData &&
-        exportData.data
-      ) {
-        // JSON export
-        interface JsonExportData {
+      } else if (exportData && 'format' in exportData && 'data' in exportData) {
+        // Type guard for JSON export data
+        interface JsonExportResponse {
+          format: string;
           data: unknown;
         }
-        const dataObj = exportData as JsonExportData;
-        const jsonContent = JSON.stringify(dataObj.data, null, 2);
-        const blob = new Blob([jsonContent], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        interface ExportDataWithFilename {
-          filename?: string;
-        }
-        const filenameObj = exportData as ExportDataWithFilename;
-        a.download =
-          filenameObj.filename ??
-          `subpilot-export-${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        const jsonExportData = exportData as unknown as JsonExportResponse;
+        if (jsonExportData.format === 'json' && jsonExportData.data) {
+          // JSON export
+          const dataObj = jsonExportData;
+          const jsonContent = JSON.stringify(dataObj.data, null, 2);
+          const blob = new Blob([jsonContent], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          interface ExportDataWithFilename {
+            filename?: string;
+          }
+          const filenameObj = exportData as ExportDataWithFilename;
+          a.download =
+            filenameObj.filename ??
+            `subpilot-export-${new Date().toISOString().split('T')[0]}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
 
-        toast.success('Data exported successfully');
+          toast.success('Data exported successfully');
+        }
       }
       setExportFormat(null); // Reset export state
     }

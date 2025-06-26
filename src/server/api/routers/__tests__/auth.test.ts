@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+/* eslint-disable @typescript-eslint/unbound-method */
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { authRouter } from '../auth';
 import { db } from '@/server/db';
 import type { Session } from 'next-auth';
-import { TRPCError } from '@trpc/server';
+// import { TRPCError } from '@trpc/server';
 
 // Mock Prisma client
 vi.mock('@/server/db', () => ({
@@ -42,6 +43,7 @@ describe('Auth Router', () => {
     name: 'Test User',
     emailVerified: new Date(),
     image: null,
+    password: null, // Required by Prisma schema
     createdAt: new Date(),
     updatedAt: new Date(),
     notificationPreferences: {
@@ -57,8 +59,8 @@ describe('Auth Router', () => {
     },
   };
 
-  let ctx: any;
-  let caller: any;
+  let ctx: ReturnType<typeof createInnerTRPCContext>;
+  let caller: ReturnType<typeof authRouter.createCaller>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -68,12 +70,12 @@ describe('Auth Router', () => {
 
   describe('getUser', () => {
     it('should return current authenticated user', async () => {
-      (db.user.findUnique as Mock).mockResolvedValueOnce(mockUser);
+      vi.mocked(db.user.findUnique).mockResolvedValueOnce(mockUser);
 
       const result = await caller.getUser();
 
       expect(result).toEqual(mockUser);
-      expect(db.user.findUnique).toHaveBeenCalledWith({
+      expect(vi.mocked(db.user.findUnique)).toHaveBeenCalledWith({
         where: { id: 'user-1' },
         select: {
           id: true,
@@ -89,7 +91,7 @@ describe('Auth Router', () => {
     });
 
     it('should throw error when user not found', async () => {
-      (db.user.findUnique as Mock).mockResolvedValueOnce(null);
+      vi.mocked(db.user.findUnique).mockResolvedValueOnce(null);
 
       await expect(caller.getUser()).rejects.toThrow('User not found');
     });
@@ -105,18 +107,18 @@ describe('Auth Router', () => {
   describe('updateProfile', () => {
     it('should update user profile', async () => {
       const updatedUser = { ...mockUser, name: 'Updated Name' };
-      (db.user.update as Mock).mockResolvedValueOnce(updatedUser);
+      vi.mocked(db.user.update).mockResolvedValueOnce(updatedUser);
 
       const result = await caller.updateProfile({
         name: 'Updated Name',
       });
 
       expect(result).toEqual(updatedUser);
-      expect(db.user.update).toHaveBeenCalledWith({
+      expect(vi.mocked(db.user.update)).toHaveBeenCalledWith({
         where: { id: 'user-1' },
         data: {
           name: 'Updated Name',
-          updatedAt: expect.any(Date),
+          updatedAt: expect.any(Date) as Date,
         },
       });
     });
@@ -134,13 +136,13 @@ describe('Auth Router', () => {
         quietHoursEnd: '08:00',
       };
 
-      (db.user.update as Mock).mockResolvedValueOnce(mockUser);
+      vi.mocked(db.user.update).mockResolvedValueOnce(mockUser);
 
       await caller.updateProfile({
         notificationPreferences,
       });
 
-      expect(db.user.update).toHaveBeenNthCalledWith(2, {
+      expect(vi.mocked(db.user.update)).toHaveBeenNthCalledWith(2, {
         where: { id: 'user-1' },
         data: {
           notificationPreferences,
@@ -151,7 +153,8 @@ describe('Auth Router', () => {
 
   describe('getNotificationPreferences', () => {
     it('should return user notification preferences', async () => {
-      (db.user.findUnique as Mock).mockResolvedValueOnce({
+      vi.mocked(db.user.findUnique).mockResolvedValueOnce({
+        ...mockUser,
         notificationPreferences: mockUser.notificationPreferences,
       });
 
@@ -161,7 +164,8 @@ describe('Auth Router', () => {
     });
 
     it('should return default preferences if not set', async () => {
-      (db.user.findUnique as Mock).mockResolvedValueOnce({
+      vi.mocked(db.user.findUnique).mockResolvedValueOnce({
+        ...mockUser,
         notificationPreferences: null,
       });
 
@@ -186,13 +190,15 @@ describe('Auth Router', () => {
       const mockSessions = [
         {
           id: 'session-1',
+          userId: 'user-1',
           sessionToken: 'token-1',
           expires: new Date(),
           createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ];
 
-      (db.session.findMany as Mock).mockResolvedValueOnce(mockSessions);
+      vi.mocked(db.session.findMany).mockResolvedValueOnce(mockSessions);
 
       const result = await caller.getSessions();
 
@@ -210,17 +216,21 @@ describe('Auth Router', () => {
       const mockSession = {
         id: 'session-1',
         userId: 'user-1',
+        sessionToken: 'token-1',
+        expires: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      (db.session.findUnique as Mock).mockResolvedValueOnce(mockSession);
-      (db.session.delete as Mock).mockResolvedValueOnce(mockSession);
+      vi.mocked(db.session.findUnique).mockResolvedValueOnce(mockSession);
+      vi.mocked(db.session.delete).mockResolvedValueOnce(mockSession);
 
       const result = await caller.revokeSession({
         sessionId: 'session-1',
       });
 
       expect(result).toEqual({ success: true });
-      expect(db.session.delete).toHaveBeenCalledWith({
+      expect(vi.mocked(db.session.delete)).toHaveBeenCalledWith({
         where: {
           id: 'session-1',
           userId: 'user-1',
@@ -229,7 +239,7 @@ describe('Auth Router', () => {
     });
 
     it('should throw error if session not found', async () => {
-      (db.session.findUnique as Mock).mockResolvedValueOnce(null);
+      vi.mocked(db.session.findUnique).mockResolvedValueOnce(null);
 
       await expect(
         caller.revokeSession({ sessionId: 'nonexistent' })
@@ -239,21 +249,21 @@ describe('Auth Router', () => {
 
   describe('deleteAccount', () => {
     it('should delete user account with correct email confirmation', async () => {
-      (db.user.findUnique as Mock).mockResolvedValueOnce(mockUser);
-      (db.user.delete as Mock).mockResolvedValueOnce(mockUser);
+      vi.mocked(db.user.findUnique).mockResolvedValueOnce(mockUser);
+      vi.mocked(db.user.delete).mockResolvedValueOnce(mockUser);
 
       const result = await caller.deleteAccount({
         confirmationEmail: 'test@example.com',
       });
 
       expect(result).toEqual({ success: true });
-      expect(db.user.delete).toHaveBeenCalledWith({
+      expect(vi.mocked(db.user.delete)).toHaveBeenCalledWith({
         where: { id: 'user-1' },
       });
     });
 
     it('should throw error with incorrect email confirmation', async () => {
-      (db.user.findUnique as Mock).mockResolvedValueOnce(mockUser);
+      vi.mocked(db.user.findUnique).mockResolvedValueOnce(mockUser);
 
       await expect(
         caller.deleteAccount({

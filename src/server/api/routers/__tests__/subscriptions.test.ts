@@ -1,4 +1,10 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { subscriptionsRouter } from '../subscriptions';
 import { db } from '@/server/db';
@@ -124,10 +130,11 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
   describe('getAll', () => {
     it('should retrieve all subscriptions with default filters', async () => {
-      (db.subscription.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.findMany).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         mockSubscriptions
       );
-      (db.subscription.count as Mock).mockResolvedValueOnce(3);
+      vi.mocked(db.subscription.count).mockResolvedValueOnce(3);
 
       const result = await caller.getAll({});
 
@@ -142,16 +149,16 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         category: 'Entertainment',
         merchantName: 'Netflix',
         description: 'Netflix Subscription',
-        startDate: expect.any(Date),
+        startDate: expect.any(Date) as Date,
         cancelledAt: null,
-        lastBillingDate: expect.any(Date),
-        nextBillingDate: expect.any(Date),
+        lastBillingDate: expect.any(Date) as Date,
+        nextBillingDate: expect.any(Date) as Date,
         provider: { name: 'Netflix', logo: null },
         confidence: 0.95,
         isManual: false,
       });
 
-      expect(db.subscription.findMany).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.findMany)).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
         include: { transactions: true },
         orderBy: { createdAt: 'desc' },
@@ -160,17 +167,18 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
     it('should filter by active status', async () => {
       const activeSubscriptions = mockSubscriptions.filter(s => s.isActive);
-      (db.subscription.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.findMany).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         activeSubscriptions
       );
-      (db.subscription.count as Mock).mockResolvedValueOnce(3);
+      vi.mocked(db.subscription.count).mockResolvedValueOnce(3);
 
       const result = await caller.getAll({ status: 'active' });
 
       expect(result.subscriptions).toHaveLength(2);
       expect(result.subscriptions.every(s => s.isActive)).toBe(true);
 
-      expect(db.subscription.findMany).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.findMany)).toHaveBeenCalledWith({
         where: {
           userId: 'user-1',
           isActive: true,
@@ -184,7 +192,8 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       const entertainmentSubs = mockSubscriptions.filter(
         s => s.category === 'Entertainment'
       );
-      (db.subscription.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.findMany).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         entertainmentSubs
       );
 
@@ -195,7 +204,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         result.subscriptions.every(s => s.category === 'Entertainment')
       ).toBe(true);
 
-      expect(db.subscription.findMany).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.findMany)).toHaveBeenCalledWith({
         where: {
           userId: 'user-1',
           category: 'Entertainment',
@@ -226,8 +235,9 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
   describe('getById', () => {
     it('should retrieve subscription by ID', async () => {
-      (db.subscription.findUnique as Mock).mockResolvedValueOnce(
-        mockSubscriptions[0]
+      vi.mocked(db.subscription.findUnique).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
+        mockSubscriptions[0]!
       );
 
       const result = await caller.getById({ id: 'sub-1' });
@@ -241,16 +251,16 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         category: 'Entertainment',
         merchantName: 'Netflix',
         description: 'Netflix Subscription',
-        startDate: expect.any(Date),
+        startDate: expect.any(Date) as Date,
         cancelledAt: null,
-        lastBillingDate: expect.any(Date),
-        nextBillingDate: expect.any(Date),
+        lastBillingDate: expect.any(Date) as Date,
+        nextBillingDate: expect.any(Date) as Date,
         provider: { name: 'Netflix', logo: null },
         confidence: 0.95,
         isManual: false,
       });
 
-      expect(db.subscription.findUnique).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.findUnique)).toHaveBeenCalledWith({
         where: {
           id: 'sub-1',
           userId: 'user-1',
@@ -260,7 +270,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
     });
 
     it('should throw error for non-existent subscription', async () => {
-      (db.subscription.findUnique as Mock).mockResolvedValueOnce(null);
+      vi.mocked(db.subscription.findUnique).mockResolvedValueOnce(null);
 
       await expect(caller.getById({ id: 'invalid-id' })).rejects.toThrow(
         'Subscription not found'
@@ -276,13 +286,13 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       });
       const otherUserCaller = subscriptionsRouter.createCaller(otherUserCtx);
 
-      (db.subscription.findUnique as Mock).mockResolvedValueOnce(null);
+      vi.mocked(db.subscription.findUnique).mockResolvedValueOnce(null);
 
       await expect(otherUserCaller.getById({ id: 'sub-1' })).rejects.toThrow(
         'Subscription not found'
       );
 
-      expect(db.subscription.findUnique).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.findUnique)).toHaveBeenCalledWith({
         where: {
           id: 'sub-1',
           userId: 'user-2', // Different user ID
@@ -295,13 +305,16 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
   describe('create', () => {
     it('should create new manual subscription', async () => {
       const newSubscription = {
-        ...mockSubscriptions[0],
+        ...mockSubscriptions[0]!,
         id: 'sub-new',
         isManual: true,
         confidence: new Decimal(1.0),
       };
 
-      (db.subscription.create as Mock).mockResolvedValueOnce(newSubscription);
+      vi.mocked(db.subscription.create).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
+        newSubscription
+      );
 
       const result = await caller.create({
         name: 'Netflix',
@@ -323,15 +336,15 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         description: 'Netflix Subscription',
         isManual: true,
         confidence: 1.0,
-        lastBillingDate: expect.any(Date),
+        lastBillingDate: expect.any(Date) as Date,
         merchantName: 'Netflix',
-        nextBillingDate: expect.any(Date),
+        nextBillingDate: expect.any(Date) as Date,
         provider: { name: 'Netflix', logo: null },
-        startDate: expect.any(Date),
+        startDate: expect.any(Date) as Date,
         cancelledAt: null,
       });
 
-      expect(db.subscription.create).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.create)).toHaveBeenCalledWith({
         data: {
           userId: 'user-1',
           name: 'Netflix',
@@ -378,17 +391,19 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
   describe('update', () => {
     it('should update subscription details', async () => {
-      const existingSubscription = mockSubscriptions[0];
+      const existingSubscription = mockSubscriptions[0]!;
       const updatedSubscription = {
         ...existingSubscription,
         name: 'Netflix Premium',
         amount: new Decimal(17.99),
       };
 
-      (db.subscription.findUnique as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.findUnique).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         existingSubscription
       );
-      (db.subscription.update as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.update).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         updatedSubscription
       );
 
@@ -400,7 +415,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
       expect(result).toEqual({ success: true });
 
-      expect(db.subscription.update).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.update)).toHaveBeenCalledWith({
         where: {
           id: 'sub-1',
           userId: 'user-1',
@@ -413,7 +428,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
     });
 
     it('should handle subscription not found', async () => {
-      (db.subscription.findUnique as Mock).mockResolvedValueOnce(null);
+      vi.mocked(db.subscription.findUnique).mockResolvedValueOnce(null);
 
       await expect(
         caller.update({ id: 'invalid-id', name: 'New Name' })
@@ -423,20 +438,25 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
   describe('cancel', () => {
     it('should cancel active subscription', async () => {
-      const activeSubscription = mockSubscriptions[0];
+      const activeSubscription = mockSubscriptions[0]!;
       const cancelledSubscription = {
         ...activeSubscription,
         isActive: false,
         cancelledAt: new Date(),
       };
 
-      (db.subscription.findUnique as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.findUnique).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         activeSubscription
       );
-      (db.subscription.update as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.update).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         cancelledSubscription
       );
-      (db.notification.create as Mock).mockResolvedValueOnce({});
+      vi.mocked(db.notification.create).mockResolvedValueOnce(
+        // @ts-expect-error - Mock object incomplete for testing
+        {}
+      );
 
       const result = await caller.markCancelled({
         id: 'sub-1',
@@ -446,7 +466,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
       expect(result).toEqual({ success: true });
 
-      expect(db.subscription.update).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.update)).toHaveBeenCalledWith({
         where: {
           id: 'sub-1',
           userId: 'user-1',
@@ -465,19 +485,26 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
     });
 
     it('should create cancellation notification', async () => {
-      const activeSubscription = mockSubscriptions[0];
-      (db.subscription.findUnique as Mock).mockResolvedValueOnce(
+      const activeSubscription = mockSubscriptions[0]!;
+      vi.mocked(db.subscription.findUnique).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         activeSubscription
       );
-      (db.subscription.update as Mock).mockResolvedValueOnce({});
-      (db.notification.create as Mock).mockResolvedValueOnce({});
+      vi.mocked(db.subscription.update).mockResolvedValueOnce(
+        // @ts-expect-error - Mock object incomplete for testing
+        {}
+      );
+      vi.mocked(db.notification.create).mockResolvedValueOnce(
+        // @ts-expect-error - Mock object incomplete for testing
+        {}
+      );
 
       await caller.markCancelled({
         id: 'sub-1',
         cancellationDate: new Date(),
       });
 
-      expect(db.notification.create).toHaveBeenCalledWith({
+      expect(vi.mocked(db.notification.create)).toHaveBeenCalledWith({
         data: {
           userId: 'user-1',
           type: 'subscription_cancelled',
@@ -491,10 +518,11 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
     it('should handle already cancelled subscription', async () => {
       const cancelledSubscription = {
-        ...mockSubscriptions[2],
+        ...mockSubscriptions[2]!,
         isActive: false,
       };
-      (db.subscription.findUnique as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.findUnique).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         cancelledSubscription
       );
 
@@ -510,21 +538,27 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
   describe.skip('delete', () => {
     // TODO: Implement delete method in subscriptions router
     it('should delete subscription and related transactions', async () => {
-      const subscription = mockSubscriptions[0];
-      (db.subscription.findUnique as Mock).mockResolvedValueOnce(subscription);
-      (db.transaction.updateMany as Mock).mockResolvedValueOnce({ count: 2 });
-      (db.subscription.delete as Mock).mockResolvedValueOnce(subscription);
+      const subscription = mockSubscriptions[0]!;
+      vi.mocked(db.subscription.findUnique).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
+        subscription
+      );
+      vi.mocked(db.transaction.updateMany).mockResolvedValueOnce({ count: 2 });
+      vi.mocked(db.subscription.delete).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
+        subscription
+      );
 
       // const result = await caller.delete({ id: 'sub-1' });
 
       // expect(result).toEqual({ success: true });
 
-      expect(db.transaction.updateMany).toHaveBeenCalledWith({
+      expect(vi.mocked(db.transaction.updateMany)).toHaveBeenCalledWith({
         where: { subscriptionId: 'sub-1' },
         data: { subscriptionId: null, isSubscription: false },
       });
 
-      expect(db.subscription.delete).toHaveBeenCalledWith({
+      expect(vi.mocked(db.subscription.delete)).toHaveBeenCalledWith({
         where: {
           id: 'sub-1',
           userId: 'user-1',
@@ -535,15 +569,18 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
   describe('getStats', () => {
     it('should return comprehensive subscription statistics', async () => {
-      (db.subscription.count as Mock)
+      vi.mocked(db.subscription.count)
         .mockResolvedValueOnce(2) // active
         .mockResolvedValueOnce(1); // cancelled
 
-      (db.subscription.aggregate as Mock)
+      vi.mocked(db.subscription.aggregate)
+        // @ts-expect-error - Mock aggregate response missing fields for testing
         .mockResolvedValueOnce({ _sum: { amount: new Decimal(625.87) } }) // total monthly
+        // @ts-expect-error - Mock aggregate response missing fields for testing
         .mockResolvedValueOnce({ _sum: { amount: new Decimal(25.98) } }); // active monthly
 
-      (db.subscription.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.findMany).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         mockSubscriptions
       );
 
@@ -567,11 +604,14 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
     });
 
     it('should handle empty subscriptions', async () => {
-      (db.subscription.count as Mock).mockResolvedValue(0);
-      (db.subscription.aggregate as Mock).mockResolvedValue({
-        _sum: { amount: null },
-      });
-      (db.subscription.findMany as Mock).mockResolvedValueOnce([]);
+      vi.mocked(db.subscription.count).mockResolvedValue(0);
+      vi.mocked(db.subscription.aggregate).mockResolvedValue(
+        // @ts-expect-error - Mock aggregate response missing fields for testing
+        {
+          _sum: { amount: null },
+        }
+      );
+      vi.mocked(db.subscription.findMany).mockResolvedValueOnce([]);
 
       const result = await caller.getStats();
 
@@ -584,12 +624,13 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
   describe('performance', () => {
     it('should handle large numbers of subscriptions efficiently', async () => {
       const largeSubscriptionSet = Array.from({ length: 1000 }, (_, i) => ({
-        ...mockSubscriptions[0],
+        ...mockSubscriptions[0]!,
         id: `sub-${i}`,
         name: `Service ${i}`,
       }));
 
-      (db.subscription.findMany as Mock).mockResolvedValueOnce(
+      vi.mocked(db.subscription.findMany).mockResolvedValueOnce(
+        // @ts-expect-error - Mock objects have additional fields for testing
         largeSubscriptionSet
       );
 
@@ -605,14 +646,15 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
   describe('data consistency', () => {
     it('should handle null/undefined values gracefully', async () => {
       const subscriptionWithNulls = {
-        ...mockSubscriptions[0],
+        ...mockSubscriptions[0]!,
         description: null,
         lastBillingDate: null,
         nextBillingDate: null,
         transactions: [],
       };
 
-      (db.subscription.findMany as Mock).mockResolvedValueOnce([
+      vi.mocked(db.subscription.findMany).mockResolvedValueOnce([
+        // @ts-expect-error - Mock objects have additional fields for testing
         subscriptionWithNulls,
       ]);
 
@@ -627,11 +669,11 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
   describe('edge cases', () => {
     it('should handle subscriptions with very large amounts', async () => {
       const expensiveSubscription = {
-        ...(mockSubscriptions[0] as any),
+        ...(mockSubscriptions[0]! as any),
         amount: new Decimal(9999.99),
       };
 
-      (db.subscription.findMany as Mock).mockResolvedValueOnce([
+      vi.mocked(db.subscription.findMany).mockResolvedValueOnce([
         expensiveSubscription,
       ]);
 
@@ -642,12 +684,13 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
 
     it('should handle subscriptions with future dates', async () => {
       const futureSubscription = {
-        ...mockSubscriptions[0],
+        ...mockSubscriptions[0]!,
         startDate: new Date('2025-01-01'),
         nextBillingDate: new Date('2025-02-01'),
       };
 
-      (db.subscription.findMany as Mock).mockResolvedValueOnce([
+      vi.mocked(db.subscription.findMany).mockResolvedValueOnce([
+        // @ts-expect-error - Mock objects have additional fields for testing
         futureSubscription,
       ]);
 

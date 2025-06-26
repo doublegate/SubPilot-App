@@ -126,7 +126,8 @@ describe('AccountList', () => {
     const selectedCard = screen
       .getByText('Checking Account')
       .closest('.rounded-lg');
-    expect(selectedCard).toHaveClass('ring-2', 'ring-primary');
+    expect(selectedCard).toHaveClass('ring-2');
+    expect(selectedCard).toHaveClass('ring-primary');
   });
 
   it('calls onSelectAccount when account is clicked', () => {

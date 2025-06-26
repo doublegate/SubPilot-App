@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import '@testing-library/jest-dom';
 import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
@@ -5,9 +7,31 @@ import React from 'react';
 
 // Extend Vitest matchers with jest-dom matchers
 declare module 'vitest' {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  interface Assertion<T = any> extends jest.Matchers<void, T> {}
-  interface AsymmetricMatchersContaining {}
+  // Explicit interface extensions for jest-dom compatibility
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type, @typescript-eslint/no-unused-vars
+  interface Assertion<T = any> {
+    toBeInTheDocument(): void;
+    toBeVisible(): void;
+    toBeDisabled(): void;
+    toBeEnabled(): void;
+    toHaveClass(className: string): void;
+    toHaveTextContent(text: string | RegExp): void;
+    toHaveValue(value: string | number | string[]): void;
+    toHaveAttribute(attr: string, value?: string): void;
+    toHaveStyle(css: Record<string, unknown>): void;
+    toBeChecked(): void;
+    toBePartiallyChecked(): void;
+    toBeRequired(): void;
+    toBeValid(): void;
+    toBeInvalid(): void;
+    toBeEmpty(): void;
+    toHaveDescription(text: string | RegExp): void;
+    toHaveErrorMessage(text: string | RegExp): void;
+    toHaveDisplayValue(value: string | RegExp | Array<string | RegExp>): void;
+    toHaveAccessibleDescription(text: string | RegExp): void;
+    toHaveAccessibleName(text: string | RegExp): void;
+    toHaveRole(role: string): void;
+  }
 }
 
 // Clean up after each test
@@ -146,10 +170,16 @@ vi.mock('@/server/db', () => ({
 // Mock Plaid client
 vi.mock('@/server/plaid-client', () => ({
   plaid: vi.fn(() => null), // Return null by default (client not configured)
-  plaidWithRetry: vi.fn().mockImplementation(async operation => operation()),
+  plaidWithRetry: vi
+    .fn()
+    .mockImplementation(async (operation: () => Promise<unknown>) =>
+      operation()
+    ),
   isPlaidConfigured: vi.fn(() => false),
   verifyPlaidWebhook: vi.fn().mockResolvedValue(true),
-  handlePlaidError: vi.fn(error => console.error('Plaid error:', error)),
+  handlePlaidError: vi.fn((error: unknown) =>
+    console.error('Plaid error:', error)
+  ),
 }));
 
 // Mock email service

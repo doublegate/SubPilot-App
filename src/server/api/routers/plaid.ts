@@ -432,7 +432,7 @@ export const plaidRouter = createTRPCRouter({
           const accessToken = await decrypt(item.accessToken);
 
           // Use transactions/sync endpoint for efficient incremental updates
-          let cursor = item.syncCursor ?? '';
+          let cursor = '';
           let hasMore = true;
           let added: Array<Record<string, unknown>> = [];
           let modified: Array<Record<string, unknown>> = [];
@@ -449,18 +449,39 @@ export const plaidRouter = createTRPCRouter({
               'transactionsSync'
             );
 
-            added = added.concat(syncResponse.data.added);
-            modified = modified.concat(syncResponse.data.modified);
-            removed = removed.concat(syncResponse.data.removed);
+            const addedTransactions = Array.isArray(syncResponse.data.added)
+              ? (syncResponse.data.added as unknown as Record<
+                  string,
+                  unknown
+                >[])
+              : [];
+            const modifiedTransactions = Array.isArray(
+              syncResponse.data.modified
+            )
+              ? (syncResponse.data.modified as unknown as Record<
+                  string,
+                  unknown
+                >[])
+              : [];
+            const removedTransactions = Array.isArray(syncResponse.data.removed)
+              ? (syncResponse.data.removed as unknown as Record<
+                  string,
+                  unknown
+                >[])
+              : [];
+
+            added = [...added, ...addedTransactions];
+            modified = [...modified, ...modifiedTransactions];
+            removed = [...removed, ...removedTransactions];
 
             hasMore = syncResponse.data.has_more;
             cursor = syncResponse.data.next_cursor;
           }
 
-          // Update sync cursor
+          // Update sync status (syncCursor field doesn't exist in schema)
           await ctx.db.plaidItem.update({
             where: { id: item.id },
-            data: { syncCursor: cursor },
+            data: { needsSync: false },
           });
 
           totalTransactionsSynced += added.length + modified.length;
@@ -476,7 +497,13 @@ export const plaidRouter = createTRPCRouter({
 
           // Handle removed transactions
           if (removed.length > 0) {
-            const removedIds = removed.map(txn => txn.transaction_id);
+            const removedIds = removed
+              .map((txn: Record<string, unknown>) => {
+                return typeof txn.transaction_id === 'string'
+                  ? txn.transaction_id
+                  : '';
+              })
+              .filter(id => id !== '');
             await ctx.db.transaction.deleteMany({
               where: {
                 plaidTransactionId: { in: removedIds },

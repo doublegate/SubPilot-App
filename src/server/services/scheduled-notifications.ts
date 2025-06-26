@@ -169,22 +169,15 @@ export class ScheduledNotificationService {
 
       // Calculate variance for better insights
       const variance = actualSpent - expectedSpent;
-      const variancePercentage =
-        expectedSpent > 0 ? (variance / expectedSpent) * 100 : 0;
 
       // Send email with comprehensive spending data
       await emailNotificationService.sendMonthlySpendingEmail({
         user: { id: user.id, email: user.email, name: user.name },
         spendingData: {
           totalSpent: actualSpent, // Use actual spending for main metric
-          expectedSpent,
-          variance,
-          variancePercentage,
           subscriptionCount: subscriptions.length,
           topCategories,
           monthlyChange,
-          monthStart: monthStart.toISOString(),
-          monthEnd: monthEnd.toISOString(),
         },
       });
 
@@ -207,16 +200,6 @@ export class ScheduledNotificationService {
           message: `You spent $${actualSpent.toFixed(2)} on ${subscriptions.length} subscription${subscriptions.length > 1 ? 's' : ''} in ${monthName} (${varianceText}). Expected: $${expectedSpent.toFixed(2)}.`,
           scheduledFor: new Date(),
           sentAt: new Date(),
-          metadata: {
-            actualSpent,
-            expectedSpent,
-            variance,
-            variancePercentage,
-            monthStart: monthStart.toISOString(),
-            monthEnd: monthEnd.toISOString(),
-            subscriptionCount: subscriptions.length,
-            topCategories,
-          },
         },
       });
     }
