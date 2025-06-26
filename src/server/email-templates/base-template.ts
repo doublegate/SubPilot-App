@@ -1,3 +1,5 @@
+import sanitizeHtml from 'sanitize-html';
+
 export interface BaseEmailTemplateProps {
   preheader?: string;
   content: string;
@@ -107,8 +109,7 @@ export function baseEmailTemplate({
 
   // Extract text content from HTML by removing tags
   const text =
-    content
-      .replace(/<[^>]*>/g, '')
+    sanitizeHtml(content)
       .replace(/\s+/g, ' ')
       .trim() + `\n\n© ${currentYear} SubPilot. All rights reserved.`;
 
