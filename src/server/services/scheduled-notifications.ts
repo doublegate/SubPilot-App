@@ -166,7 +166,7 @@ export class ScheduledNotificationService {
 
       // Calculate month-over-month change
       // For now, just use a placeholder - would need historical data
-      const monthlyChange = crypto.randomInt(-10, 11); // -10% to +10%
+      const monthlyChange = Math.floor(Math.random() * 21) - 10; // -10% to +10%
 
       // Calculate variance for better insights
       const variance = actualSpent - expectedSpent;
