@@ -75,10 +75,10 @@ export class ScheduledNotificationService {
     }
 
     const lastMonth = subDays(now, 1);
-    const _monthStart = startOfMonth(lastMonth);
-    const _monthEnd = endOfMonth(lastMonth);
+    const monthStart = startOfMonth(lastMonth);
+    const monthEnd = endOfMonth(lastMonth);
 
-    // Get all users with active subscriptions
+    // Get all users with active subscriptions and their transaction data for the month
     const users = await db.user.findMany({
       where: {
         subscriptions: {
@@ -91,6 +91,15 @@ export class ScheduledNotificationService {
         subscriptions: {
           where: {
             isActive: true,
+          },
+        },
+        transactions: {
+          where: {
+            date: {
+              gte: monthStart,
+              lte: monthEnd,
+            },
+            isSubscription: true,
           },
         },
       },
@@ -106,9 +115,14 @@ export class ScheduledNotificationService {
         continue;
       }
 
-      // Calculate spending data
+      // Calculate actual spending from transactions for the month
+      const actualSpent = user.transactions.reduce((sum, txn) => {
+        return sum + Number(txn.amount);
+      }, 0);
+
+      // Calculate expected spending from subscriptions
       const subscriptions = user.subscriptions;
-      const totalSpent = subscriptions.reduce((sum, sub) => {
+      const expectedSpent = subscriptions.reduce((sum, sub) => {
         let monthlyAmount = Number(sub.amount);
         switch (sub.frequency) {
           case 'yearly':
@@ -127,8 +141,8 @@ export class ScheduledNotificationService {
       // Group by category
       const categoryMap = new Map<string, number>();
       subscriptions.forEach(sub => {
-        const category = sub.category || 'Other';
-        const current = categoryMap.get(category) || 0;
+        const category = sub.category ?? 'Other';
+        const current = categoryMap.get(category) ?? 0;
         let monthlyAmount = Number(sub.amount);
         switch (sub.frequency) {
           case 'yearly':
@@ -153,26 +167,56 @@ export class ScheduledNotificationService {
       // For now, just use a placeholder - would need historical data
       const monthlyChange = Math.random() * 20 - 10; // -10% to +10%
 
-      // Send email
+      // Calculate variance for better insights
+      const variance = actualSpent - expectedSpent;
+      const variancePercentage =
+        expectedSpent > 0 ? (variance / expectedSpent) * 100 : 0;
+
+      // Send email with comprehensive spending data
       await emailNotificationService.sendMonthlySpendingEmail({
         user: { id: user.id, email: user.email, name: user.name },
         spendingData: {
-          totalSpent,
+          totalSpent: actualSpent, // Use actual spending for main metric
+          expectedSpent,
+          variance,
+          variancePercentage,
           subscriptionCount: subscriptions.length,
           topCategories,
           monthlyChange,
+          monthStart: monthStart.toISOString(),
+          monthEnd: monthEnd.toISOString(),
         },
       });
 
-      // Create notification record
+      // Create notification record with enhanced data
+      const monthName = lastMonth.toLocaleDateString('en-US', {
+        month: 'long',
+      });
+      const varianceText =
+        variance > 0
+          ? `$${Math.abs(variance).toFixed(2)} over budget`
+          : variance < 0
+            ? `$${Math.abs(variance).toFixed(2)} under budget`
+            : 'right on budget';
+
       await db.notification.create({
         data: {
           userId: user.id,
-          type: 'weekly_report',
-          title: 'Your monthly spending summary is ready',
-          message: `You spent $${totalSpent.toFixed(2)} on ${subscriptions.length} subscriptions last month`,
+          type: 'monthly_report',
+          title: `${monthName} Subscription Report 📊`,
+          message: `You spent $${actualSpent.toFixed(2)} on ${subscriptions.length} subscription${subscriptions.length > 1 ? 's' : ''} in ${monthName} (${varianceText}). Expected: $${expectedSpent.toFixed(2)}.`,
           scheduledFor: new Date(),
           sentAt: new Date(),
+          metadata: {
+            actualSpent,
+            expectedSpent,
+            variance,
+            variancePercentage,
+            monthStart: monthStart.toISOString(),
+            monthEnd: monthEnd.toISOString(),
+            subscriptionCount: subscriptions.length,
+            topCategories,
+          },
         },
       });
     }

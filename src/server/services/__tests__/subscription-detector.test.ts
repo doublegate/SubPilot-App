@@ -70,9 +70,35 @@ class TestableSubscriptionDetector extends SubscriptionDetector {
       nextBillingDate?: Date;
     }
   ): Promise<void> {
-    // Mock implementation for testing - do nothing
+    // Mock implementation for testing - validate the detection results
+    if (result.isSubscription && transactions.length > 0) {
+      // Verify that transactions match the detection result
+      transactions.forEach(txn => {
+        expect(txn.merchantName).toBe(result.merchantName);
+        expect(Math.abs(Number(txn.amount))).toBeCloseTo(
+          result.averageAmount,
+          2
+        );
+      });
+
+      // Track detection for testing purposes
+      this.lastDetectionResult = {
+        merchantName: result.merchantName,
+        confidence: result.confidence,
+        frequency: result.frequency,
+        transactionCount: transactions.length,
+      };
+    }
     return Promise.resolve();
   }
+
+  // Test helper to access detection results
+  public lastDetectionResult?: {
+    merchantName: string;
+    confidence: number;
+    frequency?: string;
+    transactionCount: number;
+  };
 }
 
 describe('SubscriptionDetector', () => {

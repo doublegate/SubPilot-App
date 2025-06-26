@@ -114,7 +114,7 @@ describe('Analytics Router Integration Tests', () => {
   describe('getSpendingTrends', () => {
     it('should return spending trends by month', async () => {
       // Create test subscription
-      const _subscription = await createTestSubscription(testUserId, {
+      const subscription = await createTestSubscription(testUserId, {
         name: 'Netflix',
         amount: 15.99,
         frequency: 'monthly',
@@ -148,19 +148,29 @@ describe('Analytics Router Integration Tests', () => {
         },
       });
 
-      // Create test transactions for different months
-      await createTestTransaction(testUserId, account.id, {
+      // Create test transactions for different months linked to the subscription
+      const transaction1 = await createTestTransaction(testUserId, account.id, {
         merchantName: 'Netflix',
         amount: -15.99,
         date: new Date('2024-01-15'),
         isSubscription: true,
       });
 
-      await createTestTransaction(testUserId, account.id, {
+      const transaction2 = await createTestTransaction(testUserId, account.id, {
         merchantName: 'Netflix',
         amount: -15.99,
         date: new Date('2024-02-15'),
         isSubscription: true,
+      });
+
+      // Link transactions to the subscription for better analytics
+      await db.subscription.update({
+        where: { id: subscription.id },
+        data: {
+          transactions: {
+            connect: [{ id: transaction1.id }, { id: transaction2.id }],
+          },
+        },
       });
 
       const result = await caller.analytics.getSpendingTrends({
