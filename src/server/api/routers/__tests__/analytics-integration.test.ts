@@ -142,10 +142,10 @@ describe('Analytics Router Integration Tests', () => {
     mockedTransactionFindMany.mockResolvedValue([]);
     mockedTransactionAggregate.mockResolvedValue({
       _sum: { amount: null },
-      _count: null,
-      _avg: null,
-      _min: null,
-      _max: null,
+      _count: {},
+      _avg: {},
+      _min: {},
+      _max: {},
     });
   });
 
@@ -162,20 +162,42 @@ describe('Analytics Router Integration Tests', () => {
           userId: testUserId,
           name: 'Netflix',
           amount: new Decimal(15.99),
+          currency: 'USD',
           frequency: 'monthly',
           category: 'Entertainment',
           status: 'active',
           isActive: true,
+          description: null,
+          notes: null,
+          nextBilling: null,
+          lastBilling: null,
+          provider: {},
+          cancellationInfo: {},
+          detectionConfidence: new Decimal(0.9),
+          detectedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
         {
           id: '2',
           userId: testUserId,
           name: 'Spotify',
           amount: new Decimal(9.99),
+          currency: 'USD',
           frequency: 'monthly',
           category: 'Music',
           status: 'active',
           isActive: true,
+          description: null,
+          notes: null,
+          nextBilling: null,
+          lastBilling: null,
+          provider: {},
+          cancellationInfo: {},
+          detectionConfidence: new Decimal(0.9),
+          detectedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ];
 
@@ -183,15 +205,14 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as MockSubscription[]
-      );
+        mockSubscriptions      );
 
       const aggregateResult: AggregateResult = {
         _sum: { amount: new Decimal(500) },
-        _count: null,
-        _avg: null,
-        _min: null,
-        _max: null,
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       };
       mockedTransactionAggregate.mockResolvedValueOnce(aggregateResult);
 
@@ -211,10 +232,10 @@ describe('Analytics Router Integration Tests', () => {
       mockedSubscriptionFindMany.mockResolvedValueOnce([]);
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: null },
-        _count: null,
-        _avg: null,
-        _min: null,
-        _max: null,
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       });
 
       const result = await caller.analytics.getSpendingOverview({});
@@ -251,14 +272,13 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as MockSubscription[]
-      );
+        mockSubscriptions      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: new Decimal(20) },
-        _count: null,
-        _avg: null,
-        _min: null,
-        _max: null,
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       });
 
       const result = await caller.analytics.getSpendingOverview({});
@@ -286,14 +306,13 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as MockSubscription[]
-      );
+        mockSubscriptions      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: null },
-        _count: null,
-        _avg: null,
-        _min: null,
-        _max: null,
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       });
 
       const result = await caller.analytics.getSpendingOverview({});
@@ -321,14 +340,13 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as MockSubscription[]
-      );
+        mockSubscriptions      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: null },
-        _count: null,
-        _avg: null,
-        _min: null,
-        _max: null,
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       });
 
       const result = await caller.analytics.getSpendingOverview({});
@@ -390,11 +408,11 @@ describe('Analytics Router Integration Tests', () => {
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
       mockedTransactionFindMany.mockResolvedValueOnce(
-        mockTransactions as MockTransaction[]
-      );
+        mockTransactions      );
 
       const result = await caller.analytics.getSpendingTrends({
-        period: 'month',
+        timeRange: 'month',
+        groupBy: 'month',
       });
 
       expect(result).toBeDefined();
@@ -414,11 +432,11 @@ describe('Analytics Router Integration Tests', () => {
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
       mockedTransactionFindMany.mockResolvedValueOnce(
-        mockTransactions as MockTransaction[]
-      );
+        mockTransactions      );
 
       const result = await caller.analytics.getSpendingTrends({
-        period: 'week',
+        timeRange: 'week',
+        groupBy: 'week',
       });
 
       expect(result).toBeDefined();
@@ -437,11 +455,11 @@ describe('Analytics Router Integration Tests', () => {
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
       mockedTransactionFindMany.mockResolvedValueOnce(
-        mockTransactions as MockTransaction[]
-      );
+        mockTransactions      );
 
       const result = await caller.analytics.getSpendingTrends({
-        period: 'year',
+        timeRange: 'year',
+        groupBy: 'month',
       });
 
       expect(result).toBeDefined();
@@ -453,7 +471,8 @@ describe('Analytics Router Integration Tests', () => {
       mockedTransactionFindMany.mockResolvedValueOnce([]);
 
       const result = await caller.analytics.getSpendingTrends({
-        period: 'month',
+        timeRange: 'month',
+        groupBy: 'month',
       });
 
       expect(result).toBeDefined();
@@ -497,14 +516,13 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as MockSubscription[]
-      );
+        mockSubscriptions      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: new Decimal(100) },
-        _count: null,
-        _avg: null,
-        _min: null,
-        _max: null,
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       });
 
       const result = await caller.analytics.getSpendingOverview({});
@@ -536,10 +554,10 @@ describe('Analytics Router Integration Tests', () => {
       mockedSubscriptionFindMany.mockResolvedValueOnce([]);
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: null },
-        _count: null,
-        _avg: null,
-        _min: null,
-        _max: null,
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       });
 
       const result = await caller.analytics.getSpendingOverview({});
@@ -584,14 +602,13 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as MockSubscription[]
-      );
+        mockSubscriptions      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: new Decimal(100) },
-        _count: null,
-        _avg: null,
-        _min: null,
-        _max: null,
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       });
 
       const result = await caller.analytics.getSpendingOverview({});
@@ -685,8 +702,7 @@ describe('Analytics Router Integration Tests', () => {
 
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as MockSubscription[]
-      );
+        mockSubscriptions      );
 
       const result = await caller.analytics.getUpcomingRenewals({ days: 5 });
 

@@ -31,9 +31,41 @@ interface SpendingTrendData {
   nonRecurring: number;
 }
 
+interface SubscriptionInsights {
+  insights: Array<{
+    title: string;
+    message: string;
+    type: string;
+    subscriptions?: Array<{
+      id: string;
+      name: string;
+      amount: number;
+      oldAmount?: number;
+      newAmount?: number;
+    }>;
+  }>;
+  totalActive: number;
+  totalCancelled: number;
+  unusedCount: number;
+  potentialSavings: number;
+  averageSubscriptionAge: number;
+  priceIncreaseCount: number;
+  duplicateGroups: Array<{
+    name: string;
+    count: number;
+    totalCost: number;
+    subscriptions: Array<{
+      id: string;
+      name: string;
+      amount: number;
+    }>;
+  }>;
+}
+
 type CacheData =
   | SpendingOverviewData
   | SpendingTrendData[]
+  | SubscriptionInsights
   | Record<string, unknown>;
 
 // Simple in-memory cache for expensive calculations
@@ -331,35 +363,6 @@ export const analyticsRouter = createTRPCRouter({
       'subscriptionInsights',
       {}
     );
-    interface SubscriptionInsights {
-      insights: Array<{
-        title: string;
-        message: string;
-        type: string;
-        subscriptions?: Array<{
-          id: string;
-          name: string;
-          amount: number;
-          oldAmount?: number;
-          newAmount?: number;
-        }>;
-      }>;
-      totalActive: number;
-      totalCancelled: number;
-      unusedCount: number;
-      potentialSavings: number;
-      duplicateGroups: Array<{
-        name: string;
-        count: number;
-        totalCost: number;
-        subscriptions: Array<{
-          id: string;
-          name: string;
-          amount: number;
-        }>;
-      }>;
-    }
-
     const cached = getFromCache<SubscriptionInsights>(cacheKey);
     if (cached) return cached;
 

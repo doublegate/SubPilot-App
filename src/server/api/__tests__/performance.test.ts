@@ -88,19 +88,17 @@ describe('API Performance Benchmarks', () => {
           | 'weekly',
         status: 'active',
         isActive: i % 10 !== 0, // 90% active
-        category: ['Entertainment', 'Software', 'Health'][i % 3],
-        merchantName: `Merchant ${i}`,
+        category: ['Entertainment', 'Software', 'Health'][i % 3] ?? null,
         description: `Description for service ${i}`,
-        startDate: new Date(Date.now() - i * 86400000),
-        cancelledAt: i % 10 === 0 ? new Date() : null,
+        notes: null,
+        nextBilling: new Date(Date.now() + (30 - (i % 30)) * 86400000),
+        lastBilling: new Date(Date.now() - (i % 30) * 86400000),
+        provider: { name: `Provider ${i}`, logo: null },
+        cancellationInfo: {},
+        detectionConfidence: new Decimal(0.5 + (i % 50) / 100),
+        detectedAt: new Date(Date.now() - i * 86400000),
         createdAt: new Date(Date.now() - i * 86400000),
         updatedAt: new Date(),
-        lastBillingDate: new Date(Date.now() - (i % 30) * 86400000),
-        nextBillingDate: new Date(Date.now() + (30 - (i % 30)) * 86400000),
-        provider: { name: `Provider ${i}`, logo: null },
-        metadata: { testData: true },
-        confidence: new Decimal(0.5 + (i % 50) / 100),
-        isManual: i % 20 === 0,
         transactions: [],
       }));
 
@@ -130,18 +128,16 @@ describe('API Performance Benchmarks', () => {
         status: 'active',
         isActive: true,
         category: 'Entertainment',
-        merchantName: 'Netflix',
         description: `Netflix subscription ${i}`,
-        startDate: new Date(),
-        cancelledAt: null,
+        notes: null,
+        nextBilling: new Date(),
+        lastBilling: new Date(),
+        provider: { name: 'Netflix', logo: null },
+        cancellationInfo: {},
+        detectionConfidence: new Decimal(0.95),
+        detectedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
-        lastBillingDate: new Date(),
-        nextBillingDate: new Date(),
-        provider: { name: 'Netflix', logo: null },
-        metadata: {},
-        confidence: new Decimal(0.95),
-        isManual: false,
         transactions: [],
       }));
 
@@ -187,10 +183,28 @@ describe('API Performance Benchmarks', () => {
       }));
 
       vi.mocked(db.transaction.findMany).mockResolvedValueOnce(
-        largeTransactionSet.map(t => ({
-          date: t.date,
+        largeTransactionSet.map((t, i) => ({
+          id: `trans-${i}`,
+          userId: 'user-1',
+          accountId: 'account-1',
+          plaidTransactionId: `plaid-${i}`,
+          subscriptionId: null,
           amount: t._sum.amount,
+          isoCurrencyCode: 'USD',
+          description: `Transaction ${i}`,
+          merchantName: `Merchant ${i}`,
+          category: [],
+          subcategory: null,
+          transactionType: 'other',
+          date: t.date,
+          authorizedDate: null,
+          pending: false,
+          paymentChannel: null,
+          location: null,
+          confidence: new Decimal(0),
           isSubscription: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         }))
       );
 
@@ -214,6 +228,10 @@ describe('API Performance Benchmarks', () => {
       vi.mocked(db.subscription.count).mockResolvedValueOnce(0);
       vi.mocked(db.transaction.aggregate).mockResolvedValueOnce({
         _sum: { amount: new Decimal(-3000) },
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       });
 
       const start = performance.now();
@@ -233,13 +251,16 @@ describe('API Performance Benchmarks', () => {
       const largeNotificationBatch = Array.from({ length: 100 }, (_, i) => ({
         id: `notif-${i}`,
         userId: 'user-1',
+        subscriptionId: null,
         type: 'SUBSCRIPTION_RENEWED' as const,
         title: `Notification ${i}`,
         message: `Your subscription ${i} has been renewed`,
-        isRead: false,
+        data: {},
+        read: false,
+        readAt: null,
+        scheduledFor: new Date(),
+        sentAt: null,
         createdAt: new Date(),
-        updatedAt: new Date(),
-        metadata: {},
       }));
 
       vi.mocked(db.notification.findMany).mockResolvedValueOnce(
@@ -267,18 +288,16 @@ describe('API Performance Benchmarks', () => {
         status: 'active',
         isActive: true,
         category: 'Software',
-        merchantName: 'Test Merchant',
         description: 'Test subscription',
-        startDate: new Date(),
-        cancelledAt: null,
+        notes: null,
+        nextBilling: new Date(),
+        lastBilling: new Date(),
+        provider: { name: 'Test Provider', logo: null },
+        cancellationInfo: {},
+        detectionConfidence: new Decimal(0.95),
+        detectedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
-        lastBillingDate: new Date(),
-        nextBillingDate: new Date(),
-        provider: { name: 'Test Provider', logo: null },
-        metadata: {},
-        confidence: new Decimal(0.95),
-        isManual: false,
         transactions: [],
       };
 
@@ -297,7 +316,7 @@ describe('API Performance Benchmarks', () => {
       const start = performance.now();
       const result = await caller.subscriptions.update({
         id: 'sub-1',
-        amount: 14.99,
+        customAmount: 14.99,
       });
       const duration = performance.now() - start;
 
@@ -321,16 +340,13 @@ describe('API Performance Benchmarks', () => {
           status: 'active',
           isActive: true,
           category: 'Software',
-          merchantName: `Merchant ${i}`,
           description: `Description ${i}`,
-          startDate: new Date(),
-          cancelledAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          lastBillingDate: new Date(),
-          nextBillingDate: new Date(),
-          provider: { name: `Provider ${i}`, logo: null },
-          metadata: {
+          notes: null,
+          nextBilling: new Date(),
+          lastBilling: new Date(),
+          provider: { 
+            name: `Provider ${i}`, 
+            logo: null,
             largeData: 'x'.repeat(1000), // 1KB per subscription
             nestedObject: {
               level1: {
@@ -340,8 +356,11 @@ describe('API Performance Benchmarks', () => {
               },
             },
           },
-          confidence: new Decimal(0.95),
-          isManual: false,
+          cancellationInfo: {},
+          detectionConfidence: new Decimal(0.95),
+          detectedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
           transactions: [],
         })
       );
@@ -375,18 +394,16 @@ describe('API Performance Benchmarks', () => {
           status: 'active',
           isActive: true,
           category: 'Software',
-          merchantName: 'Test',
           description: 'Test',
-          startDate: new Date(),
-          cancelledAt: null,
+          notes: null,
+          nextBilling: new Date(),
+          lastBilling: new Date(),
+          provider: { name: 'Test', logo: null },
+          cancellationInfo: {},
+          detectionConfidence: new Decimal(0.95),
+          detectedAt: new Date(),
           createdAt: new Date(),
           updatedAt: new Date(),
-          lastBillingDate: new Date(),
-          nextBillingDate: new Date(),
-          provider: { name: 'Test', logo: null },
-          metadata: {},
-          confidence: new Decimal(0.95),
-          isManual: false,
           transactions: [],
         }));
 
@@ -423,6 +440,7 @@ describe('API Performance Benchmarks', () => {
       const mockNotifications = Array.from({ length: 500 }, (_, i) => ({
         id: `notif-${i}`,
         userId: 'user-1',
+        subscriptionId: `sub-${i % 100}`,
         type: [
           'SUBSCRIPTION_RENEWED',
           'SUBSCRIPTION_CANCELLED',
@@ -433,14 +451,16 @@ describe('API Performance Benchmarks', () => {
           | 'PAYMENT_FAILED',
         title: `Notification ${i}`,
         message: `Message ${i}`,
-        isRead: i % 2 === 0,
+        data: { subscriptionId: `sub-${i % 100}` },
+        read: i % 2 === 0,
+        readAt: i % 2 === 0 ? new Date() : null,
+        scheduledFor: new Date(Date.now() - i * 3600000),
+        sentAt: null,
         createdAt: new Date(Date.now() - i * 3600000),
-        updatedAt: new Date(),
-        metadata: { subscriptionId: `sub-${i % 100}` },
       }));
 
       vi.mocked(db.notification.findMany).mockResolvedValueOnce(
-        mockNotifications.filter(n => !n.isRead).slice(0, 20)
+        mockNotifications.filter(n => !n.read).slice(0, 20)
       );
       vi.mocked(db.notification.count).mockResolvedValueOnce(250);
 
@@ -467,18 +487,16 @@ describe('API Performance Benchmarks', () => {
         status: 'active',
         isActive: true,
         category: 'Software',
-        merchantName: 'Test',
         description: 'Test',
-        startDate: new Date(),
-        cancelledAt: null,
+        notes: null,
+        nextBilling: new Date(),
+        lastBilling: new Date(),
+        provider: { name: 'Test', logo: null },
+        cancellationInfo: {},
+        detectionConfidence: new Decimal(0.95),
+        detectedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
-        lastBillingDate: new Date(),
-        nextBillingDate: new Date(),
-        provider: { name: 'Test', logo: null },
-        metadata: {},
-        confidence: new Decimal(0.95),
-        isManual: false,
         transactions: [],
       };
 
@@ -506,19 +524,22 @@ describe('API Performance Benchmarks', () => {
       vi.mocked(db.subscription.update).mockResolvedValueOnce({
         ...mockSubscription,
         isActive: false,
-        cancelledAt: new Date(),
+        cancellationInfo: { cancelledAt: new Date().toISOString() },
       });
       vi.mocked(db.transaction.findMany).mockResolvedValueOnce([]);
       vi.mocked(db.notification.create).mockResolvedValueOnce({
         id: 'notif-cancel',
         userId: 'user-1',
+        subscriptionId: null,
         type: 'SUBSCRIPTION_CANCELLED',
         title: 'Subscription Cancelled',
         message: 'Your subscription has been cancelled',
-        isRead: false,
+        data: {},
+        read: false,
+        readAt: null,
+        scheduledFor: new Date(),
+        sentAt: null,
         createdAt: new Date(),
-        updatedAt: new Date(),
-        metadata: {},
       });
 
       const cancelStart = performance.now();
@@ -539,6 +560,8 @@ describe('API Performance Benchmarks', () => {
         email: 'test@example.com',
         emailVerified: null,
         image: null,
+        password: null,
+        notificationPreferences: {},
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -552,19 +575,55 @@ describe('API Performance Benchmarks', () => {
       // Mock the subscription findMany call for getSpendingOverview
       vi.mocked(db.subscription.findMany).mockResolvedValueOnce([
         {
+          id: 'sub-1',
+          userId: 'user-1',
+          name: 'Software Service',
           amount: new Decimal(9.99),
+          currency: 'USD',
           frequency: 'monthly',
+          status: 'active',
+          isActive: true,
           category: 'Software',
+          description: null,
+          notes: null,
+          nextBilling: null,
+          lastBilling: null,
+          provider: {},
+          cancellationInfo: {},
+          detectionConfidence: new Decimal(0.9),
+          detectedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
         {
+          id: 'sub-2',
+          userId: 'user-1',
+          name: 'Entertainment Service',
           amount: new Decimal(15.99),
+          currency: 'USD',
           frequency: 'monthly',
+          status: 'active',
+          isActive: true,
           category: 'Entertainment',
+          description: null,
+          notes: null,
+          nextBilling: null,
+          lastBilling: null,
+          provider: {},
+          cancellationInfo: {},
+          detectionConfidence: new Decimal(0.9),
+          detectedAt: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ]);
 
       vi.mocked(db.transaction.aggregate).mockResolvedValueOnce({
         _sum: { amount: new Decimal(3000) },
+        _count: {},
+        _avg: {},
+        _min: {},
+        _max: {},
       });
 
       const start = performance.now();
@@ -580,15 +639,51 @@ describe('API Performance Benchmarks', () => {
 
     it('should handle year-over-year comparisons', async () => {
       const currentYearData = Array.from({ length: 12 }, (_, i) => ({
-        date: new Date(2024, i, 1),
+        id: `trans-current-${i}`,
+        userId: 'user-1',
+        accountId: 'account-1',
+        plaidTransactionId: `plaid-current-${i}`,
+        subscriptionId: null,
         amount: new Decimal(-100 * (i + 1)),
+        isoCurrencyCode: 'USD',
+        description: `Transaction ${i}`,
+        merchantName: null,
+        category: [],
+        subcategory: null,
+        transactionType: 'other',
+        date: new Date(2024, i, 1),
+        authorizedDate: null,
+        pending: false,
+        paymentChannel: null,
+        location: null,
+        confidence: new Decimal(0),
         isSubscription: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }));
 
       const previousYearData = Array.from({ length: 12 }, (_, i) => ({
-        date: new Date(2023, i, 1),
+        id: `trans-previous-${i}`,
+        userId: 'user-1',
+        accountId: 'account-1',
+        plaidTransactionId: `plaid-previous-${i}`,
+        subscriptionId: null,
         amount: new Decimal(-80 * (i + 1)),
+        isoCurrencyCode: 'USD',
+        description: `Transaction ${i}`,
+        merchantName: null,
+        category: [],
+        subcategory: null,
+        transactionType: 'other',
+        date: new Date(2023, i, 1),
+        authorizedDate: null,
+        pending: false,
+        paymentChannel: null,
+        location: null,
+        confidence: new Decimal(0),
         isSubscription: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }));
 
       vi.mocked(db.transaction.findMany)
