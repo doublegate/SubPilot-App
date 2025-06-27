@@ -150,7 +150,7 @@ export const analyticsRouter = createTRPCRouter({
 
         monthlyTotal += monthlyAmount;
 
-        const category = sub.category || 'Other';
+        const category = sub.category ?? 'Other';
         categorySpending[category] =
           (categorySpending[category] ?? 0) + monthlyAmount;
       });
@@ -325,6 +325,44 @@ export const analyticsRouter = createTRPCRouter({
    * Get subscription insights
    */
   getSubscriptionInsights: protectedProcedure.query(async ({ ctx }) => {
+    // Check cache first
+    const cacheKey = getCacheKey(
+      ctx.session.user.id,
+      'subscriptionInsights',
+      {}
+    );
+    interface SubscriptionInsights {
+      insights: Array<{
+        title: string;
+        message: string;
+        type: string;
+        subscriptions?: Array<{
+          id: string;
+          name: string;
+          amount: number;
+          oldAmount?: number;
+          newAmount?: number;
+        }>;
+      }>;
+      totalActive: number;
+      totalCancelled: number;
+      unusedCount: number;
+      potentialSavings: number;
+      duplicateGroups: Array<{
+        name: string;
+        count: number;
+        totalCost: number;
+        subscriptions: Array<{
+          id: string;
+          name: string;
+          amount: number;
+        }>;
+      }>;
+    }
+
+    const cached = getFromCache<SubscriptionInsights>(cacheKey);
+    if (cached) return cached;
+
     type SubscriptionWithTransactions = Subscription & {
       transactions: Transaction[];
     };
@@ -337,6 +375,11 @@ export const analyticsRouter = createTRPCRouter({
         transactions: {
           orderBy: { date: 'desc' },
           take: 3,
+          select: {
+            id: true,
+            date: true,
+            amount: true,
+          },
         },
       },
     })) as SubscriptionWithTransactions[];
@@ -377,7 +420,7 @@ export const analyticsRouter = createTRPCRouter({
         ? Math.round(activeAges.reduce((a, b) => a + b, 0) / activeAges.length)
         : 0;
 
-    return {
+    const result = {
       totalActive: activeCount,
       totalCancelled: cancelledCount,
       unusedCount: unusedSubscriptions.length,
@@ -419,6 +462,10 @@ export const analyticsRouter = createTRPCRouter({
           : []),
       ],
     };
+
+    // Cache the result for 30 minutes
+    setCache(cacheKey, result, 30);
+    return result;
   }),
 
   /**
@@ -608,12 +655,16 @@ export const analyticsRouter = createTRPCRouter({
         return data
           .map(row =>
             row
-              .map(cell =>
+              .map(cell => {
+                // Handle undefined/null values
+                const cellStr = cell ?? '';
                 // Escape quotes and wrap in quotes if cell contains comma, quote, or newline
-                cell.includes(',') || cell.includes('"') || cell.includes('\n')
-                  ? `"${cell.replace(/"/g, '""')}"`
-                  : cell
-              )
+                return cellStr.includes(',') ||
+                  cellStr.includes('"') ||
+                  cellStr.includes('\n')
+                  ? `"${cellStr.replace(/"/g, '""')}"`
+                  : cellStr;
+              })
               .join(',')
           )
           .join('\n');

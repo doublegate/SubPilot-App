@@ -1,14 +1,32 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { encrypt, decrypt, hashData } from '../crypto';
 
 // Mock environment
 vi.mock('@/env.js', () => ({
   env: {
-    NEXTAUTH_SECRET: 'test-secret-key-for-encryption',
+    NODE_ENV: 'development',
+    NEXTAUTH_SECRET: 'test-secret-key-for-encryption-thats-long-enough',
   },
 }));
 
 describe('Crypto Utilities', () => {
+  // Save original env
+  const originalEnv = process.env.ENCRYPTION_KEY;
+
+  beforeAll(() => {
+    // Set ENCRYPTION_KEY for tests
+    process.env.ENCRYPTION_KEY =
+      'test-encryption-key-thats-at-least-32-characters-long';
+  });
+
+  afterAll(() => {
+    // Restore original env
+    if (originalEnv) {
+      process.env.ENCRYPTION_KEY = originalEnv;
+    } else {
+      delete process.env.ENCRYPTION_KEY;
+    }
+  });
   const testData = 'sensitive-plaid-access-token-12345';
   const anotherTestData = 'another-secret-value';
 

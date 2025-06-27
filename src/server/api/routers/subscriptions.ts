@@ -106,6 +106,22 @@ export const subscriptionsRouter = createTRPCRouter({
           orderBy,
           take: input.limit,
           skip: input.offset,
+          include: {
+            _count: {
+              select: { transactions: true },
+            },
+            transactions: {
+              orderBy: { date: 'desc' },
+              take: 1,
+              select: {
+                id: true,
+                amount: true,
+                date: true,
+                description: true,
+                merchantName: true,
+              },
+            },
+          },
         }),
         ctx.db.subscription.count({ where }),
       ]);
@@ -141,9 +157,18 @@ export const subscriptionsRouter = createTRPCRouter({
                 }
               : null,
           detectedAt: sub.detectedAt,
-          lastTransaction: null, // Last transaction lookup implemented in getById for detailed view
+          lastTransaction: sub.transactions?.[0]
+            ? {
+                id: sub.transactions[0].id,
+                amount: sub.transactions[0].amount.toNumber(),
+                date: sub.transactions[0].date,
+                description: sub.transactions[0].description,
+                merchantName: sub.transactions[0].merchantName,
+              }
+            : null,
           createdAt: sub.createdAt,
           updatedAt: sub.updatedAt,
+          transactionCount: sub._count?.transactions ?? 0,
         })),
         total,
         hasMore: input.offset + input.limit < total,

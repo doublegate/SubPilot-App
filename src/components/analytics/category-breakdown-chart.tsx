@@ -124,32 +124,6 @@ export function CategoryBreakdownChart({
     );
   };
 
-  // Custom legend
-  interface LegendEntry {
-    color: string;
-    value: string;
-  }
-
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  /* eslint-disable @typescript-eslint/no-unsafe-call */
-  const renderLegend = (props: any) => {
-    if (!props.payload) return null;
-    return (
-      <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {props.payload.map((entry: LegendEntry, index: number) => (
-          <div key={index} className="flex items-center gap-2">
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: entry.color || '#000' }}
-            />
-            <span className="text-sm">{entry.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   // Calculate statistics
   const totalAmount = data.reduce((sum, item) => sum + item.amount, 0);
   const topCategory = sortedData[0];
@@ -258,7 +232,7 @@ export function CategoryBreakdownChart({
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend content={renderLegend} />
+              <Legend />
             </PieChart>
           ) : (
             <BarChart

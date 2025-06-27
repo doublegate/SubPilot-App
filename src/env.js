@@ -56,6 +56,10 @@ export const env = createEnv({
     SENTRY_DSN: z.string().url().optional(),
     // Redis
     REDIS_URL: z.string().url().optional(),
+    // Security
+    ENCRYPTION_KEY: z.string().min(32).optional(),
+    API_SECRET: z.string().min(32).optional(),
+    PLAID_WEBHOOK_SECRET: z.string().optional(),
   },
 
   /**
@@ -102,6 +106,10 @@ export const env = createEnv({
     SENTRY_DSN: process.env.SENTRY_DSN,
     // Redis
     REDIS_URL: process.env.REDIS_URL,
+    // Security
+    ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+    API_SECRET: process.env.API_SECRET,
+    PLAID_WEBHOOK_SECRET: process.env.PLAID_WEBHOOK_SECRET,
     // Client
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },

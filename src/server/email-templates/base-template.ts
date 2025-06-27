@@ -109,9 +109,8 @@ export function baseEmailTemplate({
 
   // Extract text content from HTML by removing tags
   const text =
-    sanitizeHtml(content)
-      .replace(/\s+/g, ' ')
-      .trim() + `\n\n© ${currentYear} SubPilot. All rights reserved.`;
+    sanitizeHtml(content).replace(/\s+/g, ' ').trim() +
+    `\n\n© ${currentYear} SubPilot. All rights reserved.`;
 
   return { html, text };
 }

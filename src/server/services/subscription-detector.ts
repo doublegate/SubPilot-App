@@ -48,29 +48,82 @@ export class SubscriptionDetector {
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-    const transactions = await this.db.transaction.findMany({
+    // First, use aggregation to find potential subscription merchants
+    const merchantAggregates = await this.db.transaction.groupBy({
+      by: ['merchantName'],
       where: {
         userId,
         date: { gte: oneYearAgo },
         pending: false,
         amount: { gt: 0 }, // Only consider charges, not refunds
+        merchantName: { not: null },
       },
-      orderBy: { date: 'desc' },
+      _count: {
+        id: true,
+      },
+      _avg: {
+        amount: true,
+      },
+      _min: {
+        date: true,
+      },
+      _max: {
+        date: true,
+      },
+      having: {
+        id: {
+          _count: {
+            gte: this.MIN_TRANSACTIONS,
+          },
+        },
+      },
     });
 
-    // Group transactions by merchant
-    const merchantGroups = this.groupByMerchant(transactions);
+    // Filter merchants that have potential subscription patterns
+    const potentialMerchants = merchantAggregates.filter(agg => {
+      if (!agg._min.date || !agg._max.date || !agg._avg.amount) return false;
 
-    // Analyze each merchant group
+      // Quick check: if transactions span at least 30 days, it might be recurring
+      const daySpan = this.daysBetween(agg._min.date, agg._max.date);
+      return daySpan >= 30;
+    });
+
+    // Now fetch detailed transactions only for potential subscription merchants
     const detectionResults: DetectionResult[] = [];
 
-    for (const group of merchantGroups) {
+    for (const merchant of potentialMerchants) {
+      if (!merchant.merchantName) continue;
+
+      // Fetch transactions for this specific merchant
+      const transactions = await this.db.transaction.findMany({
+        where: {
+          userId,
+          merchantName: merchant.merchantName,
+          date: { gte: oneYearAgo },
+          pending: false,
+          amount: { gt: 0 },
+        },
+        orderBy: { date: 'asc' },
+        select: {
+          id: true,
+          date: true,
+          amount: true,
+          merchantName: true,
+          description: true,
+        },
+      });
+
+      const group: TransactionGroup = {
+        merchantName: merchant.merchantName,
+        transactions,
+      };
+
       const result = this.analyzeTransactionGroup(group);
       if (result && result.confidence >= this.MIN_CONFIDENCE) {
         detectionResults.push(result);
 
         // Update transaction records with detection results
-        await this.updateTransactionDetection(group.transactions, result);
+        await this.updateTransactionDetection(transactions, result);
       }
     }
 

@@ -184,7 +184,9 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground">
                     Chrome on MacOS • Los Angeles, CA
                   </p>
-                  <p className="text-xs text-muted-foreground/70">Last active: Just now</p>
+                  <p className="text-xs text-muted-foreground/70">
+                    Last active: Just now
+                  </p>
                 </div>
                 <Badge variant="secondary">This device</Badge>
               </div>
@@ -205,8 +207,8 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="rounded-lg border bg-gradient-to-r from-cyan-50/10 to-purple-50/10 dark:from-cyan-900/20 dark:to-purple-900/20 p-4">
-                  <h3 className="font-medium">Free Plan</h3>
+                <div className="rounded-lg border bg-gradient-to-r from-cyan-50/10 to-purple-50/10 p-4 dark:from-cyan-900/20 dark:to-purple-900/20">
+                  <h2 className="text-base font-medium">Free Plan</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Track up to 10 subscriptions
                   </p>

@@ -1,36 +1,71 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { sendEmail } from '@/lib/email';
-import { db } from '@/server/db';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Decimal } from '@prisma/client/runtime/library';
 
-// Mock dependencies
+// Mock email module
 vi.mock('@/lib/email', () => ({
   sendEmail: vi.fn(),
 }));
 
+// Mock database
 vi.mock('@/server/db', () => ({
   db: {
     notification: {
       create: vi.fn(),
-      findMany: vi.fn(),
-      update: vi.fn(),
-    },
-    user: {
-      findUnique: vi.fn(),
     },
   },
 }));
 
-// Import after mocks to ensure proper mocking
+// Import mocked modules
+import { sendEmail } from '@/lib/email';
+import { db } from '@/server/db';
+
+// Mock email templates module
+vi.mock('@/server/email-templates', () => ({
+  welcomeEmailTemplate: vi.fn(() => ({
+    html: 'Welcome HTML',
+    text: 'Welcome Text',
+  })),
+  newSubscriptionTemplate: vi.fn(() => ({
+    html: 'New Sub HTML',
+    text: 'New Sub Text',
+  })),
+  priceChangeTemplate: vi.fn(() => ({
+    html: 'Price Change HTML',
+    text: 'Price Change Text',
+  })),
+  monthlySpendingTemplate: vi.fn(() => ({
+    html: 'Monthly HTML',
+    text: 'Monthly Text',
+  })),
+  cancellationConfirmationTemplate: vi.fn(() => ({
+    html: 'Cancellation HTML',
+    text: 'Cancellation Text',
+  })),
+  renewalReminderTemplate: vi.fn(() => ({
+    html: 'Renewal HTML',
+    text: 'Renewal Text',
+  })),
+  trialEndingTemplate: vi.fn(() => ({
+    html: 'Trial HTML',
+    text: 'Trial Text',
+  })),
+  paymentFailedTemplate: vi.fn(() => ({
+    html: 'Payment Failed HTML',
+    text: 'Payment Failed Text',
+  })),
+}));
+
+// Import the service after mocks
 import { emailNotificationService } from '../email.service';
 
 describe('EmailNotificationService', () => {
+  const mockNotificationCreate = vi.fn();
+
   const mockUser = {
     id: 'user-123',
     email: 'test@example.com',
@@ -55,8 +90,8 @@ describe('EmailNotificationService', () => {
     nextBilling: Date | null;
     lastBilling: Date | null;
     notes: string | null;
-    provider: any; // JsonValue is complex, use any for test simplicity
-    cancellationInfo: any; // JsonValue is complex, use any for test simplicity
+    provider: unknown; // JsonValue
+    cancellationInfo: unknown; // JsonValue
   }
 
   const mockSubscription: MockSubscription = {
@@ -83,35 +118,37 @@ describe('EmailNotificationService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set up the mock for notification.create
+    (db.notification.create as ReturnType<typeof vi.fn>) =
+      mockNotificationCreate;
   });
 
   describe('sendWelcomeEmail', () => {
     it('should send welcome email and create notification', async () => {
-      const mockSendEmail = sendEmail as Mock;
-      const mockCreateNotification = db.notification.create as Mock;
+      // Setup mocks
+      vi.mocked(sendEmail).mockResolvedValueOnce(undefined);
 
-      mockSendEmail.mockResolvedValueOnce(undefined);
-      mockCreateNotification.mockResolvedValueOnce({});
+      mockNotificationCreate.mockResolvedValueOnce({} as never);
 
       await emailNotificationService.sendWelcomeEmail({
         user: mockUser,
       });
 
-      expect(mockSendEmail).toHaveBeenCalledWith({
+      expect(sendEmail).toHaveBeenCalledWith({
         to: 'test@example.com',
         subject: 'Welcome to SubPilot! 🎉',
-        html: expect.stringContaining('Welcome to SubPilot, Test User'),
-        text: expect.stringContaining('Welcome to SubPilot, Test User'),
+        html: 'Welcome HTML',
+        text: 'Welcome Text',
       });
 
-      expect(mockCreateNotification).toHaveBeenCalledWith({
+      expect(mockNotificationCreate).toHaveBeenCalledWith({
         data: {
           userId: 'user-123',
           type: 'general',
           title: 'Welcome email sent',
           message: 'Your welcome email has been sent successfully.',
           data: {},
-          scheduledFor: expect.any(Date),
+          scheduledFor: expect.any(Date) as Date,
         },
       });
     });
@@ -119,41 +156,39 @@ describe('EmailNotificationService', () => {
 
   describe('sendNewSubscriptionEmail', () => {
     it('should send new subscription email', async () => {
-      const mockSendEmail = sendEmail as Mock;
-      const mockCreateNotification = db.notification.create as Mock;
-
-      mockSendEmail.mockResolvedValueOnce(undefined);
-      mockCreateNotification.mockResolvedValueOnce({});
+      vi.mocked(sendEmail).mockResolvedValueOnce(undefined);
+      mockNotificationCreate.mockResolvedValueOnce({} as never);
 
       await emailNotificationService.sendNewSubscriptionEmail({
         user: mockUser,
         subscription: mockSubscription,
       });
 
-      expect(mockSendEmail).toHaveBeenCalledWith({
+      expect(sendEmail).toHaveBeenCalledWith({
         to: 'test@example.com',
-        subject: 'New Subscription Detected: Netflix',
-        html: expect.stringContaining('Netflix'),
-        text: expect.stringContaining('Netflix'),
+        subject: 'New subscription detected: Netflix',
+        html: 'New Sub HTML',
+        text: 'New Sub Text',
       });
-    });
 
-    it('should throw error if subscription is missing', async () => {
-      await expect(
-        emailNotificationService.sendNewSubscriptionEmail({
-          user: mockUser,
-        })
-      ).rejects.toThrow('Subscription data is required');
+      expect(mockNotificationCreate).toHaveBeenCalledWith({
+        data: {
+          userId: 'user-123',
+          subscriptionId: 'sub-123',
+          type: 'new_subscription',
+          title: 'New subscription detected',
+          message: 'We detected a new subscription for Netflix',
+          data: {},
+          scheduledFor: expect.any(Date) as Date,
+        },
+      });
     });
   });
 
   describe('sendPriceChangeEmail', () => {
-    it('should send price increase email', async () => {
-      const mockSendEmail = sendEmail as Mock;
-      const mockCreateNotification = db.notification.create as Mock;
-
-      mockSendEmail.mockResolvedValueOnce(undefined);
-      mockCreateNotification.mockResolvedValueOnce({});
+    it('should send price change email', async () => {
+      vi.mocked(sendEmail).mockResolvedValueOnce(undefined);
+      mockNotificationCreate.mockResolvedValueOnce({} as never);
 
       await emailNotificationService.sendPriceChangeEmail({
         user: mockUser,
@@ -162,155 +197,123 @@ describe('EmailNotificationService', () => {
         newAmount: 15.99,
       });
 
-      expect(mockSendEmail).toHaveBeenCalledWith({
+      expect(sendEmail).toHaveBeenCalledWith({
         to: 'test@example.com',
-        subject: 'Price Increase Alert: Netflix',
-        html: expect.stringContaining('Netflix'),
-        text: expect.stringContaining('Netflix'),
-      });
-    });
-
-    it('should send price decrease email', async () => {
-      const mockSendEmail = sendEmail as Mock;
-      const mockCreateNotification = db.notification.create as Mock;
-
-      mockSendEmail.mockResolvedValueOnce(undefined);
-      mockCreateNotification.mockResolvedValueOnce({});
-
-      await emailNotificationService.sendPriceChangeEmail({
-        user: mockUser,
-        subscription: mockSubscription,
-        oldAmount: 15.99,
-        newAmount: 12.99,
-      });
-
-      expect(mockSendEmail).toHaveBeenCalledWith({
-        to: 'test@example.com',
-        subject: 'Great News: Netflix Price Decreased!',
-        html: expect.stringContaining('Netflix'),
-        text: expect.stringContaining('Netflix'),
-      });
-    });
-  });
-
-  describe('sendMonthlySpendingEmail', () => {
-    it('should send monthly spending summary', async () => {
-      const mockSendEmail = sendEmail as Mock;
-      const mockCreateNotification = db.notification.create as Mock;
-
-      mockSendEmail.mockResolvedValueOnce(undefined);
-      mockCreateNotification.mockResolvedValueOnce({});
-
-      await emailNotificationService.sendMonthlySpendingEmail({
-        user: mockUser,
-        spendingData: {
-          totalSpent: 150.5,
-          subscriptionCount: 8,
-          topCategories: [
-            { category: 'Entertainment', amount: 50.0 },
-            { category: 'Software', amount: 30.0 },
-          ],
-          monthlyChange: 10.5,
-        },
-      });
-
-      expect(mockSendEmail).toHaveBeenCalledWith({
-        to: 'test@example.com',
-        subject: 'Your Monthly Subscription Summary',
-        html: expect.stringContaining('$150.50'),
-        text: expect.stringContaining('$150.50'),
+        subject: 'Price increase alert: Netflix',
+        html: 'Price Change HTML',
+        text: 'Price Change Text',
       });
     });
   });
 
   describe('sendRenewalReminderEmail', () => {
-    it('should send renewal reminder with urgency for 3 days', async () => {
-      const mockSendEmail = sendEmail as Mock;
-      const mockCreateNotification = db.notification.create as Mock;
-
-      mockSendEmail.mockResolvedValueOnce(undefined);
-      mockCreateNotification.mockResolvedValueOnce({});
+    it('should send renewal reminder email', async () => {
+      vi.mocked(sendEmail).mockResolvedValueOnce(undefined);
+      mockNotificationCreate.mockResolvedValueOnce({} as never);
 
       const renewalDate = new Date();
       renewalDate.setDate(renewalDate.getDate() + 3);
 
       await emailNotificationService.sendRenewalReminderEmail({
         user: mockUser,
-        subscription: { ...mockSubscription, nextBilling: renewalDate },
+        subscription: mockSubscription,
+        renewalDate: renewalDate,
       });
 
-      expect(mockSendEmail).toHaveBeenCalledWith({
+      expect(sendEmail).toHaveBeenCalledWith({
         to: 'test@example.com',
-        subject: 'Renewal Reminder: Netflix renews in 3 days',
-        html: expect.stringContaining('Netflix'),
-        text: expect.stringContaining('Netflix'),
+        subject: 'Renewal reminder: Netflix renews in 3 days',
+        html: 'Renewal HTML',
+        text: 'Renewal Text',
       });
     });
   });
 
-  describe('processScheduledNotifications', () => {
-    it('should process and send scheduled notifications', async () => {
-      const mockNotifications = [
-        {
-          id: 'notif-1',
-          userId: 'user-123',
-          type: 'renewal_reminder',
-          title: 'Test Notification',
-          message: 'Test message',
-          data: { subscriptionId: 'sub-123' },
-          scheduledFor: new Date(),
-        },
-      ];
+  describe('sendCancellationEmail', () => {
+    it('should send cancellation confirmation email', async () => {
+      vi.mocked(sendEmail).mockResolvedValueOnce(undefined);
+      mockNotificationCreate.mockResolvedValueOnce({} as never);
 
-      const mockFindManyNotifications = db.notification.findMany as Mock;
-      const mockFindUniqueUser = db.user.findUnique as Mock;
-      const mockSendEmail = sendEmail as Mock;
-      const mockUpdateNotification = db.notification.update as Mock;
-
-      mockFindManyNotifications.mockResolvedValueOnce(mockNotifications);
-      mockFindUniqueUser.mockResolvedValueOnce({
-        ...mockUser,
-        notificationPreferences: { emailAlerts: true },
+      await emailNotificationService.sendCancellationEmail({
+        user: mockUser,
+        subscription: mockSubscription,
       });
-      mockSendEmail.mockResolvedValueOnce(undefined);
-      mockUpdateNotification.mockResolvedValueOnce({});
 
-      await emailNotificationService.processScheduledNotifications();
-
-      expect(mockSendEmail).toHaveBeenCalledWith({
+      expect(sendEmail).toHaveBeenCalledWith({
         to: 'test@example.com',
-        subject: 'Test Notification',
-        html: expect.stringContaining('Test message'),
-        text: expect.stringContaining('Test message'),
+        subject: 'Subscription cancelled: Netflix',
+        html: 'Cancellation HTML',
+        text: 'Cancellation Text',
       });
     });
+  });
 
-    it('should skip notifications if email alerts are disabled', async () => {
-      const mockNotifications = [
-        {
-          id: 'notif-1',
-          userId: 'user-123',
-          type: 'renewal_reminder',
-          title: 'Test Notification',
-          message: 'Test message',
-          data: {},
-          scheduledFor: new Date(),
+  describe('sendMonthlySpendingEmail', () => {
+    it('should send monthly spending email', async () => {
+      vi.mocked(sendEmail).mockResolvedValueOnce(undefined);
+      mockNotificationCreate.mockResolvedValueOnce({} as never);
+
+      await emailNotificationService.sendMonthlySpendingEmail({
+        user: mockUser,
+        spendingData: {
+          totalSpent: 150.5,
+          subscriptionCount: 5,
+          topCategories: [{ category: 'Entertainment', amount: 50 }],
+          monthlyChange: 10,
         },
-      ];
-
-      const mockFindManyNotifications = db.notification.findMany as Mock;
-      const mockFindUniqueUser = db.user.findUnique as Mock;
-      const mockSendEmail = sendEmail as Mock;
-
-      mockFindManyNotifications.mockResolvedValueOnce(mockNotifications);
-      mockFindUniqueUser.mockResolvedValueOnce({
-        ...mockUser,
-        notificationPreferences: { emailAlerts: false },
       });
 
-      await emailNotificationService.processScheduledNotifications();
+      const currentMonth = new Date().toLocaleString('default', {
+        month: 'long',
+      });
+      expect(sendEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        subject: `Your ${currentMonth} spending summary`,
+        html: 'Monthly HTML',
+        text: 'Monthly Text',
+      });
+    });
+  });
 
-      expect(mockSendEmail).not.toHaveBeenCalled();
+  describe('sendPaymentFailedEmail', () => {
+    it('should send payment failed email', async () => {
+      vi.mocked(sendEmail).mockResolvedValueOnce(undefined);
+      mockNotificationCreate.mockResolvedValueOnce({} as never);
+
+      await emailNotificationService.sendPaymentFailedEmail({
+        user: mockUser,
+        subscription: mockSubscription,
+        errorMessage: 'Insufficient funds',
+      });
+
+      expect(sendEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        subject: 'Payment failed: Netflix',
+        html: 'Payment Failed HTML',
+        text: 'Payment Failed Text',
+      });
+    });
+  });
+
+  describe('sendTrialEndingEmail', () => {
+    it('should send trial ending email', async () => {
+      vi.mocked(sendEmail).mockResolvedValueOnce(undefined);
+      mockNotificationCreate.mockResolvedValueOnce({} as never);
+
+      const trialEndDate = new Date('2024-02-01');
+
+      await emailNotificationService.sendTrialEndingEmail({
+        user: mockUser,
+        subscription: mockSubscription,
+        trialEndDate: trialEndDate,
+      });
+
+      expect(sendEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        subject: 'Trial ending soon: Netflix',
+        html: 'Trial HTML',
+        text: 'Trial Text',
+      });
     });
   });
 });

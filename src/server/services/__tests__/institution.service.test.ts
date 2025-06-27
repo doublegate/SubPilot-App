@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+// Test file - imports removed as they're not used
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { InstitutionService } from '../institution.service';
-// import type { PlaidApi } from 'plaid';
+import type { PlaidApi } from 'plaid';
 
 // Create mock plaid client instance
 const mockPlaidInstance = {
@@ -9,9 +9,12 @@ const mockPlaidInstance = {
   institutionsSearch: vi.fn(),
 };
 
+// Mock plaid-client module
+import { plaid } from '@/server/plaid-client';
+
 // Mock the plaid client
 vi.mock('@/server/plaid-client', () => ({
-  plaid: vi.fn(() => mockPlaidInstance),
+  plaid: vi.fn(),
   plaidWithRetry: vi
     .fn()
     .mockImplementation(async (operation: () => Promise<unknown>) =>
@@ -24,6 +27,11 @@ describe('InstitutionService', () => {
     vi.clearAllMocks();
     // Clear cache before each test
     InstitutionService.clearCache();
+    // Set up default mock implementation
+    vi.mocked(plaid).mockReturnValue(mockPlaidInstance as unknown as PlaidApi);
+    // Mock console methods to suppress output in tests
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -195,9 +203,8 @@ describe('InstitutionService', () => {
     });
 
     it('should return null when Plaid client is not configured', async () => {
-      // Import the module to get the mocked function
-      const plaidModule = await import('@/server/plaid-client');
-      vi.mocked(plaidModule.plaid).mockReturnValue(null);
+      // Mock plaid to return null
+      vi.mocked(plaid).mockReturnValueOnce(null);
 
       const result = await InstitutionService.getInstitution('ins_1');
 

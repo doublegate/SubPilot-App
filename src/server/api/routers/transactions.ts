@@ -26,6 +26,7 @@ export const transactionsRouter = createTRPCRouter({
         isRecurring: z.boolean().optional(),
         limit: z.number().min(1).max(100).optional().default(50),
         offset: z.number().min(0).optional().default(0),
+        cursor: z.string().optional(), // For cursor-based pagination
       })
     )
     .query(async ({ ctx, input }) => {
@@ -68,13 +69,28 @@ export const transactionsRouter = createTRPCRouter({
         where.isSubscription = input.isRecurring;
       }
 
+      // Use cursor-based pagination if cursor provided
+      const paginationArgs: {
+        take: number;
+        skip: number;
+        cursor?: { id: string };
+      } = input.cursor
+        ? {
+            take: input.limit + 1, // Take one extra to check if there's more
+            cursor: { id: input.cursor },
+            skip: 1, // Skip the cursor item itself
+          }
+        : {
+            take: input.limit + 1,
+            skip: input.offset,
+          };
+
       // Get transactions with pagination
-      const [transactions, total] = await Promise.all([
+      const [rawTransactions, total] = await Promise.all([
         ctx.db.transaction.findMany({
           where,
-          orderBy: { date: 'desc' },
-          take: input.limit,
-          skip: input.offset,
+          orderBy: [{ date: 'desc' }, { id: 'desc' }], // Secondary sort by ID for stable cursor
+          ...paginationArgs,
           include: {
             bankAccount: {
               select: {
@@ -97,6 +113,15 @@ export const transactionsRouter = createTRPCRouter({
         }),
         ctx.db.transaction.count({ where }),
       ]);
+
+      // Check if there are more results
+      const hasMore = rawTransactions.length > input.limit;
+      const transactions = hasMore
+        ? rawTransactions.slice(0, -1)
+        : rawTransactions;
+      const nextCursor = hasMore
+        ? transactions[transactions.length - 1]?.id
+        : null;
 
       return {
         transactions: transactions.map(t => ({
@@ -121,7 +146,8 @@ export const transactionsRouter = createTRPCRouter({
             : null,
         })),
         total,
-        hasMore: input.offset + input.limit < total,
+        hasMore,
+        nextCursor,
       };
     }),
 

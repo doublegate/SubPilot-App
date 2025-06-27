@@ -93,6 +93,7 @@ model BankAccount {
 
   @@index([userId])
   @@index([plaidAccountId])
+  @@index([userId, isActive]) // For active account queries
   @@map("bank_accounts")
 }
 
@@ -178,6 +179,10 @@ model Transaction {
   @@index([date])
   @@index([isSubscription])
   @@index([plaidTransactionId])
+  @@index([userId, date, isSubscription]) // Compound index for analytics queries
+  @@index([merchantName, userId]) // For subscription detection
+  @@index([accountId, date]) // For account-specific queries
+  @@index([subscriptionId]) // For subscription-related queries
   @@map("transactions")
 }
 
@@ -224,6 +229,9 @@ model Subscription {
   @@index([userId])
   @@index([status])
   @@index([nextBilling])
+  @@index([userId, status, isActive]) // Compound index for active subscription queries
+  @@index([userId, nextBilling]) // For upcoming renewals
+  @@index([userId, category]) // For category filtering
   @@map("subscriptions")
 }
 
@@ -277,6 +285,7 @@ model Notification {
   @@index([userId])
   @@index([read])
   @@index([scheduledFor])
+  @@index([userId, read, scheduledFor]) // Compound index for unread notification queries
   @@map("notifications")
 }
 

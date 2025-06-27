@@ -1,11 +1,15 @@
 {
     "cSpell.words": [
         "cuid",
+        "FOUC",
+        "Hmac",
         "Mailhog",
         "NEXTAUTH",
+        "nosniff",
         "schemaname",
         "shadcn",
         "Sonner",
-        "subpilot"
+        "subpilot",
+        "TTFB"
     ]
 }

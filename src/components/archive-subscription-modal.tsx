@@ -171,6 +171,8 @@ export function ArchiveSubscriptionModal({
                             'w-full pl-3 text-left font-normal',
                             !field.value && 'text-muted-foreground'
                           )}
+                          aria-required="true"
+                          aria-label="Select cancellation date"
                         >
                           {field.value ? (
                             format(field.value, 'PPP')

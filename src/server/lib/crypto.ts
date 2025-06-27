@@ -9,11 +9,30 @@ const scryptAsync = promisify(scrypt);
  * Uses AES-256-GCM for authenticated encryption
  */
 
-// Use NEXTAUTH_SECRET as the base for encryption key
-// In production, you should use a separate encryption key
+// Use separate ENCRYPTION_KEY for better security
+// Falls back to NEXTAUTH_SECRET only in development
 const getEncryptionKey = async (): Promise<Buffer> => {
-  const secret = env.NEXTAUTH_SECRET ?? 'development-secret-key';
-  const salt = 'subpilot-encryption-salt'; // Fixed salt for deterministic key derivation
+  let secret: string;
+
+  if (process.env.ENCRYPTION_KEY) {
+    secret = process.env.ENCRYPTION_KEY;
+  } else if (env.NODE_ENV === 'development' && env.NEXTAUTH_SECRET) {
+    console.warn(
+      '⚠️  Using NEXTAUTH_SECRET for encryption in development. Set ENCRYPTION_KEY for production.'
+    );
+    secret = env.NEXTAUTH_SECRET;
+  } else {
+    throw new Error(
+      'ENCRYPTION_KEY environment variable is required for encryption'
+    );
+  }
+
+  // Validate key strength
+  if (secret.length < 32) {
+    throw new Error('ENCRYPTION_KEY must be at least 32 characters long');
+  }
+
+  const salt = 'subpilot-encryption-salt-v1'; // Versioned salt for future key rotation
   const key = (await scryptAsync(secret, salt, 32)) as Buffer;
   return key;
 };

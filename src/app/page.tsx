@@ -3,7 +3,10 @@ import { ThemeToggleStandalone } from '@/components/theme-toggle-standalone';
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-cyan-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+    <main
+      id="main-content"
+      className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-cyan-50 to-purple-50 dark:from-gray-900 dark:to-gray-800"
+    >
       <ThemeToggleStandalone />
       <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
         <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 sm:text-[5rem]">

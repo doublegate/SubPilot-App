@@ -1,4 +1,9 @@
+// Test file
 /* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { authRouter } from '../auth';
@@ -70,12 +75,15 @@ describe('Auth Router', () => {
 
   describe('getUser', () => {
     it('should return current authenticated user', async () => {
-      vi.mocked(db.user.findUnique).mockResolvedValueOnce(mockUser);
+      const mockedUserFindUnique = db.user.findUnique as ReturnType<
+        typeof vi.fn
+      >;
+      mockedUserFindUnique.mockResolvedValueOnce(mockUser);
 
       const result = await caller.getUser();
 
       expect(result).toEqual(mockUser);
-      expect(vi.mocked(db.user.findUnique)).toHaveBeenCalledWith({
+      expect(mockedUserFindUnique).toHaveBeenCalledWith({
         where: { id: 'user-1' },
         select: {
           id: true,
@@ -91,7 +99,10 @@ describe('Auth Router', () => {
     });
 
     it('should throw error when user not found', async () => {
-      vi.mocked(db.user.findUnique).mockResolvedValueOnce(null);
+      const mockedUserFindUnique = db.user.findUnique as ReturnType<
+        typeof vi.fn
+      >;
+      mockedUserFindUnique.mockResolvedValueOnce(null);
 
       await expect(caller.getUser()).rejects.toThrow('User not found');
     });
@@ -107,18 +118,19 @@ describe('Auth Router', () => {
   describe('updateProfile', () => {
     it('should update user profile', async () => {
       const updatedUser = { ...mockUser, name: 'Updated Name' };
-      vi.mocked(db.user.update).mockResolvedValueOnce(updatedUser);
+      const mockedUserUpdate = db.user.update as ReturnType<typeof vi.fn>;
+      mockedUserUpdate.mockResolvedValueOnce(updatedUser);
 
       const result = await caller.updateProfile({
         name: 'Updated Name',
       });
 
       expect(result).toEqual(updatedUser);
-      expect(vi.mocked(db.user.update)).toHaveBeenCalledWith({
+      expect(mockedUserUpdate).toHaveBeenCalledWith({
         where: { id: 'user-1' },
         data: {
           name: 'Updated Name',
-          updatedAt: expect.any(Date) as Date,
+          updatedAt: expect.any(Date) as unknown as Date,
         },
       });
     });
@@ -136,13 +148,14 @@ describe('Auth Router', () => {
         quietHoursEnd: '08:00',
       };
 
-      vi.mocked(db.user.update).mockResolvedValueOnce(mockUser);
+      const mockedUserUpdate = db.user.update as ReturnType<typeof vi.fn>;
+      mockedUserUpdate.mockResolvedValueOnce(mockUser);
 
       await caller.updateProfile({
         notificationPreferences,
       });
 
-      expect(vi.mocked(db.user.update)).toHaveBeenNthCalledWith(2, {
+      expect(mockedUserUpdate).toHaveBeenNthCalledWith(2, {
         where: { id: 'user-1' },
         data: {
           notificationPreferences,
@@ -153,7 +166,10 @@ describe('Auth Router', () => {
 
   describe('getNotificationPreferences', () => {
     it('should return user notification preferences', async () => {
-      vi.mocked(db.user.findUnique).mockResolvedValueOnce({
+      const mockedUserFindUnique = db.user.findUnique as ReturnType<
+        typeof vi.fn
+      >;
+      mockedUserFindUnique.mockResolvedValueOnce({
         ...mockUser,
         notificationPreferences: mockUser.notificationPreferences,
       });
@@ -164,7 +180,10 @@ describe('Auth Router', () => {
     });
 
     it('should return default preferences if not set', async () => {
-      vi.mocked(db.user.findUnique).mockResolvedValueOnce({
+      const mockedUserFindUnique = db.user.findUnique as ReturnType<
+        typeof vi.fn
+      >;
+      mockedUserFindUnique.mockResolvedValueOnce({
         ...mockUser,
         notificationPreferences: null,
       });
@@ -198,7 +217,10 @@ describe('Auth Router', () => {
         },
       ];
 
-      vi.mocked(db.session.findMany).mockResolvedValueOnce(mockSessions);
+      const mockedSessionFindMany = db.session.findMany as ReturnType<
+        typeof vi.fn
+      >;
+      mockedSessionFindMany.mockResolvedValueOnce(mockSessions);
 
       const result = await caller.getSessions();
 
@@ -222,15 +244,20 @@ describe('Auth Router', () => {
         updatedAt: new Date(),
       };
 
-      vi.mocked(db.session.findUnique).mockResolvedValueOnce(mockSession);
-      vi.mocked(db.session.delete).mockResolvedValueOnce(mockSession);
+      const mockedSessionFindUnique = db.session.findUnique as ReturnType<
+        typeof vi.fn
+      >;
+      const mockedSessionDelete = db.session.delete as ReturnType<typeof vi.fn>;
+
+      mockedSessionFindUnique.mockResolvedValueOnce(mockSession);
+      mockedSessionDelete.mockResolvedValueOnce(mockSession);
 
       const result = await caller.revokeSession({
         sessionId: 'session-1',
       });
 
       expect(result).toEqual({ success: true });
-      expect(vi.mocked(db.session.delete)).toHaveBeenCalledWith({
+      expect(mockedSessionDelete).toHaveBeenCalledWith({
         where: {
           id: 'session-1',
           userId: 'user-1',
@@ -239,7 +266,10 @@ describe('Auth Router', () => {
     });
 
     it('should throw error if session not found', async () => {
-      vi.mocked(db.session.findUnique).mockResolvedValueOnce(null);
+      const mockedSessionFindUnique = db.session.findUnique as ReturnType<
+        typeof vi.fn
+      >;
+      mockedSessionFindUnique.mockResolvedValueOnce(null);
 
       await expect(
         caller.revokeSession({ sessionId: 'nonexistent' })
@@ -249,21 +279,29 @@ describe('Auth Router', () => {
 
   describe('deleteAccount', () => {
     it('should delete user account with correct email confirmation', async () => {
-      vi.mocked(db.user.findUnique).mockResolvedValueOnce(mockUser);
-      vi.mocked(db.user.delete).mockResolvedValueOnce(mockUser);
+      const mockedUserFindUnique = db.user.findUnique as ReturnType<
+        typeof vi.fn
+      >;
+      const mockedUserDelete = db.user.delete as ReturnType<typeof vi.fn>;
+
+      mockedUserFindUnique.mockResolvedValueOnce(mockUser);
+      mockedUserDelete.mockResolvedValueOnce(mockUser);
 
       const result = await caller.deleteAccount({
         confirmationEmail: 'test@example.com',
       });
 
       expect(result).toEqual({ success: true });
-      expect(vi.mocked(db.user.delete)).toHaveBeenCalledWith({
+      expect(mockedUserDelete).toHaveBeenCalledWith({
         where: { id: 'user-1' },
       });
     });
 
     it('should throw error with incorrect email confirmation', async () => {
-      vi.mocked(db.user.findUnique).mockResolvedValueOnce(mockUser);
+      const mockedUserFindUnique = db.user.findUnique as ReturnType<
+        typeof vi.fn
+      >;
+      mockedUserFindUnique.mockResolvedValueOnce(mockUser);
 
       await expect(
         caller.deleteAccount({

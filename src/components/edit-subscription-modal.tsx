@@ -136,7 +136,11 @@ export function EditSubscriptionModal({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Netflix Premium" {...field} />
+                    <Input
+                      placeholder="Netflix Premium"
+                      aria-required="true"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

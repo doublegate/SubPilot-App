@@ -179,7 +179,9 @@ describe('utils', () => {
 
   describe('getSubscriptionStatus', () => {
     it('returns active for active subscriptions', () => {
-      expect(getSubscriptionStatus(true, new Date())).toBe('active');
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 30); // 30 days in the future
+      expect(getSubscriptionStatus(true, futureDate)).toBe('active');
     });
 
     it('returns canceled for inactive subscriptions', () => {

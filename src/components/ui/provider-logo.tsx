@@ -63,6 +63,9 @@ export function ProviderLogo({
         }}
         onLoad={() => setIsLoading(false)}
         sizes={size === 'lg' ? '64px' : size === 'md' ? '40px' : '32px'}
+        loading="lazy"
+        placeholder="blur"
+        blurDataURL="data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='40' height='40' fill='%23e5e7eb'/%3E%3C/svg%3E"
       />
     </div>
   );

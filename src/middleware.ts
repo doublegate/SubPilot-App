@@ -8,7 +8,7 @@ import {
 
 export async function middleware(req: NextRequest) {
   // Apply security middleware first
-  const securityResponse = securityMiddleware(req);
+  const securityResponse = await securityMiddleware(req);
   if (securityResponse) {
     return securityResponse;
   }

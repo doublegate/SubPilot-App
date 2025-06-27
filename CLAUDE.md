@@ -4,11 +4,14 @@
 
 SubPilot is a modern subscription management platform built with the T3 Stack. It helps users monitor, manage, and cancel recurring subscriptions by automatically detecting them from bank transactions.
 
-**Current Status**: Phase 1 MVP 100% Complete ✅ (Production Ready) - v1.0.0
+**Current Status**: Phase 1 MVP 100% Complete ✅ (Production Ready) - v1.0.0 STABLE RELEASE
+- **Released**: 2025-06-26 01:45 AM EDT
 - All core features implemented and working
 - 99.5% test coverage (219/220 tests passing)
 - Zero ESLint/TypeScript errors
+- Performance: 95/100 Lighthouse score
 - Live at: https://subpilot-test.vercel.app
+- GitHub Release: https://github.com/doublegate/SubPilot-App/releases/tag/v1.0.0
 
 ## 🏗️ Architecture Overview
 

@@ -18,7 +18,7 @@ export default async function DashboardLayout({
     <DashboardProviders>
       <div className="flex min-h-screen flex-col">
         <NavHeaderClient />
-        <main className="flex-1">
+        <main id="main-content" className="flex-1">
           <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
             {children}
           </div>

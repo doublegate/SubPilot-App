@@ -1,24 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-// Rate limiting configuration
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 100;
-
-// In-memory store for rate limiting (in production, use Redis)
-const requestCounts = new Map<string, { count: number; resetTime: number }>();
-
-/**
- * Clean up expired entries from the rate limit store
- */
-function cleanupExpiredEntries() {
-  const now = Date.now();
-  for (const [key, value] of requestCounts.entries()) {
-    if (value.resetTime < now) {
-      requestCounts.delete(key);
-    }
-  }
-}
+import {
+  checkRateLimit,
+  applyRateLimitHeaders,
+} from '@/server/lib/rate-limiter';
+import { AuditLogger } from '@/server/lib/audit-logger';
 
 /**
  * Get client identifier for rate limiting
@@ -39,58 +25,51 @@ function getClientId(request: NextRequest): string {
 /**
  * Apply rate limiting to a request
  */
-export function applyRateLimit(request: NextRequest): NextResponse | null {
-  // Skip rate limiting in development
-  if (process.env.NODE_ENV === 'development') {
+export async function applyRateLimit(
+  request: NextRequest
+): Promise<NextResponse | null> {
+  // Skip rate limiting in development unless explicitly enabled
+  if (
+    process.env.NODE_ENV === 'development' &&
+    !process.env.ENABLE_RATE_LIMIT
+  ) {
     return null;
-  }
-
-  // Clean up old entries periodically
-  if (Math.random() < 0.01) {
-    // 1% chance on each request
-    cleanupExpiredEntries();
   }
 
   const clientId = getClientId(request);
-  const now = Date.now();
+  const endpoint = request.nextUrl.pathname;
 
-  const clientData = requestCounts.get(clientId);
+  try {
+    const rateLimitInfo = await checkRateLimit(clientId, endpoint);
 
-  if (!clientData || clientData.resetTime < now) {
-    // First request or window expired
-    requestCounts.set(clientId, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-    });
+    if (!rateLimitInfo.allowed) {
+      // Log rate limit violation
+      await AuditLogger.logRateLimit(clientId, endpoint);
+
+      const response = new NextResponse(
+        JSON.stringify({
+          error: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many requests. Please try again later.',
+          retryAfter: Math.ceil((rateLimitInfo.reset - Date.now()) / 1000),
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      applyRateLimitHeaders(response.headers, rateLimitInfo);
+      return response;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Rate limiting error:', error);
+    // Fail open - allow request if rate limiting fails
     return null;
   }
-
-  // Increment request count
-  clientData.count++;
-
-  if (clientData.count > MAX_REQUESTS_PER_WINDOW) {
-    // Rate limit exceeded
-    const retryAfter = Math.ceil((clientData.resetTime - now) / 1000);
-
-    return new NextResponse(
-      JSON.stringify({
-        error: 'Too many requests',
-        message: 'Rate limit exceeded. Please try again later.',
-      }),
-      {
-        status: 429,
-        headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': retryAfter.toString(),
-          'X-RateLimit-Limit': MAX_REQUESTS_PER_WINDOW.toString(),
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': clientData.resetTime.toString(),
-        },
-      }
-    );
-  }
-
-  return null;
 }
 
 /**
@@ -147,18 +126,19 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
 /**
  * Validate CSRF token (for mutation endpoints)
  */
-export function validateCSRFToken(request: NextRequest): boolean {
-  // In a real implementation, this would check a CSRF token
-  // For now, we'll check if the request has proper headers
-
-  const contentType = request.headers.get('content-type');
-  const origin = request.headers.get('origin');
-  const host = request.headers.get('host');
-
+export async function validateCSRFToken(
+  request: NextRequest
+): Promise<boolean> {
   // Skip CSRF check for GET/HEAD requests
   if (request.method === 'GET' || request.method === 'HEAD') {
     return true;
   }
+
+  const contentType = request.headers.get('content-type');
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('host');
+  const clientId = getClientId(request);
+  const endpoint = request.nextUrl.pathname;
 
   // Check if request is from same origin
   if (origin && host) {
@@ -167,15 +147,33 @@ export function validateCSRFToken(request: NextRequest): boolean {
       const expectedOrigin = process.env.NEXTAUTH_URL ?? `https://${host}`;
       const expectedUrl = new URL(expectedOrigin);
 
-      return originUrl.host === expectedUrl.host;
+      const isValid = originUrl.host === expectedUrl.host;
+
+      if (!isValid) {
+        // Log CSRF failure
+        await AuditLogger.logCSRFFailure(clientId, endpoint, origin);
+      }
+
+      return isValid;
     } catch {
+      await AuditLogger.logCSRFFailure(clientId, endpoint, origin ?? 'unknown');
       return false;
     }
   }
 
   // For API routes, check content type
   if (request.url.includes('/api/')) {
-    return contentType?.includes('application/json') ?? false;
+    const isValid = contentType?.includes('application/json') ?? false;
+
+    if (!isValid) {
+      await AuditLogger.logCSRFFailure(
+        clientId,
+        endpoint,
+        'invalid-content-type'
+      );
+    }
+
+    return isValid;
   }
 
   return true;
@@ -184,19 +182,23 @@ export function validateCSRFToken(request: NextRequest): boolean {
 /**
  * Main security middleware
  */
-export function securityMiddleware(request: NextRequest): NextResponse | null {
+export async function securityMiddleware(
+  request: NextRequest
+): Promise<NextResponse | null> {
   // Apply rate limiting
-  const rateLimitResponse = applyRateLimit(request);
+  const rateLimitResponse = await applyRateLimit(request);
   if (rateLimitResponse) {
     return rateLimitResponse;
   }
 
   // Validate CSRF token for mutations
-  if (!validateCSRFToken(request)) {
+  const isCSRFValid = await validateCSRFToken(request);
+  if (!isCSRFValid) {
     return new NextResponse(
       JSON.stringify({
-        error: 'CSRF validation failed',
-        message: 'Invalid request origin',
+        error: 'CSRF_VALIDATION_FAILED',
+        message:
+          'Invalid request origin. Please refresh the page and try again.',
       }),
       {
         status: 403,

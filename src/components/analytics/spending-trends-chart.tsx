@@ -12,7 +12,7 @@ import {
   Area,
 } from 'recharts';
 import { Card } from '@/components/ui/card';
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -28,7 +28,7 @@ interface SpendingTrendsChartProps {
   height?: number;
 }
 
-export function SpendingTrendsChart({
+export const SpendingTrendsChart = memo(function SpendingTrendsChart({
   data,
   height = 400,
 }: SpendingTrendsChartProps) {
@@ -37,21 +37,29 @@ export function SpendingTrendsChart({
   const [showRecurring, setShowRecurring] = useState(true);
   const [showNonRecurring, setShowNonRecurring] = useState(false);
 
-  // Calculate trends
-  const calculateTrend = (values: number[]) => {
-    if (values.length < 2) return 0;
-    const recent = values.slice(-3);
-    const previous = values.slice(-6, -3);
-    if (previous.length === 0) return 0;
+  // Calculate trends with memoization
+  const calculateTrend = useMemo(() => {
+    return (values: number[]) => {
+      if (values.length < 2) return 0;
+      const recent = values.slice(-3);
+      const previous = values.slice(-6, -3);
+      if (previous.length === 0) return 0;
 
-    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
-    const previousAvg = previous.reduce((a, b) => a + b, 0) / previous.length;
+      const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+      const previousAvg = previous.reduce((a, b) => a + b, 0) / previous.length;
 
-    return ((recentAvg - previousAvg) / previousAvg) * 100;
-  };
+      return ((recentAvg - previousAvg) / previousAvg) * 100;
+    };
+  }, []);
 
-  const totalTrend = calculateTrend(data.map(d => d.total));
-  const recurringTrend = calculateTrend(data.map(d => d.recurring));
+  const totalTrend = useMemo(
+    () => calculateTrend(data.map(d => d.total)),
+    [data, calculateTrend]
+  );
+  const recurringTrend = useMemo(
+    () => calculateTrend(data.map(d => d.recurring)),
+    [data, calculateTrend]
+  );
 
   // Format period labels
   const formatPeriod = (period: string) => {
@@ -75,14 +83,14 @@ export function SpendingTrendsChart({
   };
 
   // Format currency for tooltips
-  const formatCurrency = (value: number) => {
+  const formatCurrency = React.useCallback((value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
-  };
+  }, []);
 
   const CustomTooltip = ({
     active,
@@ -285,37 +293,45 @@ export function SpendingTrendsChart({
       </div>
 
       {/* Summary Stats */}
-      <div className="grid gap-4 text-sm md:grid-cols-3">
-        <div className="rounded-lg border p-3">
-          <div className="font-medium text-muted-foreground">Average Total</div>
-          <div className="text-lg font-bold">
-            {formatCurrency(
-              data.reduce((sum, d) => sum + d.total, 0) / data.length
-            )}
+      {useMemo(() => {
+        const avgTotal =
+          data.reduce((sum, d) => sum + d.total, 0) / data.length;
+        const avgRecurring =
+          data.reduce((sum, d) => sum + d.recurring, 0) / data.length;
+        const totalSum = data.reduce((sum, d) => sum + d.total, 0);
+        const recurringSum = data.reduce((sum, d) => sum + d.recurring, 0);
+        const recurringPercentage =
+          totalSum > 0 ? (recurringSum / totalSum) * 100 : 0;
+
+        return (
+          <div className="grid gap-4 text-sm md:grid-cols-3">
+            <div className="rounded-lg border p-3">
+              <div className="font-medium text-muted-foreground">
+                Average Total
+              </div>
+              <div className="text-lg font-bold">
+                {formatCurrency(avgTotal)}
+              </div>
+            </div>
+            <div className="rounded-lg border p-3">
+              <div className="font-medium text-muted-foreground">
+                Average Recurring
+              </div>
+              <div className="text-lg font-bold">
+                {formatCurrency(avgRecurring)}
+              </div>
+            </div>
+            <div className="rounded-lg border p-3">
+              <div className="font-medium text-muted-foreground">
+                Recurring %
+              </div>
+              <div className="text-lg font-bold">
+                {recurringPercentage.toFixed(0)}%
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="rounded-lg border p-3">
-          <div className="font-medium text-muted-foreground">
-            Average Recurring
-          </div>
-          <div className="text-lg font-bold">
-            {formatCurrency(
-              data.reduce((sum, d) => sum + d.recurring, 0) / data.length
-            )}
-          </div>
-        </div>
-        <div className="rounded-lg border p-3">
-          <div className="font-medium text-muted-foreground">Recurring %</div>
-          <div className="text-lg font-bold">
-            {(
-              (data.reduce((sum, d) => sum + d.recurring, 0) /
-                data.reduce((sum, d) => sum + d.total, 0)) *
-              100
-            ).toFixed(0)}
-            %
-          </div>
-        </div>
-      </div>
+        );
+      }, [data, formatCurrency])}
     </div>
   );
-}
+});

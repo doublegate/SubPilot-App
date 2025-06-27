@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -11,6 +8,9 @@ import { ThemeToggle } from '@/components/theme-toggle';
 vi.mock('next-themes', () => ({
   useTheme: vi.fn(),
 }));
+
+// Create a properly typed mock
+const mockUseTheme = vi.mocked(useTheme);
 
 // Mock UI components
 vi.mock('@/components/ui/button', () => ({
@@ -75,22 +75,26 @@ vi.mock('lucide-react', () => ({
 
 describe('ThemeToggle', () => {
   const mockSetTheme = vi.fn();
-  const mockUseTheme = useTheme as unknown as {
-    mockReturnValue: (value: {
-      theme: string | undefined;
-      setTheme: typeof mockSetTheme;
-    }) => void;
-  };
+
+  // Helper to create a properly typed mock return value
+  const createMockReturnValue = (
+    theme: string | undefined,
+    resolvedTheme?: string
+  ) => ({
+    theme,
+    setTheme: mockSetTheme,
+    systemTheme: undefined,
+    themes: ['light', 'dark', 'system'],
+    resolvedTheme: resolvedTheme ?? theme,
+    forcedTheme: undefined,
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders with light theme selected', () => {
-    mockUseTheme.mockReturnValue({
-      theme: 'light',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
     render(<ThemeToggle />);
 
@@ -99,10 +103,7 @@ describe('ThemeToggle', () => {
   });
 
   it('renders with dark theme selected', () => {
-    mockUseTheme.mockReturnValue({
-      theme: 'dark',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('dark'));
 
     render(<ThemeToggle />);
 
@@ -110,10 +111,7 @@ describe('ThemeToggle', () => {
   });
 
   it('renders with system theme selected', () => {
-    mockUseTheme.mockReturnValue({
-      theme: 'system',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('system', 'light'));
 
     render(<ThemeToggle />);
 
@@ -121,10 +119,7 @@ describe('ThemeToggle', () => {
   });
 
   it('displays all theme options in dropdown', () => {
-    mockUseTheme.mockReturnValue({
-      theme: 'light',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
     render(<ThemeToggle />);
 
@@ -139,10 +134,7 @@ describe('ThemeToggle', () => {
 
   it('calls setTheme when light theme is selected', async () => {
     const user = userEvent.setup();
-    mockUseTheme.mockReturnValue({
-      theme: 'dark',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('dark'));
 
     render(<ThemeToggle />);
 
@@ -154,10 +146,7 @@ describe('ThemeToggle', () => {
 
   it('calls setTheme when dark theme is selected', async () => {
     const user = userEvent.setup();
-    mockUseTheme.mockReturnValue({
-      theme: 'light',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
     render(<ThemeToggle />);
 
@@ -169,10 +158,7 @@ describe('ThemeToggle', () => {
 
   it('calls setTheme when system theme is selected', async () => {
     const user = userEvent.setup();
-    mockUseTheme.mockReturnValue({
-      theme: 'light',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
     render(<ThemeToggle />);
 
@@ -183,10 +169,7 @@ describe('ThemeToggle', () => {
   });
 
   it('displays correct icons in dropdown menu', () => {
-    mockUseTheme.mockReturnValue({
-      theme: 'light',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
     render(<ThemeToggle />);
 
@@ -199,10 +182,7 @@ describe('ThemeToggle', () => {
   });
 
   it('handles undefined theme gracefully', () => {
-    mockUseTheme.mockReturnValue({
-      theme: undefined,
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue(undefined));
 
     render(<ThemeToggle />);
 
@@ -212,10 +192,7 @@ describe('ThemeToggle', () => {
   });
 
   it('has proper accessibility attributes', () => {
-    mockUseTheme.mockReturnValue({
-      theme: 'light',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
     render(<ThemeToggle />);
 
@@ -227,10 +204,7 @@ describe('ThemeToggle', () => {
   });
 
   it('uses correct dropdown alignment', () => {
-    mockUseTheme.mockReturnValue({
-      theme: 'light',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
     render(<ThemeToggle />);
 
@@ -239,10 +213,7 @@ describe('ThemeToggle', () => {
   });
 
   it('has proper button styling', () => {
-    mockUseTheme.mockReturnValue({
-      theme: 'light',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
     render(<ThemeToggle />);
 
@@ -254,10 +225,7 @@ describe('ThemeToggle', () => {
 
   describe('theme persistence', () => {
     it('persists theme selection across component re-renders', () => {
-      mockUseTheme.mockReturnValue({
-        theme: 'dark',
-        setTheme: mockSetTheme,
-      });
+      mockUseTheme.mockReturnValue(createMockReturnValue('dark'));
 
       const { rerender } = render(<ThemeToggle />);
       expect(screen.getAllByTestId('moon-icon')).toHaveLength(2);
@@ -270,10 +238,7 @@ describe('ThemeToggle', () => {
   describe('user interactions', () => {
     it('responds to keyboard navigation', async () => {
       const user = userEvent.setup();
-      mockUseTheme.mockReturnValue({
-        theme: 'light',
-        setTheme: mockSetTheme,
-      });
+      mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
       render(<ThemeToggle />);
 
@@ -291,10 +256,7 @@ describe('ThemeToggle', () => {
 
     it('handles rapid theme switching', async () => {
       const user = userEvent.setup();
-      mockUseTheme.mockReturnValue({
-        theme: 'light',
-        setTheme: mockSetTheme,
-      });
+      mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
       render(<ThemeToggle />);
 
@@ -312,10 +274,7 @@ describe('ThemeToggle', () => {
 
   describe('error handling', () => {
     it('handles missing useTheme hook gracefully', () => {
-      mockUseTheme.mockReturnValue({
-        theme: 'light',
-        setTheme: mockSetTheme,
-      });
+      mockUseTheme.mockReturnValue(createMockReturnValue('light'));
 
       render(<ThemeToggle />);
 

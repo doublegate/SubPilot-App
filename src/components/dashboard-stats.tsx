@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   TrendingUp,
@@ -22,47 +23,59 @@ interface DashboardStatsProps {
 }
 
 export function DashboardStats({ stats }: DashboardStatsProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = useMemo(() => {
+    return (amount: number) => {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    };
+  }, []);
 
-  const statsCards = [
-    {
-      title: 'Active Subscriptions',
-      value: stats.totalActive.toString(),
-      icon: CreditCard,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100 dark:bg-blue-900/20',
-    },
-    {
-      title: 'Monthly Spend',
-      value: formatCurrency(stats.monthlySpend),
-      icon: DollarSign,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100 dark:bg-green-900/20',
-      change: stats.percentageChange,
-    },
-    {
-      title: 'Yearly Projection',
-      value: formatCurrency(stats.yearlySpend),
-      icon: TrendingUp,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100 dark:bg-purple-900/20',
-    },
-    {
-      title: 'Upcoming Renewals',
-      value: stats.upcomingRenewals?.toString() ?? '0',
-      icon: Calendar,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100 dark:bg-orange-900/20',
-      subtitle: 'Next 30 days',
-    },
-  ];
+  const statsCards = useMemo(
+    () => [
+      {
+        title: 'Active Subscriptions',
+        value: stats.totalActive.toString(),
+        icon: CreditCard,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100 dark:bg-blue-900/20',
+      },
+      {
+        title: 'Monthly Spend',
+        value: formatCurrency(stats.monthlySpend),
+        icon: DollarSign,
+        color: 'text-green-600',
+        bgColor: 'bg-green-100 dark:bg-green-900/20',
+        change: stats.percentageChange,
+      },
+      {
+        title: 'Yearly Projection',
+        value: formatCurrency(stats.yearlySpend),
+        icon: TrendingUp,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-100 dark:bg-purple-900/20',
+      },
+      {
+        title: 'Upcoming Renewals',
+        value: stats.upcomingRenewals?.toString() ?? '0',
+        icon: Calendar,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-100 dark:bg-orange-900/20',
+        subtitle: 'Next 30 days',
+      },
+    ],
+    [
+      stats.totalActive,
+      stats.monthlySpend,
+      stats.yearlySpend,
+      stats.percentageChange,
+      stats.upcomingRenewals,
+      formatCurrency,
+    ]
+  );
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -83,12 +96,16 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
                 {stat.change > 0 ? (
                   <>
                     <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
-                    <span className="text-green-600">+{stat.change.toFixed(2)}%</span>
+                    <span className="text-green-600">
+                      +{stat.change.toFixed(2)}%
+                    </span>
                   </>
                 ) : (
                   <>
                     <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
-                    <span className="text-red-600">{stat.change.toFixed(2)}%</span>
+                    <span className="text-red-600">
+                      {stat.change.toFixed(2)}%
+                    </span>
                   </>
                 )}
                 <span className="ml-1">from last month</span>

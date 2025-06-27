@@ -69,7 +69,7 @@ describe('DashboardStats', () => {
     };
 
     render(<DashboardStats stats={statsWithPositiveChange} />);
-    expect(screen.getByText('+15.5%')).toBeInTheDocument();
+    expect(screen.getByText('+15.50%')).toBeInTheDocument();
   });
 
   it('formats currency correctly for different amounts', () => {
@@ -139,6 +139,6 @@ describe('DashboardStats', () => {
     };
 
     render(<DashboardStats stats={negativeChangeStats} />);
-    expect(screen.getByText('-10.5%')).toBeInTheDocument();
+    expect(screen.getByText('-10.50%')).toBeInTheDocument();
   });
 });

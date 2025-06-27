@@ -159,7 +159,11 @@ export function AddSubscriptionModal({
                   <FormItem>
                     <FormLabel>Subscription Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Netflix Premium" {...field} />
+                      <Input
+                        placeholder="Netflix Premium"
+                        aria-required="true"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -221,6 +225,7 @@ export function AddSubscriptionModal({
                         type="number"
                         step="0.01"
                         placeholder="19.99"
+                        aria-required="true"
                         {...field}
                         onChange={e =>
                           field.onChange(parseFloat(e.target.value))

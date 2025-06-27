@@ -497,7 +497,7 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-lg border p-4">
               <div className="flex flex-col items-center text-center">
-                <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/20 mb-3">
+                <div className="mb-3 rounded-lg bg-blue-100 p-2 dark:bg-blue-900/20">
                   <svg
                     className="h-5 w-5 text-blue-600"
                     fill="none"
@@ -529,7 +529,7 @@ export default function DashboardPage() {
             {overview?.categoryBreakdown?.slice(0, 2).map((category, index) => (
               <div key={category.category} className="rounded-lg border p-4">
                 <div className="flex flex-col items-center text-center">
-                  <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/20 mb-3">
+                  <div className="mb-3 rounded-lg bg-purple-100 p-2 dark:bg-purple-900/20">
                     <svg
                       className="h-5 w-5 text-purple-600"
                       fill="none"
@@ -546,11 +546,15 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="text-lg font-semibold text-foreground">
-                      Top Category<sup className="text-xs font-normal ml-1">{index + 1}</sup>
+                      Top Category
+                      <sup className="ml-1 text-xs font-normal">
+                        {index + 1}
+                      </sup>
                     </p>
                     <p className="text-lg font-bold">{category.category}</p>
                     <p className="text-sm text-muted-foreground">
-                      ${category.amount.toFixed(2)}/mo ({category.percentage.toFixed(1)}%)
+                      ${category.amount.toFixed(2)}/mo (
+                      {category.percentage.toFixed(1)}%)
                     </p>
                   </div>
                 </div>

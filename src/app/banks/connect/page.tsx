@@ -20,7 +20,7 @@ export default async function ConnectBankPage() {
   }
 
   return (
-    <div className="container max-w-4xl py-8">
+    <main className="container max-w-4xl py-8">
       <div className="mb-8">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/dashboard">
@@ -96,7 +96,7 @@ export default async function ConnectBankPage() {
         </div>
 
         <div className="rounded-lg bg-muted p-6">
-          <h3 className="mb-2 font-semibold">What happens next?</h3>
+          <h2 className="mb-2 text-lg font-semibold">What happens next?</h2>
           <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
             <li>
               Click &quot;Connect Bank Account&quot; to open the secure Plaid
@@ -111,6 +111,6 @@ export default async function ConnectBankPage() {
           </ol>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

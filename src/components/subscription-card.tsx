@@ -180,7 +180,10 @@ export function SubscriptionCard({
                     : 'text-muted-foreground'
                 }
               >
-                <div>Next billing: {format(subscription.nextBilling, 'MMM d, yyyy')}</div>
+                <div>
+                  Next billing:{' '}
+                  {format(subscription.nextBilling, 'MMM d, yyyy')}
+                </div>
                 <div className="text-xs">
                   (
                   {formatDistanceToNow(subscription.nextBilling, {

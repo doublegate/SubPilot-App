@@ -101,7 +101,8 @@ export function UpcomingRenewalsCalendar({
     const isCurrentDay = isToday(date);
     const renewal = getRenewalForDate(date);
 
-    let classes = 'relative h-24 p-2 border rounded-lg transition-colors overflow-hidden cursor-pointer ';
+    let classes =
+      'relative h-24 p-2 border rounded-lg transition-colors overflow-hidden cursor-pointer ';
 
     if (!isCurrentMonth) {
       classes += 'text-muted-foreground bg-muted/30 ';
@@ -275,17 +276,19 @@ export function UpcomingRenewalsCalendar({
                 const isCurrentMonth = isSameMonth(date, currentDate);
 
                 return (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className={getDayClasses(date)}
-                    onMouseEnter={(e) => {
+                    onMouseEnter={e => {
                       if (renewal && isCurrentMonth) {
                         const rect = e.currentTarget.getBoundingClientRect();
-                        const calendarRect = calendarRef.current?.getBoundingClientRect();
+                        const calendarRect =
+                          calendarRef.current?.getBoundingClientRect();
                         if (calendarRect) {
                           setTooltipPosition({
                             top: rect.top - calendarRect.top - 10,
-                            left: rect.left - calendarRect.left + rect.width / 2,
+                            left:
+                              rect.left - calendarRect.left + rect.width / 2,
                           });
                           setHoveredDate(format(date, 'yyyy-MM-dd'));
                         }
@@ -320,7 +323,7 @@ export function UpcomingRenewalsCalendar({
                             )}
                           </div>
                         </div>
-                        
+
                         {/* Tooltip will be rendered at the end */}
                       </>
                     )}
@@ -328,44 +331,48 @@ export function UpcomingRenewalsCalendar({
                 );
               })}
             </div>
-            
+
             {/* Floating Tooltip */}
-            {hoveredDate && (() => {
-              const renewal = renewalMap.get(hoveredDate);
-              if (!renewal) return null;
-              
-              return (
-                <div 
-                  className="pointer-events-none absolute z-[100] w-64 rounded-lg border bg-popover p-3 shadow-lg"
-                  style={{
-                    top: `${tooltipPosition.top}px`,
-                    left: `${tooltipPosition.left}px`,
-                    transform: 'translate(-50%, -100%)',
-                  }}
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between border-b pb-2">
-                      <span className="text-sm font-medium">
-                        {format(parseISO(hoveredDate), 'MMM d, yyyy')}
-                      </span>
-                      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                        {formatCurrency(renewal.dailyTotal)}
-                      </span>
-                    </div>
-                    <div className="max-h-64 space-y-1 overflow-y-auto">
-                      {renewal.subscriptions.map(sub => (
-                        <div key={sub.id} className="flex items-center justify-between py-1">
-                          <span className="text-sm">{sub.name}</span>
-                          <span className="text-sm font-medium">
-                            {formatCurrency(sub.amount, sub.currency)}
-                          </span>
-                        </div>
-                      ))}
+            {hoveredDate &&
+              (() => {
+                const renewal = renewalMap.get(hoveredDate);
+                if (!renewal) return null;
+
+                return (
+                  <div
+                    className="pointer-events-none absolute z-[100] w-64 rounded-lg border bg-popover p-3 shadow-lg"
+                    style={{
+                      top: `${tooltipPosition.top}px`,
+                      left: `${tooltipPosition.left}px`,
+                      transform: 'translate(-50%, -100%)',
+                    }}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <span className="text-sm font-medium">
+                          {format(parseISO(hoveredDate), 'MMM d, yyyy')}
+                        </span>
+                        <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                          {formatCurrency(renewal.dailyTotal)}
+                        </span>
+                      </div>
+                      <div className="max-h-64 space-y-1 overflow-y-auto">
+                        {renewal.subscriptions.map(sub => (
+                          <div
+                            key={sub.id}
+                            className="flex items-center justify-between py-1"
+                          >
+                            <span className="text-sm">{sub.name}</span>
+                            <span className="text-sm font-medium">
+                              {formatCurrency(sub.amount, sub.currency)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
           </CardContent>
         </Card>
       ) : (

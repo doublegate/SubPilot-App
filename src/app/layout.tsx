@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   description:
     'Your command center for recurring finances. Monitor, manage, and cancel subscriptions automatically.',
   icons: [{ rel: 'icon', url: '/favicon.ico' }],
+  other: {
+    'theme-color': '#06B6D4',
+    'color-scheme': 'light dark',
+  },
 };
 
 export default function RootLayout({
@@ -23,7 +27,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://vitals.vercel-insights.com" />
+        <link rel="dns-prefetch" href="https://cdn.plaid.com" />
+      </head>
       <body className="font-sans">
+        <a
+          href="#main-content"
+          className="text-primary-foreground sr-only rounded-md bg-primary px-4 py-2 focus:not-sr-only focus:absolute focus:left-4 focus:top-4"
+        >
+          Skip to main content
+        </a>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

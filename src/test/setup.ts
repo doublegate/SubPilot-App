@@ -1,15 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 import '@testing-library/jest-dom';
-import { afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import React from 'react';
 
 // Extend Vitest matchers with jest-dom matchers
 declare module 'vitest' {
   // Explicit interface extensions for jest-dom compatibility
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type, @typescript-eslint/no-unused-vars
-  interface Assertion<T = any> {
+  interface Assertion {
     toBeInTheDocument(): void;
     toBeVisible(): void;
     toBeDisabled(): void;
@@ -39,6 +36,26 @@ afterEach(() => {
   cleanup();
 });
 
+// Suppress React warnings about non-DOM attributes in tests
+const originalError = console.error;
+beforeEach(() => {
+  console.error = (...args) => {
+    if (
+      typeof args[0] === 'string' &&
+      (args[0].includes('React does not recognize') ||
+        args[0].includes('Received `true` for a non-boolean attribute') ||
+        args[0].includes('Warning: validateDOMNesting'))
+    ) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+});
+
+afterEach(() => {
+  console.error = originalError;
+});
+
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
   useRouter() {
@@ -61,8 +78,19 @@ vi.mock('next/navigation', () => ({
 
 // Mock Next.js Image component for testing
 vi.mock('next/image', () => ({
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
-    return React.createElement('img', props);
+  default: (
+    props: React.ImgHTMLAttributes<HTMLImageElement> & {
+      fill?: boolean;
+      blurDataURL?: string;
+      sizes?: string;
+      loading?: string;
+      placeholder?: string;
+    }
+  ) => {
+    // Filter out Next.js specific props that don't exist on regular img elements
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { fill, ...imgProps } = props;
+    return React.createElement('img', imgProps);
   },
 }));
 
@@ -106,66 +134,7 @@ vi.mock('@/server/auth', () => ({
   },
 }));
 
-// Mock database
-vi.mock('@/server/db', () => ({
-  db: {
-    user: {
-      create: vi.fn(),
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-    subscription: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      deleteMany: vi.fn(),
-      count: vi.fn(),
-      aggregate: vi.fn(),
-    },
-    transaction: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      createMany: vi.fn(),
-      update: vi.fn(),
-      updateMany: vi.fn(),
-      delete: vi.fn(),
-      deleteMany: vi.fn(),
-      count: vi.fn(),
-      aggregate: vi.fn(),
-    },
-    plaidItem: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-    },
-    account: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-    },
-    notification: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      count: vi.fn(),
-      markAsRead: vi.fn(),
-    },
-  },
-}));
+// Remove global database mock - let tests decide if they need to mock
 
 // Mock Plaid client
 vi.mock('@/server/plaid-client', () => ({
@@ -182,24 +151,9 @@ vi.mock('@/server/plaid-client', () => ({
   ),
 }));
 
-// Mock email service
-vi.mock('@/server/services/email.service', () => ({
-  EmailService: {
-    sendNotification: vi.fn().mockResolvedValue(true),
-    sendWelcomeEmail: vi.fn().mockResolvedValue(true),
-    sendSubscriptionAlert: vi.fn().mockResolvedValue(true),
-    validateEmailTemplate: vi.fn(() => true),
-  },
-}));
+// Remove email service mock - let individual tests handle it
 
-// Mock subscription detector
-vi.mock('@/server/services/subscription-detector', () => ({
-  SubscriptionDetector: vi.fn().mockImplementation(() => ({
-    detectUserSubscriptions: vi.fn().mockResolvedValue([]),
-    detectSingleTransaction: vi.fn().mockResolvedValue(null),
-    createSubscriptionsFromDetection: vi.fn().mockResolvedValue([]),
-  })),
-}));
+// Remove subscription detector mock - let tests handle it
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
