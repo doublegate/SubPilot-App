@@ -8,8 +8,7 @@ export function getStripe(): Stripe {
   if (!stripeInstance) {
     // During build, skip initialization if SKIP_ENV_VALIDATION is set
     if (process.env.SKIP_ENV_VALIDATION === 'true' && !env.STRIPE_SECRET_KEY) {
-      // Return a mock object during build
-      return {} as Stripe;
+      throw new Error('Stripe cannot be used during build time');
     }
     
     // During runtime, env vars must be available
@@ -29,18 +28,8 @@ export function getStripe(): Stripe {
   return stripeInstance;
 }
 
-// Export stripe as a getter for backward compatibility
-// Use Object.defineProperty to avoid immediate evaluation
-export const stripe = {} as Stripe;
-
-// Only set up the proxy if we're not in build mode
-if (process.env.SKIP_ENV_VALIDATION !== 'true') {
-  Object.setPrototypeOf(stripe, new Proxy({}, {
-    get(target, prop) {
-      return getStripe()[prop as keyof Stripe];
-    },
-  }));
-}
+// Remove the problematic Proxy export and just export the getter
+export { getStripe as stripe };
 
 // Stripe webhook event types we handle
 export const STRIPE_WEBHOOK_EVENTS = {
