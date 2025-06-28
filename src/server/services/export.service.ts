@@ -1,6 +1,6 @@
 import { db } from '@/server/db';
 import { format } from 'date-fns';
-import type { Subscription, Transaction } from '@prisma/client';
+import type { } from '@prisma/client';
 
 // CSV Export Types
 export interface ExportOptions {
@@ -63,12 +63,7 @@ export class ExportService {
     // Add transaction data if requested
     let transactionRows: string[][] = [];
     if (options.includeTransactions) {
-      const transactionHeaders = [
-        '',
-        'Transaction Date',
-        'Transaction Amount',
-        'Transaction Description',
-      ];
+      // Transaction headers would be added here if needed for formatting
 
       transactionRows = subscriptions.flatMap(
         sub =>
@@ -267,7 +262,7 @@ export class ExportService {
   }
 
   // Get export history
-  static async getExportHistory(userId: string, limit = 10) {
+  static async getExportHistory(userId: string, _limit = 10) {
     // This would query the export history table
     // For now, returning mock data
     return [

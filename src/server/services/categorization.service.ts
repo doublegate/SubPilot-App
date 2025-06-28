@@ -1,15 +1,12 @@
 import {
   type PrismaClient,
-  type Transaction,
-  type Subscription,
   type Prisma,
 } from '@prisma/client';
 import {
   openAIClient,
-  type SubscriptionCategory,
   SUBSCRIPTION_CATEGORIES,
 } from '@/server/lib/openai-client';
-import { cacheService, cacheKeys, cacheTTL } from './cache.service';
+import { cacheService } from './cache.service';
 
 /**
  * Service for categorizing subscriptions and transactions
@@ -59,7 +56,7 @@ export class CategorizationService {
       transaction.merchantName ?? transaction.description
     );
 
-    if (merchantAlias && merchantAlias.category) {
+    if (merchantAlias?.category) {
       // Update transaction with cached alias
       await this.updateTransactionCategory(transactionId, {
         category: merchantAlias.category,
@@ -240,7 +237,7 @@ export class CategorizationService {
     // Process remaining with AI
     if (merchantGroups.size > 0) {
       const merchantsToProcess = Array.from(merchantGroups.entries()).map(
-        ([key, group]) => ({
+        ([_key, group]) => ({
           name: group[0]!.merchantName ?? group[0]!.description,
           description: group[0]!.description,
           amount: group[0]!.amount.toNumber(),
@@ -585,8 +582,6 @@ let categorizationServiceInstance: CategorizationService | null = null;
 export function getCategorizationService(
   db: PrismaClient
 ): CategorizationService {
-  if (!categorizationServiceInstance) {
-    categorizationServiceInstance = new CategorizationService(db);
-  }
+  categorizationServiceInstance ??= new CategorizationService(db);
   return categorizationServiceInstance;
 }

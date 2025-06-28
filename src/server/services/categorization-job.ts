@@ -1,6 +1,6 @@
 import { type PrismaClient } from '@prisma/client';
 import { getCategorizationService } from './categorization.service';
-import { cacheService, cacheKeys } from './cache.service';
+import { cacheService } from './cache.service';
 
 /**
  * Background job processor for categorization tasks
@@ -272,8 +272,6 @@ let jobProcessorInstance: CategorizationJobProcessor | null = null;
 export function getCategorizationJobProcessor(
   db: PrismaClient
 ): CategorizationJobProcessor {
-  if (!jobProcessorInstance) {
-    jobProcessorInstance = new CategorizationJobProcessor(db);
-  }
+  jobProcessorInstance ??= new CategorizationJobProcessor(db);
   return jobProcessorInstance;
 }

@@ -24,7 +24,7 @@ import { format } from 'date-fns';
 
 export default function ExportPage() {
   const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<
+  const [_selectedFormat, _setSelectedFormat] = useState<
     'csv' | 'json' | 'pdf' | 'excel'
   >('csv');
 
