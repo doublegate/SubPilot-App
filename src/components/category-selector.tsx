@@ -46,13 +46,13 @@ export function CategorySelector({
     onSuccess: (_, variables) => {
       toast.success('Category updated successfully');
       onCategoryChange?.(variables.category);
-      
+
       // Invalidate related queries
       void utils.subscriptions.getAll.invalidate();
       void utils.analytics.getOverview.invalidate();
       void utils.categorization.getStats.invalidate();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to update category', {
         description: error.message,
       });
@@ -63,29 +63,30 @@ export function CategorySelector({
   });
 
   // AI categorization mutation
-  const categorizeWithAI = api.categorization.categorizeSubscription.useMutation({
-    onMutate: () => {
-      setIsUpdating(true);
-    },
-    onSuccess: (result) => {
-      toast.success('AI categorization complete', {
-        description: `Category: ${result.category} (${Math.round(result.confidence * 100)}% confidence)`,
-      });
-      
-      // Invalidate related queries
-      void utils.subscriptions.getAll.invalidate();
-      void utils.analytics.getOverview.invalidate();
-      void utils.categorization.getStats.invalidate();
-    },
-    onError: (error) => {
-      toast.error('AI categorization failed', {
-        description: error.message,
-      });
-    },
-    onSettled: () => {
-      setIsUpdating(false);
-    },
-  });
+  const categorizeWithAI =
+    api.categorization.categorizeSubscription.useMutation({
+      onMutate: () => {
+        setIsUpdating(true);
+      },
+      onSuccess: result => {
+        toast.success('AI categorization complete', {
+          description: `Category: ${result.category} (${Math.round(result.confidence * 100)}% confidence)`,
+        });
+
+        // Invalidate related queries
+        void utils.subscriptions.getAll.invalidate();
+        void utils.analytics.getOverview.invalidate();
+        void utils.categorization.getStats.invalidate();
+      },
+      onError: error => {
+        toast.error('AI categorization failed', {
+          description: error.message,
+        });
+      },
+      onSettled: () => {
+        setIsUpdating(false);
+      },
+    });
 
   const handleCategoryChange = (newCategory: string) => {
     updateCategory.mutate({
@@ -108,7 +109,9 @@ export function CategorySelector({
     return (
       <div className="flex items-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="text-sm text-muted-foreground">Loading categories...</span>
+        <span className="text-sm text-muted-foreground">
+          Loading categories...
+        </span>
       </div>
     );
   }
@@ -200,8 +203,8 @@ export function BulkCategorySelector({
       disabled={isProcessing || itemCount === 0}
       className={cn(
         'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
-        'bg-primary text-primary-foreground hover:bg-primary/90',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
+        'text-primary-foreground bg-primary hover:bg-primary/90',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         'transition-colors'
       )}
     >

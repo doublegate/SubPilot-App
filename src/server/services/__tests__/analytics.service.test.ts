@@ -45,7 +45,9 @@ describe('AnalyticsService', () => {
         },
       ];
 
-      vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(mockTransactions as any);
+      vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(
+        mockTransactions as any
+      );
 
       const result = await service.generateTimeSeriesData(
         'user-123',
@@ -98,7 +100,9 @@ describe('AnalyticsService', () => {
         isSubscription: true,
       }));
 
-      vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(mockTransactions as any);
+      vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(
+        mockTransactions as any
+      );
 
       const result = await service.predictFutureSpending('user-123', 3);
 
@@ -160,7 +164,9 @@ describe('AnalyticsService', () => {
         },
       ];
 
-      vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(mockTransactions as any);
+      vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(
+        mockTransactions as any
+      );
 
       const result = await service.detectAnomalies('user-123');
 
@@ -203,7 +209,9 @@ describe('AnalyticsService', () => {
         },
       ];
 
-      vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(mockTransactions as any);
+      vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(
+        mockTransactions as any
+      );
 
       const result = await service.detectAnomalies('user-123');
 
@@ -249,7 +257,9 @@ describe('AnalyticsService', () => {
         },
       ];
 
-      vi.mocked(mockPrisma.subscription.findMany).mockResolvedValue(mockSubscriptions as any);
+      vi.mocked(mockPrisma.subscription.findMany).mockResolvedValue(
+        mockSubscriptions as any
+      );
 
       const result = await service.generateOptimizationSuggestions('user-123');
 
@@ -273,7 +283,9 @@ describe('AnalyticsService', () => {
         },
       ];
 
-      vi.mocked(mockPrisma.subscription.findMany).mockResolvedValue(mockSubscriptions as any);
+      vi.mocked(mockPrisma.subscription.findMany).mockResolvedValue(
+        mockSubscriptions as any
+      );
 
       const result = await service.generateOptimizationSuggestions('user-123');
 
@@ -381,7 +393,9 @@ describe('AnalyticsService', () => {
         },
       ];
 
-      vi.mocked(mockPrisma.subscription.findMany).mockResolvedValue(mockSubscriptions as any);
+      vi.mocked(mockPrisma.subscription.findMany).mockResolvedValue(
+        mockSubscriptions as any
+      );
 
       const result = await service.analyzeCategorySpending('user-123', 'month');
 
@@ -412,7 +426,9 @@ describe('AnalyticsService', () => {
         },
       ];
 
-      vi.mocked(mockPrisma.subscription.findMany).mockResolvedValue(mockSubscriptions as any);
+      vi.mocked(mockPrisma.subscription.findMany).mockResolvedValue(
+        mockSubscriptions as any
+      );
 
       const result = await service.analyzeCategorySpending('user-123', 'month');
 

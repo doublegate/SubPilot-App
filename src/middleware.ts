@@ -46,23 +46,26 @@ export async function middleware(req: NextRequest) {
 /**
  * Basic security checks compatible with Edge Runtime
  */
-async function applyBasicSecurity(request: NextRequest): Promise<NextResponse | null> {
+async function applyBasicSecurity(
+  request: NextRequest
+): Promise<NextResponse | null> {
   // Basic CSRF protection for mutations
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     const origin = request.headers.get('origin');
     const host = request.headers.get('host');
-    
+
     if (origin && host) {
       try {
         const originUrl = new URL(origin);
         const expectedOrigin = process.env.NEXTAUTH_URL ?? `https://${host}`;
         const expectedUrl = new URL(expectedOrigin);
-        
+
         if (originUrl.host !== expectedUrl.host) {
           return new NextResponse(
             JSON.stringify({
               error: 'CSRF_VALIDATION_FAILED',
-              message: 'Invalid request origin. Please refresh the page and try again.',
+              message:
+                'Invalid request origin. Please refresh the page and try again.',
             }),
             {
               status: 403,
@@ -74,7 +77,8 @@ async function applyBasicSecurity(request: NextRequest): Promise<NextResponse | 
         return new NextResponse(
           JSON.stringify({
             error: 'CSRF_VALIDATION_FAILED',
-            message: 'Invalid request origin. Please refresh the page and try again.',
+            message:
+              'Invalid request origin. Please refresh the page and try again.',
           }),
           {
             status: 403,

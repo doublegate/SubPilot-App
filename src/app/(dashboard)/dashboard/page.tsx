@@ -608,13 +608,11 @@ export default function DashboardPage() {
   return (
     <>
       {isMobile ? (
-        <PullToRefresh onRefresh={handleRefresh}>
-          {content}
-        </PullToRefresh>
+        <PullToRefresh onRefresh={handleRefresh}>{content}</PullToRefresh>
       ) : (
         content
       )}
-      
+
       {/* Mobile Quick Actions FAB */}
       {isMobile && (
         <MobileQuickActions
@@ -623,12 +621,9 @@ export default function DashboardPage() {
           onSync={() => syncMutation.mutate({})}
         />
       )}
-      
+
       {/* Export Modal */}
-      <ExportModal
-        open={exportModalOpen}
-        onOpenChange={setExportModalOpen}
-      />
+      <ExportModal open={exportModalOpen} onOpenChange={setExportModalOpen} />
     </>
   );
 }

@@ -70,7 +70,11 @@ export default function RootLayout({
             <ServiceWorkerRegistration />
             {children}
             <Analytics />
-            <Toaster richColors position="top-center" className="md:bottom-right" />
+            <Toaster
+              richColors
+              position="top-center"
+              className="md:bottom-right"
+            />
           </TRPCReactProvider>
         </ThemeProvider>
       </body>

@@ -12,7 +12,13 @@ import {
   Cell,
   LabelList,
 } from 'recharts';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { ArrowUpIcon, ArrowDownIcon, MinusIcon } from 'lucide-react';
 
 export interface ComparisonData {
@@ -96,8 +102,17 @@ export const ComparisonChart = React.memo(function ComparisonChart({
           ) : (
             <MinusIcon className="h-3 w-3 text-gray-500" />
           )}
-          <span className={data.change > 0 ? 'text-red-500' : data.change < 0 ? 'text-green-500' : 'text-gray-500'}>
-            {formatCurrency(Math.abs(data.change))} ({Math.abs(data.changePercentage).toFixed(1)}%)
+          <span
+            className={
+              data.change > 0
+                ? 'text-red-500'
+                : data.change < 0
+                  ? 'text-green-500'
+                  : 'text-gray-500'
+            }
+          >
+            {formatCurrency(Math.abs(data.change))} (
+            {Math.abs(data.changePercentage).toFixed(1)}%)
           </span>
         </div>
       </div>
@@ -149,7 +164,7 @@ export const ComparisonChart = React.memo(function ComparisonChart({
                 className="text-xs"
               />
               <Tooltip content={<CustomTooltip />} />
-              
+
               <Bar dataKey="Previous" fill="#e5e7eb" radius={[4, 4, 0, 0]}>
                 <LabelList content={renderCustomLabel} position="top" />
               </Bar>
@@ -164,14 +179,24 @@ export const ComparisonChart = React.memo(function ComparisonChart({
             <p className="text-sm text-muted-foreground">Total Change</p>
             <p className="text-lg font-semibold">
               {data.reduce((sum, item) => sum + item.change, 0) > 0 ? '+' : ''}
-              {formatCurrency(Math.abs(data.reduce((sum, item) => sum + item.change, 0)))}
+              {formatCurrency(
+                Math.abs(data.reduce((sum, item) => sum + item.change, 0))
+              )}
             </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Average Change</p>
             <p className="text-lg font-semibold">
-              {data.reduce((sum, item) => sum + item.changePercentage, 0) / data.length > 0 ? '+' : ''}
-              {(data.reduce((sum, item) => sum + item.changePercentage, 0) / data.length).toFixed(1)}%
+              {data.reduce((sum, item) => sum + item.changePercentage, 0) /
+                data.length >
+              0
+                ? '+'
+                : ''}
+              {(
+                data.reduce((sum, item) => sum + item.changePercentage, 0) /
+                data.length
+              ).toFixed(1)}
+              %
             </p>
           </div>
           <div>

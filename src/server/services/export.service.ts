@@ -69,14 +69,15 @@ export class ExportService {
         'Transaction Amount',
         'Transaction Description',
       ];
-      
-      transactionRows = subscriptions.flatMap(sub => 
-        sub.transactions?.map(trans => [
-          sub.name,
-          format(trans.date, 'yyyy-MM-dd'),
-          trans.amount.toString(),
-          trans.description || '',
-        ]) || []
+
+      transactionRows = subscriptions.flatMap(
+        sub =>
+          sub.transactions?.map(trans => [
+            sub.name,
+            format(trans.date, 'yyyy-MM-dd'),
+            trans.amount.toString(),
+            trans.description || '',
+          ]) || []
       );
     }
 
@@ -84,12 +85,16 @@ export class ExportService {
     const csvContent = [
       headers.join(','),
       ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
-      ...(transactionRows.length > 0 ? [
-        '',
-        'Transaction History',
-        ['Subscription', 'Date', 'Amount', 'Description'].join(','),
-        ...transactionRows.map(row => row.map(cell => `"${cell}"`).join(',')),
-      ] : []),
+      ...(transactionRows.length > 0
+        ? [
+            '',
+            'Transaction History',
+            ['Subscription', 'Date', 'Amount', 'Description'].join(','),
+            ...transactionRows.map(row =>
+              row.map(cell => `"${cell}"`).join(',')
+            ),
+          ]
+        : []),
     ].join('\n');
 
     return {
@@ -152,11 +157,12 @@ export class ExportService {
     // For now, we'll generate a CSV that Excel can open
     // In production, you'd use a library like exceljs or xlsx
     const csvResult = await this.generateCSV(options);
-    
+
     return {
       ...csvResult,
       filename: csvResult.filename.replace('.csv', '.xlsx'),
-      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      mimeType:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     };
   }
 
@@ -217,7 +223,9 @@ export class ExportService {
             </tr>
           </thead>
           <tbody>
-            ${subscriptions.map(sub => `
+            ${subscriptions
+              .map(
+                sub => `
               <tr>
                 <td>${sub.name}</td>
                 <td>$${sub.amount.toFixed(2)}</td>
@@ -225,7 +233,9 @@ export class ExportService {
                 <td>${sub.isActive ? 'Active' : 'Inactive'}</td>
                 <td>${sub.nextBilling ? format(sub.nextBilling, 'MMM dd, yyyy') : '-'}</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       </body>
@@ -282,20 +292,24 @@ export class ExportService {
       .reduce((sum, s) => sum + s.amount, 0);
 
     const yearlySpend = subscriptions.reduce((sum, s) => {
-      const multiplier = {
-        monthly: 12,
-        yearly: 1,
-        weekly: 52,
-        quarterly: 4,
-      }[s.frequency] || 12;
+      const multiplier =
+        {
+          monthly: 12,
+          yearly: 1,
+          weekly: 52,
+          quarterly: 4,
+        }[s.frequency] || 12;
       return sum + Number(s.amount) * multiplier;
     }, 0);
 
-    const categoryBreakdown = subscriptions.reduce((acc, sub) => {
-      const category = sub.category || 'Uncategorized';
-      acc[category] = (acc[category] || 0) + Number(sub.amount);
-      return acc;
-    }, {} as Record<string, number>);
+    const categoryBreakdown = subscriptions.reduce(
+      (acc, sub) => {
+        const category = sub.category || 'Uncategorized';
+        acc[category] = (acc[category] || 0) + Number(sub.amount);
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     return {
       totalActive: subscriptions.length,

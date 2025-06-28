@@ -1,4 +1,9 @@
-import { type PrismaClient, type Subscription, type Transaction, type Prisma } from '@prisma/client';
+import {
+  type PrismaClient,
+  type Subscription,
+  type Transaction,
+  type Prisma,
+} from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 // Type definitions
@@ -38,7 +43,11 @@ export interface CategoryAnalysis {
 }
 
 export interface AnomalyDetection {
-  type: 'price_spike' | 'unusual_charge' | 'duplicate_charge' | 'missing_charge';
+  type:
+    | 'price_spike'
+    | 'unusual_charge'
+    | 'duplicate_charge'
+    | 'missing_charge';
   severity: 'low' | 'medium' | 'high';
   subscription?: {
     id: string;
@@ -117,7 +126,7 @@ export class AnalyticsService {
     });
 
     const grouped = this.groupTransactionsByPeriod(transactions, groupBy);
-    
+
     return Object.entries(grouped).map(([date, data]) => ({
       date,
       value: data.total,
@@ -178,7 +187,8 @@ export class AnalyticsService {
     return {
       predictedValue: Math.max(0, predictedValue),
       confidence,
-      trend: slope > 0.05 ? 'increasing' : slope < -0.05 ? 'decreasing' : 'stable',
+      trend:
+        slope > 0.05 ? 'increasing' : slope < -0.05 ? 'decreasing' : 'stable',
       seasonalFactor,
     };
   }
@@ -199,9 +209,8 @@ export class AnalyticsService {
     ]);
 
     const change = currentSpending - previousSpending;
-    const changePercentage = previousSpending > 0 
-      ? (change / previousSpending) * 100 
-      : 0;
+    const changePercentage =
+      previousSpending > 0 ? (change / previousSpending) * 100 : 0;
 
     return {
       current: currentSpending,
@@ -258,17 +267,28 @@ export class AnalyticsService {
         totalSpending: 0,
         subscriptionCount: 0,
         averageAmount: 0,
-        trend: { current: 0, previous: 0, change: 0, changePercentage: 0, trend: 'stable' as const },
+        trend: {
+          current: 0,
+          previous: 0,
+          change: 0,
+          changePercentage: 0,
+          trend: 'stable' as const,
+        },
         providers: [],
       };
 
-      const monthlyAmount = this.convertToMonthlyAmount(sub.amount.toNumber(), sub.frequency);
+      const monthlyAmount = this.convertToMonthlyAmount(
+        sub.amount.toNumber(),
+        sub.frequency
+      );
       existing.totalSpending += monthlyAmount;
       existing.subscriptionCount += 1;
 
       const providerName = this.extractProviderName(sub.provider);
-      const providerIndex = existing.providers.findIndex(p => p.name === providerName);
-      
+      const providerIndex = existing.providers.findIndex(
+        p => p.name === providerName
+      );
+
       if (providerIndex >= 0) {
         existing.providers[providerIndex]!.amount += monthlyAmount;
       } else {
@@ -284,17 +304,17 @@ export class AnalyticsService {
 
     // Calculate averages and percentages
     const results = Array.from(categoryMap.values()).map(cat => {
-      cat.averageAmount = cat.subscriptionCount > 0 
-        ? cat.totalSpending / cat.subscriptionCount 
-        : 0;
+      cat.averageAmount =
+        cat.subscriptionCount > 0
+          ? cat.totalSpending / cat.subscriptionCount
+          : 0;
 
       // Calculate provider percentages
       cat.providers = cat.providers
         .map(p => ({
           ...p,
-          percentage: cat.totalSpending > 0 
-            ? (p.amount / cat.totalSpending) * 100 
-            : 0,
+          percentage:
+            cat.totalSpending > 0 ? (p.amount / cat.totalSpending) * 100 : 0,
         }))
         .sort((a, b) => b.amount - a.amount)
         .slice(0, 5); // Top 5 providers
@@ -331,7 +351,8 @@ export class AnalyticsService {
     const transactionsBySubscription = new Map<string, Transaction[]>();
     for (const tx of recentTransactions) {
       if (tx.subscriptionId) {
-        const existing = transactionsBySubscription.get(tx.subscriptionId) ?? [];
+        const existing =
+          transactionsBySubscription.get(tx.subscriptionId) ?? [];
         existing.push(tx);
         transactionsBySubscription.set(tx.subscriptionId, existing);
       }
@@ -364,8 +385,10 @@ export class AnalyticsService {
 
       // Duplicate charge detection
       const dates = transactions.map(t => t.date.toISOString().split('T')[0]);
-      const duplicateDates = dates.filter((date, index) => dates.indexOf(date) !== index);
-      
+      const duplicateDates = dates.filter(
+        (date, index) => dates.indexOf(date) !== index
+      );
+
       if (duplicateDates.length > 0) {
         anomalies.push({
           type: 'duplicate_charge',
@@ -377,7 +400,8 @@ export class AnalyticsService {
           },
           description: `Multiple charges detected on the same day`,
           detectedAt: new Date(),
-          affectedAmount: subscription.amount.toNumber() * duplicateDates.length,
+          affectedAmount:
+            subscription.amount.toNumber() * duplicateDates.length,
         });
       }
     }
@@ -388,7 +412,9 @@ export class AnalyticsService {
   /**
    * Generate cost optimization suggestions
    */
-  async generateOptimizationSuggestions(userId: string): Promise<CostOptimizationSuggestion[]> {
+  async generateOptimizationSuggestions(
+    userId: string
+  ): Promise<CostOptimizationSuggestion[]> {
     const suggestions: CostOptimizationSuggestion[] = [];
 
     const subscriptions = await this.prisma.subscription.findMany({
@@ -412,7 +438,9 @@ export class AnalyticsService {
 
     if (unusedSubs.length > 0) {
       const totalSavings = unusedSubs.reduce(
-        (sum, sub) => sum + this.convertToMonthlyAmount(sub.amount.toNumber(), sub.frequency),
+        (sum, sub) =>
+          sum +
+          this.convertToMonthlyAmount(sub.amount.toNumber(), sub.frequency),
         0
       );
 
@@ -423,7 +451,10 @@ export class AnalyticsService {
         subscriptions: unusedSubs.map(sub => ({
           id: sub.id,
           name: sub.name,
-          currentCost: this.convertToMonthlyAmount(sub.amount.toNumber(), sub.frequency),
+          currentCost: this.convertToMonthlyAmount(
+            sub.amount.toNumber(),
+            sub.frequency
+          ),
           recommendedAction: 'Consider cancelling this unused subscription',
         })),
         description: `You have ${unusedSubs.length} subscriptions that haven't been used in over 60 days`,
@@ -452,13 +483,14 @@ export class AnalyticsService {
           currentCost: sub.amount.toNumber(),
           recommendedAction: 'Switch to annual billing for 10-20% savings',
         })),
-        description: 'Consider switching to annual plans for long-term subscriptions',
+        description:
+          'Consider switching to annual plans for long-term subscriptions',
       });
     }
 
     // Check for duplicates by similar names
     const potentialDuplicates = this.findPotentialDuplicates(subscriptions);
-    
+
     if (potentialDuplicates.length > 0) {
       suggestions.push({
         type: 'duplicate',
@@ -467,8 +499,11 @@ export class AnalyticsService {
           (sum, group) => sum + group.potentialSavings,
           0
         ),
-        subscriptions: potentialDuplicates.flatMap(group => group.subscriptions),
-        description: 'You may have duplicate subscriptions for similar services',
+        subscriptions: potentialDuplicates.flatMap(
+          group => group.subscriptions
+        ),
+        description:
+          'You may have duplicate subscriptions for similar services',
       });
     }
 
@@ -483,21 +518,15 @@ export class AnalyticsService {
     startDate: Date,
     endDate: Date
   ): Promise<AnalyticsReport> {
-    const [
-      summary,
-      trends,
-      categories,
-      anomalies,
-      optimizations,
-      predictions,
-    ] = await Promise.all([
-      this.generateSummary(userId, startDate, endDate),
-      this.generateTimeSeriesData(userId, startDate, endDate, 'month'),
-      this.analyzeCategorySpending(userId, 'month'),
-      this.detectAnomalies(userId),
-      this.generateOptimizationSuggestions(userId),
-      this.generatePredictions(userId),
-    ]);
+    const [summary, trends, categories, anomalies, optimizations, predictions] =
+      await Promise.all([
+        this.generateSummary(userId, startDate, endDate),
+        this.generateTimeSeriesData(userId, startDate, endDate, 'month'),
+        this.analyzeCategorySpending(userId, 'month'),
+        this.detectAnomalies(userId),
+        this.generateOptimizationSuggestions(userId),
+        this.generatePredictions(userId),
+      ]);
 
     return {
       period: { start: startDate, end: endDate },
@@ -515,18 +544,21 @@ export class AnalyticsService {
     transactions: Transaction[],
     groupBy: 'day' | 'week' | 'month'
   ): Record<string, { total: number; recurring: number; count: number }> {
-    const grouped: Record<string, { total: number; recurring: number; count: number }> = {};
+    const grouped: Record<
+      string,
+      { total: number; recurring: number; count: number }
+    > = {};
 
     for (const tx of transactions) {
       const key = this.getDateKey(tx.date, groupBy);
-      
+
       if (!grouped[key]) {
         grouped[key] = { total: 0, recurring: 0, count: 0 };
       }
 
       grouped[key].total += tx.amount.toNumber();
       grouped[key].count += 1;
-      
+
       if (tx.isSubscription) {
         grouped[key].recurring += tx.amount.toNumber();
       }
@@ -548,9 +580,10 @@ export class AnalyticsService {
     }
   }
 
-  private calculateLinearRegression(
-    points: Array<{ x: number; y: number }>
-  ): { slope: number; intercept: number } {
+  private calculateLinearRegression(points: Array<{ x: number; y: number }>): {
+    slope: number;
+    intercept: number;
+  } {
     const n = points.length;
     const sumX = points.reduce((sum, p) => sum + p.x, 0);
     const sumY = points.reduce((sum, p) => sum + p.y, 0);
@@ -563,9 +596,11 @@ export class AnalyticsService {
     return { slope, intercept };
   }
 
-  private calculateSeasonalFactors(timeSeries: TimeSeriesDataPoint[]): Record<number, number> {
+  private calculateSeasonalFactors(
+    timeSeries: TimeSeriesDataPoint[]
+  ): Record<number, number> {
     const monthlyAverages: Record<number, number[]> = {};
-    
+
     for (const point of timeSeries) {
       const month = new Date(point.date).getMonth();
       if (!monthlyAverages[month]) {
@@ -574,11 +609,13 @@ export class AnalyticsService {
       monthlyAverages[month].push(point.value);
     }
 
-    const overallAverage = timeSeries.reduce((sum, p) => sum + p.value, 0) / timeSeries.length;
+    const overallAverage =
+      timeSeries.reduce((sum, p) => sum + p.value, 0) / timeSeries.length;
     const seasonalFactors: Record<number, number> = {};
 
     for (const [month, values] of Object.entries(monthlyAverages)) {
-      const monthAverage = values.reduce((sum, v) => sum + v, 0) / values.length;
+      const monthAverage =
+        values.reduce((sum, v) => sum + v, 0) / values.length;
       seasonalFactors[parseInt(month)] = monthAverage / overallAverage;
     }
 
@@ -631,26 +668,43 @@ export class AnalyticsService {
 
   private findPotentialDuplicates(
     subscriptions: Subscription[]
-  ): Array<{ subscriptions: Array<{ id: string; name: string; currentCost: number; recommendedAction: string }>; potentialSavings: number }> {
-    const groups: Map<string, Subscription[]> = new Map();
+  ): Array<{
+    subscriptions: Array<{
+      id: string;
+      name: string;
+      currentCost: number;
+      recommendedAction: string;
+    }>;
+    potentialSavings: number;
+  }> {
+    const groups = new Map<string, Subscription[]>();
 
     // Group by normalized name
     for (const sub of subscriptions) {
-      const normalized = sub.name.toLowerCase()
+      const normalized = sub.name
+        .toLowerCase()
         .replace(/[^a-z0-9]/g, '')
         .substring(0, 10);
-      
+
       const existing = groups.get(normalized) ?? [];
       existing.push(sub);
       groups.set(normalized, existing);
     }
 
     // Find groups with duplicates
-    const duplicateGroups: Array<{ subscriptions: Array<{ id: string; name: string; currentCost: number; recommendedAction: string }>; potentialSavings: number }> = [];
+    const duplicateGroups: Array<{
+      subscriptions: Array<{
+        id: string;
+        name: string;
+        currentCost: number;
+        recommendedAction: string;
+      }>;
+      potentialSavings: number;
+    }> = [];
 
     for (const [_, subs] of groups) {
       if (subs.length > 1) {
-        const monthlyAmounts = subs.map(s => 
+        const monthlyAmounts = subs.map(s =>
           this.convertToMonthlyAmount(s.amount.toNumber(), s.frequency)
         );
         const totalCost = monthlyAmounts.reduce((sum, a) => sum + a, 0);
@@ -661,7 +715,10 @@ export class AnalyticsService {
           subscriptions: subs.map(s => ({
             id: s.id,
             name: s.name,
-            currentCost: this.convertToMonthlyAmount(s.amount.toNumber(), s.frequency),
+            currentCost: this.convertToMonthlyAmount(
+              s.amount.toNumber(),
+              s.frequency
+            ),
             recommendedAction: 'Review for potential duplicate service',
           })),
           potentialSavings,
@@ -677,17 +734,19 @@ export class AnalyticsService {
     startDate: Date,
     endDate: Date
   ): Promise<AnalyticsReport['summary']> {
-    const [totalSpending, subscriptions, savingsOpportunities] = await Promise.all([
-      this.getSpendingForPeriod(userId, startDate, endDate),
-      this.prisma.subscription.findMany({
-        where: { userId },
-      }),
-      this.generateOptimizationSuggestions(userId),
-    ]);
+    const [totalSpending, subscriptions, savingsOpportunities] =
+      await Promise.all([
+        this.getSpendingForPeriod(userId, startDate, endDate),
+        this.prisma.subscription.findMany({
+          where: { userId },
+        }),
+        this.generateOptimizationSuggestions(userId),
+      ]);
 
     const activeSubscriptions = subscriptions.filter(s => s.isActive);
     const subscriptionSpending = activeSubscriptions.reduce(
-      (sum, s) => sum + this.convertToMonthlyAmount(s.amount.toNumber(), s.frequency),
+      (sum, s) =>
+        sum + this.convertToMonthlyAmount(s.amount.toNumber(), s.frequency),
       0
     );
 
@@ -703,7 +762,9 @@ export class AnalyticsService {
     };
   }
 
-  private async generatePredictions(userId: string): Promise<AnalyticsReport['predictions']> {
+  private async generatePredictions(
+    userId: string
+  ): Promise<AnalyticsReport['predictions']> {
     const [nextMonth, nextQuarter, nextYear] = await Promise.all([
       this.predictFutureSpending(userId, 1),
       this.predictFutureSpending(userId, 3),

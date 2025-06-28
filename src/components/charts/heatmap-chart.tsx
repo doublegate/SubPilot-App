@@ -1,8 +1,19 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export interface HeatmapData {
   day: number;
@@ -30,20 +41,41 @@ export const HeatmapChart = React.memo(function HeatmapChart({
   const getColorScale = () => {
     switch (colorScheme) {
       case 'green':
-        return ['#f0fdf4', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a'];
+        return [
+          '#f0fdf4',
+          '#bbf7d0',
+          '#86efac',
+          '#4ade80',
+          '#22c55e',
+          '#16a34a',
+        ];
       case 'red':
-        return ['#fef2f2', '#fecaca', '#fca5a5', '#f87171', '#ef4444', '#dc2626'];
+        return [
+          '#fef2f2',
+          '#fecaca',
+          '#fca5a5',
+          '#f87171',
+          '#ef4444',
+          '#dc2626',
+        ];
       case 'blue':
       default:
-        return ['#eff6ff', '#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb'];
+        return [
+          '#eff6ff',
+          '#bfdbfe',
+          '#93c5fd',
+          '#60a5fa',
+          '#3b82f6',
+          '#2563eb',
+        ];
     }
   };
 
   const colors = getColorScale();
-  
+
   // Calculate max value for scaling
   const maxValue = Math.max(...data.map(d => d.value), 1);
-  
+
   // Get color for value
   const getColor = (value: number) => {
     if (value === 0) return '#f3f4f6';
@@ -72,8 +104,18 @@ export const HeatmapChart = React.memo(function HeatmapChart({
 
   // Month names
   const monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   // Day labels
@@ -100,11 +142,17 @@ export const HeatmapChart = React.memo(function HeatmapChart({
           <div className="space-y-2">
             {Object.entries(monthsData).map(([month, monthData]) => {
               // Create a 6x7 grid for the month
-              const grid: (HeatmapData | null)[][] = Array(6).fill(null).map(() => Array(7).fill(null));
-              
+              const grid: (HeatmapData | null)[][] = Array(6)
+                .fill(null)
+                .map(() => Array(7).fill(null));
+
               // Get first day of month
-              const firstDay = new Date(new Date().getFullYear(), parseInt(month), 1).getDay();
-              
+              const firstDay = new Date(
+                new Date().getFullYear(),
+                parseInt(month),
+                1
+              ).getDay();
+
               // Fill the grid
               monthData.forEach(item => {
                 const dayIndex = (item.day - 1 + firstDay) % 7;
@@ -129,7 +177,9 @@ export const HeatmapChart = React.memo(function HeatmapChart({
                                 <div
                                   className="aspect-square rounded-sm transition-all hover:ring-2 hover:ring-primary hover:ring-offset-1"
                                   style={{
-                                    backgroundColor: day ? getColor(day.value) : 'transparent',
+                                    backgroundColor: day
+                                      ? getColor(day.value)
+                                      : 'transparent',
                                   }}
                                 />
                               </TooltipTrigger>
@@ -140,7 +190,11 @@ export const HeatmapChart = React.memo(function HeatmapChart({
                                       {monthNames[parseInt(month)]} {day.day}
                                     </p>
                                     <p>{formatCurrency(day.value)}</p>
-                                    {day.label && <p className="text-xs text-muted-foreground">{day.label}</p>}
+                                    {day.label && (
+                                      <p className="text-xs text-muted-foreground">
+                                        {day.label}
+                                      </p>
+                                    )}
                                   </div>
                                 </TooltipContent>
                               )}

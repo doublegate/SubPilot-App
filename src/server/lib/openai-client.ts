@@ -1,7 +1,11 @@
 import { env } from '@/env.js';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { cacheService, cacheKeys, cacheTTL } from '@/server/services/cache.service';
+import {
+  cacheService,
+  cacheKeys,
+  cacheTTL,
+} from '@/server/services/cache.service';
 import { checkRateLimit } from '@/server/lib/rate-limiter';
 
 // OpenAI API configuration
@@ -27,43 +31,99 @@ export const SUBSCRIPTION_CATEGORIES = {
     name: 'Streaming',
     description: 'Video and media streaming services',
     icon: '🎬',
-    keywords: ['netflix', 'hulu', 'disney', 'hbo', 'paramount', 'peacock', 'amazon prime', 'youtube'],
+    keywords: [
+      'netflix',
+      'hulu',
+      'disney',
+      'hbo',
+      'paramount',
+      'peacock',
+      'amazon prime',
+      'youtube',
+    ],
   },
   music: {
     name: 'Music',
     description: 'Music streaming and audio services',
     icon: '🎵',
-    keywords: ['spotify', 'apple music', 'pandora', 'tidal', 'soundcloud', 'deezer', 'amazon music'],
+    keywords: [
+      'spotify',
+      'apple music',
+      'pandora',
+      'tidal',
+      'soundcloud',
+      'deezer',
+      'amazon music',
+    ],
   },
   software: {
     name: 'Software',
     description: 'Software subscriptions and tools',
     icon: '💻',
-    keywords: ['adobe', 'microsoft', 'notion', 'slack', 'zoom', 'figma', 'canva', 'grammarly'],
+    keywords: [
+      'adobe',
+      'microsoft',
+      'notion',
+      'slack',
+      'zoom',
+      'figma',
+      'canva',
+      'grammarly',
+    ],
   },
   gaming: {
     name: 'Gaming',
     description: 'Gaming subscriptions and services',
     icon: '🎮',
-    keywords: ['xbox', 'playstation', 'nintendo', 'steam', 'epic', 'discord', 'twitch'],
+    keywords: [
+      'xbox',
+      'playstation',
+      'nintendo',
+      'steam',
+      'epic',
+      'discord',
+      'twitch',
+    ],
   },
   news: {
     name: 'News',
     description: 'News and publication subscriptions',
     icon: '📰',
-    keywords: ['nytimes', 'wsj', 'washington post', 'economist', 'bloomberg', 'reuters'],
+    keywords: [
+      'nytimes',
+      'wsj',
+      'washington post',
+      'economist',
+      'bloomberg',
+      'reuters',
+    ],
   },
   fitness: {
     name: 'Fitness',
     description: 'Fitness and wellness subscriptions',
     icon: '💪',
-    keywords: ['peloton', 'strava', 'myfitnesspal', 'headspace', 'calm', 'fitbit', 'apple fitness'],
+    keywords: [
+      'peloton',
+      'strava',
+      'myfitnesspal',
+      'headspace',
+      'calm',
+      'fitbit',
+      'apple fitness',
+    ],
   },
   education: {
     name: 'Education',
     description: 'Educational and learning platforms',
     icon: '📚',
-    keywords: ['coursera', 'udemy', 'masterclass', 'skillshare', 'duolingo', 'brilliant'],
+    keywords: [
+      'coursera',
+      'udemy',
+      'masterclass',
+      'skillshare',
+      'duolingo',
+      'brilliant',
+    ],
   },
   storage: {
     name: 'Storage',
@@ -75,19 +135,43 @@ export const SUBSCRIPTION_CATEGORIES = {
     name: 'Food',
     description: 'Food delivery and meal subscriptions',
     icon: '🍔',
-    keywords: ['doordash', 'uber eats', 'grubhub', 'hellofresh', 'blue apron', 'instacart'],
+    keywords: [
+      'doordash',
+      'uber eats',
+      'grubhub',
+      'hellofresh',
+      'blue apron',
+      'instacart',
+    ],
   },
   utilities: {
     name: 'Utilities',
     description: 'Internet, phone, and utility services',
     icon: '📱',
-    keywords: ['verizon', 'at&t', 'comcast', 'spectrum', 'cox', 'electric', 'gas', 'water'],
+    keywords: [
+      'verizon',
+      'at&t',
+      'comcast',
+      'spectrum',
+      'cox',
+      'electric',
+      'gas',
+      'water',
+    ],
   },
   finance: {
     name: 'Finance',
     description: 'Financial services and tools',
     icon: '💳',
-    keywords: ['bank', 'credit', 'insurance', 'quickbooks', 'mint', 'ynab', 'trading'],
+    keywords: [
+      'bank',
+      'credit',
+      'insurance',
+      'quickbooks',
+      'mint',
+      'ynab',
+      'trading',
+    ],
   },
   other: {
     name: 'Other',
@@ -101,23 +185,39 @@ export type SubscriptionCategory = keyof typeof SUBSCRIPTION_CATEGORIES;
 
 // Response schemas
 const categorizationResponseSchema = z.object({
-  category: z.enum(Object.keys(SUBSCRIPTION_CATEGORIES) as [SubscriptionCategory, ...SubscriptionCategory[]]),
+  category: z.enum(
+    Object.keys(SUBSCRIPTION_CATEGORIES) as [
+      SubscriptionCategory,
+      ...SubscriptionCategory[],
+    ]
+  ),
   confidence: z.number().min(0).max(1),
   merchantName: z.string(),
   reasoning: z.string().optional(),
 });
 
 const bulkCategorizationResponseSchema = z.object({
-  categorizations: z.array(z.object({
-    originalName: z.string(),
-    category: z.enum(Object.keys(SUBSCRIPTION_CATEGORIES) as [SubscriptionCategory, ...SubscriptionCategory[]]),
-    confidence: z.number().min(0).max(1),
-    normalizedName: z.string(),
-  })),
+  categorizations: z.array(
+    z.object({
+      originalName: z.string(),
+      category: z.enum(
+        Object.keys(SUBSCRIPTION_CATEGORIES) as [
+          SubscriptionCategory,
+          ...SubscriptionCategory[],
+        ]
+      ),
+      confidence: z.number().min(0).max(1),
+      normalizedName: z.string(),
+    })
+  ),
 });
 
-export type CategorizationResponse = z.infer<typeof categorizationResponseSchema>;
-export type BulkCategorizationResponse = z.infer<typeof bulkCategorizationResponseSchema>;
+export type CategorizationResponse = z.infer<
+  typeof categorizationResponseSchema
+>;
+export type BulkCategorizationResponse = z.infer<
+  typeof bulkCategorizationResponseSchema
+>;
 
 /**
  * OpenAI client for subscription categorization
@@ -125,13 +225,13 @@ export type BulkCategorizationResponse = z.infer<typeof bulkCategorizationRespon
 export class OpenAICategorizationClient {
   private apiKey: string;
   private model: string;
-  private costTracker: Map<string, number> = new Map();
+  private costTracker = new Map<string, number>();
 
   constructor(apiKey?: string, model?: string) {
     if (!apiKey && !env.OPENAI_API_KEY) {
       throw new Error('OpenAI API key is required');
     }
-    
+
     this.apiKey = apiKey ?? env.OPENAI_API_KEY!;
     this.model = model ?? DEFAULT_MODEL;
   }
@@ -164,7 +264,11 @@ export class OpenAICategorizationClient {
     }
 
     // Build prompt
-    const prompt = this.buildCategorizationPrompt(merchantName, description, amount);
+    const prompt = this.buildCategorizationPrompt(
+      merchantName,
+      description,
+      amount
+    );
 
     try {
       const response = await this.callOpenAI(prompt, 'categorization');
@@ -181,7 +285,7 @@ export class OpenAICategorizationClient {
       return result;
     } catch (error) {
       console.error('OpenAI categorization error:', error);
-      
+
       // Fallback to keyword-based categorization
       return this.fallbackCategorization(merchantName);
     }
@@ -201,7 +305,7 @@ export class OpenAICategorizationClient {
     for (const merchant of merchants) {
       const cacheKey = `ai-categorization:${merchant.name.toLowerCase()}`;
       const cached = cacheService.get<CategorizationResponse>(cacheKey);
-      
+
       if (cached) {
         cachedResults.push({
           originalName: merchant.name,
@@ -240,16 +344,24 @@ export class OpenAICategorizationClient {
       // Cache individual results
       for (const categorization of result.categorizations) {
         const cacheKey = `ai-categorization:${categorization.originalName.toLowerCase()}`;
-        cacheService.set(cacheKey, {
-          category: categorization.category,
-          confidence: categorization.confidence,
-          merchantName: categorization.normalizedName,
-        }, cacheTTL.veryLong);
+        cacheService.set(
+          cacheKey,
+          {
+            category: categorization.category,
+            confidence: categorization.confidence,
+            merchantName: categorization.normalizedName,
+          },
+          cacheTTL.veryLong
+        );
       }
 
       // Track costs
       if (userId) {
-        await this.trackCost(userId, 'bulk-categorization', uncachedMerchants.length);
+        await this.trackCost(
+          userId,
+          'bulk-categorization',
+          uncachedMerchants.length
+        );
       }
 
       // Combine cached and new results
@@ -258,7 +370,7 @@ export class OpenAICategorizationClient {
       };
     } catch (error) {
       console.error('OpenAI bulk categorization error:', error);
-      
+
       // Fallback to keyword-based categorization for all
       const fallbackResults = uncachedMerchants.map(merchant => {
         const fallback = this.fallbackCategorization(merchant.name);
@@ -303,7 +415,7 @@ export class OpenAICategorizationClient {
     try {
       const response = await this.callOpenAI(prompt, 'normalization', 100);
       const normalized = response.trim();
-      
+
       cacheService.set(cacheKey, normalized, cacheTTL.veryLong);
       return normalized;
     } catch (error) {
@@ -407,14 +519,15 @@ export class OpenAICategorizationClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
         model: this.model,
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that categorizes financial transactions. Always return valid JSON.',
+            content:
+              'You are a helpful assistant that categorizes financial transactions. Always return valid JSON.',
           },
           {
             role: 'user',
@@ -433,7 +546,7 @@ export class OpenAICategorizationClient {
     }
 
     const data = await response.json();
-    
+
     if (!data.choices?.[0]?.message?.content) {
       throw new Error('Invalid OpenAI response format');
     }
@@ -453,9 +566,11 @@ export class OpenAICategorizationClient {
     const lowerName = normalizedName.toLowerCase();
 
     // Check each category's keywords
-    for (const [categoryId, category] of Object.entries(SUBSCRIPTION_CATEGORIES)) {
+    for (const [categoryId, category] of Object.entries(
+      SUBSCRIPTION_CATEGORIES
+    )) {
       if (categoryId === 'other') continue; // Skip 'other' in first pass
-      
+
       for (const keyword of category.keywords) {
         if (lowerName.includes(keyword)) {
           return {
@@ -495,27 +610,40 @@ export class OpenAICategorizationClient {
   /**
    * Track API costs
    */
-  private async trackCost(userId: string, operation: string, count: number = 1): Promise<void> {
+  private async trackCost(
+    userId: string,
+    operation: string,
+    count = 1
+  ): Promise<void> {
     const costKey = `${userId}:${new Date().toISOString().slice(0, 7)}`; // Monthly tracking
     const currentCost = this.costTracker.get(costKey) ?? 0;
-    
+
     // Estimate tokens (rough approximation)
     const estimatedTokens = operation === 'categorization' ? 200 : 200 * count;
-    const modelCost = MODEL_COSTS[this.model as keyof typeof MODEL_COSTS] ?? MODEL_COSTS['gpt-4o-mini'];
-    const cost = (estimatedTokens / 1000) * (modelCost.input + modelCost.output);
-    
+    const modelCost =
+      MODEL_COSTS[this.model as keyof typeof MODEL_COSTS] ??
+      MODEL_COSTS['gpt-4o-mini'];
+    const cost =
+      (estimatedTokens / 1000) * (modelCost.input + modelCost.output);
+
     this.costTracker.set(costKey, currentCost + cost);
-    
+
     // Log high usage
-    if (currentCost + cost > 10) { // Alert if monthly cost exceeds $10
-      console.warn(`High OpenAI usage for user ${userId}: $${(currentCost + cost).toFixed(2)}`);
+    if (currentCost + cost > 10) {
+      // Alert if monthly cost exceeds $10
+      console.warn(
+        `High OpenAI usage for user ${userId}: $${(currentCost + cost).toFixed(2)}`
+      );
     }
   }
 
   /**
    * Get cost statistics
    */
-  getCostStats(userId?: string): { total: number; byUser: Record<string, number> } {
+  getCostStats(userId?: string): {
+    total: number;
+    byUser: Record<string, number>;
+  } {
     const byUser: Record<string, number> = {};
     let total = 0;
 

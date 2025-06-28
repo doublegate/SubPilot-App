@@ -10,31 +10,32 @@ vi.mock('@/server/lib/openai-client');
 vi.mock('../cache.service');
 
 // Create mock Prisma client
-const createMockPrismaClient = () => ({
-  transaction: {
-    findFirst: vi.fn(),
-    findMany: vi.fn(),
-    update: vi.fn(),
-    updateMany: vi.fn(),
-  },
-  subscription: {
-    findFirst: vi.fn(),
-    update: vi.fn(),
-  },
-  merchantAlias: {
-    findUnique: vi.fn(),
-    upsert: vi.fn(),
-    findMany: vi.fn(),
-    count: vi.fn(),
-    update: vi.fn(),
-    deleteMany: vi.fn(),
-  },
-  category: {
-    count: vi.fn(),
-    createMany: vi.fn(),
-    findMany: vi.fn(),
-  },
-} as unknown as PrismaClient);
+const createMockPrismaClient = () =>
+  ({
+    transaction: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    subscription: {
+      findFirst: vi.fn(),
+      update: vi.fn(),
+    },
+    merchantAlias: {
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    category: {
+      count: vi.fn(),
+      createMany: vi.fn(),
+      findMany: vi.fn(),
+    },
+  }) as unknown as PrismaClient;
 
 describe('CategorizationService', () => {
   let service: CategorizationService;
@@ -66,9 +67,15 @@ describe('CategorizationService', () => {
         aiCategoryConfidence: new Decimal(0.95),
       };
 
-      vi.mocked(mockDb.transaction.findFirst).mockResolvedValue(categorizedTransaction);
+      vi.mocked(mockDb.transaction.findFirst).mockResolvedValue(
+        categorizedTransaction
+      );
 
-      const result = await service.categorizeTransaction('trans123', 'user123', false);
+      const result = await service.categorizeTransaction(
+        'trans123',
+        'user123',
+        false
+      );
 
       expect(result).toEqual({
         category: 'streaming',
@@ -79,7 +86,9 @@ describe('CategorizationService', () => {
     });
 
     it('should use merchant alias if available', async () => {
-      vi.mocked(mockDb.transaction.findFirst).mockResolvedValue(mockTransaction);
+      vi.mocked(mockDb.transaction.findFirst).mockResolvedValue(
+        mockTransaction
+      );
       vi.mocked(mockDb.merchantAlias.findUnique).mockResolvedValue({
         id: 'alias123',
         originalName: 'netflix.com',
@@ -111,7 +120,9 @@ describe('CategorizationService', () => {
     });
 
     it('should use AI categorization when no alias exists', async () => {
-      vi.mocked(mockDb.transaction.findFirst).mockResolvedValue(mockTransaction);
+      vi.mocked(mockDb.transaction.findFirst).mockResolvedValue(
+        mockTransaction
+      );
       vi.mocked(mockDb.merchantAlias.findUnique).mockResolvedValue(null);
       vi.mocked(openAIClient.categorizeTransaction).mockResolvedValue({
         category: 'streaming',
@@ -168,7 +179,9 @@ describe('CategorizationService', () => {
         },
       ];
 
-      vi.mocked(mockDb.transaction.findMany).mockResolvedValue(mockTransactions);
+      vi.mocked(mockDb.transaction.findMany).mockResolvedValue(
+        mockTransactions
+      );
       vi.mocked(mockDb.merchantAlias.findUnique).mockResolvedValue(null);
       vi.mocked(openAIClient.bulkCategorize).mockResolvedValue({
         categorizations: [
@@ -215,8 +228,10 @@ describe('CategorizationService', () => {
         },
       ];
 
-      vi.mocked(mockDb.transaction.findMany).mockResolvedValue(mockTransactions);
-      
+      vi.mocked(mockDb.transaction.findMany).mockResolvedValue(
+        mockTransactions
+      );
+
       // Netflix has alias, Spotify doesn't
       vi.mocked(mockDb.merchantAlias.findUnique)
         .mockResolvedValueOnce({
@@ -266,9 +281,13 @@ describe('CategorizationService', () => {
         },
       ];
 
-      vi.mocked(mockDb.transaction.findMany).mockResolvedValue(mockTransactions);
+      vi.mocked(mockDb.transaction.findMany).mockResolvedValue(
+        mockTransactions
+      );
       vi.mocked(mockDb.merchantAlias.findUnique).mockResolvedValue(null);
-      vi.mocked(openAIClient.bulkCategorize).mockRejectedValue(new Error('API error'));
+      vi.mocked(openAIClient.bulkCategorize).mockRejectedValue(
+        new Error('API error')
+      );
 
       const result = await service.bulkCategorizeTransactions('user123');
 
@@ -297,7 +316,9 @@ describe('CategorizationService', () => {
         categoryOverride: 'entertainment',
       };
 
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(overriddenSubscription);
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        overriddenSubscription
+      );
 
       const result = await service.categorizeSubscription('sub123', 'user123');
 
@@ -309,7 +330,9 @@ describe('CategorizationService', () => {
     });
 
     it('should use AI categorization when needed', async () => {
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(mockSubscription);
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        mockSubscription
+      );
       vi.mocked(openAIClient.categorizeTransaction).mockResolvedValue({
         category: 'streaming',
         confidence: 0.94,
@@ -347,7 +370,9 @@ describe('CategorizationService', () => {
           category: 'music',
         },
       });
-      expect(cacheService.invalidate).toHaveBeenCalledWith('subscriptions:user123:*');
+      expect(cacheService.invalidate).toHaveBeenCalledWith(
+        'subscriptions:user123:*'
+      );
     });
   });
 

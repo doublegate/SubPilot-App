@@ -9,7 +9,11 @@ import { compare } from 'bcryptjs';
 import { env } from '@/env.js';
 import { db } from '@/server/db';
 import { sendVerificationRequest } from '@/lib/email';
-import { trackFailedAuth, isAccountLocked, clearFailedAuth } from '@/server/lib/rate-limiter';
+import {
+  trackFailedAuth,
+  isAccountLocked,
+  clearFailedAuth,
+} from '@/server/lib/rate-limiter';
 import { AuditLogger } from '@/server/lib/audit-logger';
 
 /**
@@ -86,14 +90,24 @@ export const authConfig: NextAuthConfig = {
               }
 
               const email = credentials.email as string;
-              const ipAddress = req?.headers?.get('x-forwarded-for') ?? req?.headers?.get('x-real-ip') ?? 'unknown';
+              const ipAddress =
+                req?.headers?.get('x-forwarded-for') ??
+                req?.headers?.get('x-real-ip') ??
+                'unknown';
               const userAgent = req?.headers?.get('user-agent') ?? 'unknown';
 
               // Check if account is locked
               const lockStatus = await isAccountLocked(email);
               if (lockStatus.locked) {
-                await AuditLogger.logAuthFailure(email, ipAddress, userAgent, 'Account locked');
-                throw new Error(`Account locked until ${lockStatus.until?.toLocaleTimeString()}`);
+                await AuditLogger.logAuthFailure(
+                  email,
+                  ipAddress,
+                  userAgent,
+                  'Account locked'
+                );
+                throw new Error(
+                  `Account locked until ${lockStatus.until?.toLocaleTimeString()}`
+                );
               }
 
               const user = await db.user.findUnique({
@@ -102,7 +116,12 @@ export const authConfig: NextAuthConfig = {
 
               if (!user?.password) {
                 await trackFailedAuth(email);
-                await AuditLogger.logAuthFailure(email, ipAddress, userAgent, 'User not found');
+                await AuditLogger.logAuthFailure(
+                  email,
+                  ipAddress,
+                  userAgent,
+                  'User not found'
+                );
                 return null;
               }
 
@@ -113,13 +132,23 @@ export const authConfig: NextAuthConfig = {
 
               if (!isPasswordValid) {
                 const { locked, lockUntil } = await trackFailedAuth(email);
-                await AuditLogger.logAuthFailure(email, ipAddress, userAgent, 'Invalid password');
-                
+                await AuditLogger.logAuthFailure(
+                  email,
+                  ipAddress,
+                  userAgent,
+                  'Invalid password'
+                );
+
                 if (locked) {
-                  await AuditLogger.logAccountLockout(user.id, 'Too many failed attempts');
-                  throw new Error(`Account locked until ${lockUntil?.toLocaleTimeString()}`);
+                  await AuditLogger.logAccountLockout(
+                    user.id,
+                    'Too many failed attempts'
+                  );
+                  throw new Error(
+                    `Account locked until ${lockUntil?.toLocaleTimeString()}`
+                  );
                 }
-                
+
                 return null;
               }
 

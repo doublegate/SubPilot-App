@@ -23,9 +23,7 @@ export default async function DashboardLayout({
           <NavHeaderClient />
           <main id="main-content" className="flex-1 pb-16 md:pb-0">
             <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
+              <ErrorBoundary>{children}</ErrorBoundary>
             </div>
           </main>
           <MobileNav />

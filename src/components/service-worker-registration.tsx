@@ -18,23 +18,32 @@ export function ServiceWorkerRegistration() {
             if (!newWorker) return;
 
             newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              if (
+                newWorker.state === 'installed' &&
+                navigator.serviceWorker.controller
+              ) {
                 // New update available
-                toast.info('Update available! Refresh to get the latest version.', {
-                  duration: 10000,
-                  action: {
-                    label: 'Refresh',
-                    onClick: () => window.location.reload(),
-                  },
-                });
+                toast.info(
+                  'Update available! Refresh to get the latest version.',
+                  {
+                    duration: 10000,
+                    action: {
+                      label: 'Refresh',
+                      onClick: () => window.location.reload(),
+                    },
+                  }
+                );
               }
             });
           });
 
           // Check for updates periodically
-          setInterval(() => {
-            registration.update();
-          }, 60 * 60 * 1000); // Check every hour
+          setInterval(
+            () => {
+              registration.update();
+            },
+            60 * 60 * 1000
+          ); // Check every hour
         } catch (error) {
           console.error('Service Worker registration failed:', error);
         }
@@ -42,11 +51,11 @@ export function ServiceWorkerRegistration() {
 
       // Handle offline/online events
       window.addEventListener('online', () => {
-        toast.success('You\'re back online!');
+        toast.success("You're back online!");
       });
 
       window.addEventListener('offline', () => {
-        toast.warning('You\'re offline. Some features may be limited.');
+        toast.warning("You're offline. Some features may be limited.");
       });
     }
   }, []);

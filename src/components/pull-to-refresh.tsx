@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, ReactNode } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -51,13 +51,13 @@ export function PullToRefresh({
 
     const handleTouchEnd = async () => {
       if (!isPulling) return;
-      
+
       setIsPulling(false);
 
       if (pullDistance > threshold && !isRefreshing) {
         setIsRefreshing(true);
         setPullDistance(threshold);
-        
+
         try {
           await onRefresh();
         } finally {
@@ -69,8 +69,12 @@ export function PullToRefresh({
       }
     };
 
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, {
+      passive: false,
+    });
+    container.addEventListener('touchmove', handleTouchMove, {
+      passive: false,
+    });
     container.addEventListener('touchend', handleTouchEnd);
 
     return () => {
@@ -107,7 +111,7 @@ export function PullToRefresh({
               }}
               className={`rounded-full p-2 ${
                 pullDistance > threshold
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'text-primary-foreground bg-primary'
                   : 'bg-muted text-muted-foreground'
               }`}
             >

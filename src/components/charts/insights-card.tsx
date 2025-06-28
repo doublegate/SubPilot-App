@@ -1,17 +1,23 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  AlertTriangle, 
-  TrendingDown, 
-  DollarSign, 
+import {
+  AlertTriangle,
+  TrendingDown,
+  DollarSign,
   Lightbulb,
   ChevronRight,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
 } from 'lucide-react';
 
 export interface Insight {
@@ -87,7 +93,9 @@ export const InsightsCard = React.memo(function InsightsCard({
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <CheckCircle2 className="mb-4 h-12 w-12 text-green-500" />
             <p className="text-lg font-medium">You're all set!</p>
-            <p className="text-sm text-muted-foreground">No new insights or recommendations at this time.</p>
+            <p className="text-sm text-muted-foreground">
+              No new insights or recommendations at this time.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -100,7 +108,8 @@ export const InsightsCard = React.memo(function InsightsCard({
         <div>
           <CardTitle>{title}</CardTitle>
           <CardDescription>
-            {insights.length} {insights.length === 1 ? 'insight' : 'insights'} found
+            {insights.length} {insights.length === 1 ? 'insight' : 'insights'}{' '}
+            found
           </CardDescription>
         </div>
         {!showAll && insights.length > maxItems && onShowAll && (
@@ -112,7 +121,7 @@ export const InsightsCard = React.memo(function InsightsCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {displayedInsights.map((insight) => (
+          {displayedInsights.map(insight => (
             <div
               key={insight.id}
               className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50"
@@ -121,18 +130,31 @@ export const InsightsCard = React.memo(function InsightsCard({
               <div className="flex-1 space-y-1">
                 <div className="flex items-center gap-2">
                   <h4 className="font-medium">{insight.title}</h4>
-                  <Badge variant={getPriorityColor(insight.priority)} className="text-xs">
+                  <Badge
+                    variant={getPriorityColor(insight.priority)}
+                    className="text-xs"
+                  >
                     {insight.priority}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">{insight.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {insight.description}
+                </p>
                 {insight.amount !== undefined && (
                   <div className="flex items-center gap-1 text-sm font-medium">
                     <DollarSign className="h-3 w-3" />
-                    <span className={insight.type === 'saving' ? 'text-green-600' : ''}>
+                    <span
+                      className={
+                        insight.type === 'saving' ? 'text-green-600' : ''
+                      }
+                    >
                       {formatCurrency(insight.amount)}
                     </span>
-                    {insight.type === 'saving' && <span className="text-muted-foreground">potential savings</span>}
+                    {insight.type === 'saving' && (
+                      <span className="text-muted-foreground">
+                        potential savings
+                      </span>
+                    )}
                   </div>
                 )}
                 {insight.action && (

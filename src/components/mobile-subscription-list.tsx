@@ -19,8 +19,10 @@ export function MobileSubscriptionList({
   onRefresh,
 }: MobileSubscriptionListProps) {
   const router = useRouter();
-  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
-  const [archivingSubscription, setArchivingSubscription] = useState<Subscription | null>(null);
+  const [editingSubscription, setEditingSubscription] =
+    useState<Subscription | null>(null);
+  const [archivingSubscription, setArchivingSubscription] =
+    useState<Subscription | null>(null);
 
   const deleteSubscription = api.subscriptions.delete.useMutation({
     onSuccess: () => {
@@ -28,7 +30,7 @@ export function MobileSubscriptionList({
       onRefresh?.();
       router.refresh();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Failed to delete: ' + error.message);
     },
   });
@@ -42,7 +44,7 @@ export function MobileSubscriptionList({
   return (
     <>
       <div className="space-y-3">
-        {subscriptions.map((subscription) => (
+        {subscriptions.map(subscription => (
           <SwipeableSubscriptionCard
             key={subscription.id}
             subscription={subscription}
@@ -57,7 +59,7 @@ export function MobileSubscriptionList({
         <EditSubscriptionModal
           subscription={editingSubscription}
           open={!!editingSubscription}
-          onOpenChange={(open) => !open && setEditingSubscription(null)}
+          onOpenChange={open => !open && setEditingSubscription(null)}
           onSuccess={() => {
             setEditingSubscription(null);
             onRefresh?.();
@@ -69,7 +71,7 @@ export function MobileSubscriptionList({
         <ArchiveSubscriptionModal
           subscription={archivingSubscription}
           open={!!archivingSubscription}
-          onOpenChange={(open) => !open && setArchivingSubscription(null)}
+          onOpenChange={open => !open && setArchivingSubscription(null)}
           onSuccess={() => {
             setArchivingSubscription(null);
             onRefresh?.();

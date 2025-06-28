@@ -27,8 +27,8 @@ export function LazyImage({
 
     // Create intersection observer
     observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             // Load the image
             const img = new Image();
@@ -37,7 +37,7 @@ export function LazyImage({
               setImageSrc(src);
               setIsLoaded(true);
             };
-            
+
             // Disconnect observer once image starts loading
             observerRef.current?.disconnect();
           }

@@ -27,10 +27,30 @@ interface ExportModalProps {
 type ExportFormat = 'csv' | 'json' | 'pdf' | 'excel';
 
 const formatOptions = [
-  { value: 'csv', label: 'CSV', icon: FileText, description: 'Spreadsheet compatible' },
-  { value: 'json', label: 'JSON', icon: FileJson, description: 'Developer friendly' },
-  { value: 'pdf', label: 'PDF', icon: FileDown, description: 'Print ready report' },
-  { value: 'excel', label: 'Excel', icon: FileSpreadsheet, description: 'Full spreadsheet' },
+  {
+    value: 'csv',
+    label: 'CSV',
+    icon: FileText,
+    description: 'Spreadsheet compatible',
+  },
+  {
+    value: 'json',
+    label: 'JSON',
+    icon: FileJson,
+    description: 'Developer friendly',
+  },
+  {
+    value: 'pdf',
+    label: 'PDF',
+    icon: FileDown,
+    description: 'Print ready report',
+  },
+  {
+    value: 'excel',
+    label: 'Excel',
+    icon: FileSpreadsheet,
+    description: 'Full spreadsheet',
+  },
 ] as const;
 
 export function ExportModal({
@@ -47,12 +67,12 @@ export function ExportModal({
     format === 'csv'
       ? 'generateCSV'
       : format === 'json'
-      ? 'generateJSON'
-      : format === 'pdf'
-      ? 'generatePDF'
-      : 'generateExcel'
+        ? 'generateJSON'
+        : format === 'pdf'
+          ? 'generatePDF'
+          : 'generateExcel'
   ].useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       // Create download link
       const blob = new Blob([data.content], { type: data.mimeType });
       const url = URL.createObjectURL(blob);
@@ -67,7 +87,7 @@ export function ExportModal({
       toast.success(`Export downloaded: ${data.filename}`);
       onOpenChange(false);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error('Export failed: ' + error.message);
     },
   });
@@ -96,21 +116,32 @@ export function ExportModal({
           {/* Format Selection */}
           <div className="space-y-3">
             <Label>Export Format</Label>
-            <RadioGroup value={format} onValueChange={(v) => setFormat(v as ExportFormat)}>
+            <RadioGroup
+              value={format}
+              onValueChange={v => setFormat(v as ExportFormat)}
+            >
               <div className="grid grid-cols-2 gap-3">
-                {formatOptions.map((option) => (
+                {formatOptions.map(option => (
                   <label
                     key={option.value}
                     htmlFor={option.value}
                     className={`flex cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-colors hover:bg-muted ${
-                      format === option.value ? 'border-primary bg-primary/5' : ''
+                      format === option.value
+                        ? 'border-primary bg-primary/5'
+                        : ''
                     }`}
                   >
-                    <RadioGroupItem value={option.value} id={option.value} className="sr-only" />
+                    <RadioGroupItem
+                      value={option.value}
+                      id={option.value}
+                      className="sr-only"
+                    />
                     <option.icon className="h-5 w-5 text-muted-foreground" />
                     <div className="flex-1">
                       <p className="text-sm font-medium">{option.label}</p>
-                      <p className="text-xs text-muted-foreground">{option.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {option.description}
+                      </p>
                     </div>
                   </label>
                 ))}
@@ -121,12 +152,12 @@ export function ExportModal({
           {/* Options */}
           <div className="space-y-3">
             <Label>Include in Export</Label>
-            
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="transactions"
                 checked={includeTransactions}
-                onCheckedChange={(checked) => setIncludeTransactions(!!checked)}
+                onCheckedChange={checked => setIncludeTransactions(!!checked)}
               />
               <label
                 htmlFor="transactions"
@@ -141,7 +172,7 @@ export function ExportModal({
                 <Checkbox
                   id="analytics"
                   checked={includeAnalytics}
-                  onCheckedChange={(checked) => setIncludeAnalytics(!!checked)}
+                  onCheckedChange={checked => setIncludeAnalytics(!!checked)}
                 />
                 <label
                   htmlFor="analytics"
@@ -168,7 +199,10 @@ export function ExportModal({
           <div className="rounded-lg bg-muted p-3">
             <p className="text-sm text-muted-foreground">
               Exporting {selectedSubscriptionIds?.length || 'all'} subscription
-              {(!selectedSubscriptionIds?.length || selectedSubscriptionIds.length > 1) ? 's' : ''}{' '}
+              {!selectedSubscriptionIds?.length ||
+              selectedSubscriptionIds.length > 1
+                ? 's'
+                : ''}{' '}
               as {format.toUpperCase()}
               {includeTransactions && ' with transaction history'}
               {includeAnalytics && ' and analytics data'}

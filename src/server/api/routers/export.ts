@@ -176,7 +176,7 @@ export const exportRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const results = await Promise.all(
-          input.formats.map(async (format) => {
+          input.formats.map(async format => {
             const exportOptions = {
               userId: ctx.session.user.id,
               format,

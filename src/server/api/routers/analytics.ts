@@ -720,12 +720,16 @@ export const analyticsRouter = createTRPCRouter({
   getComparisons: protectedProcedure
     .input(
       z.object({
-        comparisonType: z.enum(['month-over-month', 'year-over-year', 'quarter-over-quarter']),
+        comparisonType: z.enum([
+          'month-over-month',
+          'year-over-year',
+          'quarter-over-quarter',
+        ]),
       })
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = new AnalyticsService(ctx.db);
-      
+
       const endDate = new Date();
       const currentStart = new Date();
       const previousStart = new Date();
@@ -788,7 +792,9 @@ export const analyticsRouter = createTRPCRouter({
    */
   getOptimizations: protectedProcedure.query(async ({ ctx }) => {
     const analyticsService = new AnalyticsService(ctx.db);
-    return analyticsService.generateOptimizationSuggestions(ctx.session.user.id);
+    return analyticsService.generateOptimizationSuggestions(
+      ctx.session.user.id
+    );
   }),
 
   /**
@@ -803,13 +809,15 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = new AnalyticsService(ctx.db);
-      
+
       const endDate = input.endDate ?? new Date();
-      const startDate = input.startDate ?? (() => {
-        const date = new Date();
-        date.setMonth(date.getMonth() - 1);
-        return date;
-      })();
+      const startDate =
+        input.startDate ??
+        (() => {
+          const date = new Date();
+          date.setMonth(date.getMonth() - 1);
+          return date;
+        })();
 
       return analyticsService.generateReport(
         ctx.session.user.id,
@@ -831,13 +839,15 @@ export const analyticsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const analyticsService = new AnalyticsService(ctx.db);
-      
+
       const endDate = input.endDate ?? new Date();
-      const startDate = input.startDate ?? (() => {
-        const date = new Date();
-        date.setFullYear(date.getFullYear() - 1);
-        return date;
-      })();
+      const startDate =
+        input.startDate ??
+        (() => {
+          const date = new Date();
+          date.setFullYear(date.getFullYear() - 1);
+          return date;
+        })();
 
       return analyticsService.generateTimeSeriesData(
         ctx.session.user.id,

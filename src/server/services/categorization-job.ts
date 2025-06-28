@@ -31,7 +31,9 @@ export class CategorizationJobProcessor {
       intervalMinutes * 60 * 1000
     );
 
-    console.log(`Categorization job processor started (every ${intervalMinutes} minutes)`);
+    console.log(
+      `Categorization job processor started (every ${intervalMinutes} minutes)`
+    );
   }
 
   /**
@@ -63,10 +65,7 @@ export class CategorizationJobProcessor {
         where: {
           transactions: {
             some: {
-              OR: [
-                { aiCategory: null },
-                { normalizedMerchantName: null },
-              ],
+              OR: [{ aiCategory: null }, { normalizedMerchantName: null }],
             },
           },
         },
@@ -77,10 +76,7 @@ export class CategorizationJobProcessor {
             select: {
               transactions: {
                 where: {
-                  OR: [
-                    { aiCategory: null },
-                    { normalizedMerchantName: null },
-                  ],
+                  OR: [{ aiCategory: null }, { normalizedMerchantName: null }],
                 },
               },
             },
@@ -89,7 +85,9 @@ export class CategorizationJobProcessor {
         take: 10, // Process up to 10 users at a time
       });
 
-      console.log(`Found ${usersWithUncategorized.length} users with uncategorized transactions`);
+      console.log(
+        `Found ${usersWithUncategorized.length} users with uncategorized transactions`
+      );
 
       const service = getCategorizationService(this.db);
       let totalCategorized = 0;
@@ -97,7 +95,9 @@ export class CategorizationJobProcessor {
 
       // Process each user
       for (const user of usersWithUncategorized) {
-        console.log(`Processing ${user._count.transactions} uncategorized transactions for user ${user.email}`);
+        console.log(
+          `Processing ${user._count.transactions} uncategorized transactions for user ${user.email}`
+        );
 
         try {
           const result = await service.bulkCategorizeTransactions(
@@ -109,7 +109,9 @@ export class CategorizationJobProcessor {
           totalCategorized += result.categorized;
           totalFailed += result.failed;
 
-          console.log(`User ${user.email}: ${result.categorized} categorized, ${result.failed} failed`);
+          console.log(
+            `User ${user.email}: ${result.categorized} categorized, ${result.failed} failed`
+          );
 
           // Clear user's caches
           cacheService.invalidate(`transactions:${user.id}:*`);
@@ -123,7 +125,9 @@ export class CategorizationJobProcessor {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
-      console.log(`Categorization job completed: ${totalCategorized} categorized, ${totalFailed} failed`);
+      console.log(
+        `Categorization job completed: ${totalCategorized} categorized, ${totalFailed} failed`
+      );
 
       // Also process uncategorized subscriptions
       await this.processUncategorizedSubscriptions();
@@ -156,7 +160,9 @@ export class CategorizationJobProcessor {
         take: this.batchSize,
       });
 
-      console.log(`Found ${uncategorizedSubs.length} uncategorized subscriptions`);
+      console.log(
+        `Found ${uncategorizedSubs.length} uncategorized subscriptions`
+      );
 
       if (uncategorizedSubs.length === 0) {
         return;
@@ -167,11 +173,14 @@ export class CategorizationJobProcessor {
       let failed = 0;
 
       // Group by user for rate limiting
-      const subsByUser = uncategorizedSubs.reduce((acc, sub) => {
-        acc[sub.userId] ??= [];
-        acc[sub.userId].push(sub);
-        return acc;
-      }, {} as Record<string, typeof uncategorizedSubs>);
+      const subsByUser = uncategorizedSubs.reduce(
+        (acc, sub) => {
+          acc[sub.userId] ??= [];
+          acc[sub.userId].push(sub);
+          return acc;
+        },
+        {} as Record<string, typeof uncategorizedSubs>
+      );
 
       for (const [userId, userSubs] of Object.entries(subsByUser)) {
         for (const sub of userSubs) {
@@ -179,7 +188,10 @@ export class CategorizationJobProcessor {
             await service.categorizeSubscription(sub.id, userId, false);
             categorized++;
           } catch (error) {
-            console.error(`Failed to categorize subscription ${sub.name}:`, error);
+            console.error(
+              `Failed to categorize subscription ${sub.name}:`,
+              error
+            );
             failed++;
           }
         }
@@ -192,7 +204,9 @@ export class CategorizationJobProcessor {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      console.log(`Subscription categorization: ${categorized} categorized, ${failed} failed`);
+      console.log(
+        `Subscription categorization: ${categorized} categorized, ${failed} failed`
+      );
     } catch (error) {
       console.error('Subscription categorization error:', error);
     }
@@ -255,7 +269,9 @@ export class CategorizationJobProcessor {
 // Export singleton instance
 let jobProcessorInstance: CategorizationJobProcessor | null = null;
 
-export function getCategorizationJobProcessor(db: PrismaClient): CategorizationJobProcessor {
+export function getCategorizationJobProcessor(
+  db: PrismaClient
+): CategorizationJobProcessor {
   if (!jobProcessorInstance) {
     jobProcessorInstance = new CategorizationJobProcessor(db);
   }

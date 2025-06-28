@@ -32,13 +32,13 @@ export class AnalyticsJob {
 
     try {
       // Get users to process
-      const users = config.userId 
+      const users = config.userId
         ? [{ id: config.userId }]
         : await this.prisma.user.findMany({
-            where: { 
-              subscriptions: { 
-                some: { isActive: true } 
-              } 
+            where: {
+              subscriptions: {
+                some: { isActive: true },
+              },
             },
             select: { id: true },
           });
@@ -50,7 +50,10 @@ export class AnalyticsJob {
         try {
           await this.processUserAnalytics(user.id, config);
         } catch (error) {
-          console.error(`Error processing analytics for user ${user.id}:`, error);
+          console.error(
+            `Error processing analytics for user ${user.id}:`,
+            error
+          );
         }
       }
 
@@ -119,11 +122,10 @@ export class AnalyticsJob {
 
       // Pre-calculate category spending
       await this.analyticsService.analyzeCategorySpending(userId, 'month');
-      
+
       // Pre-calculate predictions
       await this.analyticsService.predictFutureSpending(userId, 1);
       await this.analyticsService.predictFutureSpending(userId, 3);
-      
     } catch (error) {
       console.error(`Cache warming failed for user ${userId}:`, error);
     }
@@ -171,12 +173,19 @@ export class AnalyticsJob {
             type: 'anomaly_detected',
             title: `${anomaly.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Detected`,
             message: anomaly.description,
-            severity: anomaly.severity === 'high' ? 'error' : anomaly.severity === 'medium' ? 'warning' : 'info',
+            severity:
+              anomaly.severity === 'high'
+                ? 'error'
+                : anomaly.severity === 'medium'
+                  ? 'warning'
+                  : 'info',
             data: notificationData,
           },
         });
 
-        console.log(`Created anomaly notification for user ${userId}: ${anomaly.type}`);
+        console.log(
+          `Created anomaly notification for user ${userId}: ${anomaly.type}`
+        );
       }
     } catch (error) {
       console.error(`Anomaly detection failed for user ${userId}:`, error);
@@ -190,17 +199,25 @@ export class AnalyticsJob {
     console.log(`Updating predictions for user: ${userId}`);
 
     try {
-      const predictions = await this.analyticsService.predictFutureSpending(userId, 1);
+      const predictions = await this.analyticsService.predictFutureSpending(
+        userId,
+        1
+      );
 
       // Store predictions for quick access (you might want to add a predictions table)
       // For now, we'll just log them
-      console.log(`User ${userId} predicted spending: $${predictions.predictedValue.toFixed(2)} (${predictions.confidence * 100}% confidence)`);
+      console.log(
+        `User ${userId} predicted spending: $${predictions.predictedValue.toFixed(2)} (${predictions.confidence * 100}% confidence)`
+      );
 
       // Create notification if spending is predicted to increase significantly
       if (predictions.trend === 'increasing' && predictions.confidence > 0.7) {
-        const increase = predictions.predictedValue - (await this.getCurrentMonthlySpending(userId));
-        
-        if (increase > 50) { // More than $50 increase
+        const increase =
+          predictions.predictedValue -
+          (await this.getCurrentMonthlySpending(userId));
+
+        if (increase > 50) {
+          // More than $50 increase
           await this.prisma.notification.create({
             data: {
               userId,
@@ -253,7 +270,10 @@ export class AnalyticsJob {
         });
       }
     } catch (error) {
-      console.error(`Daily report generation failed for user ${userId}:`, error);
+      console.error(
+        `Daily report generation failed for user ${userId}:`,
+        error
+      );
     }
   }
 
@@ -270,7 +290,7 @@ export class AnalyticsJob {
 
     return subscriptions.reduce((total, sub) => {
       let monthlyAmount = sub.amount.toNumber();
-      
+
       switch (sub.frequency) {
         case 'yearly':
           monthlyAmount = monthlyAmount / 12;
@@ -282,7 +302,7 @@ export class AnalyticsJob {
           monthlyAmount = monthlyAmount * 4.33;
           break;
       }
-      
+
       return total + monthlyAmount;
     }, 0);
   }
@@ -290,12 +310,15 @@ export class AnalyticsJob {
   /**
    * Schedule the job to run periodically
    */
-  static schedule(prisma: PrismaClient, intervalMs: number = 3600000): NodeJS.Timer {
+  static schedule(
+    prisma: PrismaClient,
+    intervalMs = 3600000
+  ): NodeJS.Timer {
     const job = new AnalyticsJob(prisma);
-    
+
     // Run immediately
     job.run().catch(console.error);
-    
+
     // Then run periodically
     return setInterval(() => {
       job.run().catch(console.error);

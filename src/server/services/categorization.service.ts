@@ -1,5 +1,14 @@
-import { type PrismaClient, type Transaction, type Subscription, Prisma } from '@prisma/client';
-import { openAIClient, type SubscriptionCategory, SUBSCRIPTION_CATEGORIES } from '@/server/lib/openai-client';
+import {
+  type PrismaClient,
+  type Transaction,
+  type Subscription,
+  type Prisma,
+} from '@prisma/client';
+import {
+  openAIClient,
+  type SubscriptionCategory,
+  SUBSCRIPTION_CATEGORIES,
+} from '@/server/lib/openai-client';
 import { cacheService, cacheKeys, cacheTTL } from './cache.service';
 
 /**
@@ -33,7 +42,11 @@ export class CategorizationService {
     }
 
     // Check if already categorized and not forcing recategorization
-    if (!forceRecategorize && transaction.aiCategory && transaction.normalizedMerchantName) {
+    if (
+      !forceRecategorize &&
+      transaction.aiCategory &&
+      transaction.normalizedMerchantName
+    ) {
       return {
         category: transaction.aiCategory,
         confidence: transaction.aiCategoryConfidence?.toNumber() ?? 0,
@@ -42,8 +55,10 @@ export class CategorizationService {
     }
 
     // Check merchant alias cache first
-    const merchantAlias = await this.getMerchantAlias(transaction.merchantName ?? transaction.description);
-    
+    const merchantAlias = await this.getMerchantAlias(
+      transaction.merchantName ?? transaction.description
+    );
+
     if (merchantAlias && merchantAlias.category) {
       // Update transaction with cached alias
       await this.updateTransactionCategory(transactionId, {
@@ -126,11 +141,9 @@ export class CategorizationService {
       userId,
       ...(transactionIds && { id: { in: transactionIds } }),
       ...((!forceRecategorize && {
-        OR: [
-          { aiCategory: null },
-          { normalizedMerchantName: null },
-        ],
-      }) || {}),
+        OR: [{ aiCategory: null }, { normalizedMerchantName: null }],
+      }) ||
+        {}),
     };
 
     const transactions = await this.db.transaction.findMany({
@@ -157,7 +170,9 @@ export class CategorizationService {
     // Group by merchant for efficient AI calls
     const merchantGroups = new Map<string, typeof transactions>();
     for (const transaction of transactions) {
-      const merchantKey = (transaction.merchantName ?? transaction.description).toLowerCase();
+      const merchantKey = (
+        transaction.merchantName ?? transaction.description
+      ).toLowerCase();
       const group = merchantGroups.get(merchantKey) ?? [];
       group.push(transaction);
       merchantGroups.set(merchantKey, group);
@@ -178,7 +193,7 @@ export class CategorizationService {
     // Check aliases first
     for (const [merchantKey, transactionGroup] of merchantGroups) {
       const alias = await this.getMerchantAlias(merchantKey);
-      
+
       if (alias?.category) {
         // Use cached alias
         for (const transaction of transactionGroup) {
@@ -224,14 +239,19 @@ export class CategorizationService {
 
     // Process remaining with AI
     if (merchantGroups.size > 0) {
-      const merchantsToProcess = Array.from(merchantGroups.entries()).map(([key, group]) => ({
-        name: group[0]!.merchantName ?? group[0]!.description,
-        description: group[0]!.description,
-        amount: group[0]!.amount.toNumber(),
-      }));
+      const merchantsToProcess = Array.from(merchantGroups.entries()).map(
+        ([key, group]) => ({
+          name: group[0]!.merchantName ?? group[0]!.description,
+          description: group[0]!.description,
+          amount: group[0]!.amount.toNumber(),
+        })
+      );
 
       try {
-        const aiResults = await openAIClient.bulkCategorize(merchantsToProcess, userId);
+        const aiResults = await openAIClient.bulkCategorize(
+          merchantsToProcess,
+          userId
+        );
 
         // Process AI results
         for (const aiResult of aiResults.categorizations) {
@@ -270,7 +290,8 @@ export class CategorizationService {
                   category: 'other',
                   confidence: 0,
                   normalizedName: merchantKey,
-                  error: error instanceof Error ? error.message : 'Unknown error',
+                  error:
+                    error instanceof Error ? error.message : 'Unknown error',
                 });
               }
             }
@@ -401,7 +422,7 @@ export class CategorizationService {
     confidence: Prisma.Decimal;
   } | null> {
     const cleanName = merchantName.trim().toLowerCase();
-    
+
     return await this.db.merchantAlias.findUnique({
       where: { originalName: cleanName },
       select: {
@@ -534,19 +555,21 @@ export class CategorizationService {
    */
   async initializeCategories(): Promise<void> {
     const existingCategories = await this.db.category.count();
-    
+
     if (existingCategories > 0) {
       return; // Already initialized
     }
 
-    const categories = Object.entries(SUBSCRIPTION_CATEGORIES).map(([id, data], index) => ({
-      id,
-      name: data.name,
-      description: data.description,
-      icon: data.icon,
-      keywords: data.keywords,
-      sortOrder: index,
-    }));
+    const categories = Object.entries(SUBSCRIPTION_CATEGORIES).map(
+      ([id, data], index) => ({
+        id,
+        name: data.name,
+        description: data.description,
+        icon: data.icon,
+        keywords: data.keywords,
+        sortOrder: index,
+      })
+    );
 
     await this.db.category.createMany({
       data: categories,
@@ -559,7 +582,9 @@ export class CategorizationService {
 // Export singleton instance
 let categorizationServiceInstance: CategorizationService | null = null;
 
-export function getCategorizationService(db: PrismaClient): CategorizationService {
+export function getCategorizationService(
+  db: PrismaClient
+): CategorizationService {
   if (!categorizationServiceInstance) {
     categorizationServiceInstance = new CategorizationService(db);
   }

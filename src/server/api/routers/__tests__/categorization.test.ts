@@ -25,7 +25,7 @@ describe('categorizationRouter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     ctx = createInnerTRPCContext({
       session: mockSession,
     });
@@ -39,7 +39,9 @@ describe('categorizationRouter', () => {
       initializeCategories: vi.fn(),
     };
 
-    vi.mocked(getCategorizationService).mockReturnValue(mockCategorizationService);
+    vi.mocked(getCategorizationService).mockReturnValue(
+      mockCategorizationService
+    );
     vi.mocked(cacheService.get).mockReturnValue(null);
     vi.mocked(cacheService.set).mockImplementation(() => {});
     vi.mocked(cacheService.invalidate).mockImplementation(() => {});
@@ -53,7 +55,9 @@ describe('categorizationRouter', () => {
         normalizedName: 'Netflix',
       };
 
-      mockCategorizationService.categorizeTransaction.mockResolvedValue(mockResult);
+      mockCategorizationService.categorizeTransaction.mockResolvedValue(
+        mockResult
+      );
 
       const result = await categorizationRouter
         .createCaller(ctx)
@@ -66,13 +70,15 @@ describe('categorizationRouter', () => {
         success: true,
         ...mockResult,
       });
-      expect(mockCategorizationService.categorizeTransaction).toHaveBeenCalledWith(
-        'trans123',
-        'test-user-id',
-        false
+      expect(
+        mockCategorizationService.categorizeTransaction
+      ).toHaveBeenCalledWith('trans123', 'test-user-id', false);
+      expect(cacheService.invalidate).toHaveBeenCalledWith(
+        'transactions:test-user-id:*'
       );
-      expect(cacheService.invalidate).toHaveBeenCalledWith('transactions:test-user-id:*');
-      expect(cacheService.invalidate).toHaveBeenCalledWith('analytics:test-user-id:*');
+      expect(cacheService.invalidate).toHaveBeenCalledWith(
+        'analytics:test-user-id:*'
+      );
     });
 
     it('should handle errors properly', async () => {
@@ -81,11 +87,9 @@ describe('categorizationRouter', () => {
       );
 
       await expect(
-        categorizationRouter
-          .createCaller(ctx)
-          .categorizeTransaction({
-            transactionId: 'trans123',
-          })
+        categorizationRouter.createCaller(ctx).categorizeTransaction({
+          transactionId: 'trans123',
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -111,7 +115,9 @@ describe('categorizationRouter', () => {
         ],
       };
 
-      mockCategorizationService.bulkCategorizeTransactions.mockResolvedValue(mockResult);
+      mockCategorizationService.bulkCategorizeTransactions.mockResolvedValue(
+        mockResult
+      );
 
       const result = await categorizationRouter
         .createCaller(ctx)
@@ -120,9 +126,15 @@ describe('categorizationRouter', () => {
         });
 
       expect(result).toEqual(mockResult);
-      expect(cacheService.invalidate).toHaveBeenCalledWith('transactions:test-user-id:*');
-      expect(cacheService.invalidate).toHaveBeenCalledWith('analytics:test-user-id:*');
-      expect(cacheService.invalidate).toHaveBeenCalledWith('subscriptions:test-user-id:*');
+      expect(cacheService.invalidate).toHaveBeenCalledWith(
+        'transactions:test-user-id:*'
+      );
+      expect(cacheService.invalidate).toHaveBeenCalledWith(
+        'analytics:test-user-id:*'
+      );
+      expect(cacheService.invalidate).toHaveBeenCalledWith(
+        'subscriptions:test-user-id:*'
+      );
     });
   });
 
@@ -133,7 +145,9 @@ describe('categorizationRouter', () => {
         confidence: 0.93,
       };
 
-      mockCategorizationService.categorizeSubscription.mockResolvedValue(mockResult);
+      mockCategorizationService.categorizeSubscription.mockResolvedValue(
+        mockResult
+      );
 
       const result = await categorizationRouter
         .createCaller(ctx)
@@ -146,17 +160,17 @@ describe('categorizationRouter', () => {
         success: true,
         ...mockResult,
       });
-      expect(mockCategorizationService.categorizeSubscription).toHaveBeenCalledWith(
-        'sub123',
-        'test-user-id',
-        true
-      );
+      expect(
+        mockCategorizationService.categorizeSubscription
+      ).toHaveBeenCalledWith('sub123', 'test-user-id', true);
     });
   });
 
   describe('updateCategory', () => {
     it('should update subscription category', async () => {
-      mockCategorizationService.updateSubscriptionCategory.mockResolvedValue(undefined);
+      mockCategorizationService.updateSubscriptionCategory.mockResolvedValue(
+        undefined
+      );
 
       const result = await categorizationRouter
         .createCaller(ctx)
@@ -166,11 +180,9 @@ describe('categorizationRouter', () => {
         });
 
       expect(result).toEqual({ success: true });
-      expect(mockCategorizationService.updateSubscriptionCategory).toHaveBeenCalledWith(
-        'sub123',
-        'test-user-id',
-        'music'
-      );
+      expect(
+        mockCategorizationService.updateSubscriptionCategory
+      ).toHaveBeenCalledWith('sub123', 'test-user-id', 'music');
     });
   });
 
@@ -197,7 +209,7 @@ describe('categorizationRouter', () => {
 
     it('should fetch categories from database', async () => {
       vi.mocked(cacheService.get).mockReturnValue(null);
-      
+
       const dbCategories = [
         {
           id: 'streaming',
@@ -261,7 +273,9 @@ describe('categorizationRouter', () => {
         total: 1,
       };
 
-      mockCategorizationService.getMerchantAliases.mockResolvedValue(mockResult);
+      mockCategorizationService.getMerchantAliases.mockResolvedValue(
+        mockResult
+      );
 
       const result = await categorizationRouter
         .createCaller(ctx)
@@ -319,7 +333,9 @@ describe('categorizationRouter', () => {
           confidence: 0.99,
         },
       });
-      expect(cacheService.invalidate).toHaveBeenCalledWith('ai-categorization:*');
+      expect(cacheService.invalidate).toHaveBeenCalledWith(
+        'ai-categorization:*'
+      );
     });
   });
 
@@ -343,23 +359,23 @@ describe('categorizationRouter', () => {
       };
 
       vi.mocked(cacheService.get).mockReturnValue(null);
-      
-      ctx.db.transaction.count = vi.fn()
+
+      ctx.db.transaction.count = vi
+        .fn()
         .mockResolvedValueOnce(100) // total
         .mockResolvedValueOnce(85); // categorized
-      
-      ctx.db.subscription.count = vi.fn()
+
+      ctx.db.subscription.count = vi
+        .fn()
         .mockResolvedValueOnce(20) // total
         .mockResolvedValueOnce(18); // categorized
-      
+
       ctx.db.subscription.groupBy = vi.fn().mockResolvedValue([
         { category: 'streaming', _count: { id: 5 } },
         { category: 'music', _count: { id: 3 } },
       ]);
 
-      const result = await categorizationRouter
-        .createCaller(ctx)
-        .getStats();
+      const result = await categorizationRouter.createCaller(ctx).getStats();
 
       expect(result).toEqual(mockStats);
       expect(cacheService.set).toHaveBeenCalled();

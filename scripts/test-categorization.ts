@@ -22,39 +22,39 @@ const testMerchants = [
   'DISNEY PLUS',
   'HBO MAX SUBSCRIPTION',
   'AMAZON PRIME*2V4GH8',
-  
+
   // Music services
   'SPOTIFY USA 8884407',
   'APPLE.COM/BILL APPLE MUSIC',
   'PANDORA*SUBSCRIPTION',
-  
+
   // Software
   'ADOBE *CREATIVE CLOUD',
   'MICROSOFT*365',
   'GITHUB.COM',
   'NOTION LABS INC',
-  
+
   // Gaming
   'XBOX GAME PASS',
   'PLAYSTATION PLUS',
   'NINTENDO ESHOP',
   'STEAM GAMES',
-  
+
   // Food delivery
   'DOORDASH*DASHPASS',
   'UBER* EATS PASS',
   'GRUBHUB+ MEMBERSHIP',
-  
+
   // Fitness
   'PELOTON INTERACTIVE',
   'APPLE.COM/BILL FITNESS+',
   'STRAVA SUBSCRIPTION',
-  
+
   // News
   'NYTIMES DIGITAL',
   'WSJ DIGITAL ACCESS',
   'THE ECONOMIST',
-  
+
   // Unknown/Edge cases
   'RANDOM MERCHANT 12345',
   'SQ *COFFEE SHOP',
@@ -63,7 +63,7 @@ const testMerchants = [
 
 async function testOpenAIClient() {
   console.log('🤖 Testing OpenAI Client...\n');
-  
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     console.error('❌ OPENAI_API_KEY not found in environment variables');
@@ -72,7 +72,7 @@ async function testOpenAIClient() {
   }
 
   const client = new OpenAICategorizationClient(apiKey);
-  
+
   // Test single categorization
   console.log('📌 Testing single categorization:');
   try {
@@ -89,7 +89,9 @@ async function testOpenAIClient() {
   // Test merchant normalization
   console.log('\n📌 Testing merchant normalization:');
   try {
-    const normalized = await client.normalizeMerchantName('SPOTIFY USA 8884407');
+    const normalized = await client.normalizeMerchantName(
+      'SPOTIFY USA 8884407'
+    );
     console.log('✅ Normalized:', normalized);
   } catch (error) {
     console.error('❌ Error:', error);
@@ -103,11 +105,13 @@ async function testOpenAIClient() {
       description: `Transaction for ${name}`,
       amount: Math.random() * 50 + 5,
     }));
-    
+
     const result = await client.bulkCategorize(merchants);
     console.log('✅ Bulk results:');
     result.categorizations.forEach(cat => {
-      console.log(`   ${cat.originalName} → ${cat.normalizedName} (${cat.category}, ${(cat.confidence * 100).toFixed(0)}%)`);
+      console.log(
+        `   ${cat.originalName} → ${cat.normalizedName} (${cat.category}, ${(cat.confidence * 100).toFixed(0)}%)`
+      );
     });
   } catch (error) {
     console.error('❌ Error:', error);
@@ -121,13 +125,15 @@ async function testOpenAIClient() {
     'Adobe Creative Suite',
     'Unknown Service XYZ',
   ];
-  
+
   for (const merchant of fallbackTests) {
     // Force an error to trigger fallback
     const mockClient = new OpenAICategorizationClient('invalid-key');
     try {
       const result = await mockClient.categorizeTransaction(merchant);
-      console.log(`   ${merchant} → ${result.category} (${(result.confidence * 100).toFixed(0)}%)`);
+      console.log(
+        `   ${merchant} → ${result.category} (${(result.confidence * 100).toFixed(0)}%)`
+      );
     } catch (error) {
       console.error(`   ${merchant} → Error: ${error}`);
     }
@@ -136,14 +142,14 @@ async function testOpenAIClient() {
 
 async function testCategorizationService() {
   console.log('\n\n🔧 Testing Categorization Service...\n');
-  
+
   const service = getCategorizationService(prisma);
-  
+
   // First, ensure we have a test user
   let testUser = await prisma.user.findFirst({
     where: { email: 'test@example.com' },
   });
-  
+
   if (!testUser) {
     console.log('Creating test user...');
     testUser = await prisma.user.create({
@@ -158,10 +164,10 @@ async function testCategorizationService() {
   let testAccount = await prisma.bankAccount.findFirst({
     where: { userId: testUser.id },
   });
-  
+
   if (!testAccount) {
     console.log('Creating test bank account...');
-    
+
     // Create a test Plaid item first
     const testPlaidItem = await prisma.plaidItem.create({
       data: {
@@ -172,7 +178,7 @@ async function testCategorizationService() {
         institutionName: 'Test Bank',
       },
     });
-    
+
     testAccount = await prisma.bankAccount.create({
       data: {
         userId: testUser.id,
@@ -190,11 +196,11 @@ async function testCategorizationService() {
   // Create test transactions
   console.log('\n📌 Creating test transactions...');
   const testTransactions = [];
-  
+
   for (let i = 0; i < 5; i++) {
     const merchant = testMerchants[i];
     if (!merchant) continue;
-    
+
     const transaction = await prisma.transaction.create({
       data: {
         userId: testUser.id,
@@ -232,9 +238,13 @@ async function testCategorizationService() {
       testUser.id,
       testTransactions.map(t => t.id)
     );
-    console.log(`✅ Categorized: ${result.categorized}, Failed: ${result.failed}`);
+    console.log(
+      `✅ Categorized: ${result.categorized}, Failed: ${result.failed}`
+    );
     result.results.forEach(r => {
-      console.log(`   Transaction ${r.transactionId.slice(-8)} → ${r.category} (${(r.confidence * 100).toFixed(0)}%)`);
+      console.log(
+        `   Transaction ${r.transactionId.slice(-8)} → ${r.category} (${(r.confidence * 100).toFixed(0)}%)`
+      );
     });
   } catch (error) {
     console.error('❌ Error:', error);
@@ -242,7 +252,7 @@ async function testCategorizationService() {
 
   // Test subscription categorization
   console.log('\n📌 Testing subscription categorization:');
-  
+
   // Create a test subscription
   const testSubscription = await prisma.subscription.create({
     data: {
@@ -274,7 +284,9 @@ async function testCategorizationService() {
     });
     console.log(`✅ Found ${aliases.total} aliases:`);
     aliases.aliases.slice(0, 5).forEach(alias => {
-      console.log(`   ${alias.originalName} → ${alias.normalizedName} (${alias.category})`);
+      console.log(
+        `   ${alias.originalName} → ${alias.normalizedName} (${alias.category})`
+      );
     });
   } catch (error) {
     console.error('❌ Error:', error);
@@ -292,11 +304,11 @@ async function testCategorizationService() {
 
 async function testCategorizationStats() {
   console.log('\n\n📊 Testing Categorization Statistics...\n');
-  
+
   const testUser = await prisma.user.findFirst({
     where: { email: 'test@example.com' },
   });
-  
+
   if (!testUser) {
     console.log('❌ Test user not found');
     return;
@@ -333,8 +345,12 @@ async function testCategorizationStats() {
   ]);
 
   console.log('📈 Categorization Statistics:');
-  console.log(`   Transactions: ${categorizedTransactions}/${totalTransactions} (${totalTransactions > 0 ? Math.round((categorizedTransactions / totalTransactions) * 100) : 0}%)`);
-  console.log(`   Subscriptions: ${categorizedSubscriptions}/${totalSubscriptions} (${totalSubscriptions > 0 ? Math.round((categorizedSubscriptions / totalSubscriptions) * 100) : 0}%)`);
+  console.log(
+    `   Transactions: ${categorizedTransactions}/${totalTransactions} (${totalTransactions > 0 ? Math.round((categorizedTransactions / totalTransactions) * 100) : 0}%)`
+  );
+  console.log(
+    `   Subscriptions: ${categorizedSubscriptions}/${totalSubscriptions} (${totalSubscriptions > 0 ? Math.round((categorizedSubscriptions / totalSubscriptions) * 100) : 0}%)`
+  );
 
   // Get category breakdown
   const categoryBreakdown = await prisma.subscription.groupBy({
@@ -351,25 +367,27 @@ async function testCategorizationStats() {
   if (categoryBreakdown.length > 0) {
     console.log('\n📊 Category Breakdown:');
     categoryBreakdown.forEach(item => {
-      console.log(`   ${item.category ?? 'uncategorized'}: ${item._count.id} subscriptions`);
+      console.log(
+        `   ${item.category ?? 'uncategorized'}: ${item._count.id} subscriptions`
+      );
     });
   }
 }
 
 async function main() {
   console.log('🚀 SubPilot AI Categorization Test Suite\n');
-  console.log('=' .repeat(50));
-  
+  console.log('='.repeat(50));
+
   try {
     // Test OpenAI client directly
     await testOpenAIClient();
-    
+
     // Test categorization service
     await testCategorizationService();
-    
+
     // Test statistics
     await testCategorizationStats();
-    
+
     console.log('\n✅ All tests completed!');
   } catch (error) {
     console.error('\n❌ Test suite failed:', error);
@@ -381,7 +399,7 @@ async function main() {
 // Run the test suite
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
+  .catch(error => {
     console.error(error);
     process.exit(1);
   });

@@ -98,16 +98,28 @@ export const TimeSeriesChart = React.memo(function TimeSeriesChart({
   };
 
   // Find where predictions start
-  const predictionStartIndex = data.findIndex(d => d.predicted !== undefined && d.value === undefined);
+  const predictionStartIndex = data.findIndex(
+    d => d.predicted !== undefined && d.value === undefined
+  );
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{title}</CardTitle>
         {trend && (
-          <Badge variant={trend === 'increasing' ? 'destructive' : trend === 'decreasing' ? 'default' : 'secondary'}>
+          <Badge
+            variant={
+              trend === 'increasing'
+                ? 'destructive'
+                : trend === 'decreasing'
+                  ? 'default'
+                  : 'secondary'
+            }
+          >
             {trend === 'increasing' && <TrendingUp className="mr-1 h-3 w-3" />}
-            {trend === 'decreasing' && <TrendingDown className="mr-1 h-3 w-3" />}
+            {trend === 'decreasing' && (
+              <TrendingDown className="mr-1 h-3 w-3" />
+            )}
             {trend === 'stable' && <Minus className="mr-1 h-3 w-3" />}
             {trend}
           </Badge>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 interface InfiniteScrollProps {
   children: ReactNode;
@@ -23,7 +23,7 @@ export function InfiniteScroll({
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (entries[0]?.isIntersecting && hasMore && !isLoading) {
           onLoadMore();
         }
@@ -48,16 +48,17 @@ export function InfiniteScroll({
   return (
     <>
       {children}
-      
+
       {/* Observer target */}
       <div ref={observerTarget} className="h-1" />
-      
+
       {/* Loading indicator */}
-      {isLoading && (loader || (
-        <div className="flex justify-center py-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      ))}
+      {isLoading &&
+        (loader || (
+          <div className="flex justify-center py-4">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ))}
     </>
   );
 }

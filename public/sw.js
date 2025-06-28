@@ -13,10 +13,10 @@ const STATIC_ASSETS = [
 ];
 
 // Install event - cache static assets
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
   console.log('[SW] Installing Service Worker...');
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
+    caches.open(STATIC_CACHE).then(cache => {
       console.log('[SW] Caching static assets');
       return cache.addAll(STATIC_ASSETS);
     })
@@ -25,12 +25,12 @@ self.addEventListener('install', (event) => {
 });
 
 // Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', event => {
   console.log('[SW] Activating Service Worker...');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
+        cacheNames.map(cacheName => {
           if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
             console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
@@ -43,7 +43,7 @@ self.addEventListener('activate', (event) => {
 });
 
 // Fetch event - serve from cache or network
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
@@ -120,14 +120,24 @@ async function networkFirst(request) {
 
 // Helper function to determine static assets
 function isStaticAsset(pathname) {
-  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.woff', '.woff2'];
+  const staticExtensions = [
+    '.js',
+    '.css',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.svg',
+    '.ico',
+    '.woff',
+    '.woff2',
+  ];
   return staticExtensions.some(ext => pathname.endsWith(ext));
 }
 
 // Background sync for offline actions
-self.addEventListener('sync', (event) => {
+self.addEventListener('sync', event => {
   console.log('[SW] Background sync:', event.tag);
-  
+
   if (event.tag === 'sync-subscriptions') {
     event.waitUntil(syncSubscriptions());
   }
@@ -138,7 +148,7 @@ async function syncSubscriptions() {
     // Sync any pending subscription updates
     const cache = await caches.open('subpilot-pending');
     const requests = await cache.keys();
-    
+
     for (const request of requests) {
       try {
         const response = await fetch(request);
@@ -155,7 +165,7 @@ async function syncSubscriptions() {
 }
 
 // Push notifications
-self.addEventListener('push', (event) => {
+self.addEventListener('push', event => {
   if (!event.data) return;
 
   const data = event.data.json();
@@ -176,13 +186,13 @@ self.addEventListener('push', (event) => {
 });
 
 // Notification click handler
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', event => {
   event.notification.close();
 
   const url = event.notification.data?.url || '/dashboard';
-  
+
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
+    clients.matchAll({ type: 'window' }).then(clientList => {
       // Check if there's already a window/tab open
       for (const client of clientList) {
         if (client.url === url && 'focus' in client) {

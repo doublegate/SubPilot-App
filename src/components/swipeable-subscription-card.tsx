@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, useAnimation, PanInfo } from 'framer-motion';
+import { motion, useAnimation, type PanInfo } from 'framer-motion';
 import { Archive, Edit, Trash2 } from 'lucide-react';
 import { SubscriptionCard } from './subscription-card';
 import type { Subscription } from './subscription-list';
@@ -29,7 +29,10 @@ export function SwipeableSubscriptionCard({
   // Reset swipe state when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         resetSwipe();
       }
     };

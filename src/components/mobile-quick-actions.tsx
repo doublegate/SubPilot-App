@@ -39,15 +39,19 @@ export function MobileQuickActions({
       },
       color: 'bg-blue-500',
     },
-    ...(onScanReceipt ? [{
-      icon: Camera,
-      label: 'Scan Receipt',
-      onClick: () => {
-        onScanReceipt();
-        setIsOpen(false);
-      },
-      color: 'bg-green-500',
-    }] : []),
+    ...(onScanReceipt
+      ? [
+          {
+            icon: Camera,
+            label: 'Scan Receipt',
+            onClick: () => {
+              onScanReceipt();
+              setIsOpen(false);
+            },
+            color: 'bg-green-500',
+          },
+        ]
+      : []),
     {
       icon: FileDown,
       label: 'Export Data',
@@ -107,7 +111,7 @@ export function MobileQuickActions({
                   aria-label={action.label}
                 >
                   <action.icon className="h-5 w-5" />
-                  
+
                   {/* Label */}
                   <span className="absolute right-full mr-3 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-xs text-white">
                     {action.label}

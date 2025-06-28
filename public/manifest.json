@@ -80,9 +80,5 @@
   ],
   "prefer_related_applications": false,
   "scope": "/",
-  "features": [
-    "notifications",
-    "background-sync",
-    "periodic-background-sync"
-  ]
+  "features": ["notifications", "background-sync", "periodic-background-sync"]
 }

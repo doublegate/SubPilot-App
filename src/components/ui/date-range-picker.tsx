@@ -56,7 +56,7 @@ export function CalendarDateRangePicker({
             mode="range"
             defaultMonth={date?.from}
             selected={{ from: date.from, to: date.to }}
-            onSelect={(range) => {
+            onSelect={range => {
               if (range) {
                 onDateChange({ from: range.from, to: range.to });
               }

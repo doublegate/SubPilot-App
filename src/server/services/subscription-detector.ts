@@ -454,10 +454,14 @@ export class SubscriptionDetector {
     // Import categorization service if available
     let categorizationService: any;
     try {
-      const { getCategorizationService } = await import('./categorization.service');
+      const { getCategorizationService } = await import(
+        './categorization.service'
+      );
       categorizationService = getCategorizationService(this.db);
     } catch (error) {
-      console.log('Categorization service not available, using default categories');
+      console.log(
+        'Categorization service not available, using default categories'
+      );
     }
 
     for (const result of results) {
@@ -511,9 +515,14 @@ export class SubscriptionDetector {
                 userId,
                 false
               );
-              console.log(`AI categorized subscription: ${result.merchantName}`);
+              console.log(
+                `AI categorized subscription: ${result.merchantName}`
+              );
             } catch (error) {
-              console.error(`Failed to categorize subscription ${result.merchantName}:`, error);
+              console.error(
+                `Failed to categorize subscription ${result.merchantName}:`,
+                error
+              );
             }
           }
         } else {
@@ -534,16 +543,25 @@ export class SubscriptionDetector {
           );
 
           // Re-categorize if it doesn't have a category
-          if (categorizationService && !existing.aiCategory && !existing.categoryOverride) {
+          if (
+            categorizationService &&
+            !existing.aiCategory &&
+            !existing.categoryOverride
+          ) {
             try {
               await categorizationService.categorizeSubscription(
                 existing.id,
                 userId,
                 false
               );
-              console.log(`AI categorized updated subscription: ${result.merchantName}`);
+              console.log(
+                `AI categorized updated subscription: ${result.merchantName}`
+              );
             } catch (error) {
-              console.error(`Failed to categorize subscription ${result.merchantName}:`, error);
+              console.error(
+                `Failed to categorize subscription ${result.merchantName}:`,
+                error
+              );
             }
           }
         }

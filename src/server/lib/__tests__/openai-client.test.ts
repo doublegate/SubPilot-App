@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { OpenAICategorizationClient, SUBSCRIPTION_CATEGORIES } from '../openai-client';
+import {
+  OpenAICategorizationClient,
+  SUBSCRIPTION_CATEGORIES,
+} from '../openai-client';
 import { cacheService } from '@/server/services/cache.service';
 
 // Mock the fetch function
@@ -70,15 +73,21 @@ describe('OpenAICategorizationClient', () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify(apiResponse),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify(apiResponse),
+              },
             },
-          }],
+          ],
         }),
       } as Response);
 
-      const result = await client.categorizeTransaction('NETFLIX.COM *123456', 'Netflix subscription', 9.99);
+      const result = await client.categorizeTransaction(
+        'NETFLIX.COM *123456',
+        'Netflix subscription',
+        9.99
+      );
 
       expect(result).toEqual(apiResponse);
       expect(cacheService.set).toHaveBeenCalledWith(
@@ -135,22 +144,26 @@ describe('OpenAICategorizationClient', () => {
         .mockReturnValueOnce(null); // Spotify not cached
 
       const apiResponse = {
-        categorizations: [{
-          originalName: 'Spotify',
-          category: 'music',
-          confidence: 0.9,
-          normalizedName: 'Spotify',
-        }],
+        categorizations: [
+          {
+            originalName: 'Spotify',
+            category: 'music',
+            confidence: 0.9,
+            normalizedName: 'Spotify',
+          },
+        ],
       };
 
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify(apiResponse),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify(apiResponse),
+              },
             },
-          }],
+          ],
         }),
       } as Response);
 
@@ -175,10 +188,7 @@ describe('OpenAICategorizationClient', () => {
       vi.mocked(cacheService.get).mockReturnValue(null);
       vi.mocked(fetch).mockRejectedValue(new Error('API error'));
 
-      const merchants = [
-        { name: 'Netflix' },
-        { name: 'Unknown Service XYZ' },
-      ];
+      const merchants = [{ name: 'Netflix' }, { name: 'Unknown Service XYZ' }];
 
       const result = await client.bulkCategorize(merchants);
 
@@ -197,11 +207,13 @@ describe('OpenAICategorizationClient', () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: 'Netflix',
+          choices: [
+            {
+              message: {
+                content: 'Netflix',
+              },
             },
-          }],
+          ],
         }),
       } as Response);
 
@@ -259,21 +271,33 @@ describe('OpenAICategorizationClient', () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{
-            message: {
-              content: JSON.stringify(apiResponse),
+          choices: [
+            {
+              message: {
+                content: JSON.stringify(apiResponse),
+              },
             },
-          }],
+          ],
         }),
       } as Response);
 
       // Make several categorization requests
-      await client.categorizeTransaction('Netflix', undefined, undefined, 'user123');
-      await client.categorizeTransaction('Spotify', undefined, undefined, 'user123');
+      await client.categorizeTransaction(
+        'Netflix',
+        undefined,
+        undefined,
+        'user123'
+      );
+      await client.categorizeTransaction(
+        'Spotify',
+        undefined,
+        undefined,
+        'user123'
+      );
 
       const stats = client.getCostStats('user123');
       expect(stats.total).toBeGreaterThan(0);
-      expect(stats.byUser['user123']).toBeGreaterThan(0);
+      expect(stats.byUser.user123).toBeGreaterThan(0);
     });
   });
 });
