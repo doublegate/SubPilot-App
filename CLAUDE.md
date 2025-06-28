@@ -421,6 +421,8 @@ This pattern eliminates the need for non-null assertions and improves test maint
 - **Dynamic Tag References**: Extract tags from metadata outputs, not hardcoded SHAs
 - **Health Endpoint Flexibility**: Skip database checks in test environments
 - **Container Testing**: Always verify health checks pass before pushing
+- **Next.js Standalone**: Must set ENV HOSTNAME=0.0.0.0 for health checks to work
+- **Health Check Timing**: Let Dockerfile control timing, don't override in CI
 
 ### GitHub Actions Best Practices
 - **Lowercase Image Names**: Docker registry requires lowercase (subpilot-app not SubPilot-App)
