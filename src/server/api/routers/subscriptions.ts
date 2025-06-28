@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 import { Prisma } from '@prisma/client';
-import { SubscriptionDetector } from '@/server/services/subscription-detector';
-import { emailNotificationService } from '@/server/services/email.service';
+import { SubscriptionDetector } from '~/server/services/subscription-detector';
+import { emailNotificationService } from '~/server/services/email.service';
 
 const subscriptionStatusEnum = z.enum(['active', 'cancelled', 'pending']);
 // Removed frequencyEnum as it's not currently used

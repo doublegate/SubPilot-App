@@ -1,4 +1,4 @@
-import { plaid, plaidWithRetry } from '@/server/plaid-client';
+import { plaid, plaidWithRetry } from '~/server/plaid-client';
 import type {
   InstitutionsGetByIdRequest,
   CountryCode,

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-import { AssistantService } from '@/server/services/assistant.service';
-import { ConversationService } from '@/server/services/conversation.service';
+import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import { AssistantService } from '~/server/services/assistant.service';
+import { ConversationService } from '~/server/services/conversation.service';
 import { TRPCError } from '@trpc/server';
 
 export const assistantRouter = createTRPCRouter({

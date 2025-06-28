@@ -1,4 +1,4 @@
-import { db } from '@/server/db';
+import { db } from '~/server/db';
 import { format } from 'date-fns';
 import type {} from '@prisma/client';
 

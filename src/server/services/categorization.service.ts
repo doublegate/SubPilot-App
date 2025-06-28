@@ -2,7 +2,7 @@ import { type PrismaClient, type Prisma } from '@prisma/client';
 import {
   openAIClient,
   SUBSCRIPTION_CATEGORIES,
-} from '@/server/lib/openai-client';
+} from '~/server/lib/openai-client';
 import { cacheService } from './cache.service';
 
 /**

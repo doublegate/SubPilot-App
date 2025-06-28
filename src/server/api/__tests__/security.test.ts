@@ -4,12 +4,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createInnerTRPCContext } from '@/server/api/trpc';
-import { appRouter } from '@/server/api/root';
+import { createInnerTRPCContext } from '~/server/api/trpc';
+import { appRouter } from '~/server/api/root';
 import type { Session } from 'next-auth';
 import { TRPCError } from '@trpc/server';
 import { Decimal } from '@prisma/client/runtime/library';
-import { db } from '@/server/db';
+import { db } from '~/server/db';
 // Unused imports removed to fix ESLint warnings
 
 // Mock database - define inside the factory function to avoid hoisting issues

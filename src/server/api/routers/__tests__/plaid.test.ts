@@ -14,10 +14,10 @@ import {
 } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { plaidRouter } from '../plaid';
-import { createInnerTRPCContext } from '@/server/api/trpc';
+import { createInnerTRPCContext } from '~/server/api/trpc';
 // PlaidApi import removed as unused - fixes ESLint warning
 import type { Session } from 'next-auth';
-import { plaid } from '@/server/plaid-client';
+import { plaid } from '~/server/plaid-client';
 
 // Mock environment
 vi.mock('@/env.js', () => ({
@@ -115,7 +115,7 @@ vi.mock('@/server/db', () => ({
 }));
 
 // Import db after mocking
-import { db } from '@/server/db';
+import { db } from '~/server/db';
 
 // Helper to get mocked plaid client
 const getMockPlaidClient = () => {

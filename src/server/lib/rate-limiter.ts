@@ -1,4 +1,4 @@
-import { env } from '@/env.js';
+import { env } from '~/env.js';
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds

@@ -1,6 +1,6 @@
 import { type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
-import { env } from '@/env.js';
+import { env } from '~/env.js';
 
 interface PerformanceMetrics {
   procedure: string;

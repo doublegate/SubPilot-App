@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { env } from '@/env.js';
+import { env } from '~/env.js';
 
 /**
  * Verify webhook signatures for external services

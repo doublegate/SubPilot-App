@@ -1,4 +1,4 @@
-import { env } from '@/env.js';
+import { env } from '~/env.js';
 
 /**
  * Plaid configuration utilities for managing production vs sandbox settings

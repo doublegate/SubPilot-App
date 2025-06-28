@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createInnerTRPCContext } from '@/server/api/trpc';
+import { createInnerTRPCContext } from '~/server/api/trpc';
 import { categorizationRouter } from '../categorization';
-import { getCategorizationService } from '@/server/services/categorization.service';
-import { cacheService } from '@/server/services/cache.service';
+import { getCategorizationService } from '~/server/services/categorization.service';
+import { cacheService } from '~/server/services/cache.service';
 import { type Session } from 'next-auth';
 import { TRPCError } from '@trpc/server';
 

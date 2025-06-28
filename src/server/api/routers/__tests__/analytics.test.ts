@@ -6,8 +6,8 @@ import {
   createDecimal,
   createMockSubscription,
   createMockTransaction,
-} from '@/test/test-utils';
-import type { MockContext, MockSubscription } from '@/test/test-utils';
+} from '~/test/test-utils';
+import type { MockContext, MockSubscription } from '~/test/test-utils';
 
 // Create properly typed mock context
 let mockContext: MockContext;

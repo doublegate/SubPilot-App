@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createInnerTRPCContext } from '@/server/api/trpc';
+import { createInnerTRPCContext } from '~/server/api/trpc';
 import { subscriptionsRouter } from '../subscriptions';
 import type { Session } from 'next-auth';
 import { TRPCError } from '@trpc/server';
@@ -71,7 +71,7 @@ vi.mock('@/server/db', () => ({
 }));
 
 // Import db after mocking
-import { db } from '@/server/db';
+import { db } from '~/server/db';
 
 describe('Subscriptions Router - Full tRPC Integration', () => {
   const mockSession: Session = {
