@@ -19,8 +19,8 @@ on:
 env:
   # Use GitHub Container Registry for centralized package management
   REGISTRY: ghcr.io
-  # Repository name as <account>/<repo> (automatically resolved)
-  IMAGE_NAME: ${{ github.repository }}
+  # Repository name as <account>/<repo> (converted to lowercase for Docker compatibility)
+  IMAGE_NAME: ${{ github.repository_owner }}/subpilot-app
 
 jobs:
   build-and-publish:
