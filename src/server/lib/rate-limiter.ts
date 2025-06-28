@@ -99,24 +99,60 @@ async function getRedisClient(): Promise<RedisLike> {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - ioredis is an optional dependency
       const redisModule = (await import('ioredis')) as {
-        default: new (url: string) => RedisLike;
+        default: any;
       };
       const Redis = redisModule.default;
-      redisClient = new Redis(env.REDIS_URL);
-      console.log('✅ Redis rate limiter initialized');
+      
+      // Create Redis instance with proper error handling
+      const client = new Redis(env.REDIS_URL, {
+        // Disable auto-reconnect to prevent connection spam
+        retryStrategy: () => null,
+        // Don't show connection errors in console
+        showFriendlyErrorStack: false,
+      });
+      
+      // Handle connection errors gracefully
+      client.on('error', (error: Error) => {
+        if (!error.message.includes('ECONNREFUSED')) {
+          console.error('Redis error:', error.message);
+        }
+      });
+      
+      // Test the connection
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          client.disconnect();
+          reject(new Error('Redis connection timeout'));
+        }, 5000);
+        
+        client.once('ready', () => {
+          clearTimeout(timeout);
+          console.log('✅ Redis rate limiter initialized');
+          resolve();
+        });
+        
+        client.once('error', () => {
+          clearTimeout(timeout);
+          client.disconnect();
+          reject(new Error('Redis connection failed'));
+        });
+      });
+      
+      redisClient = client;
       return redisClient;
     } catch (error) {
       console.warn(
-        '⚠️  Failed to connect to Redis, falling back to in-memory rate limiting:',
-        error
+        '⚠️  Failed to connect to Redis, falling back to in-memory rate limiting'
       );
     }
   }
 
   // Fallback to in-memory store
-  console.warn(
-    '⚠️  Using in-memory rate limiting. Configure REDIS_URL for production.'
-  );
+  if (!env.REDIS_URL) {
+    console.log(
+      '📝 Using in-memory rate limiting (Redis not configured)'
+    );
+  }
   redisClient = new InMemoryStore();
 
   // Cleanup expired entries every minute

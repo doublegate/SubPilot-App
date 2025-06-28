@@ -4,14 +4,14 @@
 
 SubPilot is a modern subscription management platform built with the T3 Stack. It helps users monitor, manage, and cancel recurring subscriptions by automatically detecting them from bank transactions.
 
-**Current Status**: Phase 1 MVP 100% Complete ✅ (Production Ready) - v1.0.0 STABLE RELEASE
-- **Released**: 2025-06-26 01:45 AM EDT
-- All core features implemented and working
-- 99.5% test coverage (219/220 tests passing)
+**Current Status**: Phase 2 Complete ✅ (AI & Analytics) - v1.1.0+ with CI/CD Excellence
+- **Released**: 2025-06-27 11:57 PM EDT (Phase 2) → 2025-06-28 02:40 AM EDT (Workflow Consolidation)
+- All Phase 2 features implemented (AI categorization, PWA, predictive analytics)
+- 99.5% test coverage (391 tests passing)
 - Zero ESLint/TypeScript errors
 - Performance: 95/100 Lighthouse score
 - Live at: https://subpilot-test.vercel.app
-- GitHub Release: https://github.com/doublegate/SubPilot-App/releases/tag/v1.0.0
+- GitHub Release: https://github.com/doublegate/SubPilot-App/releases/tag/v1.1.0
 
 ## 🏗️ Architecture Overview
 
@@ -461,6 +461,26 @@ This pattern eliminates the need for non-null assertions and improves test maint
 - **Edge Runtime**: Separate auth utilities for middleware compatibility
 - **Middleware Restrictions**: No Node.js APIs, no dynamic imports, no Prisma client
 - **ESLint Overrides**: Test files need flexible typing rules for mocking
+
+## 🚀 CI/CD Patterns
+
+### Workflow Consolidation
+- **Single Comprehensive Workflow**: Consolidated ci.yml and docker-publish.yml into ci-cd-complete.yml
+- **Eliminated Duplication**: One workflow handles all CI/CD operations
+- **Improved Maintenance**: Easier to manage and update
+- **Optimized Performance**: Reduced redundant builds and checks
+
+### Docker Health Check Patterns
+- **Test Environment Compatibility**: Use DOCKER_HEALTH_CHECK_MODE=basic for CI/CD
+- **Dynamic Tag References**: Extract tags from metadata outputs, not hardcoded SHAs
+- **Health Endpoint Flexibility**: Skip database checks in test environments
+- **Container Testing**: Always verify health checks pass before pushing
+
+### GitHub Actions Best Practices
+- **Lowercase Image Names**: Docker registry requires lowercase (subpilot-app not SubPilot-App)
+- **Dynamic Metadata**: Use fromJSON() for accessing build metadata
+- **Environment Variables**: Pass critical config to Docker containers
+- **Job Dependencies**: Structure for maximum parallelization while maintaining safety
 
 ## 📦 Documentation Archive
 

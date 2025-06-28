@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/server/db';
-import { env } from '@/env.js';
 
 export async function GET() {
   const startTime = Date.now();
@@ -11,8 +9,8 @@ export async function GET() {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       service: 'subpilot-app',
-      version: process.env.npm_package_version ?? '0.1.9',
-      environment: env.NODE_ENV,
+      version: process.env.npm_package_version ?? '1.2.0',
+      environment: process.env.NODE_ENV ?? 'production',
       checks: {
         database: 'unknown',
         email: 'unknown',
@@ -27,6 +25,8 @@ export async function GET() {
       if (process.env.DOCKER_HEALTH_CHECK_MODE === 'basic') {
         health.checks.database = 'skipped-basic-mode';
       } else {
+        // Lazy load database client only when needed
+        const { db } = await import('@/server/db');
         await db.$queryRaw`SELECT 1`;
         health.checks.database = 'healthy';
       }
@@ -38,9 +38,9 @@ export async function GET() {
 
     // Email service health check
     try {
-      if (env.SENDGRID_API_KEY) {
+      if (process.env.SENDGRID_API_KEY) {
         health.checks.email = 'configured';
-      } else if (env.SMTP_HOST) {
+      } else if (process.env.SMTP_HOST) {
         health.checks.email = 'smtp-configured';
       } else {
         health.checks.email = 'not-configured';
@@ -52,7 +52,7 @@ export async function GET() {
 
     // Plaid service health check
     try {
-      if (env.PLAID_CLIENT_ID && env.PLAID_SECRET) {
+      if (process.env.PLAID_CLIENT_ID && process.env.PLAID_SECRET) {
         health.checks.plaid = 'configured';
       } else {
         health.checks.plaid = 'not-configured';
@@ -64,7 +64,7 @@ export async function GET() {
 
     // Sentry health check
     try {
-      if (env.SENTRY_DSN) {
+      if (process.env.SENTRY_DSN) {
         health.checks.sentry = 'configured';
       } else {
         health.checks.sentry = 'not-configured';
@@ -110,6 +110,7 @@ export async function HEAD() {
     }
     
     // Quick database ping
+    const { db } = await import('@/server/db');
     await db.$queryRaw`SELECT 1`;
     return new NextResponse(null, { status: 200 });
   } catch {
