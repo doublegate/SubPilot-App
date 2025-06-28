@@ -22,7 +22,10 @@ export class AccountService {
     type?: 'personal' | 'family' | 'team';
   }) {
     // Check if user has team features
-    await this.subscriptionManager.enforceFeatureAccess(userId, 'multi_account');
+    await this.subscriptionManager.enforceFeatureAccess(
+      userId,
+      'multi_account'
+    );
 
     // Check usage limits
     const usage = await this.subscriptionManager.checkUsageLimits(userId);
@@ -219,7 +222,9 @@ export class AccountService {
       });
     }
 
-    const usage = await this.subscriptionManager.checkUsageLimits(account.ownerId);
+    const usage = await this.subscriptionManager.checkUsageLimits(
+      account.ownerId
+    );
     if (!usage.teamMembers.canAdd) {
       throw new TRPCError({
         code: 'FORBIDDEN',
@@ -286,9 +291,13 @@ export class AccountService {
     const account = await this.prisma.teamAccount.findUnique({
       where: { id: accountId },
     });
-    
+
     if (account) {
-      await this.subscriptionManager.updateUsage(account.ownerId, 'teamMember', 1);
+      await this.subscriptionManager.updateUsage(
+        account.ownerId,
+        'teamMember',
+        1
+      );
     }
   }
 
@@ -347,7 +356,10 @@ export class AccountService {
     }
 
     // Only owners can remove admins
-    if (targetMembership.role === 'admin' && removerMembership.role !== 'owner') {
+    if (
+      targetMembership.role === 'admin' &&
+      removerMembership.role !== 'owner'
+    ) {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'Only owners can remove admins',
@@ -371,9 +383,13 @@ export class AccountService {
     const account = await this.prisma.teamAccount.findUnique({
       where: { id: accountId },
     });
-    
+
     if (account) {
-      await this.subscriptionManager.updateUsage(account.ownerId, 'teamMember', -1);
+      await this.subscriptionManager.updateUsage(
+        account.ownerId,
+        'teamMember',
+        -1
+      );
     }
   }
 
@@ -498,15 +514,19 @@ export class AccountService {
     const estimatedAnnualSpend = totalMonthlySpend * 12 + totalYearlySpend;
 
     // Group by category
-    const byCategory = subscriptions.reduce((acc, sub) => {
-      const category = sub.categoryOverride ?? sub.aiCategory ?? sub.category ?? 'Other';
-      if (!acc[category]) {
-        acc[category] = { count: 0, amount: 0 };
-      }
-      acc[category].count++;
-      acc[category].amount += Number(sub.amount);
-      return acc;
-    }, {} as Record<string, { count: number; amount: number }>);
+    const byCategory = subscriptions.reduce(
+      (acc, sub) => {
+        const category =
+          sub.categoryOverride ?? sub.aiCategory ?? sub.category ?? 'Other';
+        if (!acc[category]) {
+          acc[category] = { count: 0, amount: 0 };
+        }
+        acc[category].count++;
+        acc[category].amount += Number(sub.amount);
+        return acc;
+      },
+      {} as Record<string, { count: number; amount: number }>
+    );
 
     // Group by member
     const byMember = await Promise.all(

@@ -1,12 +1,12 @@
-import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { TRPCError } from "@trpc/server";
+import { z } from 'zod';
+import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import { TRPCError } from '@trpc/server';
 import {
   cancellationService,
   CancellationRequestInput,
-  CancellationMethod,
+  type CancellationMethod,
   CancellationPriority,
-} from "~/server/services/cancellation.service";
+} from '~/server/services/cancellation.service';
 
 export const cancellationRouter = createTRPCRouter({
   /**
@@ -104,18 +104,18 @@ export const cancellationRouter = createTRPCRouter({
 
       if (!subscription) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Subscription not found",
+          code: 'NOT_FOUND',
+          message: 'Subscription not found',
         });
       }
 
       // Find provider configuration
-      const providerName = subscription.name.toLowerCase().replace(/\s+/g, "");
+      const providerName = subscription.name.toLowerCase().replace(/\s+/g, '');
       const provider = await ctx.db.cancellationProvider.findFirst({
         where: {
           OR: [
             { normalizedName: providerName },
-            { name: { contains: subscription.name, mode: "insensitive" } },
+            { name: { contains: subscription.name, mode: 'insensitive' } },
           ],
           isActive: true,
         },
@@ -123,25 +123,25 @@ export const cancellationRouter = createTRPCRouter({
 
       if (!provider) {
         return {
-          methods: ["manual"] as CancellationMethod[],
-          recommended: "manual" as CancellationMethod,
+          methods: ['manual'] as CancellationMethod[],
+          recommended: 'manual' as CancellationMethod,
           provider: null,
         };
       }
 
       const methods: CancellationMethod[] = [];
-      
-      if (provider.type === "api" && provider.apiEndpoint) {
-        methods.push("api");
+
+      if (provider.type === 'api' && provider.apiEndpoint) {
+        methods.push('api');
       }
-      if (provider.type === "web_automation" && provider.loginUrl) {
-        methods.push("web_automation");
+      if (provider.type === 'web_automation' && provider.loginUrl) {
+        methods.push('web_automation');
       }
-      methods.push("manual"); // Always available as fallback
+      methods.push('manual'); // Always available as fallback
 
       return {
         methods,
-        recommended: methods[0] ?? "manual",
+        recommended: methods[0] ?? 'manual',
         provider: {
           name: provider.name,
           logo: provider.logo,
@@ -163,8 +163,12 @@ export const cancellationRouter = createTRPCRouter({
       const provider = await ctx.db.cancellationProvider.findFirst({
         where: {
           OR: [
-            { name: { equals: input.providerName, mode: "insensitive" } },
-            { normalizedName: input.providerName.toLowerCase().replace(/\s+/g, "") },
+            { name: { equals: input.providerName, mode: 'insensitive' } },
+            {
+              normalizedName: input.providerName
+                .toLowerCase()
+                .replace(/\s+/g, ''),
+            },
           ],
           isActive: true,
         },
@@ -203,16 +207,18 @@ export const cancellationRouter = createTRPCRouter({
     // Get cancellation stats
     const [total, completed, failed, inProgress] = await Promise.all([
       ctx.db.cancellationRequest.count({ where: { userId } }),
-      ctx.db.cancellationRequest.count({ where: { userId, status: "completed" } }),
-      ctx.db.cancellationRequest.count({ where: { userId, status: "failed" } }),
       ctx.db.cancellationRequest.count({
-        where: { userId, status: { in: ["pending", "processing"] } },
+        where: { userId, status: 'completed' },
+      }),
+      ctx.db.cancellationRequest.count({ where: { userId, status: 'failed' } }),
+      ctx.db.cancellationRequest.count({
+        where: { userId, status: { in: ['pending', 'processing'] } },
       }),
     ]);
 
     // Get method breakdown
     const methodBreakdown = await ctx.db.cancellationRequest.groupBy({
-      by: ["method"],
+      by: ['method'],
       where: { userId },
       _count: { method: true },
     });
@@ -228,7 +234,7 @@ export const cancellationRouter = createTRPCRouter({
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: 5,
     });
 
@@ -236,7 +242,7 @@ export const cancellationRouter = createTRPCRouter({
     const cancelledSubscriptions = await ctx.db.subscription.findMany({
       where: {
         userId,
-        status: "cancelled",
+        status: 'cancelled',
         cancellationInfo: { not: {} },
       },
       select: { amount: true },
@@ -255,11 +261,11 @@ export const cancellationRouter = createTRPCRouter({
         inProgress,
         successRate: total > 0 ? (completed / total) * 100 : 0,
       },
-      methodBreakdown: methodBreakdown.map((item) => ({
+      methodBreakdown: methodBreakdown.map(item => ({
         method: item.method,
         count: item._count.method,
       })),
-      recentCancellations: recentCancellations.map((req) => ({
+      recentCancellations: recentCancellations.map(req => ({
         id: req.id,
         subscriptionName: req.subscription.name,
         amount: Number(req.subscription.amount),

@@ -176,9 +176,9 @@ export const accountRouter = createTRPCRouter({
         const accountService = new AccountService(ctx.db);
         await accountService.getAccount(input.accountId, ctx.session.user.id);
       }
-      
+
       // TODO: Store active account in session or user preferences
-      
+
       return { success: true, activeAccountId: input.accountId };
     }),
 });

@@ -54,14 +54,15 @@ export function ConversationHistory({
       void utils.assistant.getConversations.invalidate();
       setDeleteId(null);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
   });
 
-  const conversations = searchQuery.length > 2 
-    ? searchResults ?? [] 
-    : data?.conversations ?? [];
+  const conversations =
+    searchQuery.length > 2
+      ? (searchResults ?? [])
+      : (data?.conversations ?? []);
 
   const handleDelete = (id: string) => {
     deleteConversation.mutate({ conversationId: id });
@@ -75,7 +76,7 @@ export function ConversationHistory({
           <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search conversations..."
             className="pl-8"
           />
@@ -94,10 +95,10 @@ export function ConversationHistory({
           </div>
         ) : (
           <div className="p-2">
-            {conversations.map((conv) => {
+            {conversations.map(conv => {
               const isSearchResult = searchQuery.length > 2;
               const conversation = isSearchResult ? conv : conv;
-              
+
               return (
                 <div
                   key={conversation.id}
@@ -116,19 +117,30 @@ export function ConversationHistory({
                           {conversation.title ?? 'Untitled'}
                         </h4>
                         <p className="mt-1 truncate text-xs text-muted-foreground">
-                          {'lastMessage' in conversation ? conversation.lastMessage?.content ?? 'No messages' : 'No messages'}
+                          {'lastMessage' in conversation
+                            ? (conversation.lastMessage?.content ??
+                              'No messages')
+                            : 'No messages'}
                         </p>
                       </div>
                       <MessageSquare className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />
                     </div>
                     <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                       <span>
-                        {formatDistanceToNow(new Date(conversation.lastMessageAt), {
-                          addSuffix: true,
-                        })}
+                        {formatDistanceToNow(
+                          new Date(conversation.lastMessageAt),
+                          {
+                            addSuffix: true,
+                          }
+                        )}
                       </span>
                       <span>•</span>
-                      <span>{'messageCount' in conversation ? conversation.messageCount : conversation.matchedMessages?.length ?? 0} messages</span>
+                      <span>
+                        {'messageCount' in conversation
+                          ? conversation.messageCount
+                          : (conversation.matchedMessages?.length ?? 0)}{' '}
+                        messages
+                      </span>
                     </div>
                   </button>
 
@@ -137,7 +149,7 @@ export function ConversationHistory({
                     variant="ghost"
                     size="icon"
                     className="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       setDeleteId(conversation.id);
                     }}

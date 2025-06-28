@@ -1,6 +1,12 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/trpc/react';
@@ -49,14 +55,23 @@ export function UsageMetrics() {
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className={getUsageColor(usage.bankAccounts.used, usage.bankAccounts.limit)}>
-                {usage.bankAccounts.used} / {usage.bankAccounts.limit === -1 ? '∞' : usage.bankAccounts.limit}
+              <span
+                className={getUsageColor(
+                  usage.bankAccounts.used,
+                  usage.bankAccounts.limit
+                )}
+              >
+                {usage.bankAccounts.used} /{' '}
+                {usage.bankAccounts.limit === -1
+                  ? '∞'
+                  : usage.bankAccounts.limit}
               </span>
-              {!usage.bankAccounts.canAdd && usage.bankAccounts.limit !== -1 && (
-                <Badge variant="destructive" className="text-xs">
-                  Limit Reached
-                </Badge>
-              )}
+              {!usage.bankAccounts.canAdd &&
+                usage.bankAccounts.limit !== -1 && (
+                  <Badge variant="destructive" className="text-xs">
+                    Limit Reached
+                  </Badge>
+                )}
               {usage.bankAccounts.limit === -1 && (
                 <Badge variant="default" className="text-xs">
                   Unlimited
@@ -65,7 +80,9 @@ export function UsageMetrics() {
             </div>
             {usage.bankAccounts.limit !== -1 && (
               <Progress
-                value={(usage.bankAccounts.used / usage.bankAccounts.limit) * 100}
+                value={
+                  (usage.bankAccounts.used / usage.bankAccounts.limit) * 100
+                }
                 className="h-2"
               />
             )}
@@ -73,8 +90,8 @@ export function UsageMetrics() {
               {usage.bankAccounts.canAdd
                 ? 'You can add more bank accounts'
                 : usage.bankAccounts.limit === -1
-                ? 'No limits on your current plan'
-                : 'Upgrade to add more accounts'}
+                  ? 'No limits on your current plan'
+                  : 'Upgrade to add more accounts'}
             </p>
           </div>
         </CardContent>
@@ -89,8 +106,14 @@ export function UsageMetrics() {
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className={getUsageColor(usage.teamMembers.used, usage.teamMembers.limit)}>
-                {usage.teamMembers.used} / {usage.teamMembers.limit === -1 ? '∞' : usage.teamMembers.limit}
+              <span
+                className={getUsageColor(
+                  usage.teamMembers.used,
+                  usage.teamMembers.limit
+                )}
+              >
+                {usage.teamMembers.used} /{' '}
+                {usage.teamMembers.limit === -1 ? '∞' : usage.teamMembers.limit}
               </span>
               {!usage.teamMembers.canAdd && usage.teamMembers.limit !== -1 && (
                 <Badge variant="destructive" className="text-xs">
@@ -110,7 +133,11 @@ export function UsageMetrics() {
             </div>
             {usage.teamMembers.limit !== -1 && (
               <Progress
-                value={usage.teamMembers.limit > 0 ? (usage.teamMembers.used / usage.teamMembers.limit) * 100 : 0}
+                value={
+                  usage.teamMembers.limit > 0
+                    ? (usage.teamMembers.used / usage.teamMembers.limit) * 100
+                    : 0
+                }
                 className="h-2"
               />
             )}
@@ -118,10 +145,10 @@ export function UsageMetrics() {
               {subscription?.plan?.name === 'free'
                 ? 'Team features require Team plan'
                 : usage.teamMembers.canAdd
-                ? 'You can invite more members'
-                : usage.teamMembers.limit === -1
-                ? 'No limits on your current plan'
-                : 'Upgrade to add more members'}
+                  ? 'You can invite more members'
+                  : usage.teamMembers.limit === -1
+                    ? 'No limits on your current plan'
+                    : 'Upgrade to add more members'}
             </p>
           </div>
         </CardContent>

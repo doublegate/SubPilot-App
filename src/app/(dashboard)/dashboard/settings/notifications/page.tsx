@@ -1,5 +1,11 @@
 import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
@@ -13,7 +19,7 @@ export default function NotificationsSettingsPage() {
         </p>
       </div>
       <Separator />
-      
+
       {/* Email Notifications */}
       <Card>
         <CardHeader>
@@ -32,7 +38,7 @@ export default function NotificationsSettingsPage() {
             </div>
             <Switch id="renewal-reminders" defaultChecked />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="price-changes">Price Changes</Label>
@@ -42,7 +48,7 @@ export default function NotificationsSettingsPage() {
             </div>
             <Switch id="price-changes" defaultChecked />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="new-subscriptions">New Subscriptions</Label>
@@ -52,10 +58,12 @@ export default function NotificationsSettingsPage() {
             </div>
             <Switch id="new-subscriptions" defaultChecked />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="cancellation-confirmations">Cancellation Confirmations</Label>
+              <Label htmlFor="cancellation-confirmations">
+                Cancellation Confirmations
+              </Label>
               <p className="text-sm text-muted-foreground">
                 Receive confirmations when subscriptions are cancelled
               </p>
@@ -78,12 +86,13 @@ export default function NotificationsSettingsPage() {
             <div className="space-y-0.5">
               <Label htmlFor="weekly-summary">Weekly Summary</Label>
               <p className="text-sm text-muted-foreground">
-                Receive a weekly email with spending insights and upcoming renewals
+                Receive a weekly email with spending insights and upcoming
+                renewals
               </p>
             </div>
             <Switch id="weekly-summary" defaultChecked />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="monthly-insights">Monthly Insights</Label>
@@ -107,14 +116,16 @@ export default function NotificationsSettingsPage() {
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="browser-notifications">Browser Notifications</Label>
+              <Label htmlFor="browser-notifications">
+                Browser Notifications
+              </Label>
               <p className="text-sm text-muted-foreground">
                 Show notifications in your browser for urgent alerts
               </p>
             </div>
             <Switch id="browser-notifications" />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="mobile-notifications">Mobile Notifications</Label>

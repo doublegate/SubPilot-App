@@ -19,7 +19,11 @@ interface AssistantChatProps {
   initialMessage?: string;
 }
 
-export function AssistantChat({ isOpen, onClose, initialMessage }: AssistantChatProps) {
+export function AssistantChat({
+  isOpen,
+  onClose,
+  initialMessage,
+}: AssistantChatProps) {
   const [message, setMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -30,11 +34,11 @@ export function AssistantChat({ isOpen, onClose, initialMessage }: AssistantChat
 
   // Start conversation mutation
   const startConversation = api.assistant.startConversation.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       setConversationId(data.id);
       void utils.assistant.getConversations.invalidate();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
   });
@@ -43,19 +47,22 @@ export function AssistantChat({ isOpen, onClose, initialMessage }: AssistantChat
   const sendMessage = api.assistant.sendMessage.useMutation({
     onSuccess: () => {
       setMessage('');
-      void utils.assistant.getConversation.invalidate({ conversationId: conversationId! });
+      void utils.assistant.getConversation.invalidate({
+        conversationId: conversationId!,
+      });
       scrollToBottom();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
   });
 
   // Get conversation query
-  const { data: conversation, isLoading: conversationLoading } = api.assistant.getConversation.useQuery(
-    { conversationId: conversationId! },
-    { enabled: !!conversationId }
-  );
+  const { data: conversation, isLoading: conversationLoading } =
+    api.assistant.getConversation.useQuery(
+      { conversationId: conversationId! },
+      { enabled: !!conversationId }
+    );
 
   // Handle initial message
   useEffect(() => {
@@ -102,7 +109,9 @@ export function AssistantChat({ isOpen, onClose, initialMessage }: AssistantChat
   const scrollToBottom = () => {
     setTimeout(() => {
       if (scrollAreaRef.current) {
-        const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        const scrollContainer = scrollAreaRef.current.querySelector(
+          '[data-radix-scroll-area-viewport]'
+        );
         if (scrollContainer) {
           scrollContainer.scrollTop = scrollContainer.scrollHeight;
         }
@@ -140,11 +149,7 @@ export function AssistantChat({ isOpen, onClose, initialMessage }: AssistantChat
             >
               <Plus className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-            >
+            <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -172,11 +177,11 @@ export function AssistantChat({ isOpen, onClose, initialMessage }: AssistantChat
                 </div>
               ) : conversation ? (
                 <div className="space-y-4">
-                  {conversation.messages.map((msg) => (
+                  {conversation.messages.map(msg => (
                     <MessageBubble
                       key={msg.id}
                       message={msg}
-                      onActionConfirm={(actionId) => {
+                      onActionConfirm={actionId => {
                         // Handle action confirmation
                         console.log('Confirm action:', actionId);
                       }}
@@ -200,7 +205,9 @@ export function AssistantChat({ isOpen, onClose, initialMessage }: AssistantChat
                 </div>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center space-y-4">
-                  <h3 className="text-lg font-medium">How can I help you today?</h3>
+                  <h3 className="text-lg font-medium">
+                    How can I help you today?
+                  </h3>
                   <QuickActions onSelectAction={setMessage} />
                 </div>
               )}
@@ -212,15 +219,21 @@ export function AssistantChat({ isOpen, onClose, initialMessage }: AssistantChat
                 <Input
                   ref={inputRef}
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={e => setMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything about your subscriptions..."
-                  disabled={sendMessage.isPending || startConversation.isPending}
+                  disabled={
+                    sendMessage.isPending || startConversation.isPending
+                  }
                   className="flex-1"
                 />
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!message.trim() || sendMessage.isPending || startConversation.isPending}
+                  disabled={
+                    !message.trim() ||
+                    sendMessage.isPending ||
+                    startConversation.isPending
+                  }
                   size="icon"
                 >
                   {sendMessage.isPending || startConversation.isPending ? (
@@ -231,7 +244,8 @@ export function AssistantChat({ isOpen, onClose, initialMessage }: AssistantChat
                 </Button>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                SubPilot AI can help you analyze spending, find savings, and manage subscriptions.
+                SubPilot AI can help you analyze spending, find savings, and
+                manage subscriptions.
               </p>
             </div>
           </div>

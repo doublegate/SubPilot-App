@@ -1,49 +1,51 @@
-import { z } from "zod";
+import { z } from 'zod';
 import type {
   CancellationProvider,
   CancellationContext,
   CancellationStrategyResult,
   ApiProviderConfig,
   CancellationErrorCode,
-} from "./types";
+} from './types';
 
 // Provider-specific implementations
-import { NetflixProvider } from "./implementations/netflix";
-import { SpotifyProvider } from "./implementations/spotify";
-import { AdobeProvider } from "./implementations/adobe";
-import { AmazonProvider } from "./implementations/amazon";
-import { AppleProvider } from "./implementations/apple";
+import { NetflixProvider } from './implementations/netflix';
+import { SpotifyProvider } from './implementations/spotify';
+import { AdobeProvider } from './implementations/adobe';
+import { AmazonProvider } from './implementations/amazon';
+import { AppleProvider } from './implementations/apple';
 
 export class ApiCancellationProvider implements CancellationProvider {
-  name = "API Cancellation Provider";
-  type = "api" as const;
-  
+  name = 'API Cancellation Provider';
+  type = 'api' as const;
+
   private providers: Map<string, ApiProviderImplementation>;
 
   constructor() {
     this.providers = new Map();
-    
+
     // Register provider implementations
-    this.registerProvider("netflix", new NetflixProvider());
-    this.registerProvider("spotify", new SpotifyProvider());
-    this.registerProvider("adobe", new AdobeProvider());
-    this.registerProvider("amazon", new AmazonProvider());
-    this.registerProvider("apple", new AppleProvider());
+    this.registerProvider('netflix', new NetflixProvider());
+    this.registerProvider('spotify', new SpotifyProvider());
+    this.registerProvider('adobe', new AdobeProvider());
+    this.registerProvider('amazon', new AmazonProvider());
+    this.registerProvider('apple', new AppleProvider());
   }
 
   private registerProvider(name: string, provider: ApiProviderImplementation) {
     this.providers.set(name.toLowerCase(), provider);
   }
 
-  async cancel(context: CancellationContext): Promise<CancellationStrategyResult> {
+  async cancel(
+    context: CancellationContext
+  ): Promise<CancellationStrategyResult> {
     const { request, subscription, provider } = context;
 
-    if (!provider || provider.type !== "api") {
+    if (!provider || provider.type !== 'api') {
       return {
         success: false,
         error: {
-          code: "UNSUPPORTED_OPERATION",
-          message: "Provider does not support API cancellation",
+          code: 'UNSUPPORTED_OPERATION',
+          message: 'Provider does not support API cancellation',
         },
       };
     }
@@ -62,12 +64,13 @@ export class ApiCancellationProvider implements CancellationProvider {
       return await implementation.cancel(context);
     } catch (error) {
       console.error(`API cancellation failed for ${provider.name}:`, error);
-      
+
       return {
         success: false,
         error: {
-          code: "PROVIDER_ERROR",
-          message: error instanceof Error ? error.message : "API cancellation failed",
+          code: 'PROVIDER_ERROR',
+          message:
+            error instanceof Error ? error.message : 'API cancellation failed',
           details: error,
         },
       };
@@ -86,8 +89,8 @@ export class ApiCancellationProvider implements CancellationProvider {
       return {
         success: false,
         error: {
-          code: "PROVIDER_UNAVAILABLE",
-          message: "No API endpoint configured for provider",
+          code: 'PROVIDER_UNAVAILABLE',
+          message: 'No API endpoint configured for provider',
         },
       };
     }
@@ -97,8 +100,8 @@ export class ApiCancellationProvider implements CancellationProvider {
       const config: ApiProviderConfig = {
         endpoint: provider.apiEndpoint,
         headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "SubPilot/1.0",
+          'Content-Type': 'application/json',
+          'User-Agent': 'SubPilot/1.0',
         },
         timeout: 30000, // 30 seconds
       };
@@ -119,14 +122,17 @@ export class ApiCancellationProvider implements CancellationProvider {
           success: true,
           confirmationCode,
           effectiveDate,
-          refundAmount: Math.random() > 0.5 ? Number((Number(subscription.amount) * 0.5).toFixed(2)) : undefined,
+          refundAmount:
+            Math.random() > 0.5
+              ? Number((Number(subscription.amount) * 0.5).toFixed(2))
+              : undefined,
         };
       } else {
         return {
           success: false,
           error: {
-            code: "PROVIDER_ERROR",
-            message: "Cancellation request was rejected by the provider",
+            code: 'PROVIDER_ERROR',
+            message: 'Cancellation request was rejected by the provider',
           },
         };
       }
@@ -134,8 +140,8 @@ export class ApiCancellationProvider implements CancellationProvider {
       return {
         success: false,
         error: {
-          code: "NETWORK_ERROR",
-          message: "Failed to connect to provider API",
+          code: 'NETWORK_ERROR',
+          message: 'Failed to connect to provider API',
           details: error,
         },
       };
@@ -146,7 +152,9 @@ export class ApiCancellationProvider implements CancellationProvider {
 // Base class for provider-specific implementations
 export abstract class ApiProviderImplementation {
   abstract name: string;
-  abstract cancel(context: CancellationContext): Promise<CancellationStrategyResult>;
+  abstract cancel(
+    context: CancellationContext
+  ): Promise<CancellationStrategyResult>;
 
   /**
    * Common HTTP request helper
@@ -172,30 +180,33 @@ export abstract class ApiProviderImplementation {
   /**
    * Parse error response
    */
-  protected parseErrorResponse(response: Response, body: any): {
+  protected parseErrorResponse(
+    response: Response,
+    body: any
+  ): {
     code: string;
     message: string;
     details?: any;
   } {
     if (response.status === 401) {
       return {
-        code: "AUTH_FAILED",
-        message: "Authentication failed",
+        code: 'AUTH_FAILED',
+        message: 'Authentication failed',
       };
     } else if (response.status === 429) {
       return {
-        code: "API_RATE_LIMIT",
-        message: "Rate limit exceeded",
+        code: 'API_RATE_LIMIT',
+        message: 'Rate limit exceeded',
       };
     } else if (response.status >= 500) {
       return {
-        code: "PROVIDER_UNAVAILABLE",
-        message: "Provider service is unavailable",
+        code: 'PROVIDER_UNAVAILABLE',
+        message: 'Provider service is unavailable',
       };
     } else {
       return {
-        code: "PROVIDER_ERROR",
-        message: body?.error?.message || "Unknown provider error",
+        code: 'PROVIDER_ERROR',
+        message: body?.error?.message || 'Unknown provider error',
         details: body,
       };
     }

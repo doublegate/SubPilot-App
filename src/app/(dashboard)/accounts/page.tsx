@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { getServerAuthSession } from '@/server/auth';
+import { getServerAuthSession } from '~/server/auth';
 import {
   Card,
   CardContent,

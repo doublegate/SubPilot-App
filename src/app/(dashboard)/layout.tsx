@@ -1,6 +1,6 @@
 import { NavHeaderClient } from '@/components/layout/nav-header-client';
 import { MobileNav } from '@/components/layout/mobile-nav';
-import { auth } from '@/server/auth';
+import { auth } from '~/server/auth';
 import { redirect } from 'next/navigation';
 import { DashboardProviders } from './dashboard-providers';
 import { ErrorBoundary } from '@/components/error-boundary';

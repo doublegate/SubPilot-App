@@ -21,7 +21,7 @@ export function PremiumFeatureGate({
   onAccessDenied,
 }: PremiumFeatureGateProps) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  
+
   const { data: hasAccess, isLoading } = api.billing.hasFeature.useQuery({
     feature,
   });
@@ -61,12 +61,12 @@ export function PremiumFeatureGate({
             {fallback}
           </div>
         ) : null}
-        
+
         <UpgradeModal
           open={showUpgradeModal}
           onOpenChange={setShowUpgradeModal}
           feature={feature}
-          requiredPlan={canPerform?.upgradeRequired as any || requiredPlan}
+          requiredPlan={(canPerform?.upgradeRequired as any) || requiredPlan}
         />
       </>
     );
@@ -78,7 +78,7 @@ export function PremiumFeatureGate({
 // Hook for programmatic feature checking
 export function useFeatureAccess(feature: string) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  
+
   const { data: hasAccess, isLoading } = api.billing.hasFeature.useQuery({
     feature,
   });

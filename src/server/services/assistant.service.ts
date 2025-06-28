@@ -15,7 +15,8 @@ export const ASSISTANT_ACTIONS = {
   EXPORT_DATA: 'export_data',
 } as const;
 
-export type AssistantAction = (typeof ASSISTANT_ACTIONS)[keyof typeof ASSISTANT_ACTIONS];
+export type AssistantAction =
+  (typeof ASSISTANT_ACTIONS)[keyof typeof ASSISTANT_ACTIONS];
 
 // Function definitions for OpenAI
 const ASSISTANT_FUNCTIONS = [
@@ -233,10 +234,12 @@ export class AssistantService {
           usage: response.usage,
           actionId,
         },
-        functionCall: response.functionCall ? {
-          name: response.functionCall.name,
-          arguments: response.functionCall.arguments as any,
-        } : undefined,
+        functionCall: response.functionCall
+          ? {
+              name: response.functionCall.name,
+              arguments: response.functionCall.arguments as any,
+            }
+          : undefined,
       },
     });
 
@@ -246,17 +249,20 @@ export class AssistantService {
       data: {
         lastMessageAt: new Date(),
         messageCount: { increment: 2 },
-        title: conversation.messageCount === 0 
-          ? this.generateTitle(content) 
-          : conversation.title,
+        title:
+          conversation.messageCount === 0
+            ? this.generateTitle(content)
+            : conversation.title,
       },
     });
 
     return {
       message: assistantMessage,
-      action: actionId ? await this.db.assistantAction.findUnique({
-        where: { id: actionId },
-      }) : null,
+      action: actionId
+        ? await this.db.assistantAction.findUnique({
+            where: { id: actionId },
+          })
+        : null,
     };
   }
 
@@ -317,7 +323,7 @@ export class AssistantService {
         data: {
           status: 'completed',
           completedAt: new Date(),
-          result: result as any,
+          result: result,
         },
       });
 
@@ -510,7 +516,9 @@ If you need to take an action, use the appropriate function.`;
   private generateTitle(message: string): string {
     // Simple title generation - could be enhanced with AI
     const words = message.split(' ').slice(0, 5);
-    return words.join(' ') + (words.length < message.split(' ').length ? '...' : '');
+    return (
+      words.join(' ') + (words.length < message.split(' ').length ? '...' : '')
+    );
   }
 
   /**
@@ -522,7 +530,9 @@ If you need to take an action, use the appropriate function.`;
     parameters: Record<string, unknown>
   ) {
     // Determine if confirmation is required
-    const requiresConfirmation = ['cancelSubscription', 'setReminder'].includes(type);
+    const requiresConfirmation = ['cancelSubscription', 'setReminder'].includes(
+      type
+    );
 
     return this.db.assistantAction.create({
       data: {
@@ -576,41 +586,41 @@ If you need to take an action, use the appropriate function.`;
     switch (type) {
       case ASSISTANT_ACTIONS.ANALYZE_SPENDING:
         return this.analyzeSpending(userId, parameters);
-      
+
       case ASSISTANT_ACTIONS.CANCEL_SUBSCRIPTION:
         return this.initiateCancellation(
           parameters.subscriptionId as string,
           userId,
           parameters.reason as string
         );
-      
+
       case ASSISTANT_ACTIONS.FIND_SAVINGS:
         return this.findSavingOpportunities(
           userId,
           parameters.threshold as number
         );
-      
+
       case ASSISTANT_ACTIONS.GET_SUBSCRIPTION_INFO:
         return this.getSubscriptionDetails(
           parameters.subscriptionId as string,
           userId
         );
-      
+
       case ASSISTANT_ACTIONS.SET_REMINDER:
         return this.createReminder(userId, parameters);
-      
+
       case ASSISTANT_ACTIONS.EXPLAIN_CHARGE:
         return this.explainTransaction(
           parameters.transactionId as string,
           userId
         );
-      
+
       case ASSISTANT_ACTIONS.SUGGEST_ALTERNATIVES:
         return this.suggestAlternatives(
           parameters.subscriptionId as string,
           userId
         );
-      
+
       default:
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -632,7 +642,7 @@ If you need to take an action, use the appropriate function.`;
     // Get date range
     const now = new Date();
     let startDate = new Date();
-    
+
     switch (timeframe) {
       case 'month':
         startDate.setMonth(now.getMonth() - 1);
@@ -668,14 +678,17 @@ If you need to take an action, use the appropriate function.`;
       0
     );
     const avgSpending = totalSpending / subscriptions.length || 0;
-    
-    const byCategory = subscriptions.reduce((acc, sub) => {
-      const cat = sub.category ?? 'other';
-      if (!acc[cat]) acc[cat] = { count: 0, total: 0 };
-      acc[cat]!.count++;
-      acc[cat]!.total += Number(sub.amount);
-      return acc;
-    }, {} as Record<string, { count: number; total: number }>);
+
+    const byCategory = subscriptions.reduce(
+      (acc, sub) => {
+        const cat = sub.category ?? 'other';
+        if (!acc[cat]) acc[cat] = { count: 0, total: 0 };
+        acc[cat].count++;
+        acc[cat].total += Number(sub.amount);
+        return acc;
+      },
+      {} as Record<string, { count: number; total: number }>
+    );
 
     return {
       timeframe,
@@ -726,17 +739,15 @@ If you need to take an action, use the appropriate function.`;
         amount: Number(subscription.amount),
       },
       status: 'initiated',
-      message: 'Cancellation request created. You can track its progress in the cancellations section.',
+      message:
+        'Cancellation request created. You can track its progress in the cancellations section.',
     };
   }
 
   /**
    * Find saving opportunities
    */
-  private async findSavingOpportunities(
-    userId: string,
-    threshold = 0
-  ) {
+  private async findSavingOpportunities(userId: string, threshold = 0) {
     const subscriptions = await this.db.subscription.findMany({
       where: { userId, isActive: true },
       include: {
@@ -751,13 +762,16 @@ If you need to take an action, use the appropriate function.`;
 
     for (const sub of subscriptions) {
       const amount = Number(sub.amount);
-      
+
       // Unused subscriptions (no recent transactions)
       const lastTransaction = sub.transactions[0];
       const daysSinceLastUse = lastTransaction
-        ? Math.floor((Date.now() - lastTransaction.date.getTime()) / (1000 * 60 * 60 * 24))
+        ? Math.floor(
+            (Date.now() - lastTransaction.date.getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
         : 999;
-      
+
       if (daysSinceLastUse > 60 && amount >= threshold) {
         opportunities.push({
           type: 'unused',
@@ -771,11 +785,9 @@ If you need to take an action, use the appropriate function.`;
 
       // Duplicate services
       const similar = subscriptions.filter(
-        s => s.id !== sub.id && 
-        s.category === sub.category && 
-        s.isActive
+        s => s.id !== sub.id && s.category === sub.category && s.isActive
       );
-      
+
       if (similar.length > 0 && amount >= threshold) {
         opportunities.push({
           type: 'duplicate',
@@ -789,11 +801,12 @@ If you need to take an action, use the appropriate function.`;
 
       // High cost relative to category average
       if (sub.category) {
-        const categoryAvg = subscriptions
-          .filter(s => s.category === sub.category)
-          .reduce((sum, s) => sum + Number(s.amount), 0) / 
+        const categoryAvg =
+          subscriptions
+            .filter(s => s.category === sub.category)
+            .reduce((sum, s) => sum + Number(s.amount), 0) /
           subscriptions.filter(s => s.category === sub.category).length;
-        
+
         if (amount > categoryAvg * 1.5 && amount >= threshold) {
           opportunities.push({
             type: 'expensive',
@@ -810,7 +823,10 @@ If you need to take an action, use the appropriate function.`;
     // Sort by saving amount
     opportunities.sort((a, b) => b.savingAmount - a.savingAmount);
 
-    const totalSavings = opportunities.reduce((sum, opp) => sum + opp.savingAmount, 0);
+    const totalSavings = opportunities.reduce(
+      (sum, opp) => sum + opp.savingAmount,
+      0
+    );
 
     return {
       opportunities: opportunities.slice(0, 10),
@@ -822,10 +838,7 @@ If you need to take an action, use the appropriate function.`;
   /**
    * Get detailed subscription information
    */
-  private async getSubscriptionDetails(
-    subscriptionId: string,
-    userId: string
-  ) {
+  private async getSubscriptionDetails(subscriptionId: string, userId: string) {
     const subscription = await this.db.subscription.findFirst({
       where: { id: subscriptionId, userId },
       include: {
@@ -919,10 +932,7 @@ If you need to take an action, use the appropriate function.`;
   /**
    * Explain a transaction
    */
-  private async explainTransaction(
-    transactionId: string,
-    userId: string
-  ) {
+  private async explainTransaction(transactionId: string, userId: string) {
     const transaction = await this.db.transaction.findFirst({
       where: { id: transactionId, userId },
       include: {
@@ -947,11 +957,13 @@ If you need to take an action, use the appropriate function.`;
         merchantName: transaction.merchantName,
         category: transaction.category,
       },
-      subscription: transaction.subscription ? {
-        name: transaction.subscription.name,
-        frequency: transaction.subscription.frequency,
-        status: transaction.subscription.status,
-      } : null,
+      subscription: transaction.subscription
+        ? {
+            name: transaction.subscription.name,
+            frequency: transaction.subscription.frequency,
+            status: transaction.subscription.status,
+          }
+        : null,
       account: {
         name: transaction.bankAccount.name,
         type: transaction.bankAccount.type,
@@ -965,10 +977,7 @@ If you need to take an action, use the appropriate function.`;
   /**
    * Suggest alternatives to a subscription
    */
-  private async suggestAlternatives(
-    subscriptionId: string,
-    userId: string
-  ) {
+  private async suggestAlternatives(subscriptionId: string, userId: string) {
     const subscription = await this.db.subscription.findFirst({
       where: { id: subscriptionId, userId },
     });
@@ -995,9 +1004,10 @@ If you need to take an action, use the appropriate function.`;
         category: subscription.category,
       },
       alternatives,
-      potentialSavings: alternatives.length > 0
-        ? Number(subscription.amount) - alternatives[0]!.price
-        : 0,
+      potentialSavings:
+        alternatives.length > 0
+          ? Number(subscription.amount) - alternatives[0]!.price
+          : 0,
     };
   }
 
@@ -1025,7 +1035,11 @@ If you need to take an action, use the appropriate function.`;
             {
               name: 'Hulu (Ad-supported)',
               price: 7.99,
-              features: ['Thousands of shows', 'Next-day TV', 'Original content'],
+              features: [
+                'Thousands of shows',
+                'Next-day TV',
+                'Original content',
+              ],
               pros: ['Cheaper', 'Good TV selection'],
               cons: ['Has ads', 'Smaller movie library'],
             },
@@ -1039,7 +1053,7 @@ If you need to take an action, use the appropriate function.`;
           );
         }
         break;
-      
+
       case 'music':
         if (currentService.toLowerCase().includes('spotify')) {
           alternatives.push(
@@ -1060,7 +1074,7 @@ If you need to take an action, use the appropriate function.`;
           );
         }
         break;
-      
+
       case 'software':
         alternatives.push({
           name: 'Open Source Alternative',

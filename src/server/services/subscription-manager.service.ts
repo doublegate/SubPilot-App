@@ -10,7 +10,7 @@ export const FEATURES = {
     'basic_analytics',
     'email_notifications',
   ],
-  
+
   // Pro tier features (includes all free features)
   PRO: [
     'unlimited_bank_accounts',
@@ -21,7 +21,7 @@ export const FEATURES = {
     'priority_support',
     'export_data',
   ],
-  
+
   // Team tier features (includes all pro features)
   TEAM: [
     'multi_account',
@@ -31,7 +31,7 @@ export const FEATURES = {
     'audit_logs',
     'bulk_operations',
   ],
-  
+
   // Enterprise tier features (includes all team features)
   ENTERPRISE: [
     'sso',
@@ -43,7 +43,7 @@ export const FEATURES = {
   ],
 } as const;
 
-export type Feature = 
+export type Feature =
   | (typeof FEATURES.FREE)[number]
   | (typeof FEATURES.PRO)[number]
   | (typeof FEATURES.TEAM)[number]
@@ -94,7 +94,11 @@ export class SubscriptionManagerService {
   getPlanFeatures(planName: string): Feature[] {
     const allFeatures: Feature[] = [...FEATURES.FREE];
 
-    if (planName === 'pro' || planName === 'team' || planName === 'enterprise') {
+    if (
+      planName === 'pro' ||
+      planName === 'team' ||
+      planName === 'enterprise'
+    ) {
       allFeatures.push(...FEATURES.PRO);
     }
 
@@ -117,7 +121,7 @@ export class SubscriptionManagerService {
     teamMembers: { used: number; limit: number; canAdd: boolean };
   }> {
     const subscription = await this.getUserSubscription(userId);
-    
+
     // Count current usage
     const bankAccountCount = await this.prisma.bankAccount.count({
       where: { userId, isActive: true },
@@ -141,12 +145,14 @@ export class SubscriptionManagerService {
       bankAccounts: {
         used: bankAccountCount,
         limit: limits.bankAccounts,
-        canAdd: limits.bankAccounts === -1 || bankAccountCount < limits.bankAccounts,
+        canAdd:
+          limits.bankAccounts === -1 || bankAccountCount < limits.bankAccounts,
       },
       teamMembers: {
         used: teamMemberCount,
         limit: limits.teamMembers,
-        canAdd: limits.teamMembers === -1 || teamMemberCount < limits.teamMembers,
+        canAdd:
+          limits.teamMembers === -1 || teamMemberCount < limits.teamMembers,
       },
     };
   }
@@ -156,7 +162,7 @@ export class SubscriptionManagerService {
    */
   async enforceFeatureAccess(userId: string, feature: Feature): Promise<void> {
     const hasAccess = await this.hasFeature(userId, feature);
-    
+
     if (!hasAccess) {
       throw new TRPCError({
         code: 'FORBIDDEN',
@@ -186,7 +192,11 @@ export class SubscriptionManagerService {
   /**
    * Update usage tracking
    */
-  async updateUsage(userId: string, type: 'bankAccount' | 'teamMember', increment: number): Promise<void> {
+  async updateUsage(
+    userId: string,
+    type: 'bankAccount' | 'teamMember',
+    increment: number
+  ): Promise<void> {
     const subscription = await this.prisma.userSubscription.findUnique({
       where: { userId },
     });
@@ -222,9 +232,10 @@ export class SubscriptionManagerService {
       .filter(event => event.status === 'completed' && event.amount)
       .reduce((sum, event) => sum + Number(event.amount), 0);
 
-    const nextBillingDate = subscription.plan?.name !== 'free' && 'currentPeriodEnd' in subscription
-      ? subscription.currentPeriodEnd 
-      : null;
+    const nextBillingDate =
+      subscription.plan?.name !== 'free' && 'currentPeriodEnd' in subscription
+        ? subscription.currentPeriodEnd
+        : null;
 
     return {
       currentPlan: subscription.plan?.displayName ?? 'Free',
@@ -232,7 +243,8 @@ export class SubscriptionManagerService {
       totalSpent,
       nextBillingDate,
       billingHistory: billingEvents,
-      memberSince: 'createdAt' in subscription ? subscription.createdAt : new Date(),
+      memberSince:
+        'createdAt' in subscription ? subscription.createdAt : new Date(),
     };
   }
 
@@ -240,8 +252,12 @@ export class SubscriptionManagerService {
    * Check if user can perform an action based on their plan
    */
   async canPerformAction(
-    userId: string, 
-    action: 'add_bank_account' | 'invite_team_member' | 'use_ai_assistant' | 'export_data'
+    userId: string,
+    action:
+      | 'add_bank_account'
+      | 'invite_team_member'
+      | 'use_ai_assistant'
+      | 'export_data'
   ): Promise<{ allowed: boolean; reason?: string; upgradeRequired?: string }> {
     const subscription = await this.getUserSubscription(userId);
     const usage = await this.checkUsageLimits(userId);

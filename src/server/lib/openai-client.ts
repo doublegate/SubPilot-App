@@ -797,7 +797,9 @@ export class OpenAICategorizationClient {
       }
 
       const message = data.choices[0].message;
-      let functionCall: { name: string; arguments: Record<string, unknown> } | undefined;
+      let functionCall:
+        | { name: string; arguments: Record<string, unknown> }
+        | undefined;
 
       if (message.function_call) {
         try {
@@ -812,11 +814,13 @@ export class OpenAICategorizationClient {
 
       // Track costs
       if (userId && data.usage) {
-        const modelCost = MODEL_COSTS[model as keyof typeof MODEL_COSTS] ?? MODEL_COSTS['gpt-4o'];
-        const cost = 
+        const modelCost =
+          MODEL_COSTS[model as keyof typeof MODEL_COSTS] ??
+          MODEL_COSTS['gpt-4o'];
+        const cost =
           (data.usage.prompt_tokens / 1000) * modelCost.input +
           (data.usage.completion_tokens / 1000) * modelCost.output;
-        
+
         const costKey = `${userId}:${new Date().toISOString().slice(0, 7)}`;
         const currentCost = this.costTracker.get(costKey) ?? 0;
         this.costTracker.set(costKey, currentCost + cost);
@@ -825,11 +829,13 @@ export class OpenAICategorizationClient {
       return {
         content: message.content ?? '',
         functionCall,
-        usage: data.usage ? {
-          promptTokens: data.usage.prompt_tokens,
-          completionTokens: data.usage.completion_tokens,
-          totalTokens: data.usage.total_tokens,
-        } : undefined,
+        usage: data.usage
+          ? {
+              promptTokens: data.usage.prompt_tokens,
+              completionTokens: data.usage.completion_tokens,
+              totalTokens: data.usage.total_tokens,
+            }
+          : undefined,
       };
     } catch (error) {
       console.error('OpenAI chat completion error:', error);

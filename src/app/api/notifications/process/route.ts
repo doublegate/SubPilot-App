@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServerAuthSession } from '@/server/auth';
-import { scheduledNotificationService } from '@/server/services/scheduled-notifications';
+import { getServerAuthSession } from '~/server/auth';
+import { scheduledNotificationService } from '~/server/services/scheduled-notifications';
 
 export async function POST() {
   try {

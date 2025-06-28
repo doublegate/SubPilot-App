@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getAuthForEdge } from '@/server/auth-edge';
+import { getAuthForEdge } from '~/server/auth-edge';
 
 export async function middleware(req: NextRequest) {
   // Apply basic security checks (Edge Runtime compatible)

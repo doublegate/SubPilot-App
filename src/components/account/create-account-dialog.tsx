@@ -46,7 +46,10 @@ interface CreateAccountDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreateAccountDialog({ open, onOpenChange }: CreateAccountDialogProps) {
+export function CreateAccountDialog({
+  open,
+  onOpenChange,
+}: CreateAccountDialogProps) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<FormData>({
@@ -65,7 +68,7 @@ export function CreateAccountDialog({ open, onOpenChange }: CreateAccountDialogP
       onOpenChange(false);
       form.reset();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
     onSettled: () => {
@@ -84,10 +87,11 @@ export function CreateAccountDialog({ open, onOpenChange }: CreateAccountDialogP
         <DialogHeader>
           <DialogTitle>Create Team Account</DialogTitle>
           <DialogDescription>
-            Create a team account to share subscriptions with family or team members.
+            Create a team account to share subscriptions with family or team
+            members.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -97,7 +101,10 @@ export function CreateAccountDialog({ open, onOpenChange }: CreateAccountDialogP
                 <FormItem>
                   <FormLabel>Account Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Smith Family, Marketing Team" {...field} />
+                    <Input
+                      placeholder="e.g., Smith Family, Marketing Team"
+                      {...field}
+                    />
                   </FormControl>
                   <FormDescription>
                     Choose a name that describes your team or family
@@ -113,7 +120,10 @@ export function CreateAccountDialog({ open, onOpenChange }: CreateAccountDialogP
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Account Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select account type" />

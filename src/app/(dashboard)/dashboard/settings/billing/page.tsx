@@ -1,6 +1,12 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { BillingSettings } from '@/components/billing/billing-settings';
 import { UsageMetrics } from '@/components/billing/usage-metrics';
 import { PricingTable } from '@/components/billing/pricing-table';

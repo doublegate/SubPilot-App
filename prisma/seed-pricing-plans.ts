@@ -126,7 +126,7 @@ async function main() {
   }
 
   console.log('\n🎉 Pricing plans seeded successfully!');
-  
+
   // Create default user subscriptions for existing users (all on free plan)
   const users = await prisma.user.findMany({
     where: {
@@ -157,7 +157,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('Error seeding pricing plans:', e);
     process.exit(1);
   })

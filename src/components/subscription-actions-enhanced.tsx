@@ -1,29 +1,29 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "~/components/ui/button";
+import { useState } from 'react';
+import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import { 
-  MoreVertical, 
-  Edit, 
-  Archive, 
+} from '~/components/ui/dropdown-menu';
+import {
+  MoreVertical,
+  Edit,
+  Archive,
   Ban,
   FileText,
   AlertTriangle,
   History,
-} from "lucide-react";
-import { CancelSubscriptionButton } from "./cancellation/cancel-subscription-button";
-import { EditSubscriptionModal } from "./edit-subscription-modal";
-import { ArchiveSubscriptionModal } from "./archive-subscription-modal";
-import { SubscriptionNotes } from "./subscription-notes";
-import { api } from "~/trpc/react";
-import { toast } from "sonner";
+} from 'lucide-react';
+import { CancelSubscriptionButton } from './cancellation/cancel-subscription-button';
+import { EditSubscriptionModal } from './edit-subscription-modal';
+import { ArchiveSubscriptionModal } from './archive-subscription-modal';
+import { SubscriptionNotes } from './subscription-notes';
+import { api } from '~/trpc/react';
+import { toast } from 'sonner';
 
 interface SubscriptionActionsProps {
   subscription: {
@@ -38,7 +38,7 @@ interface SubscriptionActionsProps {
   onUpdate?: () => void;
 }
 
-export function SubscriptionActionsEnhanced({ 
+export function SubscriptionActionsEnhanced({
   subscription,
   onUpdate,
 }: SubscriptionActionsProps) {
@@ -52,11 +52,13 @@ export function SubscriptionActionsEnhanced({
   const { data: cancellationHistory } = api.cancellation.history.useQuery(
     { limit: 5 },
     {
-      select: (data) => data.filter(req => req.subscription.id === subscription.id),
+      select: data =>
+        data.filter(req => req.subscription.id === subscription.id),
     }
   );
 
-  const hasCancellationHistory = cancellationHistory && cancellationHistory.length > 0;
+  const hasCancellationHistory =
+    cancellationHistory && cancellationHistory.length > 0;
 
   const handleArchive = () => {
     // Archive logic would be implemented here
@@ -69,7 +71,7 @@ export function SubscriptionActionsEnhanced({
     <>
       <div className="flex items-center gap-2">
         {/* Cancel Button - Primary Action */}
-        {subscription.status !== "cancelled" && (
+        {subscription.status !== 'cancelled' && (
           <CancelSubscriptionButton
             subscription={subscription}
             variant="outline"
@@ -90,19 +92,21 @@ export function SubscriptionActionsEnhanced({
               <Edit className="mr-2 h-4 w-4" />
               Edit Details
             </DropdownMenuItem>
-            
+
             <DropdownMenuItem onClick={() => setShowNotes(true)}>
               <FileText className="mr-2 h-4 w-4" />
-              {subscription.notes ? "View Notes" : "Add Notes"}
+              {subscription.notes ? 'View Notes' : 'Add Notes'}
             </DropdownMenuItem>
 
             {hasCancellationHistory && (
-              <DropdownMenuItem onClick={() => {
-                // Navigate to cancellation history or show modal
-                toast.info("Cancellation history", {
-                  description: `${cancellationHistory.length} cancellation attempt(s) found`,
-                });
-              }}>
+              <DropdownMenuItem
+                onClick={() => {
+                  // Navigate to cancellation history or show modal
+                  toast.info('Cancellation history', {
+                    description: `${cancellationHistory.length} cancellation attempt(s) found`,
+                  });
+                }}
+              >
                 <History className="mr-2 h-4 w-4" />
                 Cancellation History
               </DropdownMenuItem>
@@ -110,7 +114,7 @@ export function SubscriptionActionsEnhanced({
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={() => setShowArchiveModal(true)}
               className="text-destructive"
             >
@@ -123,7 +127,10 @@ export function SubscriptionActionsEnhanced({
 
       {/* Modals */}
       <EditSubscriptionModal
-        subscription={{ ...subscription, isActive: subscription.status === 'active' }}
+        subscription={{
+          ...subscription,
+          isActive: subscription.status === 'active',
+        }}
         open={showEditModal}
         onOpenChange={setShowEditModal}
         onSuccess={() => {

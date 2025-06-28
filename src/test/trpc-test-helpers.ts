@@ -1,6 +1,6 @@
-import { appRouter } from '@/server/api/root';
+import { appRouter } from '~/server/api/root';
 import type { Session } from 'next-auth';
-import { db } from '@/server/db';
+import { db } from '~/server/db';
 
 const createCaller = appRouter.createCaller;
 

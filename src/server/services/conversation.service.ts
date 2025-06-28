@@ -194,21 +194,22 @@ export class ConversationService {
    * Get conversation statistics
    */
   async getStats(userId: string) {
-    const [totalConversations, totalMessages, recentActivity] = await Promise.all([
-      this.db.conversation.count({ where: { userId } }),
-      this.db.message.count({
-        where: { conversation: { userId } },
-      }),
-      this.db.conversation.findMany({
-        where: {
-          userId,
-          lastMessageAt: {
-            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+    const [totalConversations, totalMessages, recentActivity] =
+      await Promise.all([
+        this.db.conversation.count({ where: { userId } }),
+        this.db.message.count({
+          where: { conversation: { userId } },
+        }),
+        this.db.conversation.findMany({
+          where: {
+            userId,
+            lastMessageAt: {
+              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+            },
           },
-        },
-        select: { id: true },
-      }),
-    ]);
+          select: { id: true },
+        }),
+      ]);
 
     const actionStats = await this.db.assistantAction.groupBy({
       by: ['type', 'status'],
@@ -220,21 +221,28 @@ export class ConversationService {
       totalConversations,
       totalMessages,
       conversationsThisWeek: recentActivity.length,
-      averageMessagesPerConversation: totalConversations > 0 
-        ? Math.round(totalMessages / totalConversations) 
-        : 0,
-      actionStats: actionStats.reduce((acc, stat) => {
-        if (!acc[stat.type]) acc[stat.type] = {};
-        acc[stat.type]![stat.status] = stat._count;
-        return acc;
-      }, {} as Record<string, Record<string, number>>),
+      averageMessagesPerConversation:
+        totalConversations > 0
+          ? Math.round(totalMessages / totalConversations)
+          : 0,
+      actionStats: actionStats.reduce(
+        (acc, stat) => {
+          if (!acc[stat.type]) acc[stat.type] = {};
+          acc[stat.type]![stat.status] = stat._count;
+          return acc;
+        },
+        {} as Record<string, Record<string, number>>
+      ),
     };
   }
 
   /**
    * Export conversation as markdown
    */
-  async exportConversation(conversationId: string, userId: string): Promise<string> {
+  async exportConversation(
+    conversationId: string,
+    userId: string
+  ): Promise<string> {
     const conversation = await this.db.conversation.findFirst({
       where: { id: conversationId, userId },
       include: {
@@ -259,14 +267,14 @@ export class ConversationService {
     for (const message of conversation.messages ?? []) {
       const role = message.role === 'user' ? '**You**' : '**SubPilot AI**';
       const time = message.createdAt.toLocaleTimeString();
-      
+
       markdown += `${role} (${time}):\n\n`;
       markdown += `${message.content}\n\n`;
-      
+
       if (message.functionCall) {
         markdown += `*[Action: ${(message.functionCall as any).name}]*\n\n`;
       }
-      
+
       markdown += '---\n\n';
     }
 
@@ -276,7 +284,10 @@ export class ConversationService {
   /**
    * Generate conversation summary using AI
    */
-  async generateSummary(conversationId: string, userId: string): Promise<string> {
+  async generateSummary(
+    conversationId: string,
+    userId: string
+  ): Promise<string> {
     const conversation = await this.db.conversation.findFirst({
       where: { id: conversationId, userId },
       include: {
@@ -295,7 +306,7 @@ export class ConversationService {
         message: 'Conversation not found',
       });
     }
-    
+
     if ((conversation.messages ?? []).length < 4) {
       return 'Conversation too short to summarize';
     }
@@ -304,18 +315,21 @@ export class ConversationService {
     const messages = (conversation.messages ?? [])
       .filter((m: any) => m.content.length > 50)
       .slice(0, 10);
-    
+
     const topics = new Set<string>();
     const actions = new Set<string>();
-    
+
     // Extract topics and actions
     for (const message of messages) {
       // Simple keyword extraction (could be enhanced with NLP)
-      if (message.content.toLowerCase().includes('cancel')) topics.add('cancellation');
+      if (message.content.toLowerCase().includes('cancel'))
+        topics.add('cancellation');
       if (message.content.toLowerCase().includes('save')) topics.add('savings');
-      if (message.content.toLowerCase().includes('analyze')) topics.add('analysis');
-      if (message.content.toLowerCase().includes('subscription')) topics.add('subscriptions');
-      
+      if (message.content.toLowerCase().includes('analyze'))
+        topics.add('analysis');
+      if (message.content.toLowerCase().includes('subscription'))
+        topics.add('subscriptions');
+
       if (message.functionCall) {
         actions.add((message.functionCall as any).name);
       }
@@ -323,12 +337,14 @@ export class ConversationService {
 
     // Build summary
     let summary = `Discussed ${Array.from(topics).join(', ')}`;
-    
+
     if (actions.size > 0) {
       summary += `. Actions taken: ${Array.from(actions).join(', ')}`;
     }
-    
-    const actionCount = (conversation.actions ?? []).filter((a: any) => a.status === 'completed').length;
+
+    const actionCount = (conversation.actions ?? []).filter(
+      (a: any) => a.status === 'completed'
+    ).length;
     if (actionCount > 0) {
       summary += `. Completed ${actionCount} action${actionCount > 1 ? 's' : ''}`;
     }

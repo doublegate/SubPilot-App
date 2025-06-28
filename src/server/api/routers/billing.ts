@@ -33,7 +33,10 @@ export const billingRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const subscriptionManager = new SubscriptionManagerService(ctx.db);
-      return subscriptionManager.hasFeature(ctx.session.user.id, input.feature as any);
+      return subscriptionManager.hasFeature(
+        ctx.session.user.id,
+        input.feature as any
+      );
     }),
 
   /**
@@ -63,7 +66,7 @@ export const billingRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const billingService = new BillingService(ctx.db);
-      
+
       const baseUrl = env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
       const successUrl = `${baseUrl}/dashboard?upgrade=success`;
       const cancelUrl = `${baseUrl}/dashboard/settings/billing`;
@@ -83,7 +86,7 @@ export const billingRouter = createTRPCRouter({
    */
   createPortalSession: protectedProcedure.mutation(async ({ ctx }) => {
     const billingService = new BillingService(ctx.db);
-    
+
     const baseUrl = env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
     const returnUrl = `${baseUrl}/dashboard/settings/billing`;
 
@@ -178,6 +181,9 @@ export const billingRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const subscriptionManager = new SubscriptionManagerService(ctx.db);
-      return subscriptionManager.canPerformAction(ctx.session.user.id, input.action);
+      return subscriptionManager.canPerformAction(
+        ctx.session.user.id,
+        input.action
+      );
     }),
 });

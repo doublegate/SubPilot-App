@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,16 +8,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "~/components/ui/dialog";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
-import { Separator } from "~/components/ui/separator";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
-import { Label } from "~/components/ui/label";
-import { api } from "~/trpc/react";
-import { toast } from "sonner";
+} from '~/components/ui/dialog';
+import { Button } from '~/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card';
+import { Badge } from '~/components/ui/badge';
+import { Separator } from '~/components/ui/separator';
+import { Input } from '~/components/ui/input';
+import { Textarea } from '~/components/ui/textarea';
+import { Label } from '~/components/ui/label';
+import { api } from '~/trpc/react';
+import { toast } from 'sonner';
 import {
   Phone,
   Mail,
@@ -31,8 +37,8 @@ import {
   FileText,
   Copy,
   ExternalLink,
-} from "lucide-react";
-import { format } from "date-fns";
+} from 'lucide-react';
+import { format } from 'date-fns';
 
 interface ManualInstructionsDialogProps {
   open: boolean;
@@ -56,24 +62,24 @@ export function ManualInstructionsDialog({
 }: ManualInstructionsDialogProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [confirmationCode, setConfirmationCode] = useState("");
-  const [effectiveDate, setEffectiveDate] = useState("");
-  const [notes, setNotes] = useState("");
+  const [confirmationCode, setConfirmationCode] = useState('');
+  const [effectiveDate, setEffectiveDate] = useState('');
+  const [notes, setNotes] = useState('');
 
   const utils = api.useUtils();
 
   // Confirm manual cancellation mutation
-  const { mutate: confirmCancellation, isPending: isConfirming } = 
+  const { mutate: confirmCancellation, isPending: isConfirming } =
     api.cancellation.confirmManual.useMutation({
       onSuccess: () => {
-        toast.success("Cancellation confirmed!", {
-          description: "Your subscription has been marked as cancelled.",
+        toast.success('Cancellation confirmed!', {
+          description: 'Your subscription has been marked as cancelled.',
         });
         void utils.subscriptions.getAll.invalidate();
         onOpenChange(false);
       },
-      onError: (error) => {
-        toast.error("Failed to confirm cancellation", {
+      onError: error => {
+        toast.error('Failed to confirm cancellation', {
           description: error.message,
         });
       },
@@ -111,16 +117,16 @@ export function ManualInstructionsDialog({
 
   const copyToClipboard = (text: string) => {
     void navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard");
+    toast.success('Copied to clipboard');
   };
 
   const getContactIcon = (type: string) => {
     switch (type) {
-      case "phone":
+      case 'phone':
         return <Phone className="h-4 w-4" />;
-      case "email":
+      case 'email':
         return <Mail className="h-4 w-4" />;
-      case "chat":
+      case 'chat':
         return <MessageCircle className="h-4 w-4" />;
       default:
         return <Globe className="h-4 w-4" />;
@@ -129,7 +135,7 @@ export function ManualInstructionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>Manual Cancellation Instructions</DialogTitle>
           <DialogDescription>
@@ -143,17 +149,20 @@ export function ManualInstructionsDialog({
               <CardHeader>
                 <CardTitle>Confirm Your Cancellation</CardTitle>
                 <CardDescription>
-                  Once you've completed the cancellation process, please confirm the details below
+                  Once you've completed the cancellation process, please confirm
+                  the details below
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="confirmationCode">Confirmation Code (if provided)</Label>
+                  <Label htmlFor="confirmationCode">
+                    Confirmation Code (if provided)
+                  </Label>
                   <Input
                     id="confirmationCode"
                     placeholder="e.g., ABC123XYZ"
                     value={confirmationCode}
-                    onChange={(e) => setConfirmationCode(e.target.value)}
+                    onChange={e => setConfirmationCode(e.target.value)}
                   />
                 </div>
 
@@ -163,7 +172,7 @@ export function ManualInstructionsDialog({
                     id="effectiveDate"
                     type="date"
                     value={effectiveDate}
-                    onChange={(e) => setEffectiveDate(e.target.value)}
+                    onChange={e => setEffectiveDate(e.target.value)}
                   />
                 </div>
 
@@ -173,7 +182,7 @@ export function ManualInstructionsDialog({
                     id="notes"
                     placeholder="Any additional details about the cancellation..."
                     value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                    onChange={e => setNotes(e.target.value)}
                     rows={3}
                   />
                 </div>
@@ -193,7 +202,7 @@ export function ManualInstructionsDialog({
                 disabled={isConfirming}
                 className="flex-1"
               >
-                {isConfirming ? "Confirming..." : "Confirm Cancellation"}
+                {isConfirming ? 'Confirming...' : 'Confirm Cancellation'}
               </Button>
             </div>
           </div>
@@ -201,13 +210,15 @@ export function ManualInstructionsDialog({
           <div className="space-y-4">
             {/* Progress */}
             <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>Step {currentStep + 1} of {totalSteps}</span>
+              <span>
+                Step {currentStep + 1} of {totalSteps}
+              </span>
               <div className="flex gap-1">
                 {Array.from({ length: totalSteps }).map((_, i) => (
                   <div
                     key={i}
                     className={`h-2 w-8 rounded-full ${
-                      i <= currentStep ? "bg-primary" : "bg-muted"
+                      i <= currentStep ? 'bg-primary' : 'bg-muted'
                     }`}
                   />
                 ))}
@@ -225,12 +236,17 @@ export function ManualInstructionsDialog({
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {instructions.prerequisites.map((prereq: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-                        {prereq}
-                      </li>
-                    ))}
+                    {instructions.prerequisites.map(
+                      (prereq: string, index: number) => (
+                        <li
+                          key={index}
+                          className="flex items-start gap-2 text-sm"
+                        >
+                          <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
+                          {prereq}
+                        </li>
+                      )
+                    )}
                   </ul>
                 </CardContent>
               </Card>
@@ -242,13 +258,15 @@ export function ManualInstructionsDialog({
                 <div className="flex items-center justify-between">
                   <CardTitle>{currentInstruction?.title}</CardTitle>
                   <Badge variant="secondary">
-                    <Clock className="mr-1 h-3 w-3" />
-                    ~{instructions.estimatedTime} min
+                    <Clock className="mr-1 h-3 w-3" />~
+                    {instructions.estimatedTime} min
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm leading-relaxed">{currentInstruction?.description}</p>
+                <p className="text-sm leading-relaxed">
+                  {currentInstruction?.description}
+                </p>
 
                 {currentInstruction?.warning && (
                   <div className="flex items-start gap-2 rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20">
@@ -282,68 +300,79 @@ export function ManualInstructionsDialog({
             </Card>
 
             {/* Contact Information */}
-            {instructions.contactInfo && Object.keys(instructions.contactInfo).length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Contact Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {instructions.contactInfo.phone && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{instructions.contactInfo.phone}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyToClipboard(instructions.contactInfo.phone)}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
-                    {instructions.contactInfo.email && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{instructions.contactInfo.email}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyToClipboard(instructions.contactInfo.email)}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
-                    {instructions.contactInfo.chat && (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                          <a
-                            href={instructions.contactInfo.chat}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline"
+            {instructions.contactInfo &&
+              Object.keys(instructions.contactInfo).length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">
+                      Contact Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {instructions.contactInfo.phone && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              {instructions.contactInfo.phone}
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              copyToClipboard(instructions.contactInfo.phone)
+                            }
                           >
-                            Live Chat
-                          </a>
+                            <Copy className="h-3 w-3" />
+                          </Button>
                         </div>
-                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                      </div>
-                    )}
-                    {instructions.contactInfo.hours && (
-                      <p className="text-xs text-muted-foreground">
-                        Hours: {instructions.contactInfo.hours}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                      )}
+                      {instructions.contactInfo.email && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              {instructions.contactInfo.email}
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              copyToClipboard(instructions.contactInfo.email)
+                            }
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                      {instructions.contactInfo.chat && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                            <a
+                              href={instructions.contactInfo.chat}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary hover:underline"
+                            >
+                              Live Chat
+                            </a>
+                          </div>
+                          <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                        </div>
+                      )}
+                      {instructions.contactInfo.hours && (
+                        <p className="text-xs text-muted-foreground">
+                          Hours: {instructions.contactInfo.hours}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
             {/* Navigation */}
             <div className="flex gap-3">
@@ -379,7 +408,10 @@ export function ManualInstructionsDialog({
                   <h4 className="text-sm font-medium">Helpful Tips</h4>
                   <ul className="space-y-1">
                     {instructions.tips.map((tip: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <li
+                        key={index}
+                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                      >
                         <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-muted-foreground" />
                         {tip}
                       </li>

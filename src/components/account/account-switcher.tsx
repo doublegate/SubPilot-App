@@ -28,7 +28,9 @@ export function AccountSwitcher() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
+    null
+  );
 
   const { data: accounts } = api.account.list.useQuery();
   const switchAccount = api.account.switchAccount.useMutation({
@@ -80,7 +82,7 @@ export function AccountSwitcher() {
             <CommandInput placeholder="Search accounts..." />
             <CommandList>
               <CommandEmpty>No accounts found.</CommandEmpty>
-              
+
               <CommandGroup heading="Personal">
                 <CommandItem
                   onSelect={() => handleSelectAccount(null)}
@@ -101,7 +103,7 @@ export function AccountSwitcher() {
                 <>
                   <CommandSeparator />
                   <CommandGroup heading="Team Accounts">
-                    {accounts.map((account) => (
+                    {accounts.map(account => (
                       <CommandItem
                         key={account.id}
                         onSelect={() => handleSelectAccount(account.id)}

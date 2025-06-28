@@ -79,12 +79,12 @@ export function UpgradeModal({
   const { data: plans } = api.billing.getPlans.useQuery();
 
   const createCheckoutSession = api.billing.createCheckoutSession.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.url) {
         router.push(data.url);
       }
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
       setLoading(false);
     },

@@ -1,6 +1,12 @@
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { PricingTable } from '@/components/billing/pricing-table';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Users, Zap, Shield } from 'lucide-react';
@@ -9,13 +15,14 @@ export default function UpgradePage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="space-y-4 text-center">
         <h1 className="text-3xl font-bold tracking-tight">
           Unlock Premium Features
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Upgrade your SubPilot experience with advanced features, unlimited access, 
-          and premium support to take full control of your subscriptions.
+        <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+          Upgrade your SubPilot experience with advanced features, unlimited
+          access, and premium support to take full control of your
+          subscriptions.
         </p>
       </div>
 
@@ -30,9 +37,10 @@ export default function UpgradePage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Advanced AI assistant that helps you manage, analyze, and optimize your subscriptions automatically.
+              Advanced AI assistant that helps you manage, analyze, and optimize
+              your subscriptions automatically.
             </p>
-            <ul className="text-sm space-y-1">
+            <ul className="space-y-1 text-sm">
               <li className="flex items-center gap-2">
                 <Check className="h-3 w-3 text-primary" />
                 Smart categorization
@@ -58,9 +66,10 @@ export default function UpgradePage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Perfect for families and teams who want to share and manage subscriptions together.
+              Perfect for families and teams who want to share and manage
+              subscriptions together.
             </p>
-            <ul className="text-sm space-y-1">
+            <ul className="space-y-1 text-sm">
               <li className="flex items-center gap-2">
                 <Check className="h-3 w-3 text-primary" />
                 Multi-account support
@@ -86,9 +95,10 @@ export default function UpgradePage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              Advanced security, integrations, and support for organizations of any size.
+              Advanced security, integrations, and support for organizations of
+              any size.
             </p>
-            <ul className="text-sm space-y-1">
+            <ul className="space-y-1 text-sm">
               <li className="flex items-center gap-2">
                 <Check className="h-3 w-3 text-primary" />
                 SSO integration
@@ -111,7 +121,8 @@ export default function UpgradePage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Choose Your Plan</CardTitle>
           <CardDescription>
-            All plans include a 14-day free trial. No setup fees. Cancel anytime.
+            All plans include a 14-day free trial. No setup fees. Cancel
+            anytime.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -137,31 +148,34 @@ export default function UpgradePage() {
         <CardContent className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             <div>
-              <h4 className="font-medium mb-2">Can I change plans anytime?</h4>
+              <h4 className="mb-2 font-medium">Can I change plans anytime?</h4>
               <p className="text-sm text-muted-foreground">
-                Yes! You can upgrade or downgrade your plan at any time. Changes take effect 
-                immediately for upgrades, or at the end of your billing period for downgrades.
+                Yes! You can upgrade or downgrade your plan at any time. Changes
+                take effect immediately for upgrades, or at the end of your
+                billing period for downgrades.
               </p>
             </div>
             <div>
-              <h4 className="font-medium mb-2">What payment methods do you accept?</h4>
+              <h4 className="mb-2 font-medium">
+                What payment methods do you accept?
+              </h4>
               <p className="text-sm text-muted-foreground">
-                We accept all major credit cards (Visa, MasterCard, American Express) 
-                and debit cards through our secure Stripe integration.
+                We accept all major credit cards (Visa, MasterCard, American
+                Express) and debit cards through our secure Stripe integration.
               </p>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Is there a setup fee?</h4>
+              <h4 className="mb-2 font-medium">Is there a setup fee?</h4>
               <p className="text-sm text-muted-foreground">
-                No, there are no setup fees or hidden costs. You only pay the monthly 
-                or yearly subscription fee for your chosen plan.
+                No, there are no setup fees or hidden costs. You only pay the
+                monthly or yearly subscription fee for your chosen plan.
               </p>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Can I get a refund?</h4>
+              <h4 className="mb-2 font-medium">Can I get a refund?</h4>
               <p className="text-sm text-muted-foreground">
-                We offer a 14-day free trial, and you can cancel anytime. For paid 
-                subscriptions, refunds are handled on a case-by-case basis.
+                We offer a 14-day free trial, and you can cancel anytime. For
+                paid subscriptions, refunds are handled on a case-by-case basis.
               </p>
             </div>
           </div>
@@ -169,19 +183,20 @@ export default function UpgradePage() {
       </Card>
 
       {/* CTA */}
-      <div className="text-center space-y-4">
+      <div className="space-y-4 text-center">
         <div className="flex items-center justify-center gap-2">
-          <Star className="h-5 w-5 text-yellow-500 fill-current" />
-          <Star className="h-5 w-5 text-yellow-500 fill-current" />
-          <Star className="h-5 w-5 text-yellow-500 fill-current" />
-          <Star className="h-5 w-5 text-yellow-500 fill-current" />
-          <Star className="h-5 w-5 text-yellow-500 fill-current" />
-          <span className="text-sm text-muted-foreground ml-2">
+          <Star className="h-5 w-5 fill-current text-yellow-500" />
+          <Star className="h-5 w-5 fill-current text-yellow-500" />
+          <Star className="h-5 w-5 fill-current text-yellow-500" />
+          <Star className="h-5 w-5 fill-current text-yellow-500" />
+          <Star className="h-5 w-5 fill-current text-yellow-500" />
+          <span className="ml-2 text-sm text-muted-foreground">
             Trusted by thousands of users
           </span>
         </div>
         <p className="text-sm text-muted-foreground">
-          Join the growing community of users who have taken control of their subscriptions with SubPilot.
+          Join the growing community of users who have taken control of their
+          subscriptions with SubPilot.
         </p>
       </div>
     </div>

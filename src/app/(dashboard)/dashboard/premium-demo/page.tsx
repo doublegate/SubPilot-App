@@ -1,5 +1,11 @@
 import { Suspense } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,15 +13,15 @@ import { Separator } from '@/components/ui/separator';
 import { PremiumFeatureGate } from '@/components/billing/premium-feature-gate';
 import { UsageMetrics } from '@/components/billing/usage-metrics';
 import { AccountSwitcher } from '@/components/account/account-switcher';
-import { 
-  Sparkles, 
-  Users, 
-  CreditCard, 
-  Download, 
-  TrendingUp, 
+import {
+  Sparkles,
+  Users,
+  CreditCard,
+  Download,
+  TrendingUp,
   Bot,
   Shield,
-  Zap 
+  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,11 +30,13 @@ export default function PremiumDemoPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-4">
-        <h1 className="text-3xl font-bold tracking-tight">Premium Features Demo</h1>
-        <p className="text-muted-foreground max-w-2xl">
-          This page demonstrates all the premium features available in SubPilot Phase 3. 
-          Each feature is gated based on your subscription tier and shows upgrade prompts 
-          for features that require a higher plan.
+        <h1 className="text-3xl font-bold tracking-tight">
+          Premium Features Demo
+        </h1>
+        <p className="max-w-2xl text-muted-foreground">
+          This page demonstrates all the premium features available in SubPilot
+          Phase 3. Each feature is gated based on your subscription tier and
+          shows upgrade prompts for features that require a higher plan.
         </p>
       </div>
 
@@ -58,7 +66,8 @@ export default function PremiumDemoPage() {
             <Badge variant="secondary">Pro Feature</Badge>
           </div>
           <CardDescription>
-            Get intelligent insights and automated management for your subscriptions
+            Get intelligent insights and automated management for your
+            subscriptions
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -66,7 +75,7 @@ export default function PremiumDemoPage() {
             feature="ai_assistant"
             requiredPlan="pro"
             fallback={
-              <div className="flex items-center justify-between p-4 border border-dashed rounded-lg">
+              <div className="flex items-center justify-between rounded-lg border border-dashed p-4">
                 <div>
                   <p className="font-medium">AI Assistant Locked</p>
                   <p className="text-sm text-muted-foreground">
@@ -80,12 +89,13 @@ export default function PremiumDemoPage() {
             }
           >
             <div className="space-y-4">
-              <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
                 <p className="font-medium text-green-900 dark:text-green-100">
                   AI Assistant Available
                 </p>
                 <p className="text-sm text-green-700 dark:text-green-300">
-                  You have access to our AI assistant for subscription management
+                  You have access to our AI assistant for subscription
+                  management
                 </p>
               </div>
               <Button asChild>
@@ -105,7 +115,8 @@ export default function PremiumDemoPage() {
             <Badge variant="secondary">Team Feature</Badge>
           </div>
           <CardDescription>
-            Create team accounts and share subscription management with family or colleagues
+            Create team accounts and share subscription management with family
+            or colleagues
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -113,7 +124,7 @@ export default function PremiumDemoPage() {
             feature="multi_account"
             requiredPlan="team"
             fallback={
-              <div className="flex items-center justify-between p-4 border border-dashed rounded-lg">
+              <div className="flex items-center justify-between rounded-lg border border-dashed p-4">
                 <div>
                   <p className="font-medium">Team Accounts Locked</p>
                   <p className="text-sm text-muted-foreground">
@@ -127,7 +138,7 @@ export default function PremiumDemoPage() {
             }
           >
             <div className="space-y-4">
-              <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
                 <p className="font-medium text-green-900 dark:text-green-100">
                   Team Accounts Available
                 </p>
@@ -150,7 +161,8 @@ export default function PremiumDemoPage() {
             <Badge variant="secondary">Pro Feature</Badge>
           </div>
           <CardDescription>
-            Export your subscription data in various formats for analysis or backup
+            Export your subscription data in various formats for analysis or
+            backup
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -158,7 +170,7 @@ export default function PremiumDemoPage() {
             feature="export_data"
             requiredPlan="pro"
             fallback={
-              <div className="flex items-center justify-between p-4 border border-dashed rounded-lg">
+              <div className="flex items-center justify-between rounded-lg border border-dashed p-4">
                 <div>
                   <p className="font-medium">Data Export Locked</p>
                   <p className="text-sm text-muted-foreground">
@@ -172,7 +184,7 @@ export default function PremiumDemoPage() {
             }
           >
             <div className="space-y-4">
-              <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
                 <p className="font-medium text-green-900 dark:text-green-100">
                   Data Export Available
                 </p>
@@ -210,7 +222,7 @@ export default function PremiumDemoPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
               <p className="font-medium text-blue-900 dark:text-blue-100">
                 Bank Account Limits
               </p>
@@ -235,7 +247,7 @@ export default function PremiumDemoPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="mb-4 text-sm text-muted-foreground">
               Compare all available subscription tiers and their features
             </p>
             <Button className="w-full" asChild>
@@ -252,7 +264,7 @@ export default function PremiumDemoPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="mb-4 text-sm text-muted-foreground">
               Manage your subscription, payment methods, and billing history
             </p>
             <Button variant="outline" className="w-full" asChild>
@@ -269,7 +281,7 @@ export default function PremiumDemoPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="mb-4 text-sm text-muted-foreground">
               Configure team accounts, usage limits, and account preferences
             </p>
             <Button variant="outline" className="w-full" asChild>
@@ -290,8 +302,10 @@ export default function PremiumDemoPage() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <h4 className="font-medium text-green-700 dark:text-green-300 mb-2">✅ Implemented</h4>
-              <ul className="text-sm space-y-1">
+              <h4 className="mb-2 font-medium text-green-700 dark:text-green-300">
+                ✅ Implemented
+              </h4>
+              <ul className="space-y-1 text-sm">
                 <li>• Complete Stripe integration</li>
                 <li>• Pricing plans & subscription management</li>
                 <li>• Feature gating system</li>
@@ -303,8 +317,10 @@ export default function PremiumDemoPage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-2">🔧 Ready to Configure</h4>
-              <ul className="text-sm space-y-1">
+              <h4 className="mb-2 font-medium text-blue-700 dark:text-blue-300">
+                🔧 Ready to Configure
+              </h4>
+              <ul className="space-y-1 text-sm">
                 <li>• Stripe API keys (test/production)</li>
                 <li>• Pricing plan price IDs</li>
                 <li>• Webhook endpoints</li>

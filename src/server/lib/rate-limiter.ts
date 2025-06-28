@@ -102,7 +102,7 @@ async function getRedisClient(): Promise<RedisLike> {
         default: any;
       };
       const Redis = redisModule.default;
-      
+
       // Create Redis instance with proper error handling
       const client = new Redis(env.REDIS_URL, {
         // Disable auto-reconnect to prevent connection spam
@@ -110,34 +110,34 @@ async function getRedisClient(): Promise<RedisLike> {
         // Don't show connection errors in console
         showFriendlyErrorStack: false,
       });
-      
+
       // Handle connection errors gracefully
       client.on('error', (error: Error) => {
         if (!error.message.includes('ECONNREFUSED')) {
           console.error('Redis error:', error.message);
         }
       });
-      
+
       // Test the connection
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           client.disconnect();
           reject(new Error('Redis connection timeout'));
         }, 5000);
-        
+
         client.once('ready', () => {
           clearTimeout(timeout);
           console.log('✅ Redis rate limiter initialized');
           resolve();
         });
-        
+
         client.once('error', () => {
           clearTimeout(timeout);
           client.disconnect();
           reject(new Error('Redis connection failed'));
         });
       });
-      
+
       redisClient = client as RedisLike;
       return client as RedisLike;
     } catch (error) {
@@ -149,9 +149,7 @@ async function getRedisClient(): Promise<RedisLike> {
 
   // Fallback to in-memory store
   if (!env.REDIS_URL) {
-    console.log(
-      '📝 Using in-memory rate limiting (Redis not configured)'
-    );
+    console.log('📝 Using in-memory rate limiting (Redis not configured)');
   }
   redisClient = new InMemoryStore();
 

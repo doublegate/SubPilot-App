@@ -1,13 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { 
-  TrendingDown, 
-  Search, 
-  DollarSign, 
+import {
+  TrendingDown,
+  Search,
+  DollarSign,
   AlertTriangle,
   BarChart,
-  HelpCircle 
+  HelpCircle,
 } from 'lucide-react';
 
 interface QuickActionsProps {
@@ -24,7 +24,7 @@ const quickActions = [
   {
     icon: Search,
     label: 'Unused subscriptions',
-    message: 'Show me subscriptions I haven\'t used recently',
+    message: "Show me subscriptions I haven't used recently",
     color: 'text-orange-600',
   },
   {
@@ -56,7 +56,7 @@ const quickActions = [
 export function QuickActions({ onSelectAction }: QuickActionsProps) {
   return (
     <div className="grid gap-2 sm:grid-cols-2">
-      {quickActions.map((action) => {
+      {quickActions.map(action => {
         const Icon = action.icon;
         return (
           <Button

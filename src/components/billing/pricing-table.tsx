@@ -3,7 +3,14 @@
 import { useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -72,19 +79,21 @@ const PLANS = [
 
 export function PricingTable() {
   const router = useRouter();
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>(
+    'monthly'
+  );
   const [loading, setLoading] = useState<string | null>(null);
 
   const { data: currentSubscription } = api.billing.getSubscription.useQuery();
   const { data: plans } = api.billing.getPlans.useQuery();
 
   const createCheckoutSession = api.billing.createCheckoutSession.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.url) {
         router.push(data.url);
       }
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
       setLoading(null);
     },
@@ -120,7 +129,9 @@ export function PricingTable() {
         <Switch
           id="billing-period"
           checked={billingPeriod === 'yearly'}
-          onCheckedChange={(checked) => setBillingPeriod(checked ? 'yearly' : 'monthly')}
+          onCheckedChange={checked =>
+            setBillingPeriod(checked ? 'yearly' : 'monthly')
+          }
         />
         <Label htmlFor="billing-period">
           Yearly
@@ -132,7 +143,7 @@ export function PricingTable() {
 
       {/* Pricing Cards */}
       <div className="grid gap-8 lg:grid-cols-3">
-        {PLANS.map((plan) => (
+        {PLANS.map(plan => (
           <Card
             key={plan.name}
             className={plan.popular ? 'relative border-primary shadow-lg' : ''}
@@ -168,7 +179,7 @@ export function PricingTable() {
 
               {/* Features */}
               <ul className="space-y-3">
-                {plan.features.map((feature) => (
+                {plan.features.map(feature => (
                   <li key={feature.name} className="flex items-start">
                     {feature.included ? (
                       <Check className="mr-3 h-5 w-5 shrink-0 text-primary" />
@@ -177,7 +188,9 @@ export function PricingTable() {
                     )}
                     <span
                       className={
-                        feature.included ? '' : 'text-muted-foreground line-through'
+                        feature.included
+                          ? ''
+                          : 'text-muted-foreground line-through'
                       }
                     >
                       {feature.name}
@@ -213,7 +226,10 @@ export function PricingTable() {
         <p>All plans include a 14-day free trial. Cancel anytime.</p>
         <p className="mt-1">
           Need a custom plan?{' '}
-          <a href="mailto:support@subpilot.app" className="text-primary hover:underline">
+          <a
+            href="mailto:support@subpilot.app"
+            className="text-primary hover:underline"
+          >
             Contact us
           </a>
         </p>

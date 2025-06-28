@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { TimeSeriesChart } from '@/components/charts/time-series-chart';
 import { CategoryBreakdownChart } from './category-breakdown-chart';
 import { InsightsCard } from '@/components/charts/insights-card';
-import { type AnalyticsReport } from '@/server/services/analytics.service';
+import { type AnalyticsReport } from '~/server/services/analytics.service';
 import {
   Download,
   FileText,

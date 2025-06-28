@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { auth } from '@/server/auth';
+import { auth } from '~/server/auth';
 import { LoginForm } from '@/components/auth/login-form';
 import { ThemeToggleStandalone } from '@/components/theme-toggle-standalone';
 

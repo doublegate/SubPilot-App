@@ -2,14 +2,28 @@
 
 import { useAssistant } from '@/components/assistant';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageCircle, TrendingDown, Search, AlertTriangle, HelpCircle, DollarSign } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  MessageCircle,
+  TrendingDown,
+  Search,
+  AlertTriangle,
+  HelpCircle,
+  DollarSign,
+} from 'lucide-react';
 
 const examplePrompts = [
   {
     icon: TrendingDown,
     title: 'Find Savings',
-    description: 'Identify unused subscriptions and opportunities to save money',
+    description:
+      'Identify unused subscriptions and opportunities to save money',
     prompt: 'Help me find ways to save money on my subscriptions',
   },
   {
@@ -60,12 +74,13 @@ export default function AssistantPage() {
         <CardHeader>
           <CardTitle>How can I help you today?</CardTitle>
           <CardDescription>
-            Click on any example below to start a conversation with your AI assistant
+            Click on any example below to start a conversation with your AI
+            assistant
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {examplePrompts.map((example) => {
+            {examplePrompts.map(example => {
               const Icon = example.icon;
               return (
                 <button
@@ -93,13 +108,14 @@ export default function AssistantPage() {
         <CardHeader>
           <CardTitle>Assistant Capabilities</CardTitle>
           <CardDescription>
-            Your AI assistant can help you with various subscription management tasks
+            Your AI assistant can help you with various subscription management
+            tasks
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="font-medium mb-2">💡 Smart Analysis</h4>
-            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <h4 className="mb-2 font-medium">💡 Smart Analysis</h4>
+            <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
               <li>Analyze spending patterns and trends</li>
               <li>Identify unused or underutilized subscriptions</li>
               <li>Find opportunities to save money</li>
@@ -108,8 +124,8 @@ export default function AssistantPage() {
           </div>
 
           <div>
-            <h4 className="font-medium mb-2">🎯 Actionable Insights</h4>
-            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <h4 className="mb-2 font-medium">🎯 Actionable Insights</h4>
+            <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
               <li>Get personalized recommendations</li>
               <li>Receive alerts about price changes</li>
               <li>Track subscription usage and value</li>
@@ -118,8 +134,8 @@ export default function AssistantPage() {
           </div>
 
           <div>
-            <h4 className="font-medium mb-2">🤝 Subscription Management</h4>
-            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <h4 className="mb-2 font-medium">🤝 Subscription Management</h4>
+            <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
               <li>Help with cancellation processes</li>
               <li>Find cheaper alternatives</li>
               <li>Set reminders for important dates</li>
@@ -130,11 +146,7 @@ export default function AssistantPage() {
       </Card>
 
       <div className="flex justify-center">
-        <Button
-          size="lg"
-          onClick={() => openAssistant()}
-          className="gap-2"
-        >
+        <Button size="lg" onClick={() => openAssistant()} className="gap-2">
           <MessageCircle className="h-5 w-5" />
           Open AI Assistant
         </Button>

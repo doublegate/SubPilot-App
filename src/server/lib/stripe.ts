@@ -10,12 +10,12 @@ export function getStripe(): Stripe {
     if (process.env.SKIP_ENV_VALIDATION === 'true' && !env.STRIPE_SECRET_KEY) {
       throw new Error('Stripe cannot be used during build time');
     }
-    
+
     // During runtime, env vars must be available
     if (!env.STRIPE_SECRET_KEY && process.env.NODE_ENV === 'production') {
       throw new Error('STRIPE_SECRET_KEY is required in production');
     }
-    
+
     stripeInstance = new Stripe(env.STRIPE_SECRET_KEY ?? 'sk_test_dummy', {
       apiVersion: '2025-05-28.basil',
       typescript: true,
@@ -36,25 +36,26 @@ export const STRIPE_WEBHOOK_EVENTS = {
   // Checkout
   CHECKOUT_SESSION_COMPLETED: 'checkout.session.completed',
   CHECKOUT_SESSION_EXPIRED: 'checkout.session.expired',
-  
+
   // Subscriptions
   CUSTOMER_SUBSCRIPTION_CREATED: 'customer.subscription.created',
   CUSTOMER_SUBSCRIPTION_UPDATED: 'customer.subscription.updated',
   CUSTOMER_SUBSCRIPTION_DELETED: 'customer.subscription.deleted',
   CUSTOMER_SUBSCRIPTION_TRIAL_WILL_END: 'customer.subscription.trial_will_end',
-  
+
   // Payments
   PAYMENT_INTENT_SUCCEEDED: 'payment_intent.succeeded',
   PAYMENT_INTENT_PAYMENT_FAILED: 'payment_intent.payment_failed',
   INVOICE_PAYMENT_SUCCEEDED: 'invoice.payment_succeeded',
   INVOICE_PAYMENT_FAILED: 'invoice.payment_failed',
-  
+
   // Customer
   CUSTOMER_UPDATED: 'customer.updated',
   CUSTOMER_DELETED: 'customer.deleted',
 } as const;
 
-export type StripeWebhookEvent = (typeof STRIPE_WEBHOOK_EVENTS)[keyof typeof STRIPE_WEBHOOK_EVENTS];
+export type StripeWebhookEvent =
+  (typeof STRIPE_WEBHOOK_EVENTS)[keyof typeof STRIPE_WEBHOOK_EVENTS];
 
 // Helper function to verify webhook signatures
 export async function verifyWebhookSignature(
@@ -85,7 +86,10 @@ export function formatAmountFromStripe(amount: number): number {
 }
 
 // Get Stripe price ID based on plan and billing period
-export function getStripePriceId(planName: string, billingPeriod: 'monthly' | 'yearly' = 'monthly'): string | null {
+export function getStripePriceId(
+  planName: string,
+  billingPeriod: 'monthly' | 'yearly' = 'monthly'
+): string | null {
   // These would be configured in your Stripe dashboard and stored in env vars or database
   const priceIds: Record<string, Record<string, string>> = {
     pro: {
@@ -101,6 +105,6 @@ export function getStripePriceId(planName: string, billingPeriod: 'monthly' | 'y
       yearly: env.STRIPE_PRICE_ENTERPRISE_YEARLY ?? '',
     },
   };
-  
+
   return priceIds[planName]?.[billingPeriod] ?? null;
 }

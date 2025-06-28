@@ -1,36 +1,39 @@
-import { type PrismaClient } from "@prisma/client";
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
-import { db } from "~/server/db";
-import { AuditLogger } from "~/server/lib/audit-logger";
-import { ApiCancellationProvider } from "./providers/api-provider";
-import { WebAutomationProvider } from "./providers/web-automation-provider";
-import { ManualCancellationProvider } from "./providers/manual-provider";
-import type { CancellationProvider, CancellationStrategy } from "./providers/types";
+import { type PrismaClient } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+import { db } from '~/server/db';
+import { AuditLogger } from '~/server/lib/audit-logger';
+import { ApiCancellationProvider } from './providers/api-provider';
+import { WebAutomationProvider } from './providers/web-automation-provider';
+import { ManualCancellationProvider } from './providers/manual-provider';
+import type {
+  CancellationProvider,
+  CancellationStrategy,
+} from './providers/types';
 
 // Cancellation method types
-export const CancellationMethod = z.enum(["api", "web_automation", "manual"]);
+export const CancellationMethod = z.enum(['api', 'web_automation', 'manual']);
 export type CancellationMethod = z.infer<typeof CancellationMethod>;
 
 // Cancellation status types
 export const CancellationStatus = z.enum([
-  "pending",
-  "processing",
-  "completed",
-  "failed",
-  "cancelled",
+  'pending',
+  'processing',
+  'completed',
+  'failed',
+  'cancelled',
 ]);
 export type CancellationStatus = z.infer<typeof CancellationStatus>;
 
 // Cancellation priority types
-export const CancellationPriority = z.enum(["low", "normal", "high"]);
+export const CancellationPriority = z.enum(['low', 'normal', 'high']);
 export type CancellationPriority = z.infer<typeof CancellationPriority>;
 
 // Cancellation request input schema
 export const CancellationRequestInput = z.object({
   subscriptionId: z.string(),
   method: CancellationMethod.optional(),
-  priority: CancellationPriority.default("normal"),
+  priority: CancellationPriority.default('normal'),
   reason: z.string().optional(),
 });
 
@@ -62,11 +65,11 @@ export class CancellationService {
   constructor(database?: PrismaClient) {
     this.db = database ?? db;
     this.providers = new Map();
-    
+
     // Initialize providers
-    this.providers.set("api", new ApiCancellationProvider());
-    this.providers.set("web_automation", new WebAutomationProvider());
-    this.providers.set("manual", new ManualCancellationProvider());
+    this.providers.set('api', new ApiCancellationProvider());
+    this.providers.set('web_automation', new WebAutomationProvider());
+    this.providers.set('manual', new ManualCancellationProvider());
   }
 
   /**
@@ -91,25 +94,25 @@ export class CancellationService {
 
       if (!subscription) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Subscription not found",
+          code: 'NOT_FOUND',
+          message: 'Subscription not found',
         });
       }
 
-      if (subscription.status === "cancelled") {
+      if (subscription.status === 'cancelled') {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Subscription is already cancelled",
+          code: 'BAD_REQUEST',
+          message: 'Subscription is already cancelled',
         });
       }
 
       // Find provider configuration
-      const providerName = subscription.name.toLowerCase().replace(/\s+/g, "");
+      const providerName = subscription.name.toLowerCase().replace(/\s+/g, '');
       const provider = await this.db.cancellationProvider.findFirst({
         where: {
           OR: [
             { normalizedName: providerName },
-            { name: { contains: subscription.name, mode: "insensitive" } },
+            { name: { contains: subscription.name, mode: 'insensitive' } },
           ],
           isActive: true,
         },
@@ -126,7 +129,7 @@ export class CancellationService {
           providerId: provider?.id,
           method,
           priority: input.priority,
-          status: "pending",
+          status: 'pending',
           ipAddress: sessionData?.ipAddress,
           userAgent: sessionData?.userAgent,
           sessionId: sessionData?.sessionId,
@@ -134,18 +137,24 @@ export class CancellationService {
       });
 
       // Log the cancellation initiation
-      await this.logActivity(request.id, "initiated", "info", "Cancellation request initiated", {
-        method,
-        priority: input.priority,
-        reason: input.reason,
-      });
+      await this.logActivity(
+        request.id,
+        'initiated',
+        'info',
+        'Cancellation request initiated',
+        {
+          method,
+          priority: input.priority,
+          reason: input.reason,
+        }
+      );
 
       // Audit log
       await AuditLogger.log({
         userId,
-        action: "subscription.cancelled" as const,
+        action: 'subscription.cancelled' as const,
         resource: subscription.id,
-        result: "success",
+        result: 'success',
         metadata: {
           requestId: request.id,
           method,
@@ -161,10 +170,10 @@ export class CancellationService {
       // Audit log failure
       await AuditLogger.log({
         userId,
-        action: "subscription.cancelled" as const,
+        action: 'subscription.cancelled' as const,
         resource: input.subscriptionId,
-        result: "failure",
-        error: error instanceof Error ? error.message : "Unknown error",
+        result: 'failure',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
 
       throw error;
@@ -185,8 +194,8 @@ export class CancellationService {
 
     if (!request) {
       throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Cancellation request not found",
+        code: 'NOT_FOUND',
+        message: 'Cancellation request not found',
       });
     }
 
@@ -194,13 +203,18 @@ export class CancellationService {
     await this.db.cancellationRequest.update({
       where: { id: requestId },
       data: {
-        status: "processing",
+        status: 'processing',
         lastAttemptAt: new Date(),
         attempts: { increment: 1 },
       },
     });
 
-    await this.logActivity(requestId, "processing", "info", "Started processing cancellation");
+    await this.logActivity(
+      requestId,
+      'processing',
+      'info',
+      'Started processing cancellation'
+    );
 
     try {
       // Get the appropriate provider strategy
@@ -220,7 +234,7 @@ export class CancellationService {
       const updatedRequest = await this.db.cancellationRequest.update({
         where: { id: requestId },
         data: {
-          status: result.success ? "completed" : "failed",
+          status: result.success ? 'completed' : 'failed',
           confirmationCode: result.confirmationCode,
           effectiveDate: result.effectiveDate,
           refundAmount: result.refundAmount,
@@ -239,7 +253,7 @@ export class CancellationService {
         await this.db.subscription.update({
           where: { id: request.subscriptionId },
           data: {
-            status: "cancelled",
+            status: 'cancelled',
             isActive: false,
             cancellationInfo: {
               requestId,
@@ -252,18 +266,24 @@ export class CancellationService {
 
         await this.logActivity(
           requestId,
-          "completed",
-          "success",
-          "Cancellation completed successfully",
+          'completed',
+          'success',
+          'Cancellation completed successfully',
           {
             confirmationCode: result.confirmationCode,
             effectiveDate: result.effectiveDate,
           }
         );
       } else {
-        await this.logActivity(requestId, "failed", "failure", result.error?.message ?? "Cancellation failed", {
-          error: result.error,
-        });
+        await this.logActivity(
+          requestId,
+          'failed',
+          'failure',
+          result.error?.message ?? 'Cancellation failed',
+          {
+            error: result.error,
+          }
+        );
 
         // Schedule retry if attempts remaining
         if (updatedRequest.attempts < updatedRequest.maxAttempts) {
@@ -282,7 +302,9 @@ export class CancellationService {
         status: updatedRequest.status as CancellationStatus,
         confirmationCode: updatedRequest.confirmationCode,
         effectiveDate: updatedRequest.effectiveDate,
-        refundAmount: updatedRequest.refundAmount ? Number(updatedRequest.refundAmount) : null,
+        refundAmount: updatedRequest.refundAmount
+          ? Number(updatedRequest.refundAmount)
+          : null,
         manualInstructions: updatedRequest.manualInstructions,
         error: result.error ?? null,
       };
@@ -290,16 +312,17 @@ export class CancellationService {
       await this.db.cancellationRequest.update({
         where: { id: requestId },
         data: {
-          status: "failed",
-          errorMessage: error instanceof Error ? error.message : "Unknown error",
+          status: 'failed',
+          errorMessage:
+            error instanceof Error ? error.message : 'Unknown error',
         },
       });
 
       await this.logActivity(
         requestId,
-        "error",
-        "failure",
-        error instanceof Error ? error.message : "Unknown error"
+        'error',
+        'failure',
+        error instanceof Error ? error.message : 'Unknown error'
       );
 
       throw error;
@@ -309,7 +332,10 @@ export class CancellationService {
   /**
    * Get cancellation status
    */
-  async getCancellationStatus(userId: string, requestId: string): Promise<CancellationResult> {
+  async getCancellationStatus(
+    userId: string,
+    requestId: string
+  ): Promise<CancellationResult> {
     const request = await this.db.cancellationRequest.findFirst({
       where: {
         id: requestId,
@@ -319,8 +345,8 @@ export class CancellationService {
 
     if (!request) {
       throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Cancellation request not found",
+        code: 'NOT_FOUND',
+        message: 'Cancellation request not found',
       });
     }
 
@@ -334,7 +360,7 @@ export class CancellationService {
       error: request.errorCode
         ? {
             code: request.errorCode,
-            message: request.errorMessage ?? "Unknown error",
+            message: request.errorMessage ?? 'Unknown error',
             details: request.errorDetails,
           }
         : null,
@@ -344,19 +370,22 @@ export class CancellationService {
   /**
    * Retry a failed cancellation
    */
-  async retryCancellation(userId: string, requestId: string): Promise<CancellationResult> {
+  async retryCancellation(
+    userId: string,
+    requestId: string
+  ): Promise<CancellationResult> {
     const request = await this.db.cancellationRequest.findFirst({
       where: {
         id: requestId,
         userId,
-        status: "failed",
+        status: 'failed',
       },
     });
 
     if (!request) {
       throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Failed cancellation request not found",
+        code: 'NOT_FOUND',
+        message: 'Failed cancellation request not found',
       });
     }
 
@@ -364,7 +393,7 @@ export class CancellationService {
     await this.db.cancellationRequest.update({
       where: { id: requestId },
       data: {
-        status: "pending",
+        status: 'pending',
         errorCode: null,
         errorMessage: null,
         errorDetails: {},
@@ -391,7 +420,7 @@ export class CancellationService {
       where: {
         id: requestId,
         userId,
-        method: "manual",
+        method: 'manual',
       },
       include: {
         subscription: true,
@@ -400,8 +429,8 @@ export class CancellationService {
 
     if (!request) {
       throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Manual cancellation request not found",
+        code: 'NOT_FOUND',
+        message: 'Manual cancellation request not found',
       });
     }
 
@@ -409,7 +438,7 @@ export class CancellationService {
     const updatedRequest = await this.db.cancellationRequest.update({
       where: { id: requestId },
       data: {
-        status: "completed",
+        status: 'completed',
         userConfirmed: true,
         confirmationCode: confirmationData.confirmationCode,
         effectiveDate: confirmationData.effectiveDate,
@@ -422,7 +451,7 @@ export class CancellationService {
     await this.db.subscription.update({
       where: { id: request.subscriptionId },
       data: {
-        status: "cancelled",
+        status: 'cancelled',
         isActive: false,
         cancellationInfo: {
           requestId,
@@ -434,14 +463,20 @@ export class CancellationService {
       },
     });
 
-    await this.logActivity(requestId, "manual_confirmed", "success", "User confirmed manual cancellation", {
-      confirmationCode: confirmationData.confirmationCode,
-      notes: confirmationData.notes,
-    });
+    await this.logActivity(
+      requestId,
+      'manual_confirmed',
+      'success',
+      'User confirmed manual cancellation',
+      {
+        confirmationCode: confirmationData.confirmationCode,
+        notes: confirmationData.notes,
+      }
+    );
 
     return {
       requestId: updatedRequest.id,
-      status: "completed",
+      status: 'completed',
       confirmationCode: updatedRequest.confirmationCode,
       effectiveDate: updatedRequest.effectiveDate,
       refundAmount: null,
@@ -471,11 +506,11 @@ export class CancellationService {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: limit,
     });
 
-    return requests.map((request) => ({
+    return requests.map(request => ({
       id: request.id,
       subscription: request.subscription,
       provider: request.provider,
@@ -493,16 +528,16 @@ export class CancellationService {
    */
   private determineMethod(provider: any | null): CancellationMethod {
     if (!provider) {
-      return "manual"; // Default to manual if no provider found
+      return 'manual'; // Default to manual if no provider found
     }
 
     // Priority: API > Web Automation > Manual
-    if (provider.type === "api" && provider.apiEndpoint) {
-      return "api";
-    } else if (provider.type === "web_automation" && provider.loginUrl) {
-      return "web_automation";
+    if (provider.type === 'api' && provider.apiEndpoint) {
+      return 'api';
+    } else if (provider.type === 'web_automation' && provider.loginUrl) {
+      return 'web_automation';
     } else {
-      return "manual";
+      return 'manual';
     }
   }
 

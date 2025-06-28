@@ -5,7 +5,14 @@ import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Bot, User, Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import {
+  Bot,
+  User,
+  Loader2,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { api } from '@/trpc/react';
 import { toast } from 'sonner';
@@ -20,7 +27,11 @@ interface MessageBubbleProps {
   onActionConfirm?: (actionId: string) => void;
 }
 
-export function MessageBubble({ message, isLoading = false, onActionConfirm }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  isLoading = false,
+  onActionConfirm,
+}: MessageBubbleProps) {
   const utils = api.useUtils();
 
   // Execute action mutation
@@ -29,13 +40,16 @@ export function MessageBubble({ message, isLoading = false, onActionConfirm }: M
       toast.success('Action executed successfully');
       void utils.assistant.getConversation.invalidate();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
   });
 
   const isUser = message.role === 'user';
-  const functionCall = message.functionCall as { name: string; arguments: any } | null;
+  const functionCall = message.functionCall as {
+    name: string;
+    arguments: any;
+  } | null;
 
   const handleActionConfirm = (actionId: string) => {
     executeAction.mutate({ actionId, confirmed: true });
@@ -64,9 +78,7 @@ export function MessageBubble({ message, isLoading = false, onActionConfirm }: M
         <Card
           className={cn(
             'max-w-[80%] p-3',
-            isUser
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted'
+            isUser ? 'text-primary-foreground bg-primary' : 'bg-muted'
           )}
         >
           {isLoading ? (
@@ -86,7 +98,10 @@ export function MessageBubble({ message, isLoading = false, onActionConfirm }: M
                     <span className="text-sm font-medium">Action Required</span>
                   </div>
                   <p className="mb-3 text-sm text-muted-foreground">
-                    {getActionDescription(functionCall.name, functionCall.arguments)}
+                    {getActionDescription(
+                      functionCall.name,
+                      functionCall.arguments
+                    )}
                   </p>
                   <div className="flex gap-2">
                     <Button

@@ -13,10 +13,10 @@ interface AssistantToggleProps {
   initialMessage?: string;
 }
 
-export function AssistantToggle({ 
-  className, 
+export function AssistantToggle({
+  className,
   defaultOpen = false,
-  initialMessage 
+  initialMessage,
 }: AssistantToggleProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [message, setMessage] = useState(initialMessage);
@@ -43,10 +43,7 @@ export function AssistantToggle({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            className={cn(
-              'fixed bottom-6 right-6 z-40',
-              className
-            )}
+            className={cn('fixed bottom-6 right-6 z-40', className)}
           >
             <Button
               size="lg"
@@ -56,9 +53,9 @@ export function AssistantToggle({
               <MessageCircle className="h-6 w-6" />
               <span className="sr-only">Open AI Assistant</span>
             </Button>
-            
+
             {/* Pulse animation for attention */}
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="absolute -right-1 -top-1 flex h-3 w-3">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex h-3 w-3 rounded-full bg-primary"></span>
             </span>
@@ -89,8 +86,8 @@ export function useAssistant() {
 }
 
 // Add event listener support to the AssistantToggle component
-export function AssistantToggleWithListener({ 
-  className, 
+export function AssistantToggleWithListener({
+  className,
   defaultOpen = false,
 }: AssistantToggleProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -102,9 +99,15 @@ export function AssistantToggleWithListener({
       setIsOpen(true);
     };
 
-    window.addEventListener('open-assistant', handleOpenAssistant as EventListener);
+    window.addEventListener(
+      'open-assistant',
+      handleOpenAssistant as EventListener
+    );
     return () => {
-      window.removeEventListener('open-assistant', handleOpenAssistant as EventListener);
+      window.removeEventListener(
+        'open-assistant',
+        handleOpenAssistant as EventListener
+      );
     };
   }, []);
 
@@ -123,10 +126,7 @@ export function AssistantToggleWithListener({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            className={cn(
-              'fixed bottom-6 right-6 z-40',
-              className
-            )}
+            className={cn('fixed bottom-6 right-6 z-40', className)}
           >
             <Button
               size="lg"
@@ -136,9 +136,9 @@ export function AssistantToggleWithListener({
               <MessageCircle className="h-6 w-6" />
               <span className="sr-only">Open AI Assistant</span>
             </Button>
-            
+
             {/* Pulse animation for attention */}
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="absolute -right-1 -top-1 flex h-3 w-3">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex h-3 w-3 rounded-full bg-primary"></span>
             </span>

@@ -108,7 +108,7 @@ export async function HEAD() {
     if (process.env.DOCKER_HEALTH_CHECK_MODE === 'basic') {
       return new NextResponse(null, { status: 200 });
     }
-    
+
     // Quick database ping
     const { db } = await import('@/server/db');
     await db.$queryRaw`SELECT 1`;

@@ -1,6 +1,12 @@
 import { Suspense } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AccountSwitcher } from '@/components/account/account-switcher';
 import { UsageMetrics } from '@/components/billing/usage-metrics';
@@ -15,7 +21,7 @@ export default function AccountSettingsPage() {
         </p>
       </div>
       <Separator />
-      
+
       {/* Account Switcher */}
       <Card>
         <CardHeader>

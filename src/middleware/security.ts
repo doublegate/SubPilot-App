@@ -3,8 +3,8 @@ import type { NextRequest } from 'next/server';
 import {
   checkRateLimit,
   applyRateLimitHeaders,
-} from '@/server/lib/rate-limiter';
-import { AuditLogger } from '@/server/lib/audit-logger';
+} from '~/server/lib/rate-limiter';
+import { AuditLogger } from '~/server/lib/audit-logger';
 
 /**
  * Get client identifier for rate limiting

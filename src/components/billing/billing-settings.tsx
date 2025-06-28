@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -9,14 +15,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/trpc/react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { 
-  CreditCard, 
-  ExternalLink, 
-  AlertCircle, 
+import {
+  CreditCard,
+  ExternalLink,
+  AlertCircle,
   Download,
   Loader2,
   CheckCircle,
-  XCircle
+  XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -24,17 +30,18 @@ export function BillingSettings() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const { data: subscription, isLoading: subscriptionLoading } = api.billing.getSubscription.useQuery();
+  const { data: subscription, isLoading: subscriptionLoading } =
+    api.billing.getSubscription.useQuery();
   const { data: stats } = api.billing.getStats.useQuery();
   const { data: invoices } = api.billing.getInvoices.useQuery({ limit: 5 });
 
   const createPortalSession = api.billing.createPortalSession.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.url) {
         router.push(data.url);
       }
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
       setLoading(null);
     },
@@ -42,25 +49,29 @@ export function BillingSettings() {
 
   const cancelSubscription = api.billing.cancelSubscription.useMutation({
     onSuccess: () => {
-      toast.success('Subscription will be cancelled at the end of the billing period');
+      toast.success(
+        'Subscription will be cancelled at the end of the billing period'
+      );
       setLoading(null);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
       setLoading(null);
     },
   });
 
-  const reactivateSubscription = api.billing.reactivateSubscription.useMutation({
-    onSuccess: () => {
-      toast.success('Subscription reactivated successfully');
-      setLoading(null);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-      setLoading(null);
-    },
-  });
+  const reactivateSubscription = api.billing.reactivateSubscription.useMutation(
+    {
+      onSuccess: () => {
+        toast.success('Subscription reactivated successfully');
+        setLoading(null);
+      },
+      onError: error => {
+        toast.error(error.message);
+        setLoading(null);
+      },
+    }
+  );
 
   const handleManageSubscription = async () => {
     setLoading('manage');
@@ -136,34 +147,51 @@ export function BillingSettings() {
                     ${Number(subscription?.plan?.price || 0).toFixed(2)}/month
                   </span>
                 </div>
-                {subscription && 'currentPeriodEnd' in subscription && subscription.currentPeriodEnd && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Next billing date</span>
-                    <span className="font-medium">
-                      {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
-                    </span>
-                  </div>
-                )}
-                {subscription && 'trialEnd' in subscription && subscription.trialEnd && new Date(subscription.trialEnd) > new Date() && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Trial ends</span>
-                    <span className="font-medium">
-                      {format(new Date(subscription.trialEnd), 'MMM d, yyyy')}
-                    </span>
-                  </div>
-                )}
+                {subscription &&
+                  'currentPeriodEnd' in subscription &&
+                  subscription.currentPeriodEnd && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Next billing date
+                      </span>
+                      <span className="font-medium">
+                        {format(
+                          new Date(subscription.currentPeriodEnd),
+                          'MMM d, yyyy'
+                        )}
+                      </span>
+                    </div>
+                  )}
+                {subscription &&
+                  'trialEnd' in subscription &&
+                  subscription.trialEnd &&
+                  new Date(subscription.trialEnd) > new Date() && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Trial ends</span>
+                      <span className="font-medium">
+                        {format(new Date(subscription.trialEnd), 'MMM d, yyyy')}
+                      </span>
+                    </div>
+                  )}
               </div>
 
-              {subscription && 'cancelAtPeriodEnd' in subscription && subscription.cancelAtPeriodEnd && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Your subscription will be cancelled on{' '}
-                    {subscription && 'currentPeriodEnd' in subscription && subscription.currentPeriodEnd &&
-                      format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
-                  </AlertDescription>
-                </Alert>
-              )}
+              {subscription &&
+                'cancelAtPeriodEnd' in subscription &&
+                subscription.cancelAtPeriodEnd && (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Your subscription will be cancelled on{' '}
+                      {subscription &&
+                        'currentPeriodEnd' in subscription &&
+                        subscription.currentPeriodEnd &&
+                        format(
+                          new Date(subscription.currentPeriodEnd),
+                          'MMM d, yyyy'
+                        )}
+                    </AlertDescription>
+                  </Alert>
+                )}
 
               <div className="flex gap-2">
                 <Button
@@ -184,7 +212,9 @@ export function BillingSettings() {
                   )}
                 </Button>
 
-                {subscription && 'cancelAtPeriodEnd' in subscription && subscription.cancelAtPeriodEnd ? (
+                {subscription &&
+                'cancelAtPeriodEnd' in subscription &&
+                subscription.cancelAtPeriodEnd ? (
                   <Button
                     variant="default"
                     onClick={handleReactivateSubscription}
@@ -226,7 +256,9 @@ export function BillingSettings() {
           )}
 
           {subscription?.plan?.name === 'free' && (
-            <Button onClick={() => router.push('/dashboard/settings/billing/upgrade')}>
+            <Button
+              onClick={() => router.push('/dashboard/settings/billing/upgrade')}
+            >
               Upgrade to Pro
             </Button>
           )}
@@ -276,7 +308,7 @@ export function BillingSettings() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {invoices.map((invoice) => (
+              {invoices.map(invoice => (
                 <div
                   key={invoice.id}
                   className="flex items-center justify-between rounded-lg border p-3"
@@ -295,13 +327,11 @@ export function BillingSettings() {
                     <span className="font-medium">
                       ${invoice.amount.toFixed(2)}
                     </span>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      asChild
-                    >
+                    <Button size="sm" variant="ghost" asChild>
                       <a
-                        href={invoice.invoicePdf || invoice.hostedInvoiceUrl || '#'}
+                        href={
+                          invoice.invoicePdf || invoice.hostedInvoiceUrl || '#'
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                       >
