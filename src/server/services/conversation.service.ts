@@ -72,13 +72,6 @@ export class ConversationService {
       include: {
         messages: {
           orderBy: { createdAt: 'asc' },
-          include: {
-            _count: {
-              select: {
-                assistantActions: true,
-              },
-            },
-          },
         },
         actions: {
           orderBy: { createdAt: 'desc' },
@@ -242,14 +235,28 @@ export class ConversationService {
    * Export conversation as markdown
    */
   async exportConversation(conversationId: string, userId: string): Promise<string> {
-    const conversation = await this.getConversation(conversationId, userId);
+    const conversation = await this.db.conversation.findFirst({
+      where: { id: conversationId, userId },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!conversation) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Conversation not found',
+      });
+    }
 
     let markdown = `# ${conversation.title ?? 'Conversation'}\n\n`;
-    markdown += `Created: ${conversation.createdAt.toLocaleDateString()}\n`;
-    markdown += `Last updated: ${conversation.lastMessageAt.toLocaleDateString()}\n\n`;
+    markdown += `Created: ${conversation.createdAt?.toLocaleDateString()}\n`;
+    markdown += `Last updated: ${conversation.lastMessageAt?.toLocaleDateString()}\n\n`;
     markdown += '---\n\n';
 
-    for (const message of conversation.messages) {
+    for (const message of conversation.messages ?? []) {
       const role = message.role === 'user' ? '**You**' : '**SubPilot AI**';
       const time = message.createdAt.toLocaleTimeString();
       
@@ -270,15 +277,32 @@ export class ConversationService {
    * Generate conversation summary using AI
    */
   async generateSummary(conversationId: string, userId: string): Promise<string> {
-    const conversation = await this.getConversation(conversationId, userId);
+    const conversation = await this.db.conversation.findFirst({
+      where: { id: conversationId, userId },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+        actions: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!conversation) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Conversation not found',
+      });
+    }
     
-    if (conversation.messages.length < 4) {
+    if ((conversation.messages ?? []).length < 4) {
       return 'Conversation too short to summarize';
     }
 
     // Get key points from the conversation
-    const messages = conversation.messages
-      .filter(m => m.content.length > 50)
+    const messages = (conversation.messages ?? [])
+      .filter((m: any) => m.content.length > 50)
       .slice(0, 10);
     
     const topics = new Set<string>();
@@ -304,7 +328,7 @@ export class ConversationService {
       summary += `. Actions taken: ${Array.from(actions).join(', ')}`;
     }
     
-    const actionCount = conversation.actions.filter(a => a.status === 'completed').length;
+    const actionCount = (conversation.actions ?? []).filter((a: any) => a.status === 'completed').length;
     if (actionCount > 0) {
       summary += `. Completed ${actionCount} action${actionCount > 1 ? 's' : ''}`;
     }

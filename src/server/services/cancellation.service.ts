@@ -2,7 +2,7 @@ import { type PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { db } from "~/server/db";
-import { auditLogger } from "~/server/lib/audit-logger";
+import { AuditLogger } from "~/server/lib/audit-logger";
 import { ApiCancellationProvider } from "./providers/api-provider";
 import { WebAutomationProvider } from "./providers/web-automation-provider";
 import { ManualCancellationProvider } from "./providers/manual-provider";
@@ -141,7 +141,7 @@ export class CancellationService {
       });
 
       // Audit log
-      await auditLogger.log({
+      await AuditLogger.log({
         userId,
         action: "subscription.cancellation.initiated",
         resource: subscription.id,
@@ -159,7 +159,7 @@ export class CancellationService {
       return result;
     } catch (error) {
       // Audit log failure
-      await auditLogger.log({
+      await AuditLogger.log({
         userId,
         action: "subscription.cancellation.failed",
         resource: input.subscriptionId,

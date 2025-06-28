@@ -116,7 +116,7 @@ export function ConversationHistory({
                           {conversation.title ?? 'Untitled'}
                         </h4>
                         <p className="mt-1 truncate text-xs text-muted-foreground">
-                          {conversation.lastMessage?.content ?? 'No messages'}
+                          {'lastMessage' in conversation ? conversation.lastMessage?.content ?? 'No messages' : 'No messages'}
                         </p>
                       </div>
                       <MessageSquare className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />
@@ -128,7 +128,7 @@ export function ConversationHistory({
                         })}
                       </span>
                       <span>•</span>
-                      <span>{conversation.messageCount} messages</span>
+                      <span>{'messageCount' in conversation ? conversation.messageCount : conversation.matchedMessages?.length ?? 0} messages</span>
                     </div>
                   </button>
 

@@ -133,10 +133,10 @@ export function BillingSettings() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Price</span>
                   <span className="font-medium">
-                    ${Number(subscription.plan?.price || 0).toFixed(2)}/month
+                    ${Number(subscription?.plan?.price || 0).toFixed(2)}/month
                   </span>
                 </div>
-                {subscription.currentPeriodEnd && (
+                {subscription && 'currentPeriodEnd' in subscription && subscription.currentPeriodEnd && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Next billing date</span>
                     <span className="font-medium">
@@ -144,7 +144,7 @@ export function BillingSettings() {
                     </span>
                   </div>
                 )}
-                {subscription.trialEnd && new Date(subscription.trialEnd) > new Date() && (
+                {subscription && 'trialEnd' in subscription && subscription.trialEnd && new Date(subscription.trialEnd) > new Date() && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Trial ends</span>
                     <span className="font-medium">
@@ -154,12 +154,12 @@ export function BillingSettings() {
                 )}
               </div>
 
-              {subscription.cancelAtPeriodEnd && (
+              {subscription && 'cancelAtPeriodEnd' in subscription && subscription.cancelAtPeriodEnd && (
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     Your subscription will be cancelled on{' '}
-                    {subscription.currentPeriodEnd &&
+                    {subscription && 'currentPeriodEnd' in subscription && subscription.currentPeriodEnd &&
                       format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
                   </AlertDescription>
                 </Alert>
@@ -184,7 +184,7 @@ export function BillingSettings() {
                   )}
                 </Button>
 
-                {subscription.cancelAtPeriodEnd ? (
+                {subscription && 'cancelAtPeriodEnd' in subscription && subscription.cancelAtPeriodEnd ? (
                   <Button
                     variant="default"
                     onClick={handleReactivateSubscription}
@@ -283,7 +283,7 @@ export function BillingSettings() {
                 >
                   <div>
                     <p className="font-medium">
-                      Invoice #{invoice.number || invoice.id.slice(-8)}
+                      Invoice #{invoice.number || invoice.id?.slice(-8)}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {invoice.paidAt

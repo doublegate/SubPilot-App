@@ -292,10 +292,10 @@ export class BillingService {
         stripeSubscriptionId: subscription.id,
         stripePriceId: subscription.items.data[0]?.price.id,
         status: subscription.status,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-        trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+        trialStart: (subscription as any).trial_start ? new Date((subscription as any).trial_start * 1000) : null,
+        trialEnd: (subscription as any).trial_end ? new Date((subscription as any).trial_end * 1000) : null,
       },
       update: {
         planId,
@@ -303,10 +303,10 @@ export class BillingService {
         stripeSubscriptionId: subscription.id,
         stripePriceId: subscription.items.data[0]?.price.id,
         status: subscription.status,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-        trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+        trialStart: (subscription as any).trial_start ? new Date((subscription as any).trial_start * 1000) : null,
+        trialEnd: (subscription as any).trial_end ? new Date((subscription as any).trial_end * 1000) : null,
       },
     });
 
@@ -344,8 +344,8 @@ export class BillingService {
       where: { id: userSubscription.id },
       data: {
         status: subscription.status,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,
       },
@@ -418,7 +418,7 @@ export class BillingService {
    * Handle successful payment
    */
   async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
-    if (!invoice.subscription || !invoice.customer) {
+    if (!(invoice as any).subscription || !invoice.customer) {
       return;
     }
 
@@ -440,7 +440,7 @@ export class BillingService {
         amount: invoice.amount_paid / 100,
         currency: invoice.currency,
         stripeInvoiceId: invoice.id,
-        stripePaymentIntentId: invoice.payment_intent as string | undefined,
+        stripePaymentIntentId: (invoice as any).payment_intent as string | undefined,
         status: 'completed',
         metadata: {
           invoiceNumber: invoice.number,
@@ -457,7 +457,7 @@ export class BillingService {
    * Handle failed payment
    */
   async handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
-    if (!invoice.subscription || !invoice.customer) {
+    if (!(invoice as any).subscription || !invoice.customer) {
       return;
     }
 
@@ -471,8 +471,8 @@ export class BillingService {
     }
 
     // Update subscription status if needed
-    if (invoice.subscription) {
-      const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+    if ((invoice as any).subscription) {
+      const subscription = await stripe.subscriptions.retrieve((invoice as any).subscription as string);
       await this.prisma.userSubscription.update({
         where: { id: userSubscription.id },
         data: {
