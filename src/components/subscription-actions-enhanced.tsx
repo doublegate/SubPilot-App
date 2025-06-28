@@ -123,7 +123,7 @@ export function SubscriptionActionsEnhanced({
 
       {/* Modals */}
       <EditSubscriptionModal
-        subscription={subscription}
+        subscription={{ ...subscription, isActive: subscription.status === 'active' }}
         open={showEditModal}
         onOpenChange={setShowEditModal}
         onSuccess={() => {
@@ -136,15 +136,19 @@ export function SubscriptionActionsEnhanced({
         subscription={subscription}
         open={showArchiveModal}
         onOpenChange={setShowArchiveModal}
-        onConfirm={handleArchive}
       />
 
-      <SubscriptionNotes
-        subscription={subscription}
-        open={showNotes}
-        onOpenChange={setShowNotes}
-        onUpdate={onUpdate}
-      />
+      {showNotes && (
+        <SubscriptionNotes
+          subscriptionId={subscription.id}
+          notes={subscription.notes ?? null}
+          tags={[]}
+          onUpdate={() => {
+            setShowNotes(false);
+            onUpdate?.();
+          }}
+        />
+      )}
     </>
   );
 }

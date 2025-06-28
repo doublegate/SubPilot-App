@@ -28,7 +28,7 @@ export class AmazonProvider extends ApiProviderImplementation {
           const monthsRemaining = 12 - monthsUsed;
           if (monthsRemaining > 0 && monthsUsed < 3) {
             // Amazon often refunds if cancelled within first 3 months
-            refundAmount = Number((subscription.amount * (monthsRemaining / 12)).toFixed(2));
+            refundAmount = Number((Number(subscription.amount) * (monthsRemaining / 12)).toFixed(2));
           }
         }
 

@@ -16,8 +16,8 @@ export const cancellationRouter = createTRPCRouter({
     .input(CancellationRequestInput)
     .mutation(async ({ ctx, input }) => {
       const sessionData = {
-        ipAddress: ctx.headers?.["x-forwarded-for"] as string | undefined,
-        userAgent: ctx.headers?.["user-agent"] as string | undefined,
+        ipAddress: undefined,
+        userAgent: undefined,
         sessionId: ctx.session.user.id,
       };
 
@@ -123,8 +123,8 @@ export const cancellationRouter = createTRPCRouter({
 
       if (!provider) {
         return {
-          methods: ["manual"],
-          recommended: "manual",
+          methods: ["manual"] as CancellationMethod[],
+          recommended: "manual" as CancellationMethod,
           provider: null,
         };
       }

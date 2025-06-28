@@ -181,7 +181,7 @@ export class AutomationService {
 
     const startTime = Date.now();
     try {
-      await this.page.waitForSelector(selector, options);
+      await this.page.waitForSelector(selector, options ?? {});
       return {
         success: true,
         duration: Date.now() - startTime,

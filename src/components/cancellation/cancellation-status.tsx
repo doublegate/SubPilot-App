@@ -31,8 +31,9 @@ export function CancellationStatus({ requestId, subscriptionName }: Cancellation
   const { data: status, isLoading } = api.cancellation.status.useQuery(
     { requestId },
     {
-      refetchInterval: (data) => {
+      refetchInterval: (query) => {
         // Poll every 5 seconds if still processing
+        const data = query.state.data;
         if (data?.status === "pending" || data?.status === "processing") {
           return 5000;
         }

@@ -2,7 +2,7 @@ import { type PrismaClient } from '@prisma/client';
 import type Stripe from 'stripe';
 import { TRPCError } from '@trpc/server';
 import { stripe, formatAmountForStripe, STRIPE_WEBHOOK_EVENTS } from '../lib/stripe';
-import { env } from '~/env';
+import { env } from '~/env.js';
 
 export class BillingService {
   constructor(private prisma: PrismaClient) {}

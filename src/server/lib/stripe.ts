@@ -1,9 +1,9 @@
 import Stripe from 'stripe';
-import { env } from '~/env';
+import { env } from '~/env.js';
 
 // Initialize Stripe with the secret key
 export const stripe = new Stripe(env.STRIPE_SECRET_KEY ?? '', {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2025-05-28.basil',
   typescript: true,
   appInfo: {
     name: 'SubPilot',

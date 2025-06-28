@@ -203,7 +203,7 @@ export const validatePlaidConfig = (): {
   ];
   const products = env.PLAID_PRODUCTS?.split(',') || [];
   const invalidProducts = products.filter(
-    p => !validProducts.includes(p.trim())
+    (p: string) => !validProducts.includes(p.trim())
   );
 
   if (invalidProducts.length > 0) {
@@ -214,7 +214,7 @@ export const validatePlaidConfig = (): {
   const validCountries = ['US', 'CA', 'GB', 'FR', 'ES', 'NL', 'IE'];
   const countries = env.PLAID_COUNTRY_CODES?.split(',') || [];
   const invalidCountries = countries.filter(
-    c => !validCountries.includes(c.trim())
+    (c: string) => !validCountries.includes(c.trim())
   );
 
   if (invalidCountries.length > 0) {

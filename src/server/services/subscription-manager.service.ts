@@ -222,7 +222,7 @@ export class SubscriptionManagerService {
       .filter(event => event.status === 'completed' && event.amount)
       .reduce((sum, event) => sum + Number(event.amount), 0);
 
-    const nextBillingDate = subscription.plan?.name !== 'free' 
+    const nextBillingDate = subscription.plan?.name !== 'free' && 'currentPeriodEnd' in subscription
       ? subscription.currentPeriodEnd 
       : null;
 
@@ -232,7 +232,7 @@ export class SubscriptionManagerService {
       totalSpent,
       nextBillingDate,
       billingHistory: billingEvents,
-      memberSince: subscription.createdAt ?? new Date(),
+      memberSince: 'createdAt' in subscription ? subscription.createdAt : new Date(),
     };
   }
 

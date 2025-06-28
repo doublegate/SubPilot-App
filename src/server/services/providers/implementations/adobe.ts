@@ -24,7 +24,7 @@ export class AdobeProvider extends ApiProviderImplementation {
         // Adobe often charges cancellation fees
         const monthsRemaining = Math.floor(Math.random() * 6);
         const cancellationFee = monthsRemaining > 0 ? 
-          Number((subscription.amount * 0.5 * monthsRemaining).toFixed(2)) : 
+          Number((Number(subscription.amount) * 0.5 * monthsRemaining).toFixed(2)) : 
           0;
 
         return {

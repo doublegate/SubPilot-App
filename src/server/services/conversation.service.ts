@@ -225,7 +225,7 @@ export class ConversationService {
         : 0,
       actionStats: actionStats.reduce((acc, stat) => {
         if (!acc[stat.type]) acc[stat.type] = {};
-        acc[stat.type][stat.status] = stat._count;
+        acc[stat.type]![stat.status] = stat._count;
         return acc;
       }, {} as Record<string, Record<string, number>>),
     };

@@ -23,7 +23,7 @@ export class SpotifyProvider extends ApiProviderImplementation {
         // Calculate refund if applicable (Premium users who cancel mid-cycle)
         const daysRemaining = Math.floor(Math.random() * 30);
         const refundAmount = daysRemaining > 0 ? 
-          Number((subscription.amount * (daysRemaining / 30)).toFixed(2)) : 
+          Number((Number(subscription.amount) * (daysRemaining / 30)).toFixed(2)) : 
           undefined;
 
         return {

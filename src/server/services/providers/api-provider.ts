@@ -119,7 +119,7 @@ export class ApiCancellationProvider implements CancellationProvider {
           success: true,
           confirmationCode,
           effectiveDate,
-          refundAmount: Math.random() > 0.5 ? Number((subscription.amount * 0.5).toFixed(2)) : undefined,
+          refundAmount: Math.random() > 0.5 ? Number((Number(subscription.amount) * 0.5).toFixed(2)) : undefined,
         };
       } else {
         return {

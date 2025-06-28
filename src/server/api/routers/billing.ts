@@ -3,7 +3,7 @@ import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 import { BillingService } from '~/server/services/billing.service';
 import { SubscriptionManagerService } from '~/server/services/subscription-manager.service';
 import { TRPCError } from '@trpc/server';
-import { env } from '~/env';
+import { env } from '~/env.js';
 
 export const billingRouter = createTRPCRouter({
   /**

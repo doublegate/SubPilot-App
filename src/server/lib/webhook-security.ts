@@ -24,8 +24,7 @@ export class WebhookSecurity {
     }
 
     // In production, Plaid will provide webhook verification
-    // @ts-expect-error - PLAID_WEBHOOK_SECRET is optional in env schema
-    const secret = env.PLAID_WEBHOOK_SECRET as string | undefined;
+    const secret = env.PLAID_WEBHOOK_SECRET;
     if (!secret) {
       console.error('❌ PLAID_WEBHOOK_SECRET not configured');
       return false;
@@ -87,8 +86,7 @@ export class WebhookSecurity {
       return false;
     }
 
-    // @ts-expect-error - API_SECRET is optional in env schema
-    const secret = env.API_SECRET as string | undefined;
+    const secret = env.API_SECRET;
     if (!secret) {
       console.error('❌ API_SECRET not configured');
       return false;
@@ -110,8 +108,7 @@ export class WebhookSecurity {
     signature: string;
     timestamp: number;
   } {
-    // @ts-expect-error - API_SECRET is optional in env schema
-    const secret = env.API_SECRET as string | undefined;
+    const secret = env.API_SECRET;
     if (!secret) {
       throw new Error('API_SECRET not configured');
     }

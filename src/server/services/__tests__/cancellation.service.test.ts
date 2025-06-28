@@ -95,6 +95,7 @@ describe("CancellationService", () => {
 
       const result = await service.initiateCancellation(mockUserId, {
         subscriptionId: mockSubscriptionId,
+        priority: "normal",
       });
 
       expect(result).toEqual(mockResult);
@@ -111,6 +112,7 @@ describe("CancellationService", () => {
       await expect(
         service.initiateCancellation(mockUserId, {
           subscriptionId: mockSubscriptionId,
+          priority: "normal",
         })
       ).rejects.toThrow(TRPCError);
     });
@@ -122,6 +124,7 @@ describe("CancellationService", () => {
       await expect(
         service.initiateCancellation(mockUserId, {
           subscriptionId: mockSubscriptionId,
+          priority: "normal",
         })
       ).rejects.toThrow("Subscription is already cancelled");
     });
@@ -298,14 +301,14 @@ describe("CancellationService", () => {
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
         id: "req1",
-        subscription: mockRequests[0].subscription,
-        provider: mockRequests[0].provider,
+        subscription: mockRequests[0]?.subscription,
+        provider: mockRequests[0]?.provider,
         status: "completed",
         method: "api",
         confirmationCode: "CONF1",
-        effectiveDate: mockRequests[0].effectiveDate,
-        createdAt: mockRequests[0].createdAt,
-        completedAt: mockRequests[0].completedAt,
+        effectiveDate: mockRequests[0]?.effectiveDate,
+        createdAt: mockRequests[0]?.createdAt,
+        completedAt: mockRequests[0]?.completedAt,
       });
     });
   });

@@ -235,7 +235,7 @@ export class AssistantService {
         },
         functionCall: response.functionCall ? {
           name: response.functionCall.name,
-          arguments: response.functionCall.arguments,
+          arguments: response.functionCall.arguments as any,
         } : undefined,
       },
     });
@@ -528,7 +528,7 @@ If you need to take an action, use the appropriate function.`;
       data: {
         conversationId,
         type,
-        parameters,
+        parameters: parameters as any,
         requiresConfirmation,
         targetResource: parameters.subscriptionId as string | undefined,
       },

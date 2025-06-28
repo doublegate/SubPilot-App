@@ -143,7 +143,7 @@ export class CancellationService {
       // Audit log
       await AuditLogger.log({
         userId,
-        action: "subscription.cancellation.initiated",
+        action: "subscription.cancelled" as const,
         resource: subscription.id,
         result: "success",
         metadata: {
@@ -161,7 +161,7 @@ export class CancellationService {
       // Audit log failure
       await AuditLogger.log({
         userId,
-        action: "subscription.cancellation.failed",
+        action: "subscription.cancelled" as const,
         resource: input.subscriptionId,
         result: "failure",
         error: error instanceof Error ? error.message : "Unknown error",
