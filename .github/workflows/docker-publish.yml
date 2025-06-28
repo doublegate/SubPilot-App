@@ -1,0 +1,303 @@
+name: Publish Docker Container
+
+# This workflow builds, tests, and publishes Docker images to GitHub Container Registry (ghcr.io)
+# It includes security scanning, image signing with cosign, multi-platform builds, and comprehensive testing
+
+on:
+  schedule:
+    # Daily build at 4:22 AM UTC (ensures images stay fresh and security patches are applied)
+    - cron: '22 4 * * *'
+  push:
+    branches: [ "main" ]
+    # Publish semver tags as releases
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    # Allow manual triggering for debugging and maintenance
+
+env:
+  # Use GitHub Container Registry for centralized package management
+  REGISTRY: ghcr.io
+  # Repository name as <account>/<repo> (automatically resolved)
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read          # Required to checkout repository
+      packages: write         # Required to push to GitHub Container Registry
+      id-token: write         # Required for cosign image signing
+      security-events: write  # Required for security scanning results
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Install Node.js for package.json version extraction
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.18.0'
+          cache: 'npm'
+
+      # Extract version from package.json for image tagging
+      - name: Extract version from package.json
+        id: package-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
+
+      # Install cosign for image signing (security best practice)
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
+        with:
+          cosign-release: 'v2.2.4'
+
+      # Install Trivy for vulnerability scanning
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      # Upload security scan results to GitHub Security tab
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      # Set up BuildKit Docker container builder for multi-platform builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      # Login to GitHub Container Registry (skip for PRs to avoid permission issues)
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Extract comprehensive metadata for Docker image tagging and labeling
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # Branch-based tags
+            type=ref,event=branch
+            type=ref,event=pr
+            # Semantic version tags (for v*.*.* tags)
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            # Git SHA for traceability
+            type=sha,prefix={{branch}}-
+            # Latest tag for main branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Package.json version
+            type=raw,value=v${{ steps.package-version.outputs.version }},enable={{is_default_branch}}
+          labels: |
+            org.opencontainers.image.title=SubPilot
+            org.opencontainers.image.description=Your command center for recurring finances
+            org.opencontainers.image.vendor=SubPilot
+            org.opencontainers.image.licenses=MIT
+            maintainer=SubPilot Team
+            org.opencontainers.image.documentation=https://github.com/doublegate/SubPilot-App
+            org.opencontainers.image.source=https://github.com/doublegate/SubPilot-App
+
+      # Build and push Docker image with comprehensive configuration
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            SKIP_ENV_VALIDATION=true
+            NODE_ENV=production
+            DATABASE_URL=postgresql://placeholder:password@localhost:5432/placeholder
+            NEXTAUTH_URL=http://localhost:3000
+            BUILD_AUTH_TOKEN=placeholder-token-for-build
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Build provenance for supply chain security
+          provenance: true
+          sbom: true
+
+      # Test the built Docker image for functionality
+      - name: Test Docker image
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "🧪 Testing Docker image functionality..."
+          
+          # Pull the built image
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          
+          # Run container in background with comprehensive configuration
+          docker run -d \
+            --name subpilot-test-${{ github.run_id }} \
+            --health-interval=10s \
+            --health-timeout=5s \
+            --health-retries=5 \
+            -p 3000:3000 \
+            -e SKIP_ENV_VALIDATION=true \
+            -e NODE_ENV=production \
+            -e DATABASE_URL=postgresql://test:test@localhost:5432/test \
+            -e NEXTAUTH_URL=http://localhost:3000 \
+            -e NEXTAUTH_SECRET=test-secret-for-docker-test-${{ github.run_id }} \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          
+          # Wait for container to be healthy with timeout
+          echo "⏳ Waiting for container to become healthy..."
+          timeout 120 bash -c '
+            while true; do
+              HEALTH=$(docker inspect --format="{{.State.Health.Status}}" subpilot-test-${{ github.run_id }} 2>/dev/null || echo "none")
+              echo "Health status: $HEALTH"
+              if [[ "$HEALTH" == "healthy" ]]; then
+                break
+              fi
+              if [[ "$HEALTH" == "unhealthy" ]]; then
+                echo "❌ Container became unhealthy"
+                docker logs subpilot-test-${{ github.run_id }}
+                exit 1
+              fi
+              sleep 3
+            done
+          '
+          
+          # Test the health endpoint
+          echo "🔍 Testing health endpoint..."
+          sleep 5
+          
+          MAX_ATTEMPTS=10
+          ATTEMPT=1
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
+            if curl -f -s http://localhost:3000/api/health > /dev/null; then
+              echo "✅ Health check passed on attempt $ATTEMPT"
+              break
+            fi
+            if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+              echo "❌ Health check failed after $MAX_ATTEMPTS attempts"
+              echo "Container logs:"
+              docker logs subpilot-test-${{ github.run_id }}
+              exit 1
+            fi
+            sleep 5
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          # Test application response
+          echo "📊 Testing application response..."
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health)
+          if [ "$RESPONSE" != "200" ]; then
+            echo "❌ Unexpected response code: $RESPONSE"
+            docker logs subpilot-test-${{ github.run_id }}
+            exit 1
+          fi
+          
+          echo "✅ All Docker image tests passed successfully!"
+          
+          # Cleanup
+          docker stop subpilot-test-${{ github.run_id }} || true
+          docker rm subpilot-test-${{ github.run_id }} || true
+
+      # Run container security scan on the built image
+      - name: Run Trivy vulnerability scanner on image
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+
+      # Upload image security scan results
+      - name: Upload image scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && github.event_name != 'pull_request'
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+
+      # Sign the published Docker image for supply chain security
+      - name: Sign the published Docker image
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          echo "🔐 Signing Docker image for supply chain security..."
+          echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+          echo "✅ Image signing completed"
+
+      # Generate summary for GitHub Actions dashboard
+      - name: Generate build summary
+        if: always()
+        run: |
+          echo "## 🐳 Docker Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch/Tag:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Package Version:** v${{ steps.package-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit SHA:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Registry:** ${{ env.REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            echo "**Published Images:**" >> $GITHUB_STEP_SUMMARY
+            echo '${{ steps.meta.outputs.tags }}' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Image Digest:** \`${{ steps.build-and-push.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Security Features:**" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Vulnerability scanning with Trivy" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Image signing with cosign" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ SBOM (Software Bill of Materials) generation" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Build provenance attestation" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Multi-platform builds (amd64, arm64)" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Comprehensive health checks" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Pull Request Build:** Image built but not published" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow:** [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+
+  # Separate job for deployment notifications and cleanup
+  post-build:
+    runs-on: ubuntu-latest
+    needs: build-and-publish
+    if: always() && github.event_name != 'pull_request'
+    
+    steps:
+      - name: Container registry cleanup
+        run: |
+          echo "🧹 Container registry cleanup would run here"
+          echo "This job would typically:"
+          echo "  - Remove images older than 30 days"
+          echo "  - Keep the latest 10 versions for rollback capability"
+          echo "  - Clean up untagged images and manifests"
+          echo "  - Generate cleanup reports"
+          
+          # Example cleanup command (requires additional permissions):
+          # gh api --paginate /orgs/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions | \
+          #   jq '.[] | select(.created_at < (now - 2592000) and (.metadata.container.tags | length) == 0) | .id' | \
+          #   xargs -I {} gh api --method DELETE /orgs/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions/{}
+          
+          echo "✅ Cleanup planning completed"
