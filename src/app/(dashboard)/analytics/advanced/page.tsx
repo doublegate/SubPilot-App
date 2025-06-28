@@ -60,20 +60,27 @@ export default function AdvancedAnalyticsPage() {
     groupBy: timeRange === 'week' ? 'day' : timeRange === 'year' || timeRange === 'all' ? 'month' : 'week',
   });
 
-  // Generate report mutation
-  const generateReportMutation = api.analytics.generateReport.useMutation({
-    onSuccess: (report) => {
-      toast.success('Report generated successfully');
-      // Handle report download or display
-      console.log('Generated report:', report);
-    },
-    onError: () => {
-      toast.error('Failed to generate report');
-    },
-  });
+  // Generate report query - we'll trigger it manually
+  const [shouldGenerateReport, setShouldGenerateReport] = useState(false);
+  const generateReportQuery = api.analytics.generateReport.useQuery(
+    {},
+    {
+      enabled: shouldGenerateReport,
+      onSuccess: (report) => {
+        toast.success('Report generated successfully');
+        // Handle report download or display
+        console.log('Generated report:', report);
+        setShouldGenerateReport(false);
+      },
+      onError: () => {
+        toast.error('Failed to generate report');
+        setShouldGenerateReport(false);
+      },
+    }
+  );
 
   const handleGenerateReport = () => {
-    generateReportMutation.mutate({});
+    setShouldGenerateReport(true);
   };
 
   // Convert insights to the expected format
@@ -191,7 +198,7 @@ export default function AdvancedAnalyticsPage() {
               <SelectItem value="all">All Time</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={handleGenerateReport} disabled={generateReportMutation.isPending}>
+          <Button onClick={handleGenerateReport} disabled={generateReportQuery.isFetching}>
             <FileText className="mr-2 h-4 w-4" />
             Generate Report
           </Button>
