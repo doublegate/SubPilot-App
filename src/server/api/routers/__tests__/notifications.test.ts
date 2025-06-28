@@ -4,10 +4,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createInnerTRPCContext } from '~/server/api/trpc';
+import { createInnerTRPCContext } from '@/server/api/trpc';
 import { notificationsRouter } from '../notifications';
 import { TRPCError } from '@trpc/server';
-import { createMockSession } from '~/test/test-utils';
+import { createMockSession } from '@/test/test-utils';
 
 // Mock database - define inside the factory function to avoid hoisting issues
 vi.mock('@/server/db', () => ({
@@ -65,7 +65,7 @@ vi.mock('@/server/db', () => ({
 }));
 
 // Import db after mocking
-import { db } from '~/server/db';
+import { db } from '@/server/db';
 
 // Mock email service
 vi.mock('@/server/services/email.service', () => ({

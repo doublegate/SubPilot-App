@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
-import { env } from '~/env.js';
+import { env } from '@/env.js';
 
 const scryptAsync = promisify(scrypt);
 

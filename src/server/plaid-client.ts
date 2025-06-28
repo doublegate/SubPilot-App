@@ -1,5 +1,5 @@
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
-import { env } from '~/env.js';
+import { env } from '@/env.js';
 
 // Retry configuration
 const MAX_RETRIES = 3;

@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { db } from '~/server/db';
-import { verifyPlaidWebhook } from '~/server/plaid-client';
+import { db } from '@/server/db';
+import { verifyPlaidWebhook } from '@/server/plaid-client';
 
 interface PlaidWebhookData {
   webhook_type: string;

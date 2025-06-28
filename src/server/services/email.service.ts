@@ -4,9 +4,9 @@ import {
   type Transaction,
   type Prisma,
 } from '@prisma/client';
-import { sendEmail } from '~/lib/email';
-import { db } from '~/server/db';
-import { formatCurrency, formatDate } from '~/lib/utils';
+import { sendEmail } from '@/lib/email';
+import { db } from '@/server/db';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   welcomeEmailTemplate,
   newSubscriptionTemplate,
@@ -16,7 +16,7 @@ import {
   renewalReminderTemplate,
   trialEndingTemplate,
   paymentFailedTemplate,
-} from '~/server/email-templates';
+} from '@/server/email-templates';
 
 export interface EmailNotificationData {
   user: Pick<User, 'id' | 'email'> & { name: string | null };
@@ -447,3 +447,6 @@ export class EmailNotificationService {
 
 // Export singleton instance
 export const emailNotificationService = new EmailNotificationService();
+
+// Export class for type checking and testing
+export { EmailNotificationService as EmailService };

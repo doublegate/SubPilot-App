@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
-import { getCategorizationService } from '~/server/services/categorization.service';
-import { SUBSCRIPTION_CATEGORIES } from '~/server/lib/openai-client';
-import { cacheService, cacheTTL } from '~/server/services/cache.service';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import { getCategorizationService } from '@/server/services/categorization.service';
+import { SUBSCRIPTION_CATEGORIES } from '@/server/lib/openai-client';
+import { cacheService, cacheTTL } from '@/server/services/cache.service';
 
 export const categorizationRouter = createTRPCRouter({
   /**

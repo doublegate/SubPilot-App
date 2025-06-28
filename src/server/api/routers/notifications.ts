@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { Prisma } from '@prisma/client';
-import { emailNotificationService } from '~/server/services/email.service';
+import { emailNotificationService } from '@/server/services/email.service';
 
 const notificationTypeEnum = z.enum([
   'renewal_reminder',

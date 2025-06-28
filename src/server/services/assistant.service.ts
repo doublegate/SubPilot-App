@@ -1,6 +1,6 @@
 import { type PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
-import { openAIClient, type ChatMessage } from '~/server/lib/openai-client';
+import { openAIClient, type ChatMessage } from '@/server/lib/openai-client';
 import { z } from 'zod';
 
 // Assistant action types

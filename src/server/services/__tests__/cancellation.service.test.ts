@@ -25,7 +25,7 @@ const mockPrismaClient = {
 } as unknown as PrismaClient;
 
 // Mock audit logger
-vi.mock('~/server/lib/audit-logger', () => ({
+vi.mock('@/server/lib/audit-logger', () => ({
   auditLogger: {
     log: vi.fn(),
   },

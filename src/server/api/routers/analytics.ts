@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import {
   type Prisma,
   type Subscription,
   type Transaction,
 } from '@prisma/client';
-import { AnalyticsService } from '~/server/services/analytics.service';
+import { AnalyticsService } from '@/server/services/analytics.service';
 
 // Type-safe cache data structures
 interface SpendingOverviewData {

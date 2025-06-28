@@ -11,14 +11,14 @@ import { TRPCError } from '@trpc/server';
 import {
   createAuthenticatedCaller,
   createUnauthenticatedCaller,
-} from '~/test/trpc-test-helpers';
+} from '@/test/trpc-test-helpers';
 import { Decimal } from '@prisma/client/runtime/library';
 import {
   createMockSubscription,
   createMockTransaction,
   createDecimal,
-} from '~/test/test-utils';
-import type { MockSubscription } from '~/test/test-utils';
+} from '@/test/test-utils';
+import type { MockSubscription } from '@/test/test-utils';
 
 // Mock database
 vi.mock('@/server/db', () => {
@@ -103,7 +103,7 @@ vi.mock('@/server/db', () => {
 });
 
 // Import db after mocking
-import { db } from '~/server/db';
+import { db } from '@/server/db';
 
 // Mock Plaid client
 vi.mock('@/server/plaid-client', () => ({

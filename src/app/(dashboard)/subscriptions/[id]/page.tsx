@@ -1,5 +1,8 @@
+'use client';
+
 import { notFound } from 'next/navigation';
-import { api } from '@/trpc/server';
+import { useParams } from 'next/navigation';
+import { api } from '@/trpc/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -9,17 +12,12 @@ import {
   AlertCircle,
   Globe,
   Phone,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { SubscriptionActions } from '@/components/subscription-actions';
 import { SubscriptionNotes } from '@/components/subscription-notes';
 import { ProviderLogo } from '@/components/ui/provider-logo';
-
-interface PageProps {
-  params: Promise<{
-    id: string;
-  }>;
-}
 
 interface ProviderData {
   name?: string;
@@ -45,13 +43,21 @@ interface CancellationInfoData {
   supportInfo?: string;
 }
 
-export default async function SubscriptionDetailPage({ params }: PageProps) {
-  const { id } = await params;
-  const subscription = await api.subscriptions
-    .getById({ id })
-    .catch(() => null);
+export default function SubscriptionDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  
+  const { data: subscription, isLoading, error } = api.subscriptions.getById.useQuery({ id });
 
-  if (!subscription) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error || !subscription) {
     notFound();
   }
 

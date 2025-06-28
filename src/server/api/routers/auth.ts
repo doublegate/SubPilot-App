@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 // Types for session detection (unused but kept for future reference)
 // interface _SessionWithCurrent {
 //   id: string;

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { auth } from '~/server/auth';
+import { auth } from '@/server/auth';
 import { PlaidLinkButton } from '@/components/plaid-link-button';
 import {
   Card,

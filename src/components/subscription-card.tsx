@@ -20,6 +20,7 @@ import {
 import { formatDistanceToNow, format } from 'date-fns';
 import Link from 'next/link';
 import { ProviderLogo } from '@/components/ui/provider-logo';
+import { CancelSubscriptionButton } from '@/components/cancellation/cancel-subscription-button';
 
 interface SubscriptionCardProps {
   subscription: {
@@ -131,14 +132,13 @@ export function SubscriptionCard({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              {subscription.status === 'active' && onCancel && (
-                <DropdownMenuItem
-                  onClick={() => onCancel(subscription.id)}
-                  className="text-red-600"
-                >
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Cancel Subscription
-                </DropdownMenuItem>
+              {subscription.status === 'active' && (
+                <div className="px-2 py-1">
+                  <CancelSubscriptionButton
+                    subscriptionId={subscription.id}
+                    subscriptionName={subscription.name}
+                  />
+                </div>
               )}
             </DropdownMenuContent>
           </DropdownMenu>

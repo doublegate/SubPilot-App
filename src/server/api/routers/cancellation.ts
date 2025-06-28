@@ -1,42 +1,49 @@
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 import { TRPCError } from '@trpc/server';
-import {
-  cancellationService,
-  CancellationRequestInput,
-  type CancellationMethod,
-  CancellationPriority,
-} from '~/server/services/cancellation.service';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import { 
+  CancellationService, 
+  CancellationRequestInput, 
+  ManualConfirmationInput 
+} from '@/server/services/cancellation.service';
 
 export const cancellationRouter = createTRPCRouter({
   /**
-   * Initiate a cancellation request
+   * Initiate a subscription cancellation
    */
   initiate: protectedProcedure
     .input(CancellationRequestInput)
     .mutation(async ({ ctx, input }) => {
-      const sessionData = {
-        ipAddress: undefined,
-        userAgent: undefined,
-        sessionId: ctx.session.user.id,
-      };
-
-      return cancellationService.initiateCancellation(
-        ctx.session.user.id,
-        input,
-        sessionData
-      );
+      const service = new CancellationService(ctx.db);
+      return await service.initiateCancellation(ctx.session.user.id, input);
     }),
 
   /**
-   * Get cancellation status
+   * Get status of a cancellation request
    */
-  status: protectedProcedure
+  getStatus: protectedProcedure
     .input(z.object({ requestId: z.string() }))
     .query(async ({ ctx, input }) => {
-      return cancellationService.getCancellationStatus(
+      const service = new CancellationService(ctx.db);
+      return await service.getCancellationStatus(ctx.session.user.id, input.requestId);
+    }),
+
+  /**
+   * Confirm manual cancellation completion
+   */
+  confirmManual: protectedProcedure
+    .input(
+      z.object({
+        requestId: z.string(),
+        confirmation: ManualConfirmationInput,
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const service = new CancellationService(ctx.db);
+      return await service.confirmManualCancellation(
         ctx.session.user.id,
-        input.requestId
+        input.requestId,
+        input.confirmation
       );
     }),
 
@@ -46,55 +53,187 @@ export const cancellationRouter = createTRPCRouter({
   retry: protectedProcedure
     .input(z.object({ requestId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return cancellationService.retryCancellation(
-        ctx.session.user.id,
-        input.requestId
-      );
+      const service = new CancellationService(ctx.db);
+      return await service.retryCancellation(ctx.session.user.id, input.requestId);
     }),
 
   /**
-   * Confirm manual cancellation
+   * Get cancellation history for the user
    */
-  confirmManual: protectedProcedure
+  getHistory: protectedProcedure
     .input(
       z.object({
-        requestId: z.string(),
-        confirmationCode: z.string().optional(),
-        effectiveDate: z.date().optional(),
-        notes: z.string().optional(),
+        limit: z.number().min(1).max(50).optional().default(10),
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      return cancellationService.confirmManualCancellation(
-        ctx.session.user.id,
-        input.requestId,
-        {
-          confirmationCode: input.confirmationCode,
-          effectiveDate: input.effectiveDate,
-          notes: input.notes,
-        }
-      );
-    }),
-
-  /**
-   * Get cancellation history
-   */
-  history: protectedProcedure
-    .input(z.object({ limit: z.number().min(1).max(50).default(10) }))
     .query(async ({ ctx, input }) => {
-      return cancellationService.getCancellationHistory(
-        ctx.session.user.id,
-        input.limit
-      );
+      const service = new CancellationService(ctx.db);
+      return await service.getCancellationHistory(ctx.session.user.id, input.limit);
     }),
 
   /**
-   * Get available cancellation methods for a subscription
+   * Get available cancellation providers
    */
-  availableMethods: protectedProcedure
+  getProviders: protectedProcedure
+    .input(
+      z.object({
+        category: z.string().optional(),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const where: any = {
+        isActive: true,
+      };
+
+      if (input.category) {
+        where.category = input.category;
+      }
+
+      if (input.search) {
+        where.OR = [
+          {
+            name: {
+              contains: input.search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            normalizedName: {
+              contains: input.search.toLowerCase().replace(/[^a-z0-9]/g, ''),
+            },
+          },
+        ];
+      }
+
+      const providers = await ctx.db.cancellationProvider.findMany({
+        where,
+        orderBy: [
+          { successRate: 'desc' },
+          { name: 'asc' },
+        ],
+        select: {
+          id: true,
+          name: true,
+          normalizedName: true,
+          type: true,
+          category: true,
+          difficulty: true,
+          averageTime: true,
+          successRate: true,
+          logo: true,
+          supportsRefunds: true,
+          requires2FA: true,
+          requiresRetention: true,
+        },
+      });
+
+      return providers.map(provider => ({
+        ...provider,
+        successRate: parseFloat(provider.successRate.toString()),
+      }));
+    }),
+
+  /**
+   * Get cancellation provider details
+   */
+  getProvider: protectedProcedure
+    .input(z.object({ providerId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const provider = await ctx.db.cancellationProvider.findUnique({
+        where: { id: input.providerId },
+      });
+
+      if (!provider) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Provider not found',
+        });
+      }
+
+      return {
+        ...provider,
+        successRate: parseFloat(provider.successRate.toString()),
+      };
+    }),
+
+  /**
+   * Get cancellation logs for a request
+   */
+  getLogs: protectedProcedure
+    .input(z.object({ requestId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // First verify the request belongs to the user
+      const request = await ctx.db.cancellationRequest.findFirst({
+        where: {
+          id: input.requestId,
+          userId: ctx.session.user.id,
+        },
+      });
+
+      if (!request) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Cancellation request not found',
+        });
+      }
+
+      const logs = await ctx.db.cancellationLog.findMany({
+        where: { requestId: input.requestId },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      return logs;
+    }),
+
+  /**
+   * Get cancellation statistics
+   */
+  getStats: protectedProcedure.query(async ({ ctx }) => {
+    const [totalRequests, completedRequests, failedRequests, pendingRequests] = 
+      await Promise.all([
+        ctx.db.cancellationRequest.count({
+          where: { userId: ctx.session.user.id },
+        }),
+        ctx.db.cancellationRequest.count({
+          where: { 
+            userId: ctx.session.user.id,
+            status: 'completed',
+          },
+        }),
+        ctx.db.cancellationRequest.count({
+          where: { 
+            userId: ctx.session.user.id,
+            status: 'failed',
+          },
+        }),
+        ctx.db.cancellationRequest.count({
+          where: { 
+            userId: ctx.session.user.id,
+            status: { in: ['pending', 'processing'] },
+          },
+        }),
+      ]);
+
+    const successRate = totalRequests > 0 
+      ? Math.round((completedRequests / totalRequests) * 100) 
+      : 0;
+
+    return {
+      totalRequests,
+      completedRequests,
+      failedRequests,
+      pendingRequests,
+      successRate,
+    };
+  }),
+
+  /**
+   * Check if a subscription can be cancelled
+   */
+  canCancel: protectedProcedure
     .input(z.object({ subscriptionId: z.string() }))
     .query(async ({ ctx, input }) => {
-      // Check if subscription exists and belongs to user
       const subscription = await ctx.db.subscription.findFirst({
         where: {
           id: input.subscriptionId,
@@ -109,172 +248,92 @@ export const cancellationRouter = createTRPCRouter({
         });
       }
 
-      // Find provider configuration
-      const providerName = subscription.name.toLowerCase().replace(/\s+/g, '');
-      const provider = await ctx.db.cancellationProvider.findFirst({
-        where: {
-          OR: [
-            { normalizedName: providerName },
-            { name: { contains: subscription.name, mode: 'insensitive' } },
-          ],
-          isActive: true,
-        },
-      });
-
-      if (!provider) {
+      // Check if already cancelled
+      if (subscription.status === 'cancelled') {
         return {
-          methods: ['manual'] as CancellationMethod[],
-          recommended: 'manual' as CancellationMethod,
-          provider: null,
+          canCancel: false,
+          reason: 'already_cancelled',
         };
       }
 
-      const methods: CancellationMethod[] = [];
-
-      if (provider.type === 'api' && provider.apiEndpoint) {
-        methods.push('api');
-      }
-      if (provider.type === 'web_automation' && provider.loginUrl) {
-        methods.push('web_automation');
-      }
-      methods.push('manual'); // Always available as fallback
-
-      return {
-        methods,
-        recommended: methods[0] ?? 'manual',
-        provider: {
-          name: provider.name,
-          logo: provider.logo,
-          difficulty: provider.difficulty,
-          averageTime: provider.averageTime,
-          supportsRefunds: provider.supportsRefunds,
-          requires2FA: provider.requires2FA,
-          requiresRetention: provider.requiresRetention,
+      // Check for existing pending cancellation
+      const existingRequest = await ctx.db.cancellationRequest.findFirst({
+        where: {
+          subscriptionId: input.subscriptionId,
+          userId: ctx.session.user.id,
+          status: { in: ['pending', 'processing'] },
         },
-      };
-    }),
+      });
 
-  /**
-   * Get provider information
-   */
-  providerInfo: protectedProcedure
-    .input(z.object({ providerName: z.string() }))
-    .query(async ({ ctx, input }) => {
+      if (existingRequest) {
+        return {
+          canCancel: false,
+          reason: 'cancellation_in_progress',
+          requestId: existingRequest.id,
+        };
+      }
+
+      // Find provider info
       const provider = await ctx.db.cancellationProvider.findFirst({
         where: {
-          OR: [
-            { name: { equals: input.providerName, mode: 'insensitive' } },
-            {
-              normalizedName: input.providerName
-                .toLowerCase()
-                .replace(/\s+/g, ''),
-            },
-          ],
+          normalizedName: subscription.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
           isActive: true,
         },
       });
 
-      if (!provider) {
-        return null;
-      }
-
       return {
-        id: provider.id,
-        name: provider.name,
-        type: provider.type,
-        logo: provider.logo,
-        category: provider.category,
-        difficulty: provider.difficulty,
-        averageTime: provider.averageTime,
-        successRate: Number(provider.successRate),
-        supportsRefunds: provider.supportsRefunds,
-        requires2FA: provider.requires2FA,
-        requiresRetention: provider.requiresRetention,
-        contactInfo: {
-          phone: provider.phoneNumber,
-          email: provider.email,
-          chat: provider.chatUrl,
-        },
+        canCancel: true,
+        provider: provider ? {
+          id: provider.id,
+          name: provider.name,
+          type: provider.type,
+          difficulty: provider.difficulty,
+          averageTime: provider.averageTime,
+          successRate: parseFloat(provider.successRate.toString()),
+          supportsRefunds: provider.supportsRefunds,
+        } : null,
       };
     }),
 
   /**
-   * Get cancellation analytics
+   * Cancel a cancellation request (if still pending)
    */
-  analytics: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
-
-    // Get cancellation stats
-    const [total, completed, failed, inProgress] = await Promise.all([
-      ctx.db.cancellationRequest.count({ where: { userId } }),
-      ctx.db.cancellationRequest.count({
-        where: { userId, status: 'completed' },
-      }),
-      ctx.db.cancellationRequest.count({ where: { userId, status: 'failed' } }),
-      ctx.db.cancellationRequest.count({
-        where: { userId, status: { in: ['pending', 'processing'] } },
-      }),
-    ]);
-
-    // Get method breakdown
-    const methodBreakdown = await ctx.db.cancellationRequest.groupBy({
-      by: ['method'],
-      where: { userId },
-      _count: { method: true },
-    });
-
-    // Get recent cancellations
-    const recentCancellations = await ctx.db.cancellationRequest.findMany({
-      where: { userId },
-      include: {
-        subscription: {
-          select: {
-            name: true,
-            amount: true,
-          },
+  cancelRequest: protectedProcedure
+    .input(z.object({ requestId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const request = await ctx.db.cancellationRequest.findFirst({
+        where: {
+          id: input.requestId,
+          userId: ctx.session.user.id,
+          status: { in: ['pending', 'processing'] },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    });
+      });
 
-    // Calculate total savings from cancelled subscriptions
-    const cancelledSubscriptions = await ctx.db.subscription.findMany({
-      where: {
-        userId,
-        status: 'cancelled',
-        cancellationInfo: { not: {} },
-      },
-      select: { amount: true },
-    });
+      if (!request) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Cancellable request not found',
+        });
+      }
 
-    const totalSavings = cancelledSubscriptions.reduce(
-      (sum, sub) => sum + Number(sub.amount),
-      0
-    );
+      const updatedRequest = await ctx.db.cancellationRequest.update({
+        where: { id: input.requestId },
+        data: {
+          status: 'cancelled',
+          completedAt: new Date(),
+        },
+      });
 
-    return {
-      stats: {
-        total,
-        completed,
-        failed,
-        inProgress,
-        successRate: total > 0 ? (completed / total) * 100 : 0,
-      },
-      methodBreakdown: methodBreakdown.map(item => ({
-        method: item.method,
-        count: item._count.method,
-      })),
-      recentCancellations: recentCancellations.map(req => ({
-        id: req.id,
-        subscriptionName: req.subscription.name,
-        amount: Number(req.subscription.amount),
-        status: req.status,
-        method: req.method,
-        createdAt: req.createdAt,
-        completedAt: req.completedAt,
-      })),
-      totalSavings,
-    };
-  }),
+      // Log the cancellation of the request
+      await ctx.db.cancellationLog.create({
+        data: {
+          requestId: input.requestId,
+          action: 'request_cancelled',
+          status: 'info',
+          message: 'Cancellation request cancelled by user',
+        },
+      });
+
+      return updatedRequest;
+    }),
 });

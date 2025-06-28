@@ -1,15 +1,15 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
-import { env } from '~/env.js';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import { env } from '@/env.js';
 import {
   plaid,
   isPlaidConfigured,
   handlePlaidError,
   plaidWithRetry,
-} from '~/server/plaid-client';
-import { encrypt, decrypt } from '~/server/lib/crypto';
-import { InstitutionService } from '~/server/services/institution.service';
+} from '@/server/plaid-client';
+import { encrypt, decrypt } from '@/server/lib/crypto';
+import { InstitutionService } from '@/server/services/institution.service';
 import type {
   CountryCode,
   Products,

@@ -1,5 +1,5 @@
 import * as nodemailer from 'nodemailer';
-import { env } from '~/env.js';
+import { env } from '@/env.js';
 
 // Custom type for verification request parameters
 interface EmailProvider {

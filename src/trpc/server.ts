@@ -2,9 +2,9 @@ import 'server-only';
 
 import { headers } from 'next/headers';
 
-import { appRouter } from '~/server/api/root';
-import { createInnerTRPCContext } from '~/server/api/trpc';
-import { auth } from '~/server/auth';
+import { appRouter } from '@/server/api/root';
+import { createInnerTRPCContext } from '@/server/api/trpc';
+import { auth } from '@/server/auth';
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when

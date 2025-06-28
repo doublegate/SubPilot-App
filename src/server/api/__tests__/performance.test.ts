@@ -4,10 +4,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createInnerTRPCContext } from '~/server/api/trpc';
-import { appRouter } from '~/server/api/root';
+import { createInnerTRPCContext } from '@/server/api/trpc';
+import { appRouter } from '@/server/api/root';
 import { Decimal } from '@prisma/client/runtime/library';
-import { createMockSession } from '~/test/test-utils';
+import { createMockSession } from '@/test/test-utils';
 
 // Mock database with performance scenarios
 vi.mock('@/server/db', () => {
@@ -59,7 +59,7 @@ vi.mock('@/server/db', () => {
   return { db: mockDb };
 });
 
-import { db } from '~/server/db';
+import { db } from '@/server/db';
 
 describe('API Performance Benchmarks', () => {
   const mockSession = createMockSession();

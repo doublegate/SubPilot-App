@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { getServerAuthSession } from '~/server/auth';
+import { auth } from '@/server/auth';
 import {
   Card,
   CardContent,
@@ -18,7 +18,7 @@ export const metadata = {
 };
 
 export default async function AccountsPage() {
-  const session = await getServerAuthSession();
+  const session = await auth();
 
   if (!session) {
     redirect('/login');

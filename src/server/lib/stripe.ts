@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { env } from '~/env.js';
+import { env } from '@/env.js';
 
 // Lazy initialize Stripe to avoid build-time errors
 let stripeInstance: Stripe | null = null;

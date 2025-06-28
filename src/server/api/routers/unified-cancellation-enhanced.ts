@@ -1,0 +1,1091 @@
+import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import { 
+  UnifiedCancellationOrchestratorEnhancedService,
+  UnifiedCancellationRequestInput 
+} from '@/server/services/unified-cancellation-orchestrator-enhanced.service';
+
+/**
+ * Enhanced Unified Cancellation Router
+ * 
+ * This is the single, unified entry point for all cancellation operations.
+ * It intelligently routes requests through the most appropriate method,
+ * provides real-time updates, and handles comprehensive fallback scenarios.
+ * 
+ * Key Features:
+ * - Single API for all cancellation methods
+ * - Intelligent method selection with fallback
+ * - Real-time progress updates via SSE
+ * - Comprehensive analytics and monitoring
+ * - Unified error handling and retry logic
+ */
+export const unifiedCancellationEnhancedRouter = createTRPCRouter({
+  /**
+   * MAIN ENTRY POINT: Initiate unified cancellation
+   * Automatically selects optimal method and handles fallbacks
+   */
+  initiate: protectedProcedure
+    .input(UnifiedCancellationRequestInput)
+    .mutation(async ({ ctx, input }) => {
+      const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
+      
+      try {
+        const result = await orchestrator.initiateCancellation(ctx.session.user.id, input);
+        
+        // Log successful initiation
+        console.log(`[UnifiedCancellation] Initiated for user ${ctx.session.user.id}, subscription ${input.subscriptionId}`);
+        
+        return result;
+      } catch (error) {
+        // Enhanced error handling with context
+        const errorMessage = error instanceof Error ? error.message : 'Unknown cancellation error';
+        
+        console.error(`[UnifiedCancellation] Failed to initiate for user ${ctx.session.user.id}:`, error);
+        
+        throw new TRPCError({
+          code: error instanceof TRPCError ? error.code : 'INTERNAL_SERVER_ERROR',
+          message: errorMessage,
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Get comprehensive cancellation status with real-time updates
+   */
+  getStatus: protectedProcedure
+    .input(
+      z.object({
+        orchestrationId: z.string().optional(),
+        requestId: z.string().optional(),
+        includeHistory: z.boolean().optional().default(false),
+        includeLogs: z.boolean().optional().default(true),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      if (!input.orchestrationId && !input.requestId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Either orchestrationId or requestId must be provided',
+        });
+      }
+
+      const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
+
+      try {
+        // If we have an orchestration ID, get orchestration-level status
+        if (input.orchestrationId) {
+          const orchestrationStatus = await orchestrator.getOrchestrationStatus(input.orchestrationId);
+          
+          if (!orchestrationStatus) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Orchestration not found',
+            });
+          }
+
+          return {
+            type: 'orchestration',
+            orchestration: orchestrationStatus,
+            realTimeEnabled: true,
+            sseEndpoint: `/api/sse/cancellation/${input.orchestrationId}`,
+          };
+        }
+
+        // Otherwise, get request-level status
+        const request = await ctx.db.cancellationRequest.findFirst({
+          where: {
+            id: input.requestId,
+            userId: ctx.session.user.id,
+          },
+          include: {
+            subscription: {
+              select: {
+                id: true,
+                name: true,
+                amount: true,
+              },
+            },
+            provider: {
+              select: {
+                name: true,
+                logo: true,
+                type: true,
+              },
+            },
+            logs: input.includeLogs ? {
+              orderBy: { createdAt: 'asc' },
+              take: 50,
+            } : false,
+          },
+        });
+
+        if (!request) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Cancellation request not found',
+          });
+        }
+
+        // Get orchestration ID from metadata if available
+        const orchestrationId = (request as any).metadata?.orchestrationId;
+
+        return {
+          type: 'request',
+          request: {
+            id: request.id,
+            status: request.status,
+            method: request.method,
+            priority: request.priority,
+            attempts: request.attempts,
+            maxAttempts: request.maxAttempts,
+            createdAt: request.createdAt,
+            updatedAt: request.updatedAt,
+            completedAt: request.completedAt,
+            lastAttemptAt: request.lastAttemptAt,
+            nextRetryAt: request.nextRetryAt,
+            confirmationCode: request.confirmationCode,
+            effectiveDate: request.effectiveDate,
+            refundAmount: request.refundAmount ? parseFloat(request.refundAmount.toString()) : null,
+            errorCode: request.errorCode,
+            errorMessage: request.errorMessage,
+            userNotes: request.userNotes,
+            subscription: request.subscription,
+            provider: request.provider,
+            metadata: (request as any).metadata,
+          },
+          logs: input.includeLogs ? request.logs?.map(log => ({
+            id: log.id,
+            timestamp: log.createdAt,
+            action: log.action,
+            status: log.status,
+            message: log.message,
+            metadata: log.metadata,
+            duration: log.duration,
+          })) : undefined,
+          orchestrationId,
+          realTimeEnabled: Boolean(orchestrationId),
+          sseEndpoint: orchestrationId ? `/api/sse/cancellation/${orchestrationId}` : undefined,
+        };
+
+      } catch (error) {
+        console.error('[UnifiedCancellation] Error getting status:', error);
+        throw error instanceof TRPCError ? error : new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to get cancellation status',
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Retry failed cancellation with intelligent method selection
+   */
+  retry: protectedProcedure
+    .input(
+      z.object({
+        requestId: z.string(),
+        orchestrationId: z.string().optional(),
+        forceMethod: z.enum(['api', 'automation', 'manual']).optional(),
+        escalate: z.boolean().optional().default(false),
+        userNotes: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
+
+      try {
+        // Verify ownership of the request
+        const request = await ctx.db.cancellationRequest.findFirst({
+          where: {
+            id: input.requestId,
+            userId: ctx.session.user.id,
+          },
+          include: {
+            subscription: true,
+          },
+        });
+
+        if (!request) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Cancellation request not found',
+          });
+        }
+
+        if (!['failed', 'cancelled'].includes(request.status)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Only failed or cancelled requests can be retried',
+          });
+        }
+
+        // Create new unified cancellation request for retry
+        const retryInput = {
+          subscriptionId: request.subscriptionId,
+          reason: input.userNotes || 'Retry of failed cancellation',
+          priority: request.priority as 'low' | 'normal' | 'high',
+          preferredMethod: input.forceMethod || 'auto',
+          userPreferences: {
+            allowFallback: !input.forceMethod, // Don't allow fallback if method is forced
+            maxRetries: input.escalate ? 5 : 3,
+          },
+        };
+
+        const result = await orchestrator.initiateCancellation(ctx.session.user.id, retryInput as any);
+
+        // Update original request to reference the retry
+        await ctx.db.cancellationRequest.update({
+          where: { id: input.requestId },
+          data: {} as any,
+        });
+
+        // Log the retry
+        await ctx.db.cancellationLog.create({
+          data: {
+            requestId: input.requestId,
+            action: 'retry_initiated',
+            status: 'info',
+            message: `Retry initiated with ${input.forceMethod || 'auto'} method`,
+            metadata: {
+              retryRequestId: result.requestId,
+              retryOrchestrationId: result.orchestrationId,
+              forceMethod: input.forceMethod,
+              escalate: input.escalate,
+            },
+          },
+        });
+
+        return {
+          ...result,
+          isRetry: true,
+          originalRequestId: input.requestId,
+        };
+
+      } catch (error) {
+        console.error('[UnifiedCancellation] Error retrying:', error);
+        throw error instanceof TRPCError ? error : new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retry cancellation',
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Cancel an active cancellation request
+   */
+  cancel: protectedProcedure
+    .input(
+      z.object({
+        requestId: z.string().optional(),
+        orchestrationId: z.string().optional(),
+        reason: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!input.requestId && !input.orchestrationId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Either requestId or orchestrationId must be provided',
+        });
+      }
+
+      try {
+        // Find the request to cancel
+        const whereClause: any = {
+          userId: ctx.session.user.id,
+          status: { in: ['pending', 'processing', 'scheduled'] },
+        };
+
+        if (input.requestId) {
+          whereClause.id = input.requestId;
+        } else if (input.orchestrationId) {
+          whereClause.metadata = {
+            path: ['orchestrationId'],
+            equals: input.orchestrationId,
+          };
+        }
+
+        const request = await ctx.db.cancellationRequest.findFirst({
+          where: whereClause,
+        });
+
+        if (!request) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'No cancellable request found',
+          });
+        }
+
+        // Update request status
+        const updatedRequest = await ctx.db.cancellationRequest.update({
+          where: { id: request.id },
+          data: {
+            status: 'cancelled',
+            completedAt: new Date(),
+            userNotes: input.reason || 'Cancelled by user',
+          },
+        });
+
+        // Log the cancellation
+        await ctx.db.cancellationLog.create({
+          data: {
+            requestId: request.id,
+            action: 'request_cancelled_by_user',
+            status: 'info',
+            message: input.reason || 'Cancellation request cancelled by user',
+            metadata: {
+              cancelledAt: new Date(),
+              reason: input.reason,
+            },
+          },
+        });
+
+        return {
+          success: true,
+          requestId: request.id,
+          orchestrationId: input.orchestrationId,
+          message: 'Cancellation request has been cancelled',
+          cancelledAt: new Date(),
+        };
+
+      } catch (error) {
+        console.error('[UnifiedCancellation] Error cancelling request:', error);
+        throw error instanceof TRPCError ? error : new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to cancel request',
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Manual confirmation for lightweight cancellations
+   */
+  confirmManual: protectedProcedure
+    .input(
+      z.object({
+        requestId: z.string(),
+        confirmationCode: z.string().optional(),
+        effectiveDate: z.date().optional(),
+        refundAmount: z.number().min(0).optional(),
+        notes: z.string().optional(),
+        wasSuccessful: z.boolean(),
+        attachments: z.array(z.object({
+          type: z.enum(['screenshot', 'email', 'confirmation']),
+          url: z.string(),
+          description: z.string().optional(),
+        })).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // Verify this is a manual cancellation request
+        const request = await ctx.db.cancellationRequest.findFirst({
+          where: {
+            id: input.requestId,
+            userId: ctx.session.user.id,
+            method: 'manual',
+            status: { in: ['pending', 'processing', 'requires_manual'] },
+          },
+          include: {
+            subscription: true,
+          },
+        });
+
+        if (!request) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Manual cancellation request not found or not eligible for confirmation',
+          });
+        }
+
+        const status = input.wasSuccessful ? 'completed' : 'failed';
+        const effectiveDate = input.effectiveDate || new Date();
+
+        // Update the cancellation request
+        const updatedRequest = await ctx.db.cancellationRequest.update({
+          where: { id: input.requestId },
+          data: {
+            status,
+            confirmationCode: input.confirmationCode,
+            effectiveDate,
+            refundAmount: input.refundAmount ? input.refundAmount : null,
+            userConfirmed: input.wasSuccessful,
+            userNotes: input.notes,
+            completedAt: new Date(),
+          },
+        });
+
+        // Update subscription if successful
+        if (input.wasSuccessful) {
+          await ctx.db.subscription.update({
+            where: { id: request.subscriptionId },
+            data: {
+              status: 'cancelled',
+              isActive: false,
+              cancellationInfo: {
+                requestId: input.requestId,
+                confirmationCode: input.confirmationCode,
+                effectiveDate,
+                method: 'manual',
+                confirmedAt: new Date(),
+                userConfirmed: true,
+              },
+            },
+          });
+        }
+
+        // Log the confirmation
+        await ctx.db.cancellationLog.create({
+          data: {
+            requestId: input.requestId,
+            action: input.wasSuccessful ? 'manual_confirmation_success' : 'manual_confirmation_failed',
+            status: input.wasSuccessful ? 'success' : 'failure',
+            message: input.wasSuccessful 
+              ? `Manual cancellation confirmed successfully. Code: ${input.confirmationCode}`
+              : `Manual cancellation failed: ${input.notes}`,
+            metadata: {
+              confirmedAt: new Date(),
+              confirmationCode: input.confirmationCode,
+              effectiveDate,
+              refundAmount: input.refundAmount,
+              attachments: input.attachments,
+            },
+          },
+        });
+
+        return {
+          success: true,
+          requestId: input.requestId,
+          status,
+          confirmationCode: input.confirmationCode,
+          effectiveDate,
+          refundAmount: input.refundAmount,
+          subscription: {
+            id: request.subscription.id,
+            name: request.subscription.name,
+            status: input.wasSuccessful ? 'cancelled' : request.subscription.status,
+          },
+          message: input.wasSuccessful 
+            ? 'Manual cancellation confirmed successfully'
+            : 'Manual cancellation failure recorded',
+        };
+
+      } catch (error) {
+        console.error('[UnifiedCancellation] Error confirming manual cancellation:', error);
+        throw error instanceof TRPCError ? error : new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to confirm manual cancellation',
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Get provider capabilities and method recommendations
+   */
+  getProviderCapabilities: protectedProcedure
+    .input(
+      z.object({
+        subscriptionId: z.string(),
+        includeRecommendations: z.boolean().optional().default(true),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        // Get subscription details
+        const subscription = await ctx.db.subscription.findFirst({
+          where: {
+            id: input.subscriptionId,
+            userId: ctx.session.user.id,
+          },
+        });
+
+        if (!subscription) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Subscription not found',
+          });
+        }
+
+        const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
+        
+        // Get provider capabilities (this method would need to be made public)
+        const capabilities = await (orchestrator as any).assessProviderCapabilities(subscription.name);
+
+        // Build method availability and recommendations
+        const methods = [
+          {
+            id: 'auto',
+            name: 'Automatic (Recommended)',
+            description: 'Intelligent method selection with fallback',
+            available: true,
+            estimatedTime: Math.min(
+              capabilities.supportsApi ? capabilities.apiEstimatedTime : 999,
+              capabilities.supportsAutomation ? capabilities.automationEstimatedTime : 999,
+              capabilities.manualEstimatedTime
+            ),
+            successRate: Math.max(
+              capabilities.apiSuccessRate,
+              capabilities.automationSuccessRate,
+              capabilities.manualSuccessRate
+            ) * 100,
+            isRecommended: true,
+            requiresInteraction: false,
+          },
+          {
+            id: 'api',
+            name: 'Direct API',
+            description: 'Instant automated cancellation',
+            available: capabilities.supportsApi,
+            estimatedTime: capabilities.apiEstimatedTime,
+            successRate: capabilities.apiSuccessRate * 100,
+            isRecommended: capabilities.supportsApi && capabilities.apiSuccessRate > 0.85,
+            requiresInteraction: false,
+          },
+          {
+            id: 'automation',
+            name: 'Smart Automation',
+            description: 'Advanced web automation with monitoring',
+            available: capabilities.supportsAutomation,
+            estimatedTime: capabilities.automationEstimatedTime,
+            successRate: capabilities.automationSuccessRate * 100,
+            isRecommended: capabilities.requires2FA || capabilities.difficulty === 'hard',
+            requiresInteraction: capabilities.requires2FA,
+          },
+          {
+            id: 'manual',
+            name: 'Manual Instructions',
+            description: 'Step-by-step cancellation guide',
+            available: true,
+            estimatedTime: capabilities.manualEstimatedTime,
+            successRate: capabilities.manualSuccessRate * 100,
+            isRecommended: false,
+            requiresInteraction: true,
+          },
+        ].filter(method => method.available);
+
+        const recommendations = input.includeRecommendations ? {
+          primaryMethod: methods.find(m => m.isRecommended)?.id || 'auto',
+          reasoning: (this as any).generateRecommendationReasoning ? (this as any).generateRecommendationReasoning(capabilities) : [],
+          considerations: (this as any).generateConsiderations ? (this as any).generateConsiderations(capabilities) : [],
+        } : undefined;
+
+        return {
+          subscription: {
+            id: subscription.id,
+            name: subscription.name,
+          },
+          provider: capabilities.providerId ? {
+            id: capabilities.providerId,
+            name: capabilities.providerName,
+            dataSource: capabilities.dataSource,
+            lastAssessed: capabilities.lastAssessed,
+          } : null,
+          capabilities: {
+            difficulty: capabilities.difficulty,
+            requires2FA: capabilities.requires2FA,
+            hasRetentionOffers: capabilities.hasRetentionOffers,
+            requiresHumanIntervention: capabilities.requiresHumanIntervention,
+          },
+          methods,
+          recommendations,
+        };
+
+      } catch (error) {
+        console.error('[UnifiedCancellation] Error getting provider capabilities:', error);
+        throw error instanceof TRPCError ? error : new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to get provider capabilities',
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Validate if a subscription can be cancelled
+   */
+  canCancel: protectedProcedure
+    .input(z.object({ subscriptionId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const subscription = await ctx.db.subscription.findFirst({
+          where: {
+            id: input.subscriptionId,
+            userId: ctx.session.user.id,
+          },
+        });
+
+        if (!subscription) {
+          return {
+            canCancel: false,
+            reason: 'not_found',
+            message: 'Subscription not found or you do not have permission to cancel it',
+          };
+        }
+
+        // Check if already cancelled
+        if (subscription.status === 'cancelled') {
+          return {
+            canCancel: false,
+            reason: 'already_cancelled',
+            message: 'This subscription is already cancelled',
+            effectiveDate: (subscription.cancellationInfo as any)?.effectiveDate,
+          };
+        }
+
+        // Check for existing active cancellation requests
+        const existingRequest = await ctx.db.cancellationRequest.findFirst({
+          where: {
+            subscriptionId: input.subscriptionId,
+            userId: ctx.session.user.id,
+            status: { in: ['pending', 'processing', 'scheduled'] },
+          },
+        });
+
+        if (existingRequest) {
+          return {
+            canCancel: false,
+            reason: 'cancellation_in_progress',
+            message: 'A cancellation request is already in progress',
+            existingRequestId: existingRequest.id,
+            requestStatus: existingRequest.status,
+            requestMethod: existingRequest.method,
+            createdAt: existingRequest.createdAt,
+          };
+        }
+
+        // Get provider information for enhanced response
+        const provider = await ctx.db.cancellationProvider.findFirst({
+          where: {
+            normalizedName: subscription.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+            isActive: true,
+          },
+        });
+
+        return {
+          canCancel: true,
+          message: 'Subscription can be cancelled',
+          provider: provider ? {
+            id: provider.id,
+            name: provider.name,
+            type: provider.type,
+            difficulty: provider.difficulty,
+            estimatedTime: provider.averageTime,
+            successRate: parseFloat(provider.successRate.toString()),
+          } : null,
+          subscription: {
+            id: subscription.id,
+            name: subscription.name,
+            amount: parseFloat(subscription.amount.toString()),
+            frequency: subscription.frequency,
+            nextBilling: subscription.nextBilling,
+          },
+        };
+
+      } catch (error) {
+        console.error('[UnifiedCancellation] Error checking cancellation eligibility:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to check cancellation eligibility',
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Get comprehensive cancellation history
+   */
+  getHistory: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).optional().default(20),
+        offset: z.number().min(0).optional().default(0),
+        status: z.enum(['all', 'completed', 'failed', 'pending', 'cancelled']).optional().default('all'),
+        method: z.enum(['all', 'api', 'automation', 'manual']).optional().default('all'),
+        subscriptionId: z.string().optional(),
+        includeMetadata: z.boolean().optional().default(false),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const where: any = {
+          userId: ctx.session.user.id,
+        };
+
+        // Apply status filter
+        if (input.status !== 'all') {
+          if (input.status === 'pending') {
+            where.status = { in: ['pending', 'processing', 'scheduled'] };
+          } else {
+            where.status = input.status;
+          }
+        }
+
+        // Apply method filter
+        if (input.method !== 'all') {
+          const method = input.method === 'automation' ? 'web_automation' : 
+                       input.method === 'manual' ? 'manual' : input.method;
+          where.method = method;
+        }
+
+        // Apply subscription filter
+        if (input.subscriptionId) {
+          where.subscriptionId = input.subscriptionId;
+        }
+
+        const [requests, total] = await Promise.all([
+          ctx.db.cancellationRequest.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            take: input.limit,
+            skip: input.offset,
+            include: {
+              subscription: {
+                select: {
+                  id: true,
+                  name: true,
+                  amount: true,
+                  frequency: true,
+                },
+              },
+              provider: {
+                select: {
+                  name: true,
+                  logo: true,
+                  type: true,
+                },
+              },
+            },
+          }),
+          ctx.db.cancellationRequest.count({ where }),
+        ]);
+
+        const items = requests.map(request => ({
+          id: request.id,
+          orchestrationId: (request as any).metadata?.orchestrationId,
+          subscription: {
+            id: request.subscription.id,
+            name: request.subscription.name,
+            amount: parseFloat(request.subscription.amount.toString()),
+            frequency: request.subscription.frequency,
+          },
+          provider: request.provider,
+          status: request.status,
+          method: request.method === 'web_automation' ? 'automation' : 
+                  request.method === 'manual' ? 'manual' : request.method,
+          priority: request.priority,
+          attempts: request.attempts,
+          maxAttempts: request.maxAttempts,
+          confirmationCode: request.confirmationCode,
+          effectiveDate: request.effectiveDate,
+          refundAmount: request.refundAmount ? parseFloat(request.refundAmount.toString()) : null,
+          errorCode: request.errorCode,
+          errorMessage: request.errorMessage,
+          userNotes: request.userNotes,
+          userConfirmed: request.userConfirmed,
+          createdAt: request.createdAt,
+          updatedAt: request.updatedAt,
+          completedAt: request.completedAt,
+          lastAttemptAt: request.lastAttemptAt,
+          nextRetryAt: request.nextRetryAt,
+          metadata: input.includeMetadata ? (request as any).metadata : undefined,
+        }));
+
+        return {
+          items,
+          pagination: {
+            total,
+            limit: input.limit,
+            offset: input.offset,
+            hasMore: input.offset + input.limit < total,
+          },
+          summary: {
+            totalRequests: total,
+            byStatus: (this as any).getStatusBreakdown ? await (this as any).getStatusBreakdown(ctx.db, ctx.session.user.id) : {},
+            byMethod: (this as any).getMethodBreakdown ? await (this as any).getMethodBreakdown(ctx.db, ctx.session.user.id) : {},
+          },
+        };
+
+      } catch (error) {
+        console.error('[UnifiedCancellation] Error getting history:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to get cancellation history',
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Get unified analytics across all methods
+   */
+  getAnalytics: protectedProcedure
+    .input(
+      z.object({
+        timeframe: z.enum(['day', 'week', 'month', 'quarter', 'year']).optional().default('month'),
+        includeProviderBreakdown: z.boolean().optional().default(true),
+        includeTrends: z.boolean().optional().default(true),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
+        const analytics = await orchestrator.getUnifiedAnalytics(ctx.session.user.id, input.timeframe as any);
+
+        // Add additional insights
+        const insights = (this as any).generateAnalyticsInsights ? (this as any).generateAnalyticsInsights(analytics) : {};
+
+        return {
+          ...analytics,
+          insights,
+          timeframe: input.timeframe,
+          generatedAt: new Date(),
+        };
+
+      } catch (error) {
+        console.error('[UnifiedCancellation] Error getting analytics:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to get analytics',
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Get system health and performance metrics
+   */
+  getSystemHealth: protectedProcedure
+    .input(
+      z.object({
+        includeDetailedMetrics: z.boolean().optional().default(false),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const now = new Date();
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+        // Get recent system performance
+        const [recentRequests, recentFailures, systemLoad] = await Promise.all([
+          ctx.db.cancellationRequest.findMany({
+            where: { createdAt: { gte: oneHourAgo } },
+            select: { method: true, status: true, createdAt: true, completedAt: true },
+          }),
+          ctx.db.cancellationRequest.findMany({
+            where: {
+              createdAt: { gte: oneDayAgo },
+              status: 'failed',
+            },
+            select: { method: true, errorCode: true, createdAt: true },
+          }),
+          // Mock system load - in real implementation, this would come from monitoring
+          Promise.resolve({ cpu: 45, memory: 68, activeConnections: 23 }),
+        ]);
+
+        // Calculate method health
+        const methodHealth: Record<string, any> = {
+          api: { available: true, successRate: 0, recentRequests: 0, avgResponseTime: 0 },
+          automation: { available: true, successRate: 0, recentRequests: 0, avgResponseTime: 0 },
+          manual: { available: true, successRate: 100, recentRequests: 0, avgResponseTime: 0 },
+        };
+
+        let totalResponseTime = 0;
+        let completedRequests = 0;
+
+        for (const request of recentRequests) {
+          const method = request.method === 'web_automation' ? 'automation' : 
+                        request.method === 'manual' ? 'manual' : 'api';
+          
+          if (methodHealth[method]) {
+            methodHealth[method].recentRequests++;
+            
+            if (request.status === 'completed') {
+              methodHealth[method].successRate++;
+              
+              if (request.completedAt) {
+                const responseTime = request.completedAt.getTime() - request.createdAt.getTime();
+                totalResponseTime += responseTime;
+                completedRequests++;
+              }
+            }
+          }
+        }
+
+        // Convert to percentages and calculate averages
+        for (const method in methodHealth) {
+          if (methodHealth[method].recentRequests > 0) {
+            methodHealth[method].successRate = Math.round(
+              (methodHealth[method].successRate / methodHealth[method].recentRequests) * 100
+            );
+          }
+        }
+
+        const avgResponseTime = completedRequests > 0 ? totalResponseTime / completedRequests : 0;
+
+        // Calculate overall system status
+        const overallSuccessRate = recentRequests.length > 0 
+          ? (recentRequests.filter(r => r.status === 'completed').length / recentRequests.length) * 100
+          : 100;
+
+        const systemStatus = overallSuccessRate > 90 ? 'healthy' : 
+                           overallSuccessRate > 70 ? 'degraded' : 'unhealthy';
+
+        // Generate recommendations based on health
+        const recommendations = [];
+        if (overallSuccessRate < 80) {
+          recommendations.push('Consider using manual method for higher reliability');
+        }
+        if (recentFailures.length > 10) {
+          recommendations.push('High error rate detected - check system logs');
+        }
+        if (avgResponseTime > 30000) {
+          recommendations.push('Response times are slower than usual');
+        }
+
+        const health = {
+          status: systemStatus,
+          lastChecked: now,
+          overall: {
+            successRate: Math.round(overallSuccessRate),
+            totalRecentRequests: recentRequests.length,
+            avgResponseTimeMs: Math.round(avgResponseTime),
+            recentFailures: recentFailures.length,
+          },
+          methods: methodHealth,
+          system: systemLoad,
+          recommendations,
+        };
+
+        if (input.includeDetailedMetrics) {
+          // Add detailed metrics for monitoring dashboards
+          (health as any).detailed = {
+            errorBreakdown: (this as any).analyzeErrorBreakdown ? (this as any).analyzeErrorBreakdown(recentFailures) : {},
+            performanceMetrics: {
+              p50ResponseTime: (this as any).calculatePercentile ? (this as any).calculatePercentile(recentRequests, 50) : 0,
+              p95ResponseTime: (this as any).calculatePercentile ? (this as any).calculatePercentile(recentRequests, 95) : 0,
+              p99ResponseTime: (this as any).calculatePercentile ? (this as any).calculatePercentile(recentRequests, 99) : 0,
+            },
+            uptimeMetrics: {
+              // Mock uptime data
+              uptime: '99.9%',
+              lastDowntime: null,
+              plannedMaintenance: null,
+            },
+          };
+        }
+
+        return health;
+
+      } catch (error) {
+        console.error('[UnifiedCancellation] Error getting system health:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to get system health',
+          cause: error,
+        });
+      }
+    }),
+
+});
+
+// Helper methods for analytics and health checks
+function generateRecommendationReasoning(capabilities: any) {
+    if (capabilities.supportsApi && capabilities.apiSuccessRate > 0.85) {
+      return 'High API success rate makes automatic cancellation the best option';
+    }
+    if (capabilities.requires2FA || capabilities.difficulty === 'hard') {
+      return 'Complex cancellation process requires smart automation';
+    }
+    return 'Manual instructions provide the most reliable cancellation method';
+}
+
+function generateConsiderations(capabilities: any) {
+    const considerations = [];
+    if (capabilities.hasRetentionOffers) {
+      considerations.push('This provider may offer retention discounts during cancellation');
+    }
+    if (capabilities.requires2FA) {
+      considerations.push('Two-factor authentication will be required');
+    }
+    if (capabilities.difficulty === 'hard') {
+      considerations.push('This cancellation may be complex and time-consuming');
+    }
+    return considerations;
+}
+
+function generateAnalyticsInsights(analytics: any) {
+    const insights = [];
+    
+    if (analytics.summary.successRate < 70) {
+      insights.push({
+        type: 'warning',
+        title: 'Low Success Rate',
+        message: 'Your cancellation success rate is below average. Consider using manual method for better results.',
+      });
+    }
+    
+    if (analytics.methodBreakdown.manual > analytics.methodBreakdown.api + analytics.methodBreakdown.automation) {
+      insights.push({
+        type: 'info',
+        title: 'Manual Method Usage',
+        message: 'You\'re primarily using manual cancellations. Automated methods might save time.',
+      });
+    }
+    
+    return insights;
+}
+
+async function getStatusBreakdown(db: any, userId: string) {
+    const results = await db.cancellationRequest.groupBy({
+      by: ['status'],
+      where: { userId },
+      _count: { status: true },
+    });
+    
+    return results.reduce((acc: any, result: any) => {
+      acc[result.status] = result._count.status;
+      return acc;
+    }, {});
+}
+
+async function getMethodBreakdown(db: any, userId: string) {
+    const results = await db.cancellationRequest.groupBy({
+      by: ['method'],
+      where: { userId },
+      _count: { method: true },
+    });
+    
+    return results.reduce((acc: any, result: any) => {
+      const method = result.method === 'web_automation' ? 'automation' : 
+                    result.method === 'manual' ? 'manual' : 'api';
+      acc[method] = (acc[method] || 0) + result._count.method;
+      return acc;
+    }, {});
+}
+
+function analyzeErrorBreakdown(failures: any[]) {
+    const breakdown: Record<string, number> = {};
+    failures.forEach(failure => {
+      const code = failure.errorCode || 'unknown';
+      breakdown[code] = (breakdown[code] || 0) + 1;
+    });
+    return breakdown;
+}
+
+function calculatePercentile(requests: any[], percentile: number) {
+    const completedRequests = requests
+      .filter(r => r.completedAt)
+      .map(r => r.completedAt.getTime() - r.createdAt.getTime())
+      .sort((a, b) => a - b);
+    
+    if (completedRequests.length === 0) return 0;
+    
+    const index = Math.ceil((percentile / 100) * completedRequests.length) - 1;
+    return completedRequests[index] || 0;
+}

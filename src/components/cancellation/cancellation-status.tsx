@@ -1,238 +1,270 @@
 'use client';
 
-import { useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '~/components/ui/card';
-import { Badge } from '~/components/ui/badge';
-import { Button } from '~/components/ui/button';
-import { Progress } from '~/components/ui/progress';
-import { api } from '~/trpc/react';
-import {
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Clock,
-  RefreshCw,
-  FileText,
-  DollarSign,
-  Calendar,
-} from 'lucide-react';
-import { format } from 'date-fns';
-import type { CancellationStatus as Status } from '~/server/services/cancellation.service';
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Icons } from '@/components/ui/icons';
+import { api } from '@/trpc/react';
+import { ManualInstructionsDialog } from './manual-instructions-dialog';
+import { formatDistanceToNow } from 'date-fns';
 
 interface CancellationStatusProps {
   requestId: string;
-  subscriptionName: string;
 }
 
-export function CancellationStatus({
-  requestId,
-  subscriptionName,
-}: CancellationStatusProps) {
-  const utils = api.useUtils();
+export function CancellationStatus({ requestId }: CancellationStatusProps) {
+  const [showInstructions, setShowInstructions] = useState(false);
 
-  // Query cancellation status
-  const { data: status, isLoading } = api.cancellation.status.useQuery(
-    { requestId },
-    {
-      refetchInterval: query => {
-        // Poll every 5 seconds if still processing
-        const data = query.state.data;
-        if (data?.status === 'pending' || data?.status === 'processing') {
-          return 5000;
-        }
-        return false;
-      },
-    }
-  );
+  const { data: status, isLoading, refetch } = api.cancellation.getStatus.useQuery({
+    requestId,
+  });
 
-  // Retry mutation
-  const { mutate: retry, isPending: isRetrying } =
-    api.cancellation.retry.useMutation({
-      onSuccess: () => {
-        void utils.cancellation.status.invalidate({ requestId });
-      },
-    });
+  const { data: logs } = api.cancellation.getLogs.useQuery({
+    requestId,
+  });
 
-  const getStatusIcon = (status?: Status) => {
-    switch (status) {
+  const retryMutation = api.cancellation.retry.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  const confirmManualMutation = api.cancellation.confirmManual.useMutation({
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center">
+            <Icons.spinner className="h-6 w-6 animate-spin" />
+            <span className="ml-2">Loading cancellation status...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!status) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center text-muted-foreground">
+            Cancellation request not found.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const getStatusColor = (statusValue: string) => {
+    switch (statusValue) {
       case 'completed':
-        return <CheckCircle className="h-8 w-8 text-green-600" />;
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'failed':
-        return <XCircle className="h-8 w-8 text-red-600" />;
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'processing':
-        return <Loader2 className="h-8 w-8 animate-spin text-blue-600" />;
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'pending':
-        return <Clock className="h-8 w-8 text-yellow-600" />;
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
-        return <FileText className="h-8 w-8 text-gray-600" />;
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const getStatusColor = (status?: Status) => {
-    switch (status) {
+  const getStatusIcon = (statusValue: string) => {
+    switch (statusValue) {
       case 'completed':
-        return 'text-green-600 bg-green-100';
+        return <Icons.check className="h-4 w-4" />;
       case 'failed':
-        return 'text-red-600 bg-red-100';
+        return <Icons.x className="h-4 w-4" />;
       case 'processing':
-        return 'text-blue-600 bg-blue-100';
+        return <Icons.spinner className="h-4 w-4 animate-spin" />;
       case 'pending':
-        return 'text-yellow-600 bg-yellow-100';
+        return <Icons.clock className="h-4 w-4" />;
       default:
-        return 'text-gray-600 bg-gray-100';
+        return <Icons.clock className="h-4 w-4" />;
     }
   };
 
-  const getStatusMessage = (status?: Status) => {
-    switch (status) {
-      case 'completed':
-        return 'Cancellation successful!';
-      case 'failed':
-        return 'Cancellation failed';
-      case 'processing':
-        return 'Processing your cancellation...';
+  const getProgress = (statusValue: string) => {
+    switch (statusValue) {
       case 'pending':
-        return 'Cancellation pending';
-      default:
-        return 'Unknown status';
-    }
-  };
-
-  const getProgressValue = (status?: Status) => {
-    switch (status) {
+        return 25;
+      case 'processing':
+        return 75;
       case 'completed':
         return 100;
       case 'failed':
         return 100;
-      case 'processing':
-        return 66;
-      case 'pending':
-        return 33;
       default:
         return 0;
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin" />
-      </div>
-    );
-  }
+  const getStatusDescription = (statusValue: string) => {
+    switch (statusValue) {
+      case 'pending':
+        return 'Your cancellation request is queued for processing.';
+      case 'processing':
+        return 'We\'re actively working on cancelling your subscription.';
+      case 'completed':
+        return 'Your subscription has been successfully cancelled.';
+      case 'failed':
+        return 'We encountered an issue cancelling your subscription.';
+      default:
+        return 'Status unknown.';
+    }
+  };
 
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {getStatusIcon(status?.status)}
-              <div>
-                <CardTitle>{getStatusMessage(status?.status)}</CardTitle>
-                <CardDescription className="mt-1">
-                  {subscriptionName}
-                </CardDescription>
-              </div>
-            </div>
-            <Badge className={getStatusColor(status?.status)}>
-              {status?.status}
-            </Badge>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            {getStatusIcon(status.status)}
+            Cancellation Status
+          </CardTitle>
+          <CardDescription>
+            Request ID: {requestId}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Progress value={getProgressValue(status?.status)} className="h-2" />
-
-          {/* Success Details */}
-          {status?.status === 'completed' && (
-            <div className="space-y-3">
-              {status.confirmationCode && (
-                <div className="flex items-center justify-between rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
-                  <span className="text-sm font-medium">Confirmation Code</span>
-                  <code className="rounded bg-green-100 px-2 py-1 font-mono text-sm dark:bg-green-900">
-                    {status.confirmationCode}
-                  </code>
-                </div>
-              )}
-
-              {status.effectiveDate && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    Effective:{' '}
-                    {format(new Date(status.effectiveDate), 'MMMM d, yyyy')}
-                  </span>
-                </div>
-              )}
-
-              {status.refundAmount && status.refundAmount > 0 && (
-                <div className="flex items-center gap-2 text-sm text-green-600">
-                  <DollarSign className="h-4 w-4" />
-                  <span>
-                    Refund of ${status.refundAmount.toFixed(2)} will be
-                    processed
-                  </span>
-                </div>
-              )}
+          {/* Status Badge and Progress */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Badge className={getStatusColor(status.status)}>
+                {status.status.charAt(0).toUpperCase() + status.status.slice(1)}
+              </Badge>
             </div>
-          )}
-
-          {/* Error Details */}
-          {status?.status === 'failed' && status.error && (
-            <div className="space-y-3">
-              <div className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
-                <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                  {status.error.message}
-                </p>
-                {status.error.code && (
-                  <p className="mt-1 text-xs text-red-600 dark:text-red-300">
-                    Error code: {status.error.code}
-                  </p>
-                )}
-              </div>
-
-              <Button
-                onClick={() => retry({ requestId })}
-                disabled={isRetrying}
-                variant="outline"
-                className="w-full"
-              >
-                {isRetrying ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Retrying...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Retry Cancellation
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-
-          {/* Processing Message */}
-          {status?.status === 'processing' && (
+            
             <div className="space-y-2">
+              <Progress value={getProgress(status.status)} className="h-2" />
               <p className="text-sm text-muted-foreground">
-                We're working on cancelling your subscription. This usually
-                takes a few minutes.
+                {getStatusDescription(status.status)}
               </p>
-              <div className="flex items-center gap-2 text-sm text-blue-600">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Please wait while we process your request...</span>
+            </div>
+          </div>
+
+          {/* Success Information */}
+          {status.status === 'completed' && (
+            <Alert>
+              <Icons.check className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <div className="font-medium">Cancellation Confirmed</div>
+                  {status.confirmationCode && (
+                    <div>Confirmation Code: <code className="bg-muted px-1 rounded">{status.confirmationCode}</code></div>
+                  )}
+                  {status.effectiveDate && (
+                    <div>Effective Date: {new Date(status.effectiveDate).toLocaleDateString()}</div>
+                  )}
+                  {status.refundAmount && (
+                    <div>Refund Amount: ${status.refundAmount.toFixed(2)}</div>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error Information */}
+          {status.status === 'failed' && status.error && (
+            <Alert variant="destructive">
+              <Icons.alertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <div className="font-medium">Cancellation Failed</div>
+                  <div>{status.error}</div>
+                  <Button
+                    size="sm"
+                    onClick={() => retryMutation.mutate({ requestId })}
+                    disabled={retryMutation.isPending}
+                  >
+                    {retryMutation.isPending ? (
+                      <>
+                        <Icons.spinner className="mr-2 h-3 w-3 animate-spin" />
+                        Retrying...
+                      </>
+                    ) : (
+                      <>
+                        <Icons.rotateClockwise className="mr-2 h-3 w-3" />
+                        Retry Cancellation
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Manual Instructions */}
+          {status.status === 'pending' && status.manualInstructions && (
+            <Alert>
+              <Icons.book className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <div className="font-medium">Manual Cancellation Required</div>
+                  <div>We've prepared step-by-step instructions to help you cancel this subscription.</div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowInstructions(true)}
+                  >
+                    <Icons.book className="mr-2 h-3 w-3" />
+                    View Instructions
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Activity Log */}
+          {logs && logs.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Activity Log</h4>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {logs.map((log) => (
+                  <div key={log.id} className="flex items-start gap-2 text-xs">
+                    <div className={`w-2 h-2 rounded-full mt-1 ${
+                      log.status === 'success' ? 'bg-green-500' :
+                      log.status === 'failure' ? 'bg-red-500' : 'bg-blue-500'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-muted-foreground">
+                        {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+                      </div>
+                      <div>{log.message}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Manual Instructions Dialog */}
+      {status.manualInstructions && (
+        <ManualInstructionsDialog
+          isOpen={showInstructions}
+          onClose={() => setShowInstructions(false)}
+          instructions={status.manualInstructions}
+          requestId={requestId}
+          onConfirmation={(confirmationData) => {
+            confirmManualMutation.mutate({
+              requestId,
+              confirmation: confirmationData,
+            });
+            setShowInstructions(false);
+          }}
+        />
+      )}
     </div>
   );
 }

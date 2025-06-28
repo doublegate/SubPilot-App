@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerAuthSession } from '~/server/auth';
-import { scheduledNotificationService } from '~/server/services/scheduled-notifications';
+import { auth } from '@/server/auth';
+import { scheduledNotificationService } from '@/server/services/scheduled-notifications';
 
 export async function POST() {
   try {
     // Only allow in development or with admin auth
     if (process.env.NODE_ENV !== 'development') {
-      const session = await getServerAuthSession();
+      const session = await auth();
       if (!session) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }

@@ -6,7 +6,7 @@ import {
   formatAmountForStripe,
   STRIPE_WEBHOOK_EVENTS,
 } from '../lib/stripe';
-import { env } from '~/env.js';
+import { env } from '@/env.js';
 
 export class BillingService {
   constructor(private prisma: PrismaClient) {}

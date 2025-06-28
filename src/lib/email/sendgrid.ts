@@ -1,10 +1,10 @@
 import * as sgMail from '@sendgrid/mail';
-import { env } from '~/env.js';
+import { env } from '@/env.js';
 import {
   SENDGRID_TEMPLATES,
   HTML_TEMPLATES,
   TEXT_TEMPLATES,
-} from '~/lib/email-templates/production';
+} from '@/lib/email-templates/production';
 
 // Initialize SendGrid
 if (env.SENDGRID_API_KEY) {

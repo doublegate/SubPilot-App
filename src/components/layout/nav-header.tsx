@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { auth } from '~/server/auth';
+import { auth } from '@/server/auth';
 import { SignOutButton } from '@/components/auth/sign-out-button';
 import {
   DropdownMenu,

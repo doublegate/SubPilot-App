@@ -1,4 +1,4 @@
-import { auth } from '~/server/auth';
+import { auth } from '@/server/auth';
 import { ProfileForm } from '@/components/profile/profile-form';
 
 export default async function ProfilePage() {

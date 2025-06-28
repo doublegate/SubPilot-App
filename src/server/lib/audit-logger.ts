@@ -1,4 +1,4 @@
-import { db } from '~/server/db';
+import { db } from '@/server/db';
 import type { Prisma } from '@prisma/client';
 
 export type SecurityAction =
@@ -16,7 +16,14 @@ export type SecurityAction =
   | 'subscription.cancelled'
   | 'api.rate_limit'
   | 'security.csrf_failed'
-  | 'security.suspicious_activity';
+  | 'security.suspicious_activity'
+  | 'cancellation.initiated'
+  | 'cancellation.manual_confirmed'
+  | 'webhook.signature_verification_failed'
+  | 'webhook.cancellation_request_not_found'
+  | 'webhook.cancellation_confirmed'
+  | 'webhook.cancellation_error'
+  | 'realtime.sse_connected';
 
 export interface SecurityEvent {
   userId?: string;

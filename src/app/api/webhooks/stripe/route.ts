@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 import {
   verifyWebhookSignature,
   STRIPE_WEBHOOK_EVENTS,
-} from '~/server/lib/stripe';
-import { BillingService } from '~/server/services/billing.service';
-import { db } from '~/server/db';
+} from '@/server/lib/stripe';
+import { BillingService } from '@/server/services/billing.service';
+import { db } from '@/server/db';
 import type Stripe from 'stripe';
 
 export const runtime = 'nodejs';

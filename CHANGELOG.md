@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Unified Cancellation System** - 2025-06-28 12:14
+  - Complete rewrite of cancellation system with three-agent architecture
+  - API-First approach with webhook integration and provider APIs
+  - Event-Driven approach with background jobs and workflow orchestration
+  - Lightweight approach with manual instructions and user confirmation
+  - Unified Orchestration Service for intelligent method selection
+  - Automatic fallback between methods (API → Automation → Manual)
+  - Real-time status updates via Server-Sent Events
+  - Provider capability detection and recommendations
+  - Job queue system with retry logic and backoff strategies
+  - Event bus for component communication
+  - Comprehensive audit logging for compliance
+  - tRPC router with type-safe endpoints
+  - Complete database schema for all cancellation entities
+
 ### Fixed
 
 - **Import Alias Standardization** - 2025-06-28 08:22

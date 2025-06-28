@@ -5,9 +5,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createInnerTRPCContext } from '~/server/api/trpc';
+import { createInnerTRPCContext } from '@/server/api/trpc';
 import { transactionsRouter } from '../transactions';
-import { db } from '~/server/db';
+import { db } from '@/server/db';
 import type { Session } from 'next-auth';
 import { TRPCError } from '@trpc/server';
 import { Decimal } from '@prisma/client/runtime/library';

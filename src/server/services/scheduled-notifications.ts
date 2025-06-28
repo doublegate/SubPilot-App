@@ -1,4 +1,4 @@
-import { db } from '~/server/db';
+import { db } from '@/server/db';
 import { emailNotificationService } from './email.service';
 import { subDays, startOfMonth, endOfMonth, addDays } from 'date-fns';
 
