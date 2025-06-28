@@ -139,7 +139,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   describe('getNotifications', () => {
     it('should retrieve paginated notifications with default parameters', async () => {
-      db.notification.findMany.mockResolvedValueOnce(
+      vi.mocked(db.notification.findMany).mockResolvedValue(
         mockNotifications.map(n => ({
           ...n,
           subscription: n.subscriptionId
@@ -147,7 +147,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
             : null,
         }))
       );
-      db.notification.count.mockResolvedValueOnce(3);
+      vi.mocked(db.notification.count).mockResolvedValue(3);
 
       const result = await caller.getAll({});
 
@@ -180,13 +180,13 @@ describe('Notifications Router - Full tRPC Integration', () => {
     });
 
     it('should support custom pagination parameters', async () => {
-      db.notification.findMany.mockResolvedValueOnce([
+      vi.mocked(db.notification.findMany).mockResolvedValue([
         {
           ...mockNotifications[1]!,
           subscription: { id: 'sub-2', name: 'Test Subscription' },
-        },
+        } as any,
       ]);
-      db.notification.count.mockResolvedValueOnce(1);
+      vi.mocked(db.notification.count).mockResolvedValue(1);
 
       const result = await caller.getAll({
         limit: 10,
@@ -212,7 +212,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
     it('should filter unread notifications only', async () => {
       const unreadNotifications = mockNotifications.filter(n => !n.read);
-      db.notification.findMany.mockResolvedValueOnce(
+      vi.mocked(db.notification.findMany).mockResolvedValue(
         unreadNotifications.map(n => ({
           ...n,
           subscription: n.subscriptionId
@@ -220,7 +220,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
             : null,
         }))
       );
-      db.notification.count.mockResolvedValueOnce(2);
+      vi.mocked(db.notification.count).mockResolvedValue(2);
 
       const result = await caller.getAll({
         unreadOnly: true,
@@ -254,7 +254,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
       const priceAlerts = mockNotifications.filter(
         n => n.type === 'price_change'
       );
-      db.notification.findMany.mockResolvedValueOnce(
+      vi.mocked(db.notification.findMany).mockResolvedValue(
         priceAlerts.map(n => ({
           ...n,
           subscription: n.subscriptionId
@@ -262,7 +262,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
             : null,
         }))
       );
-      db.notification.count.mockResolvedValueOnce(1);
+      vi.mocked(db.notification.count).mockResolvedValue(1);
 
       const result = await caller.getAll({
         type: 'price_change',
@@ -306,7 +306,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   describe('getUnreadCount', () => {
     it('should return count of unread notifications', async () => {
-      db.notification.count.mockResolvedValueOnce(5);
+      vi.mocked(db.notification.count).mockResolvedValue(5);
 
       const result = await caller.getUnreadCount();
 
@@ -320,7 +320,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     });
 
     it('should return zero for users with no unread notifications', async () => {
-      db.notification.count.mockResolvedValueOnce(0);
+      vi.mocked(db.notification.count).mockResolvedValue(0);
 
       const result = await caller.getUnreadCount();
 
@@ -332,8 +332,8 @@ describe('Notifications Router - Full tRPC Integration', () => {
     it('should mark single notification as read', async () => {
       const updatedNotification = { ...mockNotifications[0]!, read: true };
 
-      db.notification.findFirst.mockResolvedValueOnce(mockNotifications[0]!);
-      db.notification.update.mockResolvedValueOnce(updatedNotification);
+      vi.mocked(db.notification.findFirst).mockResolvedValue(mockNotifications[0]!);
+      vi.mocked(db.notification.update).mockResolvedValue(updatedNotification);
 
       const result = await caller.markAsRead({
         id: 'notif-1',
@@ -350,7 +350,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     });
 
     it('should handle notification not found', async () => {
-      db.notification.findFirst.mockResolvedValueOnce(null);
+      vi.mocked(db.notification.findFirst).mockResolvedValue(null);
 
       await expect(caller.markAsRead({ id: 'invalid-id' })).rejects.toThrow(
         'Notification not found'
@@ -366,7 +366,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
       });
       const otherUserCaller = notificationsRouter.createCaller(otherUserCtx);
 
-      db.notification.findFirst.mockResolvedValueOnce(null);
+      vi.mocked(db.notification.findFirst).mockResolvedValue(null);
 
       await expect(
         otherUserCaller.markAsRead({ id: 'notif-1' })
@@ -383,7 +383,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   describe('markAllAsRead', () => {
     it('should mark all notifications as read for user', async () => {
-      db.notification.updateMany.mockResolvedValueOnce({ count: 3 });
+      vi.mocked(db.notification.updateMany).mockResolvedValue({ count: 3 });
 
       const result = await caller.markAllAsRead();
 
@@ -398,7 +398,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     });
 
     it('should handle case with no unread notifications', async () => {
-      db.notification.updateMany.mockResolvedValueOnce({ count: 0 });
+      vi.mocked(db.notification.updateMany).mockResolvedValue({ count: 0 });
 
       const result = await caller.markAllAsRead();
 
@@ -408,8 +408,8 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   describe('deleteNotification', () => {
     it('should delete single notification', async () => {
-      db.notification.findFirst.mockResolvedValueOnce(mockNotifications[0]!);
-      db.notification.delete.mockResolvedValueOnce(mockNotifications[0]!);
+      vi.mocked(db.notification.findFirst).mockResolvedValue(mockNotifications[0]!);
+      vi.mocked(db.notification.delete).mockResolvedValue(mockNotifications[0]!);
 
       const result = await caller.delete({
         id: 'notif-1',
@@ -422,7 +422,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     });
 
     it('should handle notification not found', async () => {
-      db.notification.findFirst.mockResolvedValueOnce(null);
+      vi.mocked(db.notification.findFirst).mockResolvedValue(null);
 
       await expect(caller.delete({ id: 'invalid-id' })).rejects.toThrow(
         'Notification not found'
@@ -432,7 +432,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   describe('deleteAllRead', () => {
     it('should delete all read notifications for user', async () => {
-      db.notification.deleteMany.mockResolvedValueOnce({ count: 5 });
+      vi.mocked(db.notification.deleteMany).mockResolvedValue({ count: 5 });
 
       const result = await caller.deleteAllRead();
 
@@ -446,7 +446,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     });
 
     it('should handle user with no notifications', async () => {
-      db.notification.deleteMany.mockResolvedValueOnce({ count: 0 });
+      vi.mocked(db.notification.deleteMany).mockResolvedValue({ count: 0 });
 
       const result = await caller.deleteAllRead();
 
@@ -456,14 +456,14 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   describe.skip('getNotificationStats', () => {
     it('should return comprehensive notification statistics', async () => {
-      db.notification.count
-        .mockResolvedValueOnce(10) // total
-        .mockResolvedValueOnce(3) // unread
-        .mockResolvedValueOnce(2) // subscription_detected
-        .mockResolvedValueOnce(1) // price_increase
-        .mockResolvedValueOnce(4) // billing_reminder
-        .mockResolvedValueOnce(1) // unused_subscription
-        .mockResolvedValueOnce(2); // system
+      vi.mocked(db.notification.count)
+        .mockResolvedValue(10) // total
+        .mockResolvedValue(3) // unread
+        .mockResolvedValue(2) // subscription_detected
+        .mockResolvedValue(1) // price_increase
+        .mockResolvedValue(4) // billing_reminder
+        .mockResolvedValue(1) // unused_subscription
+        .mockResolvedValue(2); // system
 
       const result = await caller.getPreferencesSummary();
 
@@ -487,7 +487,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     it('should create and send test notification', async () => {
       // Mock NODE_ENV
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
 
       const createdNotification = {
         ...mockNotifications[0]!,
@@ -496,7 +496,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         message: 'This is a test message',
       };
 
-      db.notification.create.mockResolvedValueOnce(createdNotification);
+      vi.mocked(db.notification.create).mockResolvedValue(createdNotification);
 
       const result = await caller.createTestNotification({
         type: 'general',
@@ -522,12 +522,12 @@ describe('Notifications Router - Full tRPC Integration', () => {
       });
 
       // Restore NODE_ENV
-      process.env.NODE_ENV = originalEnv;
+      vi.unstubAllEnvs();
     });
 
     it('should only work in development mode', async () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       await expect(
         caller.createTestNotification({
@@ -537,7 +537,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         })
       ).rejects.toThrow('Test notifications only available in development');
 
-      process.env.NODE_ENV = originalEnv;
+      vi.unstubAllEnvs();
     });
   });
 
@@ -549,7 +549,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         title: `Notification ${i}`,
       }));
 
-      db.notification.findMany.mockResolvedValueOnce(
+      vi.mocked(db.notification.findMany).mockResolvedValue(
         largeNotificationSet.slice(0, 50).map(n => ({
           ...n,
           subscription: n.subscriptionId
@@ -557,7 +557,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
             : null,
         }))
       );
-      db.notification.count.mockResolvedValueOnce(1000);
+      vi.mocked(db.notification.count).mockResolvedValue(1000);
 
       const start = performance.now();
       const result = await caller.getAll({ limit: 50 });
@@ -568,7 +568,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
     });
 
     it('should perform bulk operations efficiently', async () => {
-      db.notification.updateMany.mockResolvedValueOnce({
+      vi.mocked(db.notification.updateMany).mockResolvedValue({
         count: 1000,
       });
 
@@ -600,10 +600,10 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   describe('error handling', () => {
     it('should handle database connection errors', async () => {
-      db.notification.findMany.mockRejectedValueOnce(
+      vi.mocked(db.notification.findMany).mockRejectedValue(
         new Error('Database connection failed')
       );
-      db.notification.count.mockRejectedValueOnce(
+      vi.mocked(db.notification.count).mockRejectedValue(
         new Error('Database connection failed')
       );
 
@@ -613,8 +613,8 @@ describe('Notifications Router - Full tRPC Integration', () => {
     });
 
     it('should handle concurrent modification errors', async () => {
-      db.notification.findFirst.mockResolvedValueOnce(mockNotifications[0]!);
-      db.notification.update.mockRejectedValueOnce(
+      vi.mocked(db.notification.findFirst).mockResolvedValue(mockNotifications[0]!);
+      vi.mocked(db.notification.update).mockRejectedValue(
         new Error('Optimistic lock failed')
       );
 
@@ -631,13 +631,13 @@ describe('Notifications Router - Full tRPC Integration', () => {
         data: null, // Malformed data
       };
 
-      db.notification.findMany.mockResolvedValueOnce([
+      vi.mocked(db.notification.findMany).mockResolvedValue([
         {
           ...malformedNotification,
           subscription: null,
-        },
+        } as any,
       ]);
-      db.notification.count.mockResolvedValueOnce(1);
+      vi.mocked(db.notification.count).mockResolvedValue(1);
 
       const result = await caller.getAll({});
 
@@ -652,15 +652,15 @@ describe('Notifications Router - Full tRPC Integration', () => {
         createdAt: new Date('2020-01-01'),
       };
 
-      db.notification.findMany.mockResolvedValueOnce([
+      vi.mocked(db.notification.findMany).mockResolvedValue([
         {
           ...oldNotification,
           subscription: oldNotification.subscriptionId
             ? { id: oldNotification.subscriptionId, name: 'Test Subscription' }
             : null,
-        },
+        } as any,
       ]);
-      db.notification.count.mockResolvedValueOnce(1);
+      vi.mocked(db.notification.count).mockResolvedValue(1);
 
       const result = await caller.getAll({});
 

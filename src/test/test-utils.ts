@@ -18,6 +18,12 @@ export type MockPrismaModel = {
   aggregate: ReturnType<typeof vi.fn>;
   groupBy?: ReturnType<typeof vi.fn>;
   upsert?: ReturnType<typeof vi.fn>;
+  // Add missing methods for full Prisma compatibility
+  findUniqueOrThrow?: ReturnType<typeof vi.fn>;
+  findFirstOrThrow?: ReturnType<typeof vi.fn>;
+  createManyAndReturn?: ReturnType<typeof vi.fn>;
+  updateManyAndReturn?: ReturnType<typeof vi.fn>;
+  fields?: any;
 };
 
 export type MockPrismaClient = {
@@ -43,6 +49,11 @@ export function createMockDb(): MockPrismaClient {
       aggregate: vi.fn(),
       groupBy: vi.fn(),
       upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
     },
     subscription: {
       findMany: vi.fn(),
@@ -58,6 +69,11 @@ export function createMockDb(): MockPrismaClient {
       aggregate: vi.fn(),
       groupBy: vi.fn(),
       upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
     },
     transaction: {
       findMany: vi.fn(),
@@ -73,6 +89,11 @@ export function createMockDb(): MockPrismaClient {
       aggregate: vi.fn(),
       groupBy: vi.fn(),
       upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
     },
     plaidItem: {
       findMany: vi.fn(),
@@ -88,6 +109,11 @@ export function createMockDb(): MockPrismaClient {
       aggregate: vi.fn(),
       groupBy: vi.fn(),
       upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
     },
     account: {
       findMany: vi.fn(),
@@ -103,6 +129,31 @@ export function createMockDb(): MockPrismaClient {
       aggregate: vi.fn(),
       groupBy: vi.fn(),
       upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
+    },
+    bankAccount: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      createMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
+      groupBy: vi.fn(),
+      upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
     },
     notification: {
       findMany: vi.fn(),
@@ -118,6 +169,11 @@ export function createMockDb(): MockPrismaClient {
       aggregate: vi.fn(),
       groupBy: vi.fn(),
       upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
     },
     verificationToken: {
       findMany: vi.fn(),
@@ -133,6 +189,11 @@ export function createMockDb(): MockPrismaClient {
       aggregate: vi.fn(),
       groupBy: vi.fn(),
       upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
     },
     // Add Prisma client methods
     $connect: vi.fn(),
@@ -216,4 +277,140 @@ export function isDecimal(value: unknown): value is Prisma.Decimal {
     'toNumber' in value &&
     typeof (value as Prisma.Decimal).toNumber === 'function'
   );
+}
+
+// Helper types for mock data based on Prisma schema
+export interface MockSubscription {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  notes?: string | null;
+  amount: Prisma.Decimal;
+  currency: string;
+  frequency: string;
+  nextBilling?: Date | null;
+  lastBilling?: Date | null;
+  status: string;
+  isActive: boolean;
+  provider: any; // JsonValue
+  cancellationInfo: any; // JsonValue
+  detectionConfidence: Prisma.Decimal;
+  detectedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MockTransaction {
+  id: string;
+  userId: string;
+  accountId: string;
+  plaidTransactionId: string;
+  subscriptionId?: string | null;
+  amount: Prisma.Decimal;
+  isoCurrencyCode: string;
+  description: string;
+  merchantName?: string | null;
+  category: any; // JsonValue array
+  subcategory?: string | null;
+  transactionType: string;
+  date: Date;
+  authorizedDate?: Date | null;
+  pending: boolean;
+  paymentChannel?: string | null;
+  location?: any | null; // JsonValue
+  confidence: Prisma.Decimal;
+  isSubscription: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MockNotification {
+  id: string;
+  userId: string;
+  subscriptionId?: string | null;
+  type: string;
+  title: string;
+  message: string;
+  data: any; // JsonValue
+  read: boolean;
+  readAt?: Date | null;
+  scheduledFor: Date;
+  sentAt?: Date | null;
+  createdAt: Date;
+}
+
+// Helper functions to create properly structured mock data
+export function createMockSubscription(overrides?: Partial<MockSubscription>): MockSubscription {
+  const now = new Date();
+  return {
+    id: 'sub-test-id',
+    userId: 'test-user-id',
+    name: 'Test Subscription',
+    description: null,
+    category: 'Streaming',
+    notes: null,
+    amount: createDecimal(15.99),
+    currency: 'USD',
+    frequency: 'monthly',
+    nextBilling: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+    lastBilling: null,
+    status: 'active',
+    isActive: true,
+    provider: {},
+    cancellationInfo: {},
+    detectionConfidence: createDecimal(0.9),
+    detectedAt: now,
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  };
+}
+
+export function createMockTransaction(overrides?: Partial<MockTransaction>): MockTransaction {
+  const now = new Date();
+  return {
+    id: 'tx-test-id',
+    userId: 'test-user-id',
+    accountId: 'acc-test-id',
+    plaidTransactionId: 'plaid-tx-id',
+    subscriptionId: null,
+    amount: createDecimal(15.99),
+    isoCurrencyCode: 'USD',
+    description: 'Test Transaction',
+    merchantName: 'Test Merchant',
+    category: ['Transfer', 'Digital'],
+    subcategory: null,
+    transactionType: 'other',
+    date: now,
+    authorizedDate: now,
+    pending: false,
+    paymentChannel: null,
+    location: null,
+    confidence: createDecimal(0.8),
+    isSubscription: false,
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  };
+}
+
+export function createMockNotification(overrides?: Partial<MockNotification>): MockNotification {
+  const now = new Date();
+  return {
+    id: 'notif-test-id',
+    userId: 'test-user-id',
+    subscriptionId: null,
+    type: 'renewal_reminder',
+    title: 'Test Notification',
+    message: 'Test message',
+    data: {},
+    read: false,
+    readAt: null,
+    scheduledFor: now,
+    sentAt: null,
+    createdAt: now,
+    ...overrides,
+  };
 }

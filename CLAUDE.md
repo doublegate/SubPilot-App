@@ -191,6 +191,7 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 - Integration tests for API routes
 - E2E tests for critical user flows
 - Maintain good test coverage
+- **TypeScript Compilation Excellence**: All mock data must match current Prisma schema, resolve UMD globals with proper imports, fix null assignments with type guards
 
 ## 📚 Key Documentation Files
 

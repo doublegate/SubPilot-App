@@ -151,7 +151,7 @@ describe('Plaid Router', () => {
         },
       };
 
-      getMockPlaidClient().linkTokenCreate = vi
+      getMockPlaidClient()!.linkTokenCreate = vi
         .fn()
         .mockResolvedValue(mockResponse);
 
@@ -166,7 +166,7 @@ describe('Plaid Router', () => {
         expiration: new Date('2024-12-31T23:59:59Z'),
       });
 
-      expect(getMockPlaidClient().linkTokenCreate).toHaveBeenCalledWith({
+      expect(getMockPlaidClient()!.linkTokenCreate).toHaveBeenCalledWith({
         user: { client_user_id: 'user123' },
         client_name: 'SubPilot',
         products: ['transactions', 'accounts'],
@@ -217,14 +217,14 @@ describe('Plaid Router', () => {
       // Reset all mocks
       vi.clearAllMocks();
 
-      getMockPlaidClient().itemPublicTokenExchange = vi.fn().mockResolvedValue({
+      getMockPlaidClient()!.itemPublicTokenExchange = vi.fn().mockResolvedValue({
         data: {
           access_token: 'access-token-123',
           item_id: 'item-123',
         },
       });
 
-      getMockPlaidClient().accountsGet = vi.fn().mockResolvedValue({
+      getMockPlaidClient()!.accountsGet = vi.fn().mockResolvedValue({
         data: {
           accounts: [
             {
@@ -266,7 +266,7 @@ describe('Plaid Router', () => {
         plaidItemId: 'plaid-item-1',
       });
 
-      getMockPlaidClient().transactionsGet = vi.fn().mockResolvedValue({
+      getMockPlaidClient()!.transactionsGet = vi.fn().mockResolvedValue({
         data: {
           transactions: [
             {
@@ -311,13 +311,13 @@ describe('Plaid Router', () => {
       expect(result.accounts).toHaveLength(1);
 
       // Verify Plaid calls
-      expect(getMockPlaidClient().itemPublicTokenExchange).toHaveBeenCalledWith(
+      expect(getMockPlaidClient()!.itemPublicTokenExchange).toHaveBeenCalledWith(
         {
           public_token: 'public-token-123',
         }
       );
-      expect(getMockPlaidClient().accountsGet).toHaveBeenCalled();
-      expect(getMockPlaidClient().transactionsGet).toHaveBeenCalled();
+      expect(getMockPlaidClient()!.accountsGet).toHaveBeenCalled();
+      expect(getMockPlaidClient()!.transactionsGet).toHaveBeenCalled();
 
       // Verify database calls
       expect(db.plaidItem.create).toHaveBeenCalledWith({
@@ -334,7 +334,7 @@ describe('Plaid Router', () => {
     });
 
     it.skip('should handle transaction fetch errors gracefully', async () => {
-      getMockPlaidClient().transactionsGet = vi
+      getMockPlaidClient()!.transactionsGet = vi
         .fn()
         .mockRejectedValue(new Error('Transaction fetch failed'));
 
@@ -352,7 +352,7 @@ describe('Plaid Router', () => {
 
   describe('syncTransactions', () => {
     beforeEach(() => {
-      db.plaidItem.findMany.mockResolvedValue([
+      vi.mocked(db.plaidItem.findMany).mockResolvedValue([
         {
           id: 'plaid-item-1',
           accessToken: 'encrypted_token',
@@ -367,7 +367,7 @@ describe('Plaid Router', () => {
         },
       ]);
 
-      getMockPlaidClient().transactionsSync = vi.fn().mockResolvedValue({
+      getMockPlaidClient()!.transactionsSync = vi.fn().mockResolvedValue({
         data: {
           added: [
             {
@@ -388,7 +388,7 @@ describe('Plaid Router', () => {
         },
       });
 
-      getMockPlaidClient().accountsGet = vi.fn().mockResolvedValue({
+      getMockPlaidClient()!.accountsGet = vi.fn().mockResolvedValue({
         data: {
           accounts: [
             {
@@ -402,7 +402,7 @@ describe('Plaid Router', () => {
         },
       });
 
-      db.transaction.createMany.mockResolvedValue({ count: 1 });
+      vi.mocked(db.transaction.createMany).mockResolvedValue({ count: 1 });
     });
 
     it('should sync transactions using sync endpoint', async () => {
@@ -416,7 +416,7 @@ describe('Plaid Router', () => {
       expect(result.totalNewTransactions).toBe(1);
 
       // Verify sync endpoint was called
-      expect(getMockPlaidClient().transactionsSync).toHaveBeenCalledWith({
+      expect(getMockPlaidClient()!.transactionsSync).toHaveBeenCalledWith({
         access_token: 'decrypted_token',
         cursor: '',
       });
@@ -432,7 +432,7 @@ describe('Plaid Router', () => {
     });
 
     it('should handle removed transactions', async () => {
-      getMockPlaidClient().transactionsSync = vi.fn().mockResolvedValue({
+      getMockPlaidClient()!.transactionsSync = vi.fn().mockResolvedValue({
         data: {
           added: [],
           modified: [],
@@ -457,7 +457,7 @@ describe('Plaid Router', () => {
     });
 
     it('should handle modified transactions', async () => {
-      getMockPlaidClient().transactionsSync = vi.fn().mockResolvedValue({
+      getMockPlaidClient()!.transactionsSync = vi.fn().mockResolvedValue({
         data: {
           added: [],
           modified: [
@@ -501,7 +501,7 @@ describe('Plaid Router', () => {
 
   describe('getAccounts', () => {
     it('should return accounts with institution logos', async () => {
-      db.plaidItem.findMany.mockResolvedValue([
+      vi.mocked(db.plaidItem.findMany).mockResolvedValue([
         {
           institutionName: 'Test Bank',
           institutionLogo: 'https://example.com/logo.png',
@@ -550,7 +550,7 @@ describe('Plaid Router', () => {
 
   describe('disconnectAccount', () => {
     beforeEach(() => {
-      db.plaidItem.findFirst.mockResolvedValue({
+      vi.mocked(db.plaidItem.findFirst).mockResolvedValue({
         id: 'plaid-item-1',
         accessToken: 'encrypted_token',
       });
@@ -568,7 +568,7 @@ describe('Plaid Router', () => {
       expect(result.success).toBe(true);
 
       // Verify Plaid removal
-      expect(getMockPlaidClient().itemRemove).toHaveBeenCalledWith({
+      expect(getMockPlaidClient()!.itemRemove).toHaveBeenCalledWith({
         access_token: 'decrypted_token',
       });
 
@@ -585,7 +585,7 @@ describe('Plaid Router', () => {
     });
 
     it('should handle Plaid removal errors gracefully', async () => {
-      getMockPlaidClient().itemRemove = vi
+      getMockPlaidClient()!.itemRemove = vi
         .fn()
         .mockRejectedValue(new Error('Plaid removal failed'));
 
@@ -603,7 +603,7 @@ describe('Plaid Router', () => {
     });
 
     it('should throw error if account not found', async () => {
-      db.plaidItem.findFirst.mockResolvedValue(null);
+      vi.mocked(db.plaidItem.findFirst).mockResolvedValue(null);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
@@ -618,7 +618,7 @@ describe('Plaid Router', () => {
 
   describe('getSyncStatus', () => {
     it('should return sync status for all items', async () => {
-      db.plaidItem.findMany.mockResolvedValue([
+      vi.mocked(db.plaidItem.findMany).mockResolvedValue([
         {
           id: 'plaid-item-1',
           institutionName: 'Test Bank',

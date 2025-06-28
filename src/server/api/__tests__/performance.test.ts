@@ -344,8 +344,8 @@ describe('API Performance Benchmarks', () => {
           notes: null,
           nextBilling: new Date(),
           lastBilling: new Date(),
-          provider: { 
-            name: `Provider ${i}`, 
+          provider: {
+            name: `Provider ${i}`,
             logo: null,
             largeData: 'x'.repeat(1000), // 1KB per subscription
             nestedObject: {

@@ -332,7 +332,7 @@ describe('API Security Tests', () => {
       (db.notification.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(
         []
       );
-      db.notification.count.mockResolvedValue(0);
+      (db.notification.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
 
       // Test negative limit - should throw validation error
       await expect(

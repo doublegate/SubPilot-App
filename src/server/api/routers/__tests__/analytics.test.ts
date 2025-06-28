@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { analyticsRouter } from '../analytics';
-import { createMockContext, createDecimal } from '@/test/test-utils';
-import type { MockContext } from '@/test/test-utils';
+import { createMockContext, createDecimal, createMockSubscription, createMockTransaction } from '@/test/test-utils';
+import type { MockContext, MockSubscription } from '@/test/test-utils';
 
 // Create properly typed mock context
 let mockContext: MockContext;
@@ -11,58 +11,74 @@ beforeEach(() => {
   mockContext = createMockContext();
 });
 
-// Mock subscription data
-const mockSubscriptions = [
-  {
-    id: 'sub-1',
-    amount: createDecimal(15.99),
-    frequency: 'monthly',
-    category: 'Streaming',
-    isActive: true,
-    createdAt: new Date('2024-01-01'),
-    detectedAt: new Date('2024-01-02'),
-    status: 'active',
-  },
-  {
-    id: 'sub-2',
-    amount: createDecimal(99.99),
-    frequency: 'yearly',
-    category: 'Software',
-    isActive: true,
-    createdAt: new Date('2024-02-01'),
-    detectedAt: new Date('2024-02-01'),
-    status: 'active',
-  },
-  {
-    id: 'sub-3',
-    amount: createDecimal(9.99),
-    frequency: 'monthly',
-    category: 'Music',
-    isActive: false,
-    createdAt: new Date('2024-01-15'),
-    detectedAt: new Date('2024-01-15'),
-    status: 'cancelled',
-  },
-];
+// Mock subscription data with proper schema structure
+const mockSubscription1 = createMockSubscription({
+  id: 'sub-1',
+  name: 'Netflix',
+  amount: createDecimal(15.99),
+  frequency: 'monthly',
+  category: 'Streaming',
+  isActive: true,
+  createdAt: new Date('2024-01-01'),
+  detectedAt: new Date('2024-01-02'),
+  status: 'active',
+});
 
-// Mock transaction data
-const mockTransactions = [
-  {
-    date: new Date('2024-06-01'),
-    amount: createDecimal(15.99),
-    isSubscription: true,
-  },
-  {
-    date: new Date('2024-06-05'),
-    amount: createDecimal(50.0),
-    isSubscription: false,
-  },
-  {
-    date: new Date('2024-06-15'),
-    amount: createDecimal(9.99),
-    isSubscription: true,
-  },
-];
+const mockSubscription2 = createMockSubscription({
+  id: 'sub-2',
+  name: 'Adobe Creative Suite',
+  amount: createDecimal(99.99),
+  frequency: 'yearly',
+  category: 'Software',
+  isActive: true,
+  createdAt: new Date('2024-02-01'),
+  detectedAt: new Date('2024-02-01'),
+  status: 'active',
+});
+
+const mockSubscription3 = createMockSubscription({
+  id: 'sub-3',
+  name: 'Spotify',
+  amount: createDecimal(9.99),
+  frequency: 'monthly',
+  category: 'Music',
+  isActive: false,
+  createdAt: new Date('2024-01-15'),
+  detectedAt: new Date('2024-01-15'),
+  status: 'cancelled',
+});
+
+const mockSubscriptions = [mockSubscription1, mockSubscription2, mockSubscription3];
+
+// Mock transaction data with proper schema structure
+const mockTransaction1 = createMockTransaction({
+  id: 'tx-1',
+  date: new Date('2024-06-01'),
+  amount: createDecimal(15.99),
+  isSubscription: true,
+  description: 'Netflix Subscription',
+  merchantName: 'Netflix',
+});
+
+const mockTransaction2 = createMockTransaction({
+  id: 'tx-2',
+  date: new Date('2024-06-05'),
+  amount: createDecimal(50.0),
+  isSubscription: false,
+  description: 'Grocery Store',
+  merchantName: 'Whole Foods',
+});
+
+const mockTransaction3 = createMockTransaction({
+  id: 'tx-3',
+  date: new Date('2024-06-15'),
+  amount: createDecimal(9.99),
+  isSubscription: true,
+  description: 'Spotify Premium',
+  merchantName: 'Spotify',
+});
+
+const mockTransactions = [mockTransaction1, mockTransaction2, mockTransaction3];
 
 describe('Analytics Router', () => {
   beforeEach(() => {
@@ -86,7 +102,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(275.98) },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -119,26 +135,26 @@ describe('Analytics Router', () => {
 
     it.skip('should handle different frequency calculations', async () => {
       const testSubs = [
-        {
+        createMockSubscription({
           amount: createDecimal(12.0),
           frequency: 'monthly',
           category: 'Test1',
-        },
-        {
+        }),
+        createMockSubscription({
           amount: createDecimal(120.0),
           frequency: 'yearly',
           category: 'Test2',
-        },
-        {
+        }),
+        createMockSubscription({
           amount: createDecimal(30.0),
           frequency: 'quarterly',
           category: 'Test3',
-        },
-        {
+        }),
+        createMockSubscription({
           amount: createDecimal(3.0),
           frequency: 'weekly',
           category: 'Test4',
-        },
+        }),
       ];
 
       mockContext.db.subscription.findMany.mockResolvedValue(testSubs);
@@ -146,7 +162,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(100) },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -160,27 +176,27 @@ describe('Analytics Router', () => {
 
     it.skip('should group categories correctly', async () => {
       mockContext.db.subscription.findMany.mockResolvedValue([
-        {
+        createMockSubscription({
           amount: createDecimal(10),
           frequency: 'monthly',
           category: 'Streaming',
-        },
-        {
+        }),
+        createMockSubscription({
           amount: createDecimal(15),
           frequency: 'monthly',
           category: 'Streaming',
-        },
-        {
+        }),
+        createMockSubscription({
           amount: createDecimal(20),
           frequency: 'monthly',
           category: 'Software',
-        },
+        }),
       ]);
       mockContext.db.transaction.aggregate.mockResolvedValue({
         _sum: { amount: createDecimal(100) },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -209,7 +225,7 @@ describe('Analytics Router', () => {
     it('should calculate trends correctly', async () => {
       mockContext.db.transaction.findMany.mockResolvedValue(mockTransactions);
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingTrends({
         timeRange: 'month',
         groupBy: 'day',
@@ -255,28 +271,28 @@ describe('Analytics Router', () => {
 
     it('should handle monthly grouping', async () => {
       const monthlyTransactions = [
-        {
+        createMockTransaction({
           date: new Date('2024-01-15'),
           amount: createDecimal(100),
           isSubscription: true,
-        },
-        {
+        }),
+        createMockTransaction({
           date: new Date('2024-01-20'),
           amount: createDecimal(50),
           isSubscription: false,
-        },
-        {
+        }),
+        createMockTransaction({
           date: new Date('2024-02-10'),
           amount: createDecimal(75),
           isSubscription: true,
-        },
+        }),
       ];
 
       mockContext.db.transaction.findMany.mockResolvedValue(
         monthlyTransactions
       );
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingTrends({
         timeRange: 'quarter',
         groupBy: 'month',
@@ -309,27 +325,25 @@ describe('Analytics Router', () => {
       const twoMonthsAgo = new Date(now.getTime() - 65 * 24 * 60 * 60 * 1000); // 65 days ago
 
       const subscriptionsWithTransactions = [
-        {
+        createMockSubscription({
           id: 'sub-1',
           isActive: true,
           amount: createDecimal(15),
-          transactions: [{ date: twoMonthsAgo, amount: createDecimal(15) }],
           createdAt: new Date(),
-        },
-        {
+        }),
+        createMockSubscription({
           id: 'sub-2',
           isActive: true,
           amount: createDecimal(20),
-          transactions: [{ date: new Date(), amount: createDecimal(20) }],
           createdAt: new Date(),
-        },
+        }),
       ];
 
       mockContext.db.subscription.findMany.mockResolvedValue(
         subscriptionsWithTransactions
       );
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSubscriptionInsights();
 
       expect(result.unusedCount).toBe(1);
@@ -345,28 +359,20 @@ describe('Analytics Router', () => {
 
     it.skip('should detect price increases', async () => {
       const subscriptionsWithPriceChanges = [
-        {
+        createMockSubscription({
           id: 'sub-1',
           name: 'Test Service',
           isActive: true,
           amount: createDecimal(20),
-          transactions: [
-            { id: 'tx1', date: new Date(), amount: createDecimal(20) },
-            {
-              id: 'tx2',
-              date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-              amount: createDecimal(15),
-            },
-          ],
           createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // Old enough to not be "unused"
-        },
+        }),
       ];
 
       mockContext.db.subscription.findMany.mockResolvedValue(
         subscriptionsWithPriceChanges
       );
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSubscriptionInsights();
 
       // Note: The router doesn't return priceIncreaseCount, only insights array
@@ -386,29 +392,27 @@ describe('Analytics Router', () => {
       const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
 
       const subscriptionsWithAges = [
-        {
+        createMockSubscription({
           id: 'sub-1',
           name: 'Test Sub 1',
           isActive: true,
           amount: createDecimal(15.99),
           createdAt: thirtyDaysAgo,
-          transactions: [],
-        },
-        {
+        }),
+        createMockSubscription({
           id: 'sub-2',
           name: 'Test Sub 2',
           isActive: true,
           amount: createDecimal(9.99),
           createdAt: tenDaysAgo,
-          transactions: [],
-        },
+        }),
       ];
 
       mockContext.db.subscription.findMany.mockResolvedValue(
         subscriptionsWithAges
       );
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSubscriptionInsights();
 
       // Note: The router doesn't return averageSubscriptionAge field directly
@@ -422,37 +426,37 @@ describe('Analytics Router', () => {
       const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
       const upcomingSubscriptions = [
-        {
+        createMockSubscription({
           id: 'sub-1',
           name: 'Netflix',
           amount: createDecimal(15.99),
           currency: 'USD',
           nextBilling: tomorrow,
           provider: { name: 'Netflix' },
-        },
-        {
+        }),
+        createMockSubscription({
           id: 'sub-2',
           name: 'Spotify',
           amount: createDecimal(9.99),
           currency: 'USD',
           nextBilling: tomorrow,
           provider: { name: 'Spotify' },
-        },
-        {
+        }),
+        createMockSubscription({
           id: 'sub-3',
           name: 'Adobe',
           amount: createDecimal(52.99),
           currency: 'USD',
           nextBilling: nextWeek,
           provider: { name: 'Adobe' },
-        },
+        }),
       ];
 
       mockContext.db.subscription.findMany.mockResolvedValue(
         upcomingSubscriptions
       );
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
       expect(result.totalCount).toBe(3);
@@ -475,7 +479,7 @@ describe('Analytics Router', () => {
     it('should handle empty renewals', async () => {
       mockContext.db.subscription.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
       expect(result.totalCount).toBe(0);
@@ -489,10 +493,10 @@ describe('Analytics Router', () => {
       mockContext.db.subscription.findMany.mockResolvedValue(mockSubscriptions);
       mockContext.db.transaction.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.exportData({});
 
-      expect(result.data.subscriptions).toEqual(
+      expect(result.data?.subscriptions).toEqual(
         expect.stringContaining(
           'Name,Amount,Currency,Frequency,Status,Category,Next Billing,Provider'
         )
@@ -507,7 +511,7 @@ describe('Analytics Router', () => {
       ]);
       mockContext.db.transaction.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.exportData({ format: 'json' });
 
       expect(result.subscriptions).toEqual(
@@ -524,7 +528,7 @@ describe('Analytics Router', () => {
       mockContext.db.subscription.findMany.mockResolvedValue([]);
       mockContext.db.transaction.findMany.mockResolvedValue([
         {
-          ...mockTransactions[0],
+          ...mockTransaction1,
           bankAccount: {
             name: 'Checking',
             isoCurrencyCode: 'USD',
@@ -535,13 +539,13 @@ describe('Analytics Router', () => {
         },
       ]);
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.exportData({
         includeTransactions: true,
         format: 'csv',
       });
 
-      expect(result.data.transactions).toEqual(
+      expect(result.data?.transactions).toEqual(
         expect.stringContaining(
           'Date,Description,Amount,Currency,Category,Account,Institution'
         )
@@ -561,7 +565,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(100) },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
 
       // First call
       await caller.getSpendingOverview({ timeRange: 'month' });
@@ -578,7 +582,7 @@ describe('Analytics Router', () => {
 
       mockContext.db.transaction.findMany.mockResolvedValue(mockTransactions);
 
-      const caller = analyticsRouter.createCaller(mockContext);
+      const caller = analyticsRouter.createCaller(mockContext as any);
 
       // First call
       await caller.getSpendingTrends({ timeRange: 'month', groupBy: 'day' });
