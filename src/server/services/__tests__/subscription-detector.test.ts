@@ -70,7 +70,6 @@ vi.mock('@/server/db', () => {
 class TestableSubscriptionDetector extends SubscriptionDetector {
   // Expose protected methods for testing
   public testGroupByMerchant(transactions: Transaction[]) {
-    // @ts-expect-error - Accessing protected method for testing
     return this.groupByMerchant(transactions);
   }
 
@@ -78,14 +77,12 @@ class TestableSubscriptionDetector extends SubscriptionDetector {
     merchantName: string;
     transactions: Transaction[];
   }) {
-    // @ts-expect-error - Accessing protected method for testing
     return this.analyzeTransactionGroup(group);
   }
 
   // detectFrequency is already public, so we can call it directly
 
   public testCalculateAmountConsistency(amounts: number[]) {
-    // @ts-expect-error - Accessing protected method for testing
     return this.calculateAmountConsistency(amounts);
   }
 
@@ -94,7 +91,6 @@ class TestableSubscriptionDetector extends SubscriptionDetector {
     amountConsistency: number,
     transactionCount: number
   ) {
-    // @ts-expect-error - Accessing protected method for testing
     return this.calculateConfidence(
       frequencyConfidence,
       amountConsistency,
@@ -102,8 +98,8 @@ class TestableSubscriptionDetector extends SubscriptionDetector {
     );
   }
 
-  // Override the private method to avoid database calls in tests
-  protected async updateTransactionDetection(
+  // Override the public method to avoid database calls in tests
+  public async updateTransactionDetection(
     transactions: Transaction[],
     result: {
       isSubscription: boolean;

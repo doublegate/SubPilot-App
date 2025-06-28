@@ -4,6 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import {
@@ -11,7 +13,11 @@ import {
   createUnauthenticatedCaller,
 } from '@/test/trpc-test-helpers';
 import { Decimal } from '@prisma/client/runtime/library';
-import { createMockSubscription, createMockTransaction, createDecimal } from '@/test/test-utils';
+import {
+  createMockSubscription,
+  createMockTransaction,
+  createDecimal,
+} from '@/test/test-utils';
 import type { MockSubscription } from '@/test/test-utils';
 
 // Mock database
@@ -46,7 +52,9 @@ vi.mock('@/server/db', () => {
       delete: vi.fn(),
       deleteMany: vi.fn(),
       count: vi.fn(),
-      aggregate: vi.fn().mockResolvedValue({ _sum: { amount: createDecimal(0) } }),
+      aggregate: vi
+        .fn()
+        .mockResolvedValue({ _sum: { amount: createDecimal(0) } }),
     },
     plaidItem: {
       findMany: vi.fn(),
@@ -201,7 +209,9 @@ describe('Analytics Router Integration Tests', () => {
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
-      mockedSubscriptionFindMany.mockResolvedValueOnce(mockSubscriptions);
+      mockedSubscriptionFindMany.mockResolvedValueOnce(
+        mockSubscriptions as any
+      );
 
       const aggregateResult = {
         _sum: { amount: createDecimal(500) },
@@ -267,7 +277,9 @@ describe('Analytics Router Integration Tests', () => {
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
-      mockedSubscriptionFindMany.mockResolvedValueOnce(mockSubscriptions);
+      mockedSubscriptionFindMany.mockResolvedValueOnce(
+        mockSubscriptions as any
+      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: createDecimal(20) },
         _count: {},
@@ -300,7 +312,9 @@ describe('Analytics Router Integration Tests', () => {
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
-      mockedSubscriptionFindMany.mockResolvedValueOnce(mockSubscriptions);
+      mockedSubscriptionFindMany.mockResolvedValueOnce(
+        mockSubscriptions as any
+      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: null },
         _count: {},
@@ -333,7 +347,9 @@ describe('Analytics Router Integration Tests', () => {
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
-      mockedSubscriptionFindMany.mockResolvedValueOnce(mockSubscriptions);
+      mockedSubscriptionFindMany.mockResolvedValueOnce(
+        mockSubscriptions as any
+      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: null },
         _count: {},
@@ -400,7 +416,7 @@ describe('Analytics Router Integration Tests', () => {
       ];
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
-      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions);
+      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as any);
 
       const result = await caller.analytics.getSpendingTrends({
         timeRange: 'month',
@@ -423,7 +439,7 @@ describe('Analytics Router Integration Tests', () => {
       }));
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
-      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions);
+      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as any);
 
       const result = await caller.analytics.getSpendingTrends({
         timeRange: 'week',
@@ -445,7 +461,7 @@ describe('Analytics Router Integration Tests', () => {
       }));
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
-      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions);
+      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as any);
 
       const result = await caller.analytics.getSpendingTrends({
         timeRange: 'year',
@@ -505,7 +521,9 @@ describe('Analytics Router Integration Tests', () => {
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
-      mockedSubscriptionFindMany.mockResolvedValueOnce(mockSubscriptions);
+      mockedSubscriptionFindMany.mockResolvedValueOnce(
+        mockSubscriptions as any
+      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: createDecimal(100) },
         _count: {},
@@ -590,7 +608,9 @@ describe('Analytics Router Integration Tests', () => {
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
-      mockedSubscriptionFindMany.mockResolvedValueOnce(mockSubscriptions);
+      mockedSubscriptionFindMany.mockResolvedValueOnce(
+        mockSubscriptions as any
+      );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: createDecimal(100) },
         _count: {},
@@ -655,7 +675,7 @@ describe('Analytics Router Integration Tests', () => {
 
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions.slice(0, 2) as MockSubscription[] // Only first 2 within 30 days
+        mockSubscriptions.slice(0, 2) as any // Only first 2 within 30 days
       );
 
       const result = await caller.analytics.getUpcomingRenewals({});
@@ -689,7 +709,9 @@ describe('Analytics Router Integration Tests', () => {
       ];
 
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
-      mockedSubscriptionFindMany.mockResolvedValueOnce(mockSubscriptions);
+      mockedSubscriptionFindMany.mockResolvedValueOnce(
+        mockSubscriptions as any
+      );
 
       const result = await caller.analytics.getUpcomingRenewals({ days: 5 });
 

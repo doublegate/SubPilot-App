@@ -115,7 +115,8 @@ export class SubscriptionDetector {
 
       const group: TransactionGroup = {
         merchantName: merchant.merchantName,
-        transactions,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        transactions: transactions as any,
       };
 
       const result = this.analyzeTransactionGroup(group);
@@ -123,7 +124,8 @@ export class SubscriptionDetector {
         detectionResults.push(result);
 
         // Update transaction records with detection results
-        await this.updateTransactionDetection(transactions, result);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await this.updateTransactionDetection(transactions as any, result);
       }
     }
 
@@ -402,7 +404,7 @@ export class SubscriptionDetector {
   /**
    * Update transaction records with detection results
    */
-  private async updateTransactionDetection(
+  public async updateTransactionDetection(
     transactions: Transaction[],
     result: DetectionResult
   ): Promise<void> {

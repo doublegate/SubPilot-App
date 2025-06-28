@@ -189,7 +189,7 @@ export default async function SubscriptionDetailPage({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {subscription.category || 'General'}
+              {subscription.category ?? 'General'}
             </div>
             <p className="text-xs text-muted-foreground">Subscription type</p>
           </CardContent>

@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { notificationsRouter } from '../notifications';
 import { TRPCError } from '@trpc/server';
-import { createMockSession } from '@/test-utils';
+import { createMockSession } from '@/test/test-utils';
 
 // Mock database - define inside the factory function to avoid hoisting issues
 vi.mock('@/server/db', () => ({
@@ -133,7 +133,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    ctx = createInnerTRPCContext({ session: mockSession });
+    ctx = createInnerTRPCContext({ session: mockSession as any });
     caller = notificationsRouter.createCaller(ctx);
   });
 
@@ -332,7 +332,9 @@ describe('Notifications Router - Full tRPC Integration', () => {
     it('should mark single notification as read', async () => {
       const updatedNotification = { ...mockNotifications[0]!, read: true };
 
-      vi.mocked(db.notification.findFirst).mockResolvedValue(mockNotifications[0]!);
+      vi.mocked(db.notification.findFirst).mockResolvedValue(
+        mockNotifications[0]!
+      );
       vi.mocked(db.notification.update).mockResolvedValue(updatedNotification);
 
       const result = await caller.markAsRead({
@@ -361,8 +363,8 @@ describe('Notifications Router - Full tRPC Integration', () => {
       const otherUserCtx = createInnerTRPCContext({
         session: {
           ...mockSession,
-          user: { ...mockSession.user, id: 'user-2' },
-        },
+          user: { ...(mockSession as any).user, id: 'user-2' },
+        } as any,
       });
       const otherUserCaller = notificationsRouter.createCaller(otherUserCtx);
 
@@ -408,8 +410,12 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   describe('deleteNotification', () => {
     it('should delete single notification', async () => {
-      vi.mocked(db.notification.findFirst).mockResolvedValue(mockNotifications[0]!);
-      vi.mocked(db.notification.delete).mockResolvedValue(mockNotifications[0]!);
+      vi.mocked(db.notification.findFirst).mockResolvedValue(
+        mockNotifications[0]!
+      );
+      vi.mocked(db.notification.delete).mockResolvedValue(
+        mockNotifications[0]!
+      );
 
       const result = await caller.delete({
         id: 'notif-1',
@@ -613,7 +619,9 @@ describe('Notifications Router - Full tRPC Integration', () => {
     });
 
     it('should handle concurrent modification errors', async () => {
-      vi.mocked(db.notification.findFirst).mockResolvedValue(mockNotifications[0]!);
+      vi.mocked(db.notification.findFirst).mockResolvedValue(
+        mockNotifications[0]!
+      );
       vi.mocked(db.notification.update).mockRejectedValue(
         new Error('Optimistic lock failed')
       );

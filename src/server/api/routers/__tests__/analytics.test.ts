@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { analyticsRouter } from '../analytics';
-import { createMockContext, createDecimal, createMockSubscription, createMockTransaction } from '@/test/test-utils';
+import {
+  createMockContext,
+  createDecimal,
+  createMockSubscription,
+  createMockTransaction,
+} from '@/test/test-utils';
 import type { MockContext, MockSubscription } from '@/test/test-utils';
 
 // Create properly typed mock context
@@ -48,7 +53,11 @@ const mockSubscription3 = createMockSubscription({
   status: 'cancelled',
 });
 
-const mockSubscriptions = [mockSubscription1, mockSubscription2, mockSubscription3];
+const mockSubscriptions = [
+  mockSubscription1,
+  mockSubscription2,
+  mockSubscription3,
+];
 
 // Mock transaction data with proper schema structure
 const mockTransaction1 = createMockTransaction({

@@ -23,7 +23,7 @@ export type MockPrismaModel = {
   findFirstOrThrow?: ReturnType<typeof vi.fn>;
   createManyAndReturn?: ReturnType<typeof vi.fn>;
   updateManyAndReturn?: ReturnType<typeof vi.fn>;
-  fields?: any;
+  fields?: unknown;
 };
 
 export type MockPrismaClient = {
@@ -175,6 +175,46 @@ export function createMockDb(): MockPrismaClient {
       updateManyAndReturn: vi.fn(),
       fields: {},
     },
+    subscriptionHistory: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      createMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
+      groupBy: vi.fn(),
+      upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
+    },
+    session: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      createMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
+      groupBy: vi.fn(),
+      upsert: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findFirstOrThrow: vi.fn(),
+      createManyAndReturn: vi.fn(),
+      updateManyAndReturn: vi.fn(),
+      fields: {},
+    },
     verificationToken: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
@@ -206,7 +246,7 @@ export function createMockDb(): MockPrismaClient {
     $on: vi.fn(),
     $use: vi.fn(),
     $extends: vi.fn(),
-  } as MockPrismaClient;
+  } as unknown as MockPrismaClient;
 }
 
 // Type-safe mock context
@@ -266,7 +306,7 @@ export function createDecimal(value: number): Prisma.Decimal {
     clamp: (min: Prisma.Decimal, max: Prisma.Decimal) =>
       createDecimal(Math.max(min.toNumber(), Math.min(max.toNumber(), value))),
     constructor: Prisma.Decimal,
-  } as Prisma.Decimal;
+  } as unknown as Prisma.Decimal;
 }
 
 // Type guard for Decimal values
@@ -294,8 +334,8 @@ export interface MockSubscription {
   lastBilling?: Date | null;
   status: string;
   isActive: boolean;
-  provider: any; // JsonValue
-  cancellationInfo: any; // JsonValue
+  provider: Record<string, unknown>; // JsonValue
+  cancellationInfo: Record<string, unknown>; // JsonValue
   detectionConfidence: Prisma.Decimal;
   detectedAt: Date;
   createdAt: Date;
@@ -312,14 +352,14 @@ export interface MockTransaction {
   isoCurrencyCode: string;
   description: string;
   merchantName?: string | null;
-  category: any; // JsonValue array
+  category: string[]; // JsonValue array
   subcategory?: string | null;
   transactionType: string;
   date: Date;
   authorizedDate?: Date | null;
   pending: boolean;
   paymentChannel?: string | null;
-  location?: any | null; // JsonValue
+  location?: Record<string, unknown> | null; // JsonValue
   confidence: Prisma.Decimal;
   isSubscription: boolean;
   createdAt: Date;
@@ -333,7 +373,7 @@ export interface MockNotification {
   type: string;
   title: string;
   message: string;
-  data: any; // JsonValue
+  data: Record<string, unknown>; // JsonValue
   read: boolean;
   readAt?: Date | null;
   scheduledFor: Date;
@@ -342,7 +382,9 @@ export interface MockNotification {
 }
 
 // Helper functions to create properly structured mock data
-export function createMockSubscription(overrides?: Partial<MockSubscription>): MockSubscription {
+export function createMockSubscription(
+  overrides?: Partial<MockSubscription>
+): MockSubscription {
   const now = new Date();
   return {
     id: 'sub-test-id',
@@ -368,7 +410,9 @@ export function createMockSubscription(overrides?: Partial<MockSubscription>): M
   };
 }
 
-export function createMockTransaction(overrides?: Partial<MockTransaction>): MockTransaction {
+export function createMockTransaction(
+  overrides?: Partial<MockTransaction>
+): MockTransaction {
   const now = new Date();
   return {
     id: 'tx-test-id',
@@ -396,7 +440,9 @@ export function createMockTransaction(overrides?: Partial<MockTransaction>): Moc
   };
 }
 
-export function createMockNotification(overrides?: Partial<MockNotification>): MockNotification {
+export function createMockNotification(
+  overrides?: Partial<MockNotification>
+): MockNotification {
   const now = new Date();
   return {
     id: 'notif-test-id',
@@ -411,6 +457,22 @@ export function createMockNotification(overrides?: Partial<MockNotification>): M
     scheduledFor: now,
     sentAt: null,
     createdAt: now,
+    ...overrides,
+  };
+}
+
+// Helper to create mock session
+export function createMockSession(
+  overrides?: Partial<Record<string, unknown>>
+): Record<string, unknown> {
+  return {
+    user: {
+      id: 'user-1',
+      email: 'test@example.com',
+      name: 'Test User',
+      image: null,
+    },
+    expires: new Date(Date.now() + 86400000).toISOString(),
     ...overrides,
   };
 }

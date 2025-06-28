@@ -1,6 +1,6 @@
 import { type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
-import { env } from '@/env';
+import { env } from '@/env.js';
 
 interface PerformanceMetrics {
   procedure: string;
@@ -17,7 +17,7 @@ const MAX_METRICS = 1000;
  * TRPC Performance Monitoring Link
  * Tracks API call performance and logs slow queries
  */
-export const performanceLink: TRPCLink<unknown> = () => {
+export const performanceLink: TRPCLink<any> = () => {
   return ({ next, op }) => {
     return observable(observer => {
       const start = Date.now();
@@ -69,7 +69,7 @@ export const performanceLink: TRPCLink<unknown> = () => {
             console.warn(`[PERF] Slow API call: ${op.path} took ${duration}ms`);
           }
 
-          observer.complete();
+          observer.complete?.();
         },
       });
 
@@ -133,7 +133,7 @@ export function getPerformanceStats(minutes = 5): {
   const byProcedure: Record<string, PerformanceMetrics[]> = {};
   for (const metric of relevantMetrics) {
     byProcedure[metric.procedure] ??= [];
-    byProcedure[metric.procedure].push(metric);
+    byProcedure[metric.procedure]!.push(metric);
   }
 
   // Calculate stats by procedure

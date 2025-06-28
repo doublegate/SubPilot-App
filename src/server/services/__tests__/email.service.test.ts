@@ -161,7 +161,7 @@ describe('EmailNotificationService', () => {
 
       await emailNotificationService.sendNewSubscriptionEmail({
         user: mockUser,
-        subscription: mockSubscription,
+        subscription: mockSubscription as any,
       });
 
       expect(sendEmail).toHaveBeenCalledWith({
@@ -192,7 +192,7 @@ describe('EmailNotificationService', () => {
 
       await emailNotificationService.sendPriceChangeEmail({
         user: mockUser,
-        subscription: mockSubscription,
+        subscription: mockSubscription as any,
         oldAmount: 12.99,
         newAmount: 15.99,
       });
@@ -216,7 +216,7 @@ describe('EmailNotificationService', () => {
 
       await emailNotificationService.sendRenewalReminderEmail({
         user: mockUser,
-        subscription: mockSubscription,
+        subscription: mockSubscription as any,
         renewalDate: renewalDate,
       });
 
@@ -236,7 +236,7 @@ describe('EmailNotificationService', () => {
 
       await emailNotificationService.sendCancellationEmail({
         user: mockUser,
-        subscription: mockSubscription,
+        subscription: mockSubscription as any,
       });
 
       expect(sendEmail).toHaveBeenCalledWith({
@@ -282,7 +282,7 @@ describe('EmailNotificationService', () => {
 
       await emailNotificationService.sendPaymentFailedEmail({
         user: mockUser,
-        subscription: mockSubscription,
+        subscription: mockSubscription as any,
         errorMessage: 'Insufficient funds',
       });
 
@@ -304,7 +304,7 @@ describe('EmailNotificationService', () => {
 
       await emailNotificationService.sendTrialEndingEmail({
         user: mockUser,
-        subscription: mockSubscription,
+        subscription: mockSubscription as any,
         trialEndDate: trialEndDate,
       });
 

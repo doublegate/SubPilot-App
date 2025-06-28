@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { appRouter } from '@/server/api/root';
 import { Decimal } from '@prisma/client/runtime/library';
-import { createMockSession } from '@/test-utils';
+import { createMockSession } from '@/test/test-utils';
 
 // Mock database with performance scenarios
 vi.mock('@/server/db', () => {
@@ -69,7 +69,7 @@ describe('API Performance Benchmarks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    ctx = createInnerTRPCContext({ session: mockSession });
+    ctx = createInnerTRPCContext({ session: mockSession as any });
     caller = appRouter.createCaller(ctx);
   });
 

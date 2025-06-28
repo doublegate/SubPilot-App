@@ -217,12 +217,14 @@ describe('Plaid Router', () => {
       // Reset all mocks
       vi.clearAllMocks();
 
-      getMockPlaidClient()!.itemPublicTokenExchange = vi.fn().mockResolvedValue({
-        data: {
-          access_token: 'access-token-123',
-          item_id: 'item-123',
-        },
-      });
+      getMockPlaidClient()!.itemPublicTokenExchange = vi
+        .fn()
+        .mockResolvedValue({
+          data: {
+            access_token: 'access-token-123',
+            item_id: 'item-123',
+          },
+        });
 
       getMockPlaidClient()!.accountsGet = vi.fn().mockResolvedValue({
         data: {
@@ -311,11 +313,11 @@ describe('Plaid Router', () => {
       expect(result.accounts).toHaveLength(1);
 
       // Verify Plaid calls
-      expect(getMockPlaidClient()!.itemPublicTokenExchange).toHaveBeenCalledWith(
-        {
-          public_token: 'public-token-123',
-        }
-      );
+      expect(
+        getMockPlaidClient()!.itemPublicTokenExchange
+      ).toHaveBeenCalledWith({
+        public_token: 'public-token-123',
+      });
       expect(getMockPlaidClient()!.accountsGet).toHaveBeenCalled();
       expect(getMockPlaidClient()!.transactionsGet).toHaveBeenCalled();
 
@@ -355,8 +357,23 @@ describe('Plaid Router', () => {
       vi.mocked(db.plaidItem.findMany).mockResolvedValue([
         {
           id: 'plaid-item-1',
+          userId: 'user123',
+          plaidItemId: 'item-123',
           accessToken: 'encrypted_token',
+          institutionId: 'ins_1',
+          institutionName: 'Test Bank',
+          institutionLogo: null,
+          availableProducts: [],
+          billedProducts: [],
+          status: 'good',
+          lastWebhook: null,
+          needsSync: false,
+          isActive: true,
+          errorCode: null,
+          errorMessage: null,
           syncCursor: '',
+          createdAt: new Date(),
+          updatedAt: new Date(),
           bankAccounts: [
             {
               id: 'bank-account-1',
@@ -364,7 +381,7 @@ describe('Plaid Router', () => {
               lastSync: new Date('2024-01-01'),
             },
           ],
-        },
+        } as any,
       ]);
 
       getMockPlaidClient()!.transactionsSync = vi.fn().mockResolvedValue({
@@ -503,8 +520,24 @@ describe('Plaid Router', () => {
     it('should return accounts with institution logos', async () => {
       vi.mocked(db.plaidItem.findMany).mockResolvedValue([
         {
+          id: 'plaid-item-1',
+          userId: 'user123',
+          plaidItemId: 'item-123',
+          accessToken: 'encrypted_token',
+          institutionId: 'ins_1',
           institutionName: 'Test Bank',
           institutionLogo: 'https://example.com/logo.png',
+          availableProducts: [],
+          billedProducts: [],
+          status: 'good',
+          lastWebhook: null,
+          needsSync: false,
+          isActive: true,
+          errorCode: null,
+          errorMessage: null,
+          syncCursor: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
           bankAccounts: [
             {
               id: 'account-1',
@@ -519,7 +552,7 @@ describe('Plaid Router', () => {
               createdAt: new Date('2024-01-01'),
             },
           ],
-        },
+        } as any,
       ]);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
@@ -552,8 +585,24 @@ describe('Plaid Router', () => {
     beforeEach(() => {
       vi.mocked(db.plaidItem.findFirst).mockResolvedValue({
         id: 'plaid-item-1',
+        userId: 'user123',
+        plaidItemId: 'item-123',
         accessToken: 'encrypted_token',
-      });
+        institutionId: 'ins_1',
+        institutionName: 'Test Bank',
+        institutionLogo: null,
+        availableProducts: [],
+        billedProducts: [],
+        status: 'good',
+        lastWebhook: null,
+        needsSync: false,
+        isActive: true,
+        errorCode: null,
+        errorMessage: null,
+        syncCursor: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as any);
     });
 
     it('should disconnect account and remove from Plaid', async () => {
@@ -621,17 +670,47 @@ describe('Plaid Router', () => {
       vi.mocked(db.plaidItem.findMany).mockResolvedValue([
         {
           id: 'plaid-item-1',
+          userId: 'user123',
+          plaidItemId: 'item-123-1',
+          accessToken: 'encrypted_token',
+          institutionId: 'ins_1',
           institutionName: 'Test Bank',
+          institutionLogo: null,
+          availableProducts: [],
+          billedProducts: [],
           status: 'good',
+          lastWebhook: null,
+          needsSync: false,
+          isActive: true,
+          errorCode: null,
+          errorMessage: null,
+          syncCursor: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
           bankAccounts: [{ id: 'acc-1', lastSync: new Date('2024-01-01') }],
         },
         {
           id: 'plaid-item-2',
+          userId: 'user123',
+          plaidItemId: 'item-123-2',
+          accessToken: 'encrypted_token',
+          institutionId: 'ins_2',
           institutionName: 'Another Bank',
+          institutionLogo: null,
+          availableProducts: [],
+          billedProducts: [],
           status: 'error',
+          lastWebhook: null,
+          needsSync: false,
+          isActive: true,
+          errorCode: null,
+          errorMessage: null,
+          syncCursor: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
           bankAccounts: [],
         },
-      ]);
+      ] as any);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests
