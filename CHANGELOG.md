@@ -7,7 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added - Security Enhancements (2025-06-27)
+## [1.1.0] - 2025-06-27 - Phase 2 Advanced Features Complete
+
+### 🤖 Added - AI & Analytics Release
+
+#### AI-Powered Categorization
+- **OpenAI Integration** - GPT-4o-mini for intelligent subscription categorization
+- **Smart Merchant Normalization** - Automatic cleanup of transaction names
+- **12 Predefined Categories** - Streaming, Music, Software, Gaming, and more
+- **Confidence Scoring** - Transparency in AI decisions
+- **Manual Override** - Users maintain full control
+- **Bulk Categorization** - Process multiple subscriptions at once
+- **Cost Tracking** - Monitor API usage and costs
+
+#### Advanced Analytics
+- **Predictive Analytics** - Spending forecasts with confidence intervals
+- **Time-Series Analysis** - Flexible grouping by day/week/month
+- **Anomaly Detection** - Identify unusual charges and price changes
+- **Cost Optimization** - Suggestions for saving money
+- **Interactive Charts** - Beautiful visualizations with Recharts
+- **Custom Reports** - Generate comprehensive analytics reports
+- **Comparison Views** - Month-over-month and year-over-year analysis
+
+#### Progressive Web App
+- **Service Worker** - Full offline support with smart caching
+- **PWA Manifest** - Installable on all platforms
+- **App Shortcuts** - Quick actions from home screen
+- **Update Notifications** - Seamless app updates
+- **Offline Fallback** - Graceful degradation when offline
+
+#### Mobile Optimization
+- **Bottom Navigation** - Thumb-friendly mobile nav
+- **Swipe Gestures** - Intuitive touch interactions
+- **Pull-to-Refresh** - Native-like refresh behavior
+- **Mobile Quick Actions** - Floating action button menu
+- **Responsive Charts** - Optimized for small screens
+- **Lazy Loading** - Performance optimization for images
+- **Infinite Scroll** - Smooth pagination on mobile
+
+#### Data Export
+- **Multiple Formats** - CSV, JSON, PDF, and Excel support
+- **Customizable Fields** - Choose what data to export
+- **Date Range Filtering** - Export specific time periods
+- **Bulk Export** - All data or selected subscriptions
+- **Transaction Inclusion** - Optional transaction details
+- **Export History** - Track past exports
+
+### Changed
+- **Performance** - Optimized bundle size with code splitting
+- **Caching** - Implemented aggressive caching for AI responses
+- **Database** - Added indexes for analytics queries
+- **UI Components** - Enhanced for touch interactions
+
+### Technical Details
+- **New Dependencies**: openai, recharts, framer-motion, @radix-ui components
+- **Database Tables**: Category, MerchantAlias
+- **API Endpoints**: 20+ new tRPC procedures
+- **Components**: 15+ new UI components
+- **Service Worker**: Offline-first architecture
+
+## [1.0.0] - 2025-06-27 - Security Enhancements
 
 - **Account Lockout Protection**
   - Added automatic account lockout after 5 failed login attempts
@@ -61,7 +120,7 @@ This release resolves a critical production middleware error on Vercel deploymen
   - Removed imports of `@/server/lib/audit-logger` (requires Node.js runtime)
   - Inlined essential security functions for Edge compatibility
 
-#### Changed
+#### Changed - (v1.0.0-production-ready)
 
 - **Middleware Architecture**
   - Simplified security checks to Edge-compatible implementations

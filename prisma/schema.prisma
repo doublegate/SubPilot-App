@@ -169,6 +169,11 @@ model Transaction {
   // Subscription Detection
   confidence            Decimal  @default(0) // 0-1 confidence score
   isSubscription        Boolean  @default(false)
+  
+  // AI Categorization
+  aiCategory            String?  // AI-detected category
+  aiCategoryConfidence  Decimal? // Confidence score for AI categorization
+  normalizedMerchantName String? // AI-normalized merchant name
 
   // Timestamps
   createdAt             DateTime @default(now())
@@ -201,6 +206,11 @@ model Subscription {
   description           String?
   category              String?
   notes                 String?
+  
+  // AI Categorization
+  aiCategory            String?  // AI-detected category (overrides category if set)
+  aiCategoryConfidence  Decimal? // Confidence score for AI categorization
+  categoryOverride      String?  // Manual category override by user
   amount                Decimal
   currency              String   @default("USD")
   frequency             String   // monthly, yearly, weekly, quarterly
@@ -341,4 +351,53 @@ model AuditLog {
   @@index([action])
   @@index([timestamp])
   @@map("audit_logs")
+}
+
+// Category hierarchy for subscriptions
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  icon        String?
+  parentId    String?
+  
+  // Metadata
+  keywords    Json     @default("[]") // Array of keywords for matching
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  
+  @@index([parentId])
+  @@index([name])
+  @@map("categories")
+}
+
+// Merchant name aliases for better categorization
+model MerchantAlias {
+  id               String   @id @default(cuid())
+  originalName     String   @unique // The raw merchant name from transactions
+  normalizedName   String   // The clean, normalized name
+  category         String?  // Default category for this merchant
+  
+  // Metadata
+  confidence       Decimal  @default(1.0) // Confidence in this alias mapping
+  isVerified       Boolean  @default(false) // Manually verified by admin
+  usageCount       Int      @default(0) // How many times this alias was used
+  
+  // Timestamps
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  lastUsedAt       DateTime @default(now())
+  
+  @@index([originalName])
+  @@index([normalizedName])
+  @@index([category])
+  @@map("merchant_aliases")
 }

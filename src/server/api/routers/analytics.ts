@@ -5,6 +5,7 @@ import {
   type Subscription,
   type Transaction,
 } from '@prisma/client';
+import { AnalyticsService } from '@/server/services/analytics.service';
 
 // Type-safe cache data structures
 interface SpendingOverviewData {
@@ -694,5 +695,155 @@ export const analyticsRouter = createTRPCRouter({
         contentType: input.format === 'csv' ? 'text/csv' : 'application/json',
         exportDate: new Date(),
       };
+    }),
+
+  /**
+   * Get detailed category breakdown with trends
+   */
+  getCategoryBreakdown: protectedProcedure
+    .input(
+      z.object({
+        timeRange: timeRangeEnum.optional().default('month'),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const analyticsService = new AnalyticsService(ctx.db);
+      return analyticsService.analyzeCategorySpending(
+        ctx.session.user.id,
+        input.timeRange as 'month' | 'quarter' | 'year'
+      );
+    }),
+
+  /**
+   * Get spending comparisons (month-over-month, year-over-year)
+   */
+  getComparisons: protectedProcedure
+    .input(
+      z.object({
+        comparisonType: z.enum(['month-over-month', 'year-over-year', 'quarter-over-quarter']),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const analyticsService = new AnalyticsService(ctx.db);
+      
+      const endDate = new Date();
+      const currentStart = new Date();
+      const previousStart = new Date();
+      const previousEnd = new Date();
+
+      switch (input.comparisonType) {
+        case 'month-over-month':
+          currentStart.setMonth(endDate.getMonth() - 1);
+          previousStart.setMonth(endDate.getMonth() - 2);
+          previousEnd.setMonth(endDate.getMonth() - 1);
+          break;
+        case 'quarter-over-quarter':
+          currentStart.setMonth(endDate.getMonth() - 3);
+          previousStart.setMonth(endDate.getMonth() - 6);
+          previousEnd.setMonth(endDate.getMonth() - 3);
+          break;
+        case 'year-over-year':
+          currentStart.setFullYear(endDate.getFullYear() - 1);
+          previousStart.setFullYear(endDate.getFullYear() - 2);
+          previousEnd.setFullYear(endDate.getFullYear() - 1);
+          break;
+      }
+
+      return analyticsService.compareSpendingPeriods(
+        ctx.session.user.id,
+        currentStart,
+        endDate,
+        previousStart,
+        previousEnd
+      );
+    }),
+
+  /**
+   * Get predictive analytics
+   */
+  getPredictions: protectedProcedure
+    .input(
+      z.object({
+        horizonMonths: z.number().min(1).max(12).optional().default(3),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const analyticsService = new AnalyticsService(ctx.db);
+      return analyticsService.predictFutureSpending(
+        ctx.session.user.id,
+        input.horizonMonths
+      );
+    }),
+
+  /**
+   * Detect anomalies in spending
+   */
+  getAnomalies: protectedProcedure.query(async ({ ctx }) => {
+    const analyticsService = new AnalyticsService(ctx.db);
+    return analyticsService.detectAnomalies(ctx.session.user.id);
+  }),
+
+  /**
+   * Get cost optimization suggestions
+   */
+  getOptimizations: protectedProcedure.query(async ({ ctx }) => {
+    const analyticsService = new AnalyticsService(ctx.db);
+    return analyticsService.generateOptimizationSuggestions(ctx.session.user.id);
+  }),
+
+  /**
+   * Generate comprehensive analytics report
+   */
+  generateReport: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const analyticsService = new AnalyticsService(ctx.db);
+      
+      const endDate = input.endDate ?? new Date();
+      const startDate = input.startDate ?? (() => {
+        const date = new Date();
+        date.setMonth(date.getMonth() - 1);
+        return date;
+      })();
+
+      return analyticsService.generateReport(
+        ctx.session.user.id,
+        startDate,
+        endDate
+      );
+    }),
+
+  /**
+   * Get time series data for custom analysis
+   */
+  getTimeSeries: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+        groupBy: z.enum(['day', 'week', 'month']).optional().default('month'),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const analyticsService = new AnalyticsService(ctx.db);
+      
+      const endDate = input.endDate ?? new Date();
+      const startDate = input.startDate ?? (() => {
+        const date = new Date();
+        date.setFullYear(date.getFullYear() - 1);
+        return date;
+      })();
+
+      return analyticsService.generateTimeSeriesData(
+        ctx.session.user.id,
+        startDate,
+        endDate,
+        input.groupBy
+      );
     }),
 });

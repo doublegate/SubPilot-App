@@ -2,17 +2,25 @@
 
 import { DashboardStats } from '@/components/dashboard-stats';
 import { SubscriptionList } from '@/components/subscription-list';
+import { MobileSubscriptionList } from '@/components/mobile-subscription-list';
 import { BankConnectionCard } from '@/components/bank-connection-card';
 import { PlaidLinkButton } from '@/components/plaid-link-button';
+import { MobileQuickActions } from '@/components/mobile-quick-actions';
+import { PullToRefresh } from '@/components/pull-to-refresh';
+import { ExportModal } from '@/components/export-modal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/trpc/react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useMobile } from '@/hooks/use-mobile';
+import { useState } from 'react';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { data: session } = useSession();
+  const isMobile = useMobile();
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   // Fetch all data
   const {
@@ -240,10 +248,19 @@ export default function DashboardPage() {
     unusedSubscriptions: insights?.unusedCount ?? 0,
   };
 
-  return (
-    <div className="space-y-8">
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchStats(),
+      refetchSubscriptions(),
+      refetchPlaid(),
+      refetchNotifications(),
+    ]);
+  };
+
+  const content = (
+    <div className="space-y-6 md:space-y-8">
       {/* Quick Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
@@ -362,24 +379,46 @@ export default function DashboardPage() {
           </div>
         </div>
         {subscriptionsData && subscriptionsData.subscriptions.length > 0 ? (
-          <SubscriptionList
-            subscriptions={subscriptionsData.subscriptions.map(sub => ({
-              id: sub.id,
-              name: sub.name,
-              amount: sub.amount,
-              currency: sub.currency,
-              frequency: sub.frequency as
-                | 'monthly'
-                | 'yearly'
-                | 'weekly'
-                | 'quarterly',
-              nextBilling: sub.nextBilling,
-              status: sub.isActive
-                ? ('active' as const)
-                : ('cancelled' as const),
-              category: sub.category ?? undefined,
-            }))}
-          />
+          isMobile ? (
+            <MobileSubscriptionList
+              subscriptions={subscriptionsData.subscriptions.map(sub => ({
+                id: sub.id,
+                name: sub.name,
+                amount: sub.amount,
+                currency: sub.currency,
+                frequency: sub.frequency as
+                  | 'monthly'
+                  | 'yearly'
+                  | 'weekly'
+                  | 'quarterly',
+                nextBilling: sub.nextBilling,
+                status: sub.isActive
+                  ? ('active' as const)
+                  : ('cancelled' as const),
+                category: sub.category ?? undefined,
+              }))}
+              onRefresh={handleRefresh}
+            />
+          ) : (
+            <SubscriptionList
+              subscriptions={subscriptionsData.subscriptions.map(sub => ({
+                id: sub.id,
+                name: sub.name,
+                amount: sub.amount,
+                currency: sub.currency,
+                frequency: sub.frequency as
+                  | 'monthly'
+                  | 'yearly'
+                  | 'weekly'
+                  | 'quarterly',
+                nextBilling: sub.nextBilling,
+                status: sub.isActive
+                  ? ('active' as const)
+                  : ('cancelled' as const),
+                category: sub.category ?? undefined,
+              }))}
+            />
+          )
         ) : (
           <div className="rounded-lg border border-dashed p-8 text-center">
             <p className="text-muted-foreground">
@@ -564,6 +603,33 @@ export default function DashboardPage() {
         </section>
       )}
     </div>
+  );
+
+  return (
+    <>
+      {isMobile ? (
+        <PullToRefresh onRefresh={handleRefresh}>
+          {content}
+        </PullToRefresh>
+      ) : (
+        content
+      )}
+      
+      {/* Mobile Quick Actions FAB */}
+      {isMobile && (
+        <MobileQuickActions
+          onAddSubscription={() => router.push('/subscriptions?action=add')}
+          onExport={() => setExportModalOpen(true)}
+          onSync={() => syncMutation.mutate({})}
+        />
+      )}
+      
+      {/* Export Modal */}
+      <ExportModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+      />
+    </>
   );
 }
 

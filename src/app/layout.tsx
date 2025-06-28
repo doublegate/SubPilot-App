@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 
 import { TRPCReactProvider } from '@/trpc/react';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
 
 export const metadata: Metadata = {
   title: {
@@ -14,9 +15,24 @@ export const metadata: Metadata = {
   description:
     'Your command center for recurring finances. Monitor, manage, and cancel subscriptions automatically.',
   icons: [{ rel: 'icon', url: '/favicon.ico' }],
+  manifest: '/manifest.json',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'SubPilot',
+  },
   other: {
     'theme-color': '#06B6D4',
     'color-scheme': 'light dark',
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
   },
 };
 
@@ -51,9 +67,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TRPCReactProvider>
+            <ServiceWorkerRegistration />
             {children}
             <Analytics />
-            <Toaster richColors position="bottom-right" />
+            <Toaster richColors position="top-center" className="md:bottom-right" />
           </TRPCReactProvider>
         </ThemeProvider>
       </body>

@@ -451,6 +451,15 @@ export class SubscriptionDetector {
     let skipped = 0;
     let errors = 0;
 
+    // Import categorization service if available
+    let categorizationService: any;
+    try {
+      const { getCategorizationService } = await import('./categorization.service');
+      categorizationService = getCategorizationService(this.db);
+    } catch (error) {
+      console.log('Categorization service not available, using default categories');
+    }
+
     for (const result of results) {
       if (!result.isSubscription || !result.frequency) {
         skipped++;
@@ -474,7 +483,7 @@ export class SubscriptionDetector {
               userId,
               name: result.merchantName,
               description: `Recurring payment to ${result.merchantName}`,
-              category: 'general', // Could be enhanced with category detection
+              category: 'other', // Default category, will be updated by AI
               amount: result.averageAmount,
               currency: 'USD',
               frequency: result.frequency,
@@ -493,9 +502,23 @@ export class SubscriptionDetector {
           console.log(
             `Created subscription: ${result.merchantName} (${result.frequency}, confidence: ${result.confidence})`
           );
+
+          // Categorize the new subscription using AI
+          if (categorizationService) {
+            try {
+              await categorizationService.categorizeSubscription(
+                newSubscription.id,
+                userId,
+                false
+              );
+              console.log(`AI categorized subscription: ${result.merchantName}`);
+            } catch (error) {
+              console.error(`Failed to categorize subscription ${result.merchantName}:`, error);
+            }
+          }
         } else {
           // Update existing subscription - reactivate if needed
-          await this.db.subscription.update({
+          const updatedSubscription = await this.db.subscription.update({
             where: { id: existing.id },
             data: {
               amount: result.averageAmount,
@@ -509,6 +532,20 @@ export class SubscriptionDetector {
           console.log(
             `Updated subscription: ${result.merchantName} (${result.frequency})`
           );
+
+          // Re-categorize if it doesn't have a category
+          if (categorizationService && !existing.aiCategory && !existing.categoryOverride) {
+            try {
+              await categorizationService.categorizeSubscription(
+                existing.id,
+                userId,
+                false
+              );
+              console.log(`AI categorized updated subscription: ${result.merchantName}`);
+            } catch (error) {
+              console.error(`Failed to categorize subscription ${result.merchantName}:`, error);
+            }
+          }
         }
       } catch (error) {
         errors++;

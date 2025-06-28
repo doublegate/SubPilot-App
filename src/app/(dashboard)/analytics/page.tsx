@@ -24,8 +24,9 @@ import { CategoryBreakdownChart } from '@/components/analytics/category-breakdow
 import { SubscriptionTimeline } from '@/components/analytics/subscription-timeline';
 import { UpcomingRenewalsCalendar } from '@/components/analytics/upcoming-renewals-calendar';
 import { AnalyticsFilters } from '@/components/analytics/analytics-filters';
-import { Download, TrendingUp, PieChart, Calendar, Clock } from 'lucide-react';
+import { Download, TrendingUp, PieChart, Calendar, Clock, Brain } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 type TimeRange = 'week' | 'month' | 'quarter' | 'year' | 'all';
 
@@ -188,6 +189,12 @@ export default function AnalyticsPage() {
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
+          <Link href="/analytics/advanced">
+            <Button variant="default" size="sm">
+              <Brain className="mr-2 h-4 w-4" />
+              Advanced Analytics
+            </Button>
+          </Link>
         </div>
       </div>
 

@@ -6,6 +6,8 @@ import { subscriptionsRouter } from '@/server/api/routers/subscriptions';
 import { transactionsRouter } from '@/server/api/routers/transactions';
 import { notificationsRouter } from '@/server/api/routers/notifications';
 import { analyticsRouter } from '@/server/api/routers/analytics';
+import { categorizationRouter } from '@/server/api/routers/categorization';
+import { exportRouter } from '@/server/api/routers/export';
 
 /**
  * This is the primary router for your server.
@@ -20,6 +22,8 @@ export const appRouter = createTRPCRouter({
   transactions: transactionsRouter,
   notifications: notificationsRouter,
   analytics: analyticsRouter,
+  categorization: categorizationRouter,
+  export: exportRouter,
 });
 
 // export type definition of API

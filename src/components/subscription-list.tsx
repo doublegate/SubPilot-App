@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Filter, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-interface Subscription {
+export interface Subscription {
   id: string;
   name: string;
   amount: number;
