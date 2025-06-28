@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Import Alias Standardization** - 2025-06-28 08:22
+  - Fixed critical CI/CD build failure with "Cannot access before initialization" error
+  - Root cause: Mixed import aliases (@/ vs ~/) causing webpack module duplication
+  - Standardized imports in `/src/app/api/trpc/[trpc]/route.ts` to use ~/ consistently
+  - Prevents temporal dead zone errors during Next.js page data collection
+  - Validated fix using MCP Intelligent Debugger combination
+  
 - **Build-Time Initialization Errors** - 2025-06-28 08:01
   - Resolved "ReferenceError: Cannot access 'u' before initialization" in CI/CD
   - Removed problematic Proxy pattern from Stripe lazy loading

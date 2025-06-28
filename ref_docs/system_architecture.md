@@ -25,6 +25,9 @@ graph TB
         J[Transaction Service]
         K[Budget Service]
         L[Notification Service]
+        M1[Cancellation Service]
+        M2[Assistant Service]
+        M3[Billing Service]
     end
     
     subgraph "Data Layer"
@@ -37,6 +40,9 @@ graph TB
         P[Plaid Banking API]
         Q[Email Service]
         R[Authentication]
+        V[OpenAI API]
+        W[Stripe API]
+        X[Playwright Automation]
     end
     
     subgraph "Infrastructure"
