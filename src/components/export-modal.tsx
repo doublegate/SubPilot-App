@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { FileDown, FileJson, FileText, FileSpreadsheet } from 'lucide-react';
-import { format } from 'date-fns';
+// import { format } from 'date-fns'; // Currently unused
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ interface ExportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedSubscriptionIds?: string[];
+  defaultFormat?: ExportFormat;
 }
 
 type ExportFormat = 'csv' | 'json' | 'pdf' | 'excel';
@@ -57,8 +58,9 @@ export function ExportModal({
   open,
   onOpenChange,
   selectedSubscriptionIds,
+  defaultFormat = 'csv',
 }: ExportModalProps) {
-  const [format, setFormat] = useState<ExportFormat>('csv');
+  const [format, setFormat] = useState<ExportFormat>(defaultFormat);
   const [includeTransactions, setIncludeTransactions] = useState(false);
   const [includeAnalytics, setIncludeAnalytics] = useState(false);
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});

@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import {
   cacheService,
-  cacheKeys,
   cacheTTL,
 } from '@/server/services/cache.service';
 import { checkRateLimit } from '@/server/lib/rate-limiter';
@@ -14,9 +13,9 @@ const DEFAULT_MODEL = 'gpt-4o-mini';
 const MAX_TOKENS = 500;
 const TEMPERATURE = 0.3; // Lower temperature for more consistent categorization
 
-// Rate limiting for OpenAI API
-const OPENAI_RATE_LIMIT_PER_MINUTE = 60;
-const OPENAI_RATE_LIMIT_PER_DAY = 1000;
+// Rate limiting for OpenAI API (reserved for future use)
+// const OPENAI_RATE_LIMIT_PER_MINUTE = 60;
+// const OPENAI_RATE_LIMIT_PER_DAY = 1000;
 
 // Cost tracking constants (approximate costs per 1k tokens)
 const MODEL_COSTS = {
@@ -432,11 +431,11 @@ export class OpenAICategorizationClient {
 
     try {
       const response = await this.callOpenAI(prompt, 'normalization', 100);
-      const normalized = response.trim();
+      const normalized = typeof response === 'string' ? response.trim() : String(response).trim();
 
       cacheService.set(cacheKey, normalized, cacheTTL.veryLong);
       return normalized;
-    } catch (error) {
+    } catch {
       // Fallback normalization
       return this.basicNormalization(merchantName);
     }
@@ -532,7 +531,7 @@ export class OpenAICategorizationClient {
     prompt: string,
     type: string,
     maxTokens: number = MAX_TOKENS
-  ): Promise<any> {
+  ): Promise<unknown> {
     const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
@@ -571,7 +570,7 @@ export class OpenAICategorizationClient {
 
     try {
       return JSON.parse(data.choices[0].message.content);
-    } catch (error) {
+    } catch {
       throw new Error('Failed to parse OpenAI response as JSON');
     }
   }
@@ -685,9 +684,7 @@ let _openAIClient: OpenAICategorizationClient | null = null;
  * This lazy initialization prevents build-time errors when OPENAI_API_KEY is not available
  */
 export function getOpenAIClient(): OpenAICategorizationClient {
-  if (!_openAIClient) {
-    _openAIClient = new OpenAICategorizationClient();
-  }
+  _openAIClient ??= new OpenAICategorizationClient();
   return _openAIClient;
 }
 

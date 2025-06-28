@@ -29,7 +29,7 @@ export const exportRouter = createTRPCRouter({
           content: result.content,
           mimeType: result.mimeType,
         };
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to generate CSV export',
@@ -53,7 +53,7 @@ export const exportRouter = createTRPCRouter({
           content: result.content,
           mimeType: result.mimeType,
         };
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to generate JSON export',
@@ -77,7 +77,7 @@ export const exportRouter = createTRPCRouter({
           content: result.content,
           mimeType: result.mimeType,
         };
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to generate PDF report',
@@ -101,7 +101,7 @@ export const exportRouter = createTRPCRouter({
           content: result.content,
           mimeType: result.mimeType,
         };
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to generate Excel export',
@@ -131,7 +131,7 @@ export const exportRouter = createTRPCRouter({
           success: true,
           scheduledExport: result,
         };
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to schedule export',
@@ -155,7 +155,7 @@ export const exportRouter = createTRPCRouter({
         return {
           exports: history,
         };
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch export history',
@@ -202,7 +202,7 @@ export const exportRouter = createTRPCRouter({
           success: true,
           exports: results,
         };
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to generate bulk exports',

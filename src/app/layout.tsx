@@ -1,6 +1,6 @@
 import '@/styles/globals.css';
 import { Analytics } from '@vercel/analytics/next';
-import { type Metadata } from 'next';
+import { type Metadata, type Viewport } from 'next';
 import { Toaster } from 'sonner';
 
 import { TRPCReactProvider } from '@/trpc/react';
@@ -16,12 +16,6 @@ export const metadata: Metadata = {
     'Your command center for recurring finances. Monitor, manage, and cancel subscriptions automatically.',
   icons: [{ rel: 'icon', url: '/favicon.ico' }],
   manifest: '/manifest.json',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -34,6 +28,13 @@ export const metadata: Metadata = {
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'default',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

@@ -62,6 +62,8 @@ const config = {
         '@typescript-eslint/no-redundant-type-constituents': 'off',
         '@typescript-eslint/ban-types': 'off',
         '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/unbound-method': 'off',
+        '@typescript-eslint/no-empty-function': 'off',
       },
     },
   ],

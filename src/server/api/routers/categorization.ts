@@ -5,7 +5,6 @@ import { getCategorizationService } from '@/server/services/categorization.servi
 import { SUBSCRIPTION_CATEGORIES } from '@/server/lib/openai-client';
 import {
   cacheService,
-  cacheKeys,
   cacheTTL,
 } from '@/server/services/cache.service';
 
@@ -270,7 +269,11 @@ export const categorizationRouter = createTRPCRouter({
       // Check if user has admin privileges (you might want to add this to your user model)
       // For now, we'll allow any authenticated user to update aliases
 
-      const updateData: any = {};
+      const updateData: {
+        normalizedName?: string;
+        category?: string;
+        isVerified?: boolean;
+      } = {};
 
       if (input.normalizedName !== undefined) {
         updateData.normalizedName = input.normalizedName;

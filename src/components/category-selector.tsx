@@ -134,8 +134,8 @@ export function CategorySelector({
           {Object.entries(categories).map(([id, category]) => (
             <SelectItem key={id} value={id}>
               <span className="flex items-center gap-2">
-                <span>{category.icon}</span>
-                <span>{category.name}</span>
+                <span>{(category as { icon: string; name: string }).icon}</span>
+                <span>{(category as { icon: string; name: string }).name}</span>
               </span>
             </SelectItem>
           ))}

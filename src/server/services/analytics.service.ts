@@ -2,9 +2,7 @@ import {
   type PrismaClient,
   type Subscription,
   type Transaction,
-  type Prisma,
 } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
 
 // Type definitions
 export interface TimeSeriesDataPoint {
@@ -359,7 +357,7 @@ export class AnalyticsService {
     }
 
     // Check for anomalies
-    for (const [subId, transactions] of transactionsBySubscription) {
+    for (const [, transactions] of transactionsBySubscription) {
       const subscriptionId = transactions[0]?.subscriptionId;
       if (!subscriptionId) continue;
 
@@ -558,9 +556,7 @@ export class AnalyticsService {
     for (const tx of transactions) {
       const key = this.getDateKey(tx.date, groupBy);
 
-      if (!grouped[key]) {
-        grouped[key] = { total: 0, recurring: 0, count: 0 };
-      }
+      grouped[key] ??= { total: 0, recurring: 0, count: 0 };
 
       grouped[key].total += tx.amount.toNumber();
       grouped[key].count += 1;
@@ -609,9 +605,7 @@ export class AnalyticsService {
 
     for (const point of timeSeries) {
       const month = new Date(point.date).getMonth();
-      if (!monthlyAverages[month]) {
-        monthlyAverages[month] = [];
-      }
+      monthlyAverages[month] ??= [];
       monthlyAverages[month].push(point.value);
     }
 
@@ -706,7 +700,7 @@ export class AnalyticsService {
       potentialSavings: number;
     }> = [];
 
-    for (const [_, subs] of groups) {
+    for (const [, subs] of groups) {
       if (subs.length > 1) {
         const monthlyAmounts = subs.map(s =>
           this.convertToMonthlyAmount(s.amount.toNumber(), s.frequency)
