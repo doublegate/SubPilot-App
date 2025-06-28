@@ -11,6 +11,7 @@ interface Subscription {
   frequency: 'monthly' | 'yearly' | 'weekly' | 'quarterly';
   nextBilling: Date | null;
   status: 'active' | 'cancelled' | 'pending';
+  isActive: boolean;
   category?: string;
   provider?: {
     name: string;
@@ -27,6 +28,7 @@ const mockSubscription1: Subscription = {
   frequency: 'monthly',
   nextBilling: new Date('2024-08-15'),
   status: 'active',
+  isActive: true,
   category: 'Entertainment',
   provider: {
     name: 'Netflix Inc.',
@@ -43,6 +45,7 @@ const mockSubscription2: Subscription = {
   frequency: 'monthly',
   nextBilling: new Date('2024-08-10'),
   status: 'active',
+  isActive: true,
   category: 'Music',
   provider: {
     name: 'Spotify AB',
@@ -59,6 +62,7 @@ const mockSubscription3: Subscription = {
   frequency: 'monthly',
   nextBilling: null,
   status: 'cancelled',
+  isActive: false,
   category: 'Entertainment',
   provider: null,
   lastTransaction: new Date('2024-06-01'),

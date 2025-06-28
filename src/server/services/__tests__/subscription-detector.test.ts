@@ -164,6 +164,9 @@ describe('SubscriptionDetector', () => {
     authorizedDate: null,
     location: null,
     confidence: new Decimal(0),
+    aiCategory: null,
+    aiCategoryConfidence: null,
+    normalizedMerchantName: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

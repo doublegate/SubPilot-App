@@ -228,12 +228,21 @@ export class OpenAICategorizationClient {
   private costTracker = new Map<string, number>();
 
   constructor(apiKey?: string, model?: string) {
-    if (!apiKey && !env.OPENAI_API_KEY) {
-      throw new Error('OpenAI API key is required');
-    }
-
-    this.apiKey = apiKey ?? env.OPENAI_API_KEY!;
+    // During build time, we don't need to validate the API key
+    // The validation will happen when the methods are actually called
+    this.apiKey = apiKey ?? env.OPENAI_API_KEY ?? '';
     this.model = model ?? DEFAULT_MODEL;
+  }
+
+  /**
+   * Validate that API key is available before making requests
+   */
+  private validateApiKey(): void {
+    if (!this.apiKey) {
+      throw new Error(
+        'OpenAI API key is required. Please set OPENAI_API_KEY environment variable.'
+      );
+    }
   }
 
   /**
@@ -251,6 +260,9 @@ export class OpenAICategorizationClient {
     if (cached) {
       return cached;
     }
+
+    // Validate API key is available
+    this.validateApiKey();
 
     // Rate limiting check
     if (userId) {
@@ -298,6 +310,9 @@ export class OpenAICategorizationClient {
     merchants: Array<{ name: string; description?: string; amount?: number }>,
     userId?: string
   ): Promise<BulkCategorizationResponse> {
+    // Validate API key is available
+    this.validateApiKey();
+
     // Check cache for all merchants
     const uncachedMerchants: typeof merchants = [];
     const cachedResults: BulkCategorizationResponse['categorizations'] = [];
@@ -397,6 +412,9 @@ export class OpenAICategorizationClient {
     if (cached) {
       return cached;
     }
+
+    // Validate API key is available
+    this.validateApiKey();
 
     const prompt = `
       Normalize this merchant name to its canonical form. Remove any transaction IDs, 
@@ -659,5 +677,32 @@ export class OpenAICategorizationClient {
   }
 }
 
-// Export singleton instance
-export const openAIClient = new OpenAICategorizationClient();
+// Lazy singleton instance
+let _openAIClient: OpenAICategorizationClient | null = null;
+
+/**
+ * Get or create the OpenAI client instance
+ * This lazy initialization prevents build-time errors when OPENAI_API_KEY is not available
+ */
+export function getOpenAIClient(): OpenAICategorizationClient {
+  if (!_openAIClient) {
+    _openAIClient = new OpenAICategorizationClient();
+  }
+  return _openAIClient;
+}
+
+// Export singleton instance for backwards compatibility
+export const openAIClient = {
+  get categorizeTransaction() {
+    return getOpenAIClient().categorizeTransaction.bind(getOpenAIClient());
+  },
+  get bulkCategorize() {
+    return getOpenAIClient().bulkCategorize.bind(getOpenAIClient());
+  },
+  get normalizeMerchantName() {
+    return getOpenAIClient().normalizeMerchantName.bind(getOpenAIClient());
+  },
+  get getCostStats() {
+    return getOpenAIClient().getCostStats.bind(getOpenAIClient());
+  },
+};

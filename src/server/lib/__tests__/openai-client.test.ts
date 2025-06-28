@@ -193,10 +193,10 @@ describe('OpenAICategorizationClient', () => {
       const result = await client.bulkCategorize(merchants);
 
       expect(result.categorizations).toHaveLength(2);
-      expect(result.categorizations[0].category).toBe('streaming');
-      expect(result.categorizations[0].confidence).toBe(0.7);
-      expect(result.categorizations[1].category).toBe('other');
-      expect(result.categorizations[1].confidence).toBe(0.5);
+      expect(result.categorizations[0]?.category).toBe('streaming');
+      expect(result.categorizations[0]?.confidence).toBe(0.7);
+      expect(result.categorizations[1]?.category).toBe('other');
+      expect(result.categorizations[1]?.confidence).toBe(0.5);
     });
   });
 

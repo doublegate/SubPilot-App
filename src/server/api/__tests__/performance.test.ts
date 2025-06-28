@@ -89,6 +89,9 @@ describe('API Performance Benchmarks', () => {
         status: 'active',
         isActive: i % 10 !== 0, // 90% active
         category: ['Entertainment', 'Software', 'Health'][i % 3] ?? null,
+        aiCategory: ['Entertainment', 'Software', 'Health'][i % 3] ?? null,
+        aiCategoryConfidence: new Decimal(0.8 + (i % 20) / 100),
+        categoryOverride: null,
         description: `Description for service ${i}`,
         notes: null,
         nextBilling: new Date(Date.now() + (30 - (i % 30)) * 86400000),
@@ -100,6 +103,8 @@ describe('API Performance Benchmarks', () => {
         createdAt: new Date(Date.now() - i * 86400000),
         updatedAt: new Date(),
         transactions: [],
+        history: [],
+        notifications: [],
       }));
 
       // Router will only take 20 items by default
@@ -128,6 +133,9 @@ describe('API Performance Benchmarks', () => {
         status: 'active',
         isActive: true,
         category: 'Entertainment',
+        aiCategory: 'Entertainment',
+        aiCategoryConfidence: new Decimal(0.95),
+        categoryOverride: null,
         description: `Netflix subscription ${i}`,
         notes: null,
         nextBilling: new Date(),
@@ -139,6 +147,8 @@ describe('API Performance Benchmarks', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         transactions: [],
+        history: [],
+        notifications: [],
       }));
 
       // Router will take exactly 50 items as requested
@@ -203,6 +213,9 @@ describe('API Performance Benchmarks', () => {
           location: null,
           confidence: new Decimal(0),
           isSubscription: false,
+          aiCategory: null,
+          aiCategoryConfidence: null,
+          normalizedMerchantName: null,
           createdAt: new Date(),
           updatedAt: new Date(),
         }))
@@ -255,6 +268,7 @@ describe('API Performance Benchmarks', () => {
         type: 'SUBSCRIPTION_RENEWED' as const,
         title: `Notification ${i}`,
         message: `Your subscription ${i} has been renewed`,
+        severity: 'info' as const,
         data: {},
         read: false,
         readAt: null,
@@ -288,6 +302,9 @@ describe('API Performance Benchmarks', () => {
         status: 'active',
         isActive: true,
         category: 'Software',
+        aiCategory: 'Software',
+        aiCategoryConfidence: new Decimal(0.95),
+        categoryOverride: null,
         description: 'Test subscription',
         notes: null,
         nextBilling: new Date(),
@@ -299,6 +316,8 @@ describe('API Performance Benchmarks', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         transactions: [],
+        history: [],
+        notifications: [],
       };
 
       const subscriptionFindMock = vi.mocked(db.subscription.findFirst);
@@ -340,6 +359,9 @@ describe('API Performance Benchmarks', () => {
           status: 'active',
           isActive: true,
           category: 'Software',
+          aiCategory: 'Software',
+          aiCategoryConfidence: new Decimal(0.95),
+          categoryOverride: null,
           description: `Description ${i}`,
           notes: null,
           nextBilling: new Date(),
@@ -362,6 +384,8 @@ describe('API Performance Benchmarks', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
           transactions: [],
+          history: [],
+          notifications: [],
         })
       );
 
@@ -394,6 +418,9 @@ describe('API Performance Benchmarks', () => {
           status: 'active',
           isActive: true,
           category: 'Software',
+          aiCategory: 'Software',
+          aiCategoryConfidence: new Decimal(0.9),
+          categoryOverride: null,
           description: 'Test',
           notes: null,
           nextBilling: new Date(),
@@ -451,6 +478,7 @@ describe('API Performance Benchmarks', () => {
           | 'PAYMENT_FAILED',
         title: `Notification ${i}`,
         message: `Message ${i}`,
+        severity: 'info' as const,
         data: { subscriptionId: `sub-${i % 100}` },
         read: i % 2 === 0,
         readAt: i % 2 === 0 ? new Date() : null,
@@ -487,6 +515,9 @@ describe('API Performance Benchmarks', () => {
         status: 'active',
         isActive: true,
         category: 'Software',
+        aiCategory: 'Software',
+        aiCategoryConfidence: new Decimal(0.95),
+        categoryOverride: null,
         description: 'Test',
         notes: null,
         nextBilling: new Date(),
@@ -498,6 +529,8 @@ describe('API Performance Benchmarks', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         transactions: [],
+        history: [],
+        notifications: [],
       };
 
       // Create
@@ -534,6 +567,7 @@ describe('API Performance Benchmarks', () => {
         type: 'SUBSCRIPTION_CANCELLED',
         title: 'Subscription Cancelled',
         message: 'Your subscription has been cancelled',
+        severity: 'info' as const,
         data: {},
         read: false,
         readAt: null,
@@ -562,6 +596,8 @@ describe('API Performance Benchmarks', () => {
         image: null,
         password: null,
         notificationPreferences: {},
+        failedLoginAttempts: 0,
+        lockedUntil: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -584,6 +620,9 @@ describe('API Performance Benchmarks', () => {
           status: 'active',
           isActive: true,
           category: 'Software',
+          aiCategory: 'Software',
+          aiCategoryConfidence: new Decimal(0.9),
+          categoryOverride: null,
           description: null,
           notes: null,
           nextBilling: null,
@@ -605,6 +644,9 @@ describe('API Performance Benchmarks', () => {
           status: 'active',
           isActive: true,
           category: 'Entertainment',
+          aiCategory: 'Entertainment',
+          aiCategoryConfidence: new Decimal(0.9),
+          categoryOverride: null,
           description: null,
           notes: null,
           nextBilling: null,
@@ -658,6 +700,9 @@ describe('API Performance Benchmarks', () => {
         location: null,
         confidence: new Decimal(0),
         isSubscription: true,
+        aiCategory: null,
+        aiCategoryConfidence: null,
+        normalizedMerchantName: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       }));
@@ -682,6 +727,9 @@ describe('API Performance Benchmarks', () => {
         location: null,
         confidence: new Decimal(0),
         isSubscription: true,
+        aiCategory: null,
+        aiCategoryConfidence: null,
+        normalizedMerchantName: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       }));
