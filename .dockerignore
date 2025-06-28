@@ -1,61 +1,69 @@
-# Git
+# Ignore version control
 .git
 .gitignore
 .github
 
-# Dependencies
-node_modules
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Ignore development files
+.env*
+\!.env.example
+.vscode
+.idea
 
-# Testing
-coverage
-.nyc_output
-*.test.js
-*.test.ts
-*.spec.js
-*.spec.ts
-
-# Build outputs
+# Ignore build outputs
 .next
 out
 dist
 build
 
-# Development
-.env
-.env.local
-.env.development
-.env.test
-.env.production
+# Ignore test files
+**/*.test.*
+**/*.spec.*
+__tests__
+__mocks__
+coverage
+.nyc_output
+e2e
 
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
-*~
+# Ignore documentation
+*.md
+\!README.md
+docs
+ref_docs
+archive
+to-dos
 
-# OS
+# Ignore CI/CD files
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Ignore package manager files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Ignore OS files
 .DS_Store
 Thumbs.db
 
-# Documentation
-*.md
-LICENSE
-docs
-to-dos
-ref_docs
+# Ignore temporary files
+*.tmp
+*.temp
+*.log
 
-# CI/CD
-.github
-docker-compose*.yml
-Dockerfile
-.dockerignore
+# Ignore specific project folders
+images
+uploads
+css_theme
+scripts
+security-*
 
-# Misc
-.eslintcache
-.cache
-tmp
-temp
+# Keep only necessary files for build
+\!package.json
+\!package-lock.json
+\!next.config.js
+\!tsconfig.json
+\!public
+\!src
+\!prisma

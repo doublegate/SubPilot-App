@@ -62,6 +62,8 @@ ENV NEXTAUTH_URL=$NEXTAUTH_URL
 ENV NEXTAUTH_SECRET=$BUILD_AUTH_TOKEN
 
 # Build the application
+# Disable Next.js telemetry for faster builds
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build:ci
 
 # Production stage
@@ -96,9 +98,12 @@ EXPOSE 3000
 
 ENV PORT=3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Health check with increased start period and using curl
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=5 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Start the application
 CMD ["node", "server.js"]
