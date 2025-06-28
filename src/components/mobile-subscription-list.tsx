@@ -24,20 +24,24 @@ export function MobileSubscriptionList({
   const [archivingSubscription, setArchivingSubscription] =
     useState<Subscription | null>(null);
 
-  const deleteSubscription = api.subscriptions.delete.useMutation({
+  const cancelSubscription = api.subscriptions.markCancelled.useMutation({
     onSuccess: () => {
-      toast.success('Subscription deleted');
+      toast.success('Subscription cancelled');
       onRefresh?.();
       router.refresh();
     },
-    onError: error => {
-      toast.error('Failed to delete: ' + error.message);
+    onError: (error: { message: string }) => {
+      toast.error('Failed to cancel: ' + error.message);
     },
   });
 
   const handleDelete = (subscription: Subscription) => {
-    if (confirm(`Are you sure you want to delete ${subscription.name}?`)) {
-      deleteSubscription.mutate({ id: subscription.id });
+    if (confirm(`Are you sure you want to cancel ${subscription.name}?`)) {
+      cancelSubscription.mutate({ 
+        id: subscription.id,
+        reason: 'Cancelled via mobile app',
+        cancellationDate: new Date()
+      });
     }
   };
 

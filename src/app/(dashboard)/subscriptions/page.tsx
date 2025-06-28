@@ -281,6 +281,7 @@ export default function SubscriptionsPage() {
               status: sub.isActive
                 ? ('active' as const)
                 : ('cancelled' as const),
+              isActive: sub.isActive,
               category: sub.category ?? undefined,
               provider: sub.provider ?? undefined,
             }))}

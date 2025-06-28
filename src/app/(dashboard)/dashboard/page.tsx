@@ -395,6 +395,7 @@ export default function DashboardPage() {
                 status: sub.isActive
                   ? ('active' as const)
                   : ('cancelled' as const),
+                isActive: sub.isActive,
                 category: sub.category ?? undefined,
               }))}
               onRefresh={handleRefresh}
@@ -415,6 +416,7 @@ export default function DashboardPage() {
                 status: sub.isActive
                   ? ('active' as const)
                   : ('cancelled' as const),
+                isActive: sub.isActive,
                 category: sub.category ?? undefined,
               }))}
             />

@@ -166,13 +166,13 @@ export const ComparisonChart = React.memo(function ComparisonChart({
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="name" className="text-xs" />
               <YAxis
-                tickFormatter={value => formatCurrency(value)}
+                tickFormatter={(value: unknown) => formatCurrency(Number(value))}
                 className="text-xs"
               />
               <Tooltip content={<CustomTooltip />} />
 
               <Bar dataKey="Previous" fill="#e5e7eb" radius={[4, 4, 0, 0]}>
-                <LabelList content={renderCustomLabel} position="top" />
+                <LabelList content={renderCustomLabel as any} position="top" />
               </Bar>
               <Bar dataKey="Current" fill="#06b6d4" radius={[4, 4, 0, 0]} />
             </BarChart>

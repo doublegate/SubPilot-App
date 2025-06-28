@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, useAnimation, type PanInfo } from 'framer-motion';
 import { Archive, Edit, Trash2 } from 'lucide-react';
@@ -27,13 +27,19 @@ export function SwipeableSubscriptionCard({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Reset swipe state when clicking outside
+  const resetSwipe = useCallback(async () => {
+    await controls.start({ x: 0 });
+    setIsSwipedLeft(false);
+    setIsSwipedRight(false);
+  }, [controls]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
-        resetSwipe();
+        void resetSwipe();
       }
     };
 
@@ -44,15 +50,9 @@ export function SwipeableSubscriptionCard({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, []);
+  }, [resetSwipe]);
 
-  const resetSwipe = async () => {
-    await controls.start({ x: 0 });
-    setIsSwipedLeft(false);
-    setIsSwipedRight(false);
-  };
-
-  const handleDragEnd = async (event: any, info: PanInfo) => {
+  const handleDragEnd = async (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = 100;
     const velocity = info.velocity.x;
     const distance = info.offset.x;
@@ -79,7 +79,7 @@ export function SwipeableSubscriptionCard({
     if (!isSwipedLeft && !isSwipedRight) {
       router.push(`/subscriptions/${subscription.id}`);
     } else {
-      resetSwipe();
+      void resetSwipe();
     }
   };
 
@@ -90,7 +90,7 @@ export function SwipeableSubscriptionCard({
         <button
           onClick={() => {
             onEdit?.();
-            resetSwipe();
+            void resetSwipe();
           }}
           className="flex h-full w-1/2 items-center justify-center bg-blue-500 text-white transition-opacity hover:bg-blue-600"
           aria-label="Edit subscription"
@@ -100,7 +100,7 @@ export function SwipeableSubscriptionCard({
         <button
           onClick={() => {
             onArchive?.();
-            resetSwipe();
+            void resetSwipe();
           }}
           className="flex h-full w-1/2 items-center justify-center bg-yellow-500 text-white transition-opacity hover:bg-yellow-600"
           aria-label="Archive subscription"
@@ -114,7 +114,7 @@ export function SwipeableSubscriptionCard({
         <button
           onClick={() => {
             onDelete?.();
-            resetSwipe();
+            void resetSwipe();
           }}
           className="flex h-full w-full items-center justify-center bg-red-500 text-white transition-opacity hover:bg-red-600"
           aria-label="Delete subscription"

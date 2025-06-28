@@ -49,7 +49,7 @@ export function CategorySelector({
 
       // Invalidate related queries
       void utils.subscriptions.getAll.invalidate();
-      void utils.analytics.getOverview.invalidate();
+      void utils.analytics.getSpendingOverview.invalidate();
       void utils.categorization.getStats.invalidate();
     },
     onError: error => {
@@ -68,14 +68,14 @@ export function CategorySelector({
       onMutate: () => {
         setIsUpdating(true);
       },
-      onSuccess: result => {
+      onSuccess: (result) => {
         toast.success('AI categorization complete', {
           description: `Category: ${result.category} (${Math.round(result.confidence * 100)}% confidence)`,
         });
 
         // Invalidate related queries
         void utils.subscriptions.getAll.invalidate();
-        void utils.analytics.getOverview.invalidate();
+        void utils.analytics.getSpendingOverview.invalidate();
         void utils.categorization.getStats.invalidate();
       },
       onError: error => {

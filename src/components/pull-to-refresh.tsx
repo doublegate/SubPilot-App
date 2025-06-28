@@ -49,7 +49,7 @@ export function PullToRefresh({
       }
     };
 
-    const handleTouchEnd = async () => {
+    const handleTouchEnd = () => {
       if (!isPulling) return;
 
       setIsPulling(false);
@@ -58,12 +58,14 @@ export function PullToRefresh({
         setIsRefreshing(true);
         setPullDistance(threshold);
 
-        try {
-          await onRefresh();
-        } finally {
-          setIsRefreshing(false);
-          setPullDistance(0);
-        }
+        void (async () => {
+          try {
+            await onRefresh();
+          } finally {
+            setIsRefreshing(false);
+            setPullDistance(0);
+          }
+        })();
       } else {
         setPullDistance(0);
       }

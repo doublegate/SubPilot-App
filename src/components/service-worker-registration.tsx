@@ -7,7 +7,8 @@ export function ServiceWorkerRegistration() {
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       // Register service worker
-      window.addEventListener('load', async () => {
+      window.addEventListener('load', () => {
+        void (async () => {
         try {
           const registration = await navigator.serviceWorker.register('/sw.js');
           console.log('Service Worker registered:', registration);
@@ -40,13 +41,14 @@ export function ServiceWorkerRegistration() {
           // Check for updates periodically
           setInterval(
             () => {
-              registration.update();
+              void registration.update();
             },
             60 * 60 * 1000
           ); // Check every hour
         } catch (error) {
           console.error('Service Worker registration failed:', error);
         }
+        })();
       });
 
       // Handle offline/online events

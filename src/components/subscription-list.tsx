@@ -22,6 +22,7 @@ export interface Subscription {
   frequency: 'monthly' | 'yearly' | 'weekly' | 'quarterly';
   nextBilling: Date | null;
   status: 'active' | 'cancelled' | 'pending';
+  isActive: boolean;
   category?: string;
   provider?: {
     name: string;

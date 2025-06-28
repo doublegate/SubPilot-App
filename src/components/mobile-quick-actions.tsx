@@ -106,7 +106,7 @@ export function MobileQuickActions({
                   onClick={action.onClick}
                   className={cn(
                     'absolute bottom-0 right-0 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg',
-                    action.color || 'bg-gray-500'
+                    action.color ?? 'bg-gray-500'
                   )}
                   aria-label={action.label}
                 >

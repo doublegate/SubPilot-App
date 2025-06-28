@@ -97,7 +97,7 @@ export const HeatmapChart = React.memo(function HeatmapChart({
   const monthsData: Record<number, HeatmapData[]> = {};
   data.forEach(item => {
     monthsData[item.month] ??= [];
-    monthsData[item.month].push(item);
+    monthsData[item.month]?.push(item);
   });
 
   // Month names
@@ -142,7 +142,7 @@ export const HeatmapChart = React.memo(function HeatmapChart({
               // Create a 6x7 grid for the month
               const grid: (HeatmapData | null)[][] = Array(6)
                 .fill(null)
-                .map(() => Array(7).fill(null));
+                .map(() => Array(7).fill(null) as (HeatmapData | null)[]);
 
               // Get first day of month
               const firstDay = new Date(
@@ -156,7 +156,7 @@ export const HeatmapChart = React.memo(function HeatmapChart({
                 const dayIndex = (item.day - 1 + firstDay) % 7;
                 const weekIndex = Math.floor((item.day - 1 + firstDay) / 7);
                 if (weekIndex < 6) {
-                  grid[weekIndex][dayIndex] = item;
+                  grid[weekIndex]![dayIndex] = item;
                 }
               });
 

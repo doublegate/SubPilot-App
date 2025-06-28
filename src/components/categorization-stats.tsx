@@ -17,8 +17,28 @@ interface CategorizationStatsProps {
   className?: string;
 }
 
+type StatsData = {
+  transactions: {
+    total: number;
+    categorized: number;
+    percentage: number;
+  };
+  subscriptions: {
+    total: number;
+    categorized: number;
+    percentage: number;
+  };
+  categoryBreakdown: Array<{
+    category: string;
+    count: number;
+  }>;
+};
+
 export function CategorizationStats({ className }: CategorizationStatsProps) {
-  const { data: stats, isLoading } = api.categorization.getStats.useQuery();
+  const { data: stats, isLoading } = api.categorization.getStats.useQuery() as {
+    data: StatsData | undefined;
+    isLoading: boolean;
+  };
 
   if (isLoading) {
     return <CategorizationStatsSkeleton className={className} />;

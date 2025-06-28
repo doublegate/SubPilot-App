@@ -198,7 +198,7 @@ export function ExportModal({
           {/* Summary */}
           <div className="rounded-lg bg-muted p-3">
             <p className="text-sm text-muted-foreground">
-              Exporting {selectedSubscriptionIds?.length || 'all'} subscription
+              Exporting {selectedSubscriptionIds?.length ?? 'all'} subscription
               {!selectedSubscriptionIds?.length ||
               selectedSubscriptionIds.length > 1
                 ? 's'
