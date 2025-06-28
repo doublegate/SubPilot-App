@@ -139,26 +139,10 @@ Key relationships:
 
 ## 🚀 Implementation Status
 
-### ✅ Completed Features (Phase 1 MVP - 95% Complete)
-
-- **Authentication**: Auth.js v5 with OAuth (Google, GitHub) and magic links
-- **Bank Integration**: Plaid API with encrypted token storage and webhooks
-- **Subscription Detection**: 85%+ accuracy with pattern matching and confidence scoring
-- **Dashboard**: Real-time analytics with interactive visualizations
-- **Email Notifications**: 8 notification types with SendGrid integration
-- **Subscription Management**: Full CRUD operations with provider-specific workflows
-- **Theme System**: Light/Dark/Auto modes with persistent preferences
-- **UI Components**: 20+ components with shadcn/ui and custom implementations
-- **Testing**: 99.5% pass rate (219/220 tests) with comprehensive coverage
-- **CI/CD**: Fully automated pipeline with Docker support and release management
-
-### 🎯 Remaining Tasks (5% for 100% MVP)
-
-- [ ] Performance optimization and caching implementation
-- [ ] Accessibility audit and WCAG 2.1 compliance
-- [ ] Production OAuth credentials setup
-- [ ] User documentation and help guides
-- [ ] Final production deployment optimization
+### ✅ Phase 1 & 2 Complete - Production Ready
+- **Phase 1 MVP**: 100% Complete (v1.0.0)
+- **Phase 2 Advanced Features**: 100% Complete (v1.1.0+)
+- **Current Focus**: Ready for Phase 3 (Automation)
 
 ## 🎨 Design System
 
@@ -207,10 +191,10 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 
 ## 🎯 Development Phases
 
-**Phase 1**: MVP (95% Complete) ✅
-**Phase 2**: Advanced Features (AI, Analytics) 📋
-**Phase 3**: Automation (Cancellation, AI Assistant) 📋
-**Phase 4**: Launch & Marketing 📋
+**Phase 1**: MVP ✅ Complete (v1.0.0)
+**Phase 2**: Advanced Features ✅ Complete (v1.1.0+)
+**Phase 3**: Automation 📋 Next Focus
+**Phase 4**: Launch & Marketing 📋 Future
 
 ## ⚠️ Important Notes
 
@@ -226,19 +210,10 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 
 6. **Edge Runtime Compatibility**: Middleware runs in Edge Runtime. Use `auth-edge.ts` for auth checks instead of importing the full auth config. Complex security features (rate limiting, audit logging) must be in API routes, not middleware.
 
-## 🎉 v1.0.0 Release Achievement
+7. **Docker Health Checks**: Use DOCKER_HEALTH_CHECK_MODE=basic for test environments to skip database checks.
 
-Phase 1 MVP is now 100% complete with this stable release! All core features are implemented and production-ready.
+8. **CI/CD Best Practices**: Prefer single comprehensive workflows over multiple specialized ones for easier maintenance.
 
-## 🚦 Phase 2 Planning
-
-With Phase 1 complete, the next phase will focus on:
-
-1. **AI-Powered Insights**: Smart recommendations and spending predictions
-2. **Mobile Applications**: iOS and Android native apps
-3. **Advanced Analytics**: Enhanced reporting and data visualization
-4. **Automation Features**: Auto-cancellation and smart notifications
-5. **Family Management**: Household subscription sharing
 
 ## 📞 External Services
 
@@ -271,7 +246,7 @@ With Phase 1 complete, the next phase will focus on:
 - **GitHub URL**: <https://github.com/doublegate/SubPilot-App>
 - **Visibility**: Public repository
 - **License**: MIT License
-- **Current Version**: 1.0.0-production-ready
+- **Current Version**: v1.1.0+ (Phase 2 Complete)
 
 ## 🛠️ Common Development Tasks
 
@@ -319,22 +294,11 @@ The project has a comprehensive GitHub Actions CI/CD pipeline configured in `.gi
 5. **Health Check**: API health endpoint at `/api/health` for Docker container validation
 6. **Vercel Integration**: Connect to GitHub for automatic deployments on main branch
 
-### Monitoring CI/CD
+### CI/CD Pipeline Status
 
-```bash
-# Check recent workflow runs
-gh run list --workflow=ci.yml
-
-# View detailed logs for a specific run
-gh run view <run-id> --log
-
-# Watch a running workflow
-gh run watch <run-id>
-```
-
----
-
-**Remember**: This is a T3 Stack project with full implementation completed for Week 1 of Phase 1. When in doubt, refer to the T3 Stack documentation and best practices. The project follows standard T3 conventions with some customizations for the subscription management domain.
+- **Workflow**: Single unified `ci-cd-complete.yml`
+- **Features**: Code quality checks, security scanning, Docker builds, automated releases
+- **Optimizations**: ARM64 builds only for releases, health checks with curl
 
 ## 🎯 Key Features
 
@@ -364,6 +328,14 @@ const account = mockAccount1; // Type: Account (guaranteed)
 ```
 
 This pattern eliminates the need for non-null assertions and improves test maintainability.
+
+### TypeScript Compilation Excellence
+- All mock data must match current Prisma schema
+- Add missing imports (React, types) to resolve UMD globals
+- Null assignment issues resolved with proper type guards
+- Aggregate mock results align with expected Prisma types
+- ESLint Config: Test files need rule overrides for flexible typing
+- TypeScript Fixes: Use 'as any' sparingly for test mock compatibility
 
 ## 🏦 Bank Integration Patterns
 
@@ -417,37 +389,11 @@ This pattern eliminates the need for non-null assertions and improves test maint
 
 ## 🧪 Test Framework Patterns
 
-### Test Implementation Achievements
-- **Vitest + React Testing Library**: Configuration for Next.js projects
-- **API Router Testing**: tRPC patterns with comprehensive coverage
-- **Component Testing**: User interactions and state management
-- **Utility Function Testing**: 100% pass rates achieved
-- **Mocking Strategies**: External services (Plaid, auth providers)
-- **Coverage Integration**: CI/CD pipelines with reports
-- **Test Organization**: By domain (analytics, notifications, components, utilities)
-
-### Test Framework Restoration
-- **Simplified Logic Tests**: tRPC routers avoid complex mocking setup
-- **Business Logic Focus**: Rather than framework integration
-- **Radix UI Handling**: Special test handling for dropdown menus
-- **TypeScript First**: Fix compilation errors before running tests
-- **Component Props**: Always verify against implementation
-- **Target Pass Rate**: 80%+ rather than perfect coverage
-- **High-Value Tests**: Prioritize over complete coverage
-- **Aria-Label Workarounds**: Use getAllByRole('button') with className filtering
-- **Method Name Fixes**: detectFromTransaction → detectSingleTransaction
-- **Array Parameter Handling**: Wrap single objects in arrays when needed
-- **Optional Chaining**: Use ?. for potentially undefined array access
-- **Mock Object Cleanup**: Remove extra properties not in interfaces
-
-### 100% Test Coverage Achievement
-- Create new test files for 0% coverage components first
-- Use userEvent over fireEvent for better async handling
-- Add findBy queries for portal-rendered content (dropdowns, modals)
-- Mock DOM APIs in setup for Radix UI compatibility
-- Fix all failing tests before enabling skipped tests
-- Comprehensive test creation adds 40+ tests in single session
-- Always run tests after ESLint/Prettier fixes
+### Current Testing State
+- **Test Coverage**: 99.5% (391 tests passing)
+- **Framework**: Vitest + React Testing Library
+- **Mocking**: External services properly mocked (Plaid, auth)
+- **Organization**: Tests organized by domain
 
 ## 🛠️ TypeScript Compilation Patterns
 
@@ -482,14 +428,10 @@ This pattern eliminates the need for non-null assertions and improves test maint
 - **Environment Variables**: Pass critical config to Docker containers
 - **Job Dependencies**: Structure for maximum parallelization while maintaining safety
 
-## 📦 Documentation Archive
+## 📦 Documentation Archives
 
-### Phase 1 Completed Documentation
-All Phase 1 MVP documentation has been archived at `archive/phase-1-completion/`:
+- **Phase 1 Completion**: `archive/phase-1-completion/`
+- **Memory Archives**: `archive/memory/`
+- **Session Summaries**: `archive/session/`
 
-- **Reports**: Code quality audits, performance analyses, security assessments
-- **Implementation**: Technical summaries, fixes, completed plans
-- **Setup Guides**: Vercel deployment documentation (completed)
-- **Release Notes**: Historical version documentation
-
-Active documentation remains in `docs/` for ongoing development reference.
+Active documentation remains in `docs/` for ongoing development.
