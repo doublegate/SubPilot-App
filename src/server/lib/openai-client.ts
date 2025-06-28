@@ -1,10 +1,7 @@
 import { env } from '@/env.js';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import {
-  cacheService,
-  cacheTTL,
-} from '@/server/services/cache.service';
+import { cacheService, cacheTTL } from '@/server/services/cache.service';
 import { checkRateLimit } from '@/server/lib/rate-limiter';
 
 // OpenAI API configuration
@@ -431,7 +428,10 @@ export class OpenAICategorizationClient {
 
     try {
       const response = await this.callOpenAI(prompt, 'normalization', 100);
-      const normalized = typeof response === 'string' ? response.trim() : String(response).trim();
+      const normalized =
+        typeof response === 'string'
+          ? response.trim()
+          : String(response).trim();
 
       cacheService.set(cacheKey, normalized, cacheTTL.veryLong);
       return normalized;
@@ -562,7 +562,13 @@ export class OpenAICategorizationClient {
       throw new Error(`OpenAI API error: ${response.status} - ${error}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      choices?: Array<{
+        message?: {
+          content?: string;
+        };
+      }>;
+    };
 
     if (!data.choices?.[0]?.message?.content) {
       throw new Error('Invalid OpenAI response format');

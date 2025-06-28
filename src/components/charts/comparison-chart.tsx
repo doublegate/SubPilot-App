@@ -174,9 +174,9 @@ export const ComparisonChart = React.memo(function ComparisonChart({
               <Tooltip content={<CustomTooltip />} />
 
               <Bar dataKey="Previous" fill="#e5e7eb" radius={[4, 4, 0, 0]}>
-                <LabelList 
-                  content={renderCustomLabel as never} 
-                  position="top" 
+                <LabelList
+                  content={renderCustomLabel as never}
+                  position="top"
                 />
               </Bar>
               <Bar dataKey="Current" fill="#06b6d4" radius={[4, 4, 0, 0]} />

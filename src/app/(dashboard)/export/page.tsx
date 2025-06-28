@@ -200,8 +200,8 @@ export default function ExportPage() {
       </Card>
 
       {/* Export Modal */}
-      <ExportModal 
-        open={exportModalOpen} 
+      <ExportModal
+        open={exportModalOpen}
         onOpenChange={setExportModalOpen}
         defaultFormat={selectedFormat}
       />

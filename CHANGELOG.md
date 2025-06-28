@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - **Complete CI/CD Pipeline** - Unified workflow combining code quality, security, Docker build/publish, and release management (2025-06-28 01:15)
   - Merged ci.yml, docker-image.yml, and docker-publish.yml into optimized ci-cd-complete.yml
   - Eliminated duplicate builds and reduced workflow complexity
@@ -15,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced error handling and cleanup procedures
 
 ### Fixed
+
 - **Docker Case Sensitivity** - Resolved "invalid reference format: repository name must be lowercase" error (2025-06-28 01:15)
   - Fixed IMAGE_NAME from doublegate/SubPilot-App to doublegate/subpilot-app
   - Ensures Docker registry compliance with lowercase naming requirements
@@ -32,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Result: CI/CD pipeline now fully operational with 0 TypeScript errors
 
 ### Enhanced
+
 - **Security Features** - Comprehensive security scanning and image signing (2025-06-28 01:15)
   - Trivy vulnerability scanning for filesystem and container images
   - Cosign image signing for supply chain security
