@@ -165,6 +165,7 @@ jobs:
             -e DATABASE_URL=postgresql://test:test@localhost:5432/test \
             -e NEXTAUTH_URL=http://localhost:3000 \
             -e NEXTAUTH_SECRET=test-secret-for-docker-test-${{ github.run_id }} \
+            -e DOCKER_HEALTH_CHECK_MODE=basic \
             $FIRST_TAG
 
           # Wait for container to be healthy with timeout

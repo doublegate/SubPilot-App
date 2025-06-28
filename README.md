@@ -8,7 +8,7 @@
 
   <p>
     <a href="https://github.com/doublegate/SubPilot-App/actions">
-      <img src="https://img.shields.io/github/actions/workflow/status/doublegate/SubPilot-App/ci.yml?branch=main" alt="Build Status">
+      <img src="https://img.shields.io/github/actions/workflow/status/doublegate/SubPilot-App/ci-cd-complete.yml?branch=main" alt="Build Status">
     </a>
     <a href="https://github.com/doublegate/SubPilot-App/blob/main/LICENSE">
       <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
@@ -29,6 +29,17 @@ SubPilot is a modern, intelligent subscription management platform that automati
 > **CI/CD Status**: ✅ Complete pipeline with Docker containerization, security scanning, and optimized workflows
 
 ## 🔥 Recent Updates (v1.1.0+ - June 28, 2025)
+
+### 🔧 v1.1.0+ Workflow Consolidation & Health Check Optimization (June 28, 2025 - 02:40 AM EDT)
+
+**Status**: Completed CI/CD pipeline consolidation with comprehensive Docker health check fixes and workflow optimization.
+
+- ✅ **Workflow Consolidation** - Consolidated ci.yml and docker-publish.yml into unified ci-cd-complete.yml workflow
+- ✅ **Docker Health Check Fix** - Resolved container health check failures with `DOCKER_HEALTH_CHECK_MODE=basic` environment variable
+- ✅ **Pipeline Optimization** - Eliminated duplicate workflows, improved build efficiency and maintenance
+- ✅ **Tag Reference Fixes** - Fixed Docker image tag reference issues using dynamic metadata extraction
+- ✅ **Production Stability** - Enhanced health endpoint to handle test environments gracefully
+- ✅ **Infrastructure Excellence** - Single comprehensive workflow for all CI/CD operations
 
 ### 🚀 v1.1.0+ CI/CD Excellence & Docker Optimization (June 28, 2025 - 01:15 AM EDT)
 

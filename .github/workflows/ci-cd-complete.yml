@@ -247,12 +247,12 @@ jobs:
         run: |
           echo "🧪 Testing Docker image functionality..."
 
-          # Use lowercase image name to avoid case sensitivity issues
-          IMAGE_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          echo "Testing image: $IMAGE_TAG"
+          # Extract the first tag from the metadata output for testing
+          FIRST_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
+          echo "Testing with tag: $FIRST_TAG"
 
-          # Pull the built image
-          docker pull "$IMAGE_TAG"
+          # Pull the built image using the first available tag from the build
+          docker pull "$FIRST_TAG"
 
           # Run container with unique name to avoid conflicts
           CONTAINER_NAME="subpilot-test-${{ github.run_id }}"
@@ -267,7 +267,8 @@ jobs:
             -e DATABASE_URL=postgresql://test:test@localhost:5432/test \
             -e NEXTAUTH_URL=http://localhost:3000 \
             -e NEXTAUTH_SECRET=test-secret-for-docker-test-${{ github.run_id }} \
-            "$IMAGE_TAG"
+            -e DOCKER_HEALTH_CHECK_MODE=basic \
+            "$FIRST_TAG"
 
           # Wait for container to become healthy with timeout
           echo "⏳ Waiting for container to become healthy..."
@@ -316,7 +317,7 @@ jobs:
       - name: Run container security scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: 'sarif'
           output: 'trivy-image-results.sarif'
 

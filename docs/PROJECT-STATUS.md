@@ -1,17 +1,27 @@
 # SubPilot Project Status
 
-**Last Updated**: 2025-06-28 01:15 AM EDT  
-**Current Version**: 1.1.0+ (Phase 2 Complete + CI/CD Excellence & Docker Optimization)  
-**Current Phase**: Phase 2 - Advanced Features 100% COMPLETE + Enhanced Production Infrastructure  
+**Last Updated**: 2025-06-28 02:40 AM EDT  
+**Current Version**: 1.1.0+ (Phase 2 Complete + Workflow Consolidation & Health Check Optimization)  
+**Current Phase**: Phase 2 - Advanced Features 100% COMPLETE + Optimized Production Infrastructure  
 **Test Coverage**: 99.5% test pass rate (391 tests passing, comprehensive coverage across all features)  
-**CI/CD Status**: ✅ Complete optimized pipeline - Docker containerization, security scanning, workflow consolidation  
-**Latest Achievement**: Complete CI/CD Pipeline with Docker case sensitivity fix and Next.js 15 compliance  
-**Latest Release**: v1.1.0+ - Enhanced Production Infrastructure (LATEST)  
+**CI/CD Status**: ✅ Single unified ci-cd-complete.yml workflow - consolidated pipeline with health check fixes  
+**Latest Achievement**: Workflow consolidation with Docker health check optimization and tag reference fixes  
+**Latest Release**: v1.1.0+ - Workflow Consolidation & Health Check Optimization (LATEST)  
 **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) ✅ AI Categorization + Predictive Analytics + PWA Support + Production Infrastructure
 
 ## 🎯 Project Overview
 
 SubPilot is a comprehensive subscription management application that helps users track, manage, and optimize their recurring payments by connecting to their bank accounts via Plaid.
+
+## 🔧 Latest Achievement: Workflow Consolidation & Health Check Optimization (June 28, 2025 - 02:40 AM EDT)
+
+### Infrastructure Excellence ✅
+- ✅ **Workflow Consolidation** - Consolidated ci.yml and docker-publish.yml into unified ci-cd-complete.yml
+- ✅ **Health Check Fixes** - Resolved Docker container health check failures with DOCKER_HEALTH_CHECK_MODE=basic
+- ✅ **Tag Reference Optimization** - Fixed Docker image tag reference issues using dynamic metadata extraction  
+- ✅ **Pipeline Efficiency** - Eliminated duplicate workflows for improved maintenance and reduced complexity
+- ✅ **Production Stability** - Enhanced health endpoint to gracefully handle test environments
+- ✅ **CI/CD Excellence** - Single comprehensive workflow for all build, test, security, and deployment operations
 
 ## 🚀 Major Milestone: Phase 2 Advanced Features 100% Complete (v1.1.0)
 

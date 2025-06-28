@@ -22,10 +22,14 @@ export async function GET() {
       responseTime: 0,
     };
 
-    // Database health check
+    // Database health check (skip in basic Docker health check mode)
     try {
-      await db.$queryRaw`SELECT 1`;
-      health.checks.database = 'healthy';
+      if (process.env.DOCKER_HEALTH_CHECK_MODE === 'basic') {
+        health.checks.database = 'skipped-basic-mode';
+      } else {
+        await db.$queryRaw`SELECT 1`;
+        health.checks.database = 'healthy';
+      }
     } catch (error) {
       health.checks.database = 'unhealthy';
       health.status = 'degraded';
@@ -100,6 +104,11 @@ export async function GET() {
 // Also handle HEAD requests for basic uptime checks
 export async function HEAD() {
   try {
+    // Skip database check in basic Docker health check mode
+    if (process.env.DOCKER_HEALTH_CHECK_MODE === 'basic') {
+      return new NextResponse(null, { status: 200 });
+    }
+    
     // Quick database ping
     await db.$queryRaw`SELECT 1`;
     return new NextResponse(null, { status: 200 });

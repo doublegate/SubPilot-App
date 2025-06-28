@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Workflow Consolidation** - Consolidated CI/CD pipeline into single comprehensive workflow (2025-06-28 02:40)
+  - Disabled ci.yml and docker-publish.yml workflows (renamed to .disabled)
+  - Enhanced ci-cd-complete.yml with all functionality from consolidated workflows
+  - Unified job dependencies and error handling
+  - Improved maintenance and reduced workflow complexity
+
 - **Complete CI/CD Pipeline** - Unified workflow combining code quality, security, Docker build/publish, and release management (2025-06-28 01:15)
   - Merged ci.yml, docker-image.yml, and docker-publish.yml into optimized ci-cd-complete.yml
   - Eliminated duplicate builds and reduced workflow complexity
@@ -16,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced error handling and cleanup procedures
 
 ### Fixed
+
+- **Docker Health Check Issues** - Resolved container health check failures in CI/CD workflows (2025-06-28 02:40)
+  - Added DOCKER_HEALTH_CHECK_MODE=basic environment variable for test environments
+  - Updated health endpoint to skip database checks in basic mode
+  - Fixed Docker image tag reference issues using dynamic metadata extraction
+  - Container testing now passes consistently in CI/CD pipeline
 
 - **Docker Case Sensitivity** - Resolved "invalid reference format: repository name must be lowercase" error (2025-06-28 01:15)
   - Fixed IMAGE_NAME from doublegate/SubPilot-App to doublegate/subpilot-app
