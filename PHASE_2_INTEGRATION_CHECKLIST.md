@@ -88,7 +88,13 @@ npx tsx scripts/start-categorization-job.ts
 ## 📱 PWA Deployment
 
 ### Before Production
+<<<<<<< HEAD
 1. Generate actual icon files:
+=======
+
+1. Generate actual icon files:
+
+>>>>>>> b7d1a55 (feat: release v1.1.0 - AI-powered analytics and mobile PWA)
    ```bash
    # Use a tool like PWA Asset Generator
    npx pwa-asset-generator logo.png ./public/icons
@@ -107,7 +113,13 @@ npx tsx scripts/start-categorization-job.ts
 ## 🚀 Performance Verification
 
 ### Lighthouse Scores
+<<<<<<< HEAD
 Run Lighthouse audit and verify:
+=======
+
+Run Lighthouse audit and verify:
+
+>>>>>>> b7d1a55 (feat: release v1.1.0 - AI-powered analytics and mobile PWA)
 - [ ] Performance > 90
 - [ ] Accessibility > 90
 - [ ] Best Practices > 90
@@ -115,9 +127,17 @@ Run Lighthouse audit and verify:
 - [ ] PWA - All checks pass
 
 ### Bundle Size
+<<<<<<< HEAD
 ```bash
 npm run analyze
 ```
+=======
+
+```bash
+npm run analyze
+```
+
+>>>>>>> b7d1a55 (feat: release v1.1.0 - AI-powered analytics and mobile PWA)
 - [ ] Check for large dependencies
 - [ ] Verify code splitting works
 - [ ] Ensure tree shaking is effective
