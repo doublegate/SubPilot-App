@@ -302,6 +302,18 @@ export const notificationsRouter = createTRPCRouter({
         },
       };
 
+      const testSubscriptionBase = {
+        aiCategory: null,
+        aiCategoryConfidence: null,
+        categoryOverride: null,
+        userId: user.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        provider: {},
+        cancellationInfo: {},
+        notes: null,
+      };
+
       switch (input.type) {
         case 'welcome':
           await emailNotificationService.sendWelcomeEmail(testData);
@@ -311,6 +323,7 @@ export const notificationsRouter = createTRPCRouter({
           await emailNotificationService.sendNewSubscriptionEmail({
             ...testData,
             subscription: {
+              ...testSubscriptionBase,
               id: 'test-sub-1',
               name: 'Netflix Premium',
               amount: new Prisma.Decimal(19.99),
@@ -321,15 +334,9 @@ export const notificationsRouter = createTRPCRouter({
               isActive: true,
               detectionConfidence: new Prisma.Decimal(0.95),
               detectedAt: new Date(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              userId: user.id,
               description: 'Test subscription',
               nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
               lastBilling: new Date(),
-              provider: {},
-              cancellationInfo: {},
-              notes: null,
             },
           });
           break;
@@ -338,6 +345,7 @@ export const notificationsRouter = createTRPCRouter({
           await emailNotificationService.sendPriceChangeEmail({
             ...testData,
             subscription: {
+              ...testSubscriptionBase,
               id: 'test-sub-2',
               name: 'Spotify Family',
               amount: new Prisma.Decimal(15.99),
@@ -348,15 +356,9 @@ export const notificationsRouter = createTRPCRouter({
               isActive: true,
               detectionConfidence: new Prisma.Decimal(0.9),
               detectedAt: new Date(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              userId: user.id,
               description: 'Test subscription',
               nextBilling: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
               lastBilling: new Date(),
-              provider: {},
-              cancellationInfo: {},
-              notes: null,
             },
             oldAmount: 14.99,
             newAmount: 15.99,
@@ -383,6 +385,7 @@ export const notificationsRouter = createTRPCRouter({
           await emailNotificationService.sendCancellationEmail({
             ...testData,
             subscription: {
+              ...testSubscriptionBase,
               id: 'test-sub-3',
               name: 'Adobe Creative Cloud',
               amount: new Prisma.Decimal(52.99),
@@ -393,15 +396,9 @@ export const notificationsRouter = createTRPCRouter({
               isActive: false,
               detectionConfidence: new Prisma.Decimal(0.85),
               detectedAt: new Date(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              userId: user.id,
               description: 'Test subscription',
               nextBilling: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
               lastBilling: new Date(),
-              provider: {},
-              cancellationInfo: {},
-              notes: null,
             },
           });
           break;
@@ -410,6 +407,7 @@ export const notificationsRouter = createTRPCRouter({
           await emailNotificationService.sendRenewalReminderEmail({
             ...testData,
             subscription: {
+              ...testSubscriptionBase,
               id: 'test-sub-4',
               name: 'Disney+',
               amount: new Prisma.Decimal(13.99),
@@ -438,6 +436,7 @@ export const notificationsRouter = createTRPCRouter({
           await emailNotificationService.sendTrialEndingEmail({
             ...testData,
             subscription: {
+              ...testSubscriptionBase,
               id: 'test-sub-5',
               name: 'Apple TV+',
               amount: new Prisma.Decimal(9.99),
@@ -448,15 +447,9 @@ export const notificationsRouter = createTRPCRouter({
               isActive: true,
               detectionConfidence: new Prisma.Decimal(0.88),
               detectedAt: new Date(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              userId: user.id,
               description: 'Test subscription',
               nextBilling: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
               lastBilling: null,
-              provider: {},
-              cancellationInfo: {},
-              notes: null,
             },
             trialEndDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
           });
@@ -466,6 +459,7 @@ export const notificationsRouter = createTRPCRouter({
           await emailNotificationService.sendPaymentFailedEmail({
             ...testData,
             subscription: {
+              ...testSubscriptionBase,
               id: 'test-sub-6',
               name: 'Hulu',
               amount: new Prisma.Decimal(17.99),
@@ -476,15 +470,9 @@ export const notificationsRouter = createTRPCRouter({
               isActive: true,
               detectionConfidence: new Prisma.Decimal(0.91),
               detectedAt: new Date(),
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              userId: user.id,
               description: 'Test subscription',
               nextBilling: new Date(),
               lastBilling: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-              provider: {},
-              cancellationInfo: {},
-              notes: null,
             },
             errorMessage: 'Card declined - insufficient funds',
           });

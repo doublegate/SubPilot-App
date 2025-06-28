@@ -181,17 +181,27 @@ export const categorizationRouter = createTRPCRouter({
       // Transform to match expected format
       const categories = dbCategories.reduce(
         (acc, cat) => {
-          acc[cat.id] = {
-            name: cat.name,
-            description: cat.description ?? '',
-            icon: cat.icon ?? '📦',
-            keywords: Array.isArray(cat.keywords)
-              ? (cat.keywords as string[])
-              : [],
+          return {
+            ...acc,
+            [cat.id]: {
+              name: cat.name,
+              description: cat.description ?? '',
+              icon: cat.icon ?? '📦',
+              keywords: Array.isArray(cat.keywords)
+                ? (cat.keywords as string[])
+                : [],
+            },
           };
-          return acc;
         },
-        {} as typeof SUBSCRIPTION_CATEGORIES
+        {} as Record<
+          string,
+          {
+            name: string;
+            description: string;
+            icon: string;
+            keywords: string[];
+          }
+        >
       );
 
       cacheService.set(cacheKey, categories, cacheTTL.veryLong);
@@ -296,7 +306,7 @@ export const categorizationRouter = createTRPCRouter({
    */
   getStats: protectedProcedure.query(async ({ ctx }) => {
     const cacheKey = `categorization-stats:${ctx.session.user.id}`;
-    
+
     type StatsType = {
       transactions: {
         total: number;
@@ -313,7 +323,7 @@ export const categorizationRouter = createTRPCRouter({
         count: number;
       }>;
     };
-    
+
     const cached = cacheService.get<StatsType>(cacheKey);
     if (cached) {
       return cached;

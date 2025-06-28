@@ -37,10 +37,10 @@ export function MobileSubscriptionList({
 
   const handleDelete = (subscription: Subscription) => {
     if (confirm(`Are you sure you want to cancel ${subscription.name}?`)) {
-      cancelSubscription.mutate({ 
+      cancelSubscription.mutate({
         id: subscription.id,
         reason: 'Cancelled via mobile app',
-        cancellationDate: new Date()
+        cancellationDate: new Date(),
       });
     }
   };

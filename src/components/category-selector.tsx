@@ -68,7 +68,7 @@ export function CategorySelector({
       onMutate: () => {
         setIsUpdating(true);
       },
-      onSuccess: (result) => {
+      onSuccess: result => {
         toast.success('AI categorization complete', {
           description: `Category: ${result.category} (${Math.round(result.confidence * 100)}% confidence)`,
         });

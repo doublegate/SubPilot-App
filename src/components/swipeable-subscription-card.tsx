@@ -52,7 +52,10 @@ export function SwipeableSubscriptionCard({
     };
   }, [resetSwipe]);
 
-  const handleDragEnd = async (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = async (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     const threshold = 100;
     const velocity = info.velocity.x;
     const distance = info.offset.x;

@@ -280,6 +280,7 @@ model Notification {
   type            String    // renewal_reminder, price_change, trial_ending, new_subscription
   title           String
   message         String
+  severity        String    @default("info") // info, warning, error
   data            Json      @default("{}")
 
   // Status

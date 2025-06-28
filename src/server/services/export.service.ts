@@ -1,6 +1,6 @@
 import { db } from '@/server/db';
 import { format } from 'date-fns';
-import type { } from '@prisma/client';
+import type {} from '@prisma/client';
 
 // CSV Export Types
 export interface ExportOptions {

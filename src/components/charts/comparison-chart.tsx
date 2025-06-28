@@ -166,7 +166,9 @@ export const ComparisonChart = React.memo(function ComparisonChart({
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="name" className="text-xs" />
               <YAxis
-                tickFormatter={(value: unknown) => formatCurrency(Number(value))}
+                tickFormatter={(value: unknown) =>
+                  formatCurrency(Number(value))
+                }
                 className="text-xs"
               />
               <Tooltip content={<CustomTooltip />} />

@@ -96,7 +96,8 @@ async function getRedisClient(): Promise<RedisLike> {
   if (env.REDIS_URL) {
     try {
       // Dynamic import to avoid build errors if ioredis is not installed
-      // @ts-expect-error - ioredis is an optional dependency
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - ioredis is an optional dependency
       const redisModule = (await import('ioredis')) as {
         default: new (url: string) => RedisLike;
       };

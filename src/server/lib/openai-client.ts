@@ -650,7 +650,7 @@ export class OpenAICategorizationClient {
     for (const [key, cost] of this.costTracker.entries()) {
       const [user] = key.split(':');
       if (!userId || user === userId) {
-        byUser[user] = (byUser[user] ?? 0) + cost;
+        byUser[user!] = (byUser[user!] ?? 0) + cost;
         total += cost;
       }
     }

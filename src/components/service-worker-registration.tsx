@@ -9,45 +9,46 @@ export function ServiceWorkerRegistration() {
       // Register service worker
       window.addEventListener('load', () => {
         void (async () => {
-        try {
-          const registration = await navigator.serviceWorker.register('/sw.js');
-          console.log('Service Worker registered:', registration);
+          try {
+            const registration =
+              await navigator.serviceWorker.register('/sw.js');
+            console.log('Service Worker registered:', registration);
 
-          // Handle updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            if (!newWorker) return;
+            // Handle updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              if (!newWorker) return;
 
-            newWorker.addEventListener('statechange', () => {
-              if (
-                newWorker.state === 'installed' &&
-                navigator.serviceWorker.controller
-              ) {
-                // New update available
-                toast.info(
-                  'Update available! Refresh to get the latest version.',
-                  {
-                    duration: 10000,
-                    action: {
-                      label: 'Refresh',
-                      onClick: () => window.location.reload(),
-                    },
-                  }
-                );
-              }
+              newWorker.addEventListener('statechange', () => {
+                if (
+                  newWorker.state === 'installed' &&
+                  navigator.serviceWorker.controller
+                ) {
+                  // New update available
+                  toast.info(
+                    'Update available! Refresh to get the latest version.',
+                    {
+                      duration: 10000,
+                      action: {
+                        label: 'Refresh',
+                        onClick: () => window.location.reload(),
+                      },
+                    }
+                  );
+                }
+              });
             });
-          });
 
-          // Check for updates periodically
-          setInterval(
-            () => {
-              void registration.update();
-            },
-            60 * 60 * 1000
-          ); // Check every hour
-        } catch (error) {
-          console.error('Service Worker registration failed:', error);
-        }
+            // Check for updates periodically
+            setInterval(
+              () => {
+                void registration.update();
+              },
+              60 * 60 * 1000
+            ); // Check every hour
+          } catch (error) {
+            console.error('Service Worker registration failed:', error);
+          }
         })();
       });
 

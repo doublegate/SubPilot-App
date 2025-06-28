@@ -1,7 +1,4 @@
-import {
-  type PrismaClient,
-  type Prisma,
-} from '@prisma/client';
+import { type PrismaClient, type Prisma } from '@prisma/client';
 import {
   openAIClient,
   SUBSCRIPTION_CATEGORIES,

@@ -360,7 +360,13 @@ export class AnalyticsService {
 
     // Check for anomalies
     for (const [subId, transactions] of transactionsBySubscription) {
-      const subscription = transactions[0]?.subscription;
+      const subscriptionId = transactions[0]?.subscriptionId;
+      if (!subscriptionId) continue;
+
+      // Fetch subscription details
+      const subscription = await this.prisma.subscription.findUnique({
+        where: { id: subscriptionId },
+      });
       if (!subscription) continue;
 
       // Price spike detection
@@ -666,9 +672,7 @@ export class AnalyticsService {
     return 'Unknown';
   }
 
-  private findPotentialDuplicates(
-    subscriptions: Subscription[]
-  ): Array<{
+  private findPotentialDuplicates(subscriptions: Subscription[]): Array<{
     subscriptions: Array<{
       id: string;
       name: string;

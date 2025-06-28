@@ -180,6 +180,7 @@ export class AnalyticsJob {
                   ? 'warning'
                   : 'info',
             data: notificationData,
+            scheduledFor: new Date(),
           },
         });
 
@@ -225,6 +226,7 @@ export class AnalyticsJob {
               title: 'Spending Increase Predicted',
               message: `Your subscription spending is predicted to increase by $${increase.toFixed(2)} next month.`,
               severity: 'warning',
+              scheduledFor: new Date(),
             },
           });
         }
@@ -266,6 +268,7 @@ export class AnalyticsJob {
             message: `We found ${report.optimizations.length} ways to save $${totalSavings.toFixed(2)}/month on your subscriptions.`,
             severity: 'info',
             data: JSON.stringify({ reportId: `report-${Date.now()}` }),
+            scheduledFor: new Date(),
           },
         });
       }
@@ -310,10 +313,7 @@ export class AnalyticsJob {
   /**
    * Schedule the job to run periodically
    */
-  static schedule(
-    prisma: PrismaClient,
-    intervalMs = 3600000
-  ): NodeJS.Timer {
+  static schedule(prisma: PrismaClient, intervalMs = 3600000): NodeJS.Timer {
     const job = new AnalyticsJob(prisma);
 
     // Run immediately

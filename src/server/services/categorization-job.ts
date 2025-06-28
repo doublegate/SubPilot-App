@@ -176,7 +176,7 @@ export class CategorizationJobProcessor {
       const subsByUser = uncategorizedSubs.reduce(
         (acc, sub) => {
           acc[sub.userId] ??= [];
-          acc[sub.userId].push(sub);
+          acc[sub.userId]?.push(sub);
           return acc;
         },
         {} as Record<string, typeof uncategorizedSubs>
