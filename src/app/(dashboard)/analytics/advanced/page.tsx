@@ -66,18 +66,22 @@ export default function AdvancedAnalyticsPage() {
     {},
     {
       enabled: shouldGenerateReport,
-      onSuccess: (report) => {
-        toast.success('Report generated successfully');
-        // Handle report download or display
-        console.log('Generated report:', report);
-        setShouldGenerateReport(false);
-      },
-      onError: () => {
-        toast.error('Failed to generate report');
-        setShouldGenerateReport(false);
-      },
     }
   );
+
+  // Handle report success/error with useEffect
+  React.useEffect(() => {
+    if (generateReportQuery.isSuccess && generateReportQuery.data) {
+      toast.success('Report generated successfully');
+      // Handle report download or display
+      console.log('Generated report:', generateReportQuery.data);
+      setShouldGenerateReport(false);
+    }
+    if (generateReportQuery.isError) {
+      toast.error('Failed to generate report');
+      setShouldGenerateReport(false);
+    }
+  }, [generateReportQuery.isSuccess, generateReportQuery.isError, generateReportQuery.data]);
 
   const handleGenerateReport = () => {
     setShouldGenerateReport(true);
@@ -198,7 +202,7 @@ export default function AdvancedAnalyticsPage() {
               <SelectItem value="all">All Time</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={handleGenerateReport} disabled={generateReportQuery.isFetching}>
+          <Button onClick={handleGenerateReport} disabled={generateReportQuery.isLoading}>
             <FileText className="mr-2 h-4 w-4" />
             Generate Report
           </Button>
