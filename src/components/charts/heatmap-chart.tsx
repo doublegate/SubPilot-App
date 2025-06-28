@@ -96,9 +96,7 @@ export const HeatmapChart = React.memo(function HeatmapChart({
   // Group data by month
   const monthsData: Record<number, HeatmapData[]> = {};
   data.forEach(item => {
-    if (!monthsData[item.month]) {
-      monthsData[item.month] = [];
-    }
+    monthsData[item.month] ??= [];
     monthsData[item.month].push(item);
   });
 

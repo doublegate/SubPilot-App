@@ -139,7 +139,7 @@ export const TimeSeriesChart = React.memo(function TimeSeriesChart({
                 className="text-xs"
               />
               <YAxis
-                tickFormatter={value => formatCurrency(value)}
+                tickFormatter={value => formatCurrency(Number(value))}
                 className="text-xs"
               />
               <Tooltip content={<CustomTooltip />} />

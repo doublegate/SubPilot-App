@@ -92,7 +92,7 @@ export const InsightsCard = React.memo(function InsightsCard({
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <CheckCircle2 className="mb-4 h-12 w-12 text-green-500" />
-            <p className="text-lg font-medium">You're all set!</p>
+            <p className="text-lg font-medium">You&apos;re all set!</p>
             <p className="text-sm text-muted-foreground">
               No new insights or recommendations at this time.
             </p>
