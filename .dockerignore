@@ -5,7 +5,7 @@
 
 # Ignore development files
 .env*
-\!.env.example
+!.env.example
 .vscode
 .idea
 
@@ -26,7 +26,7 @@ e2e
 
 # Ignore documentation
 *.md
-\!README.md
+!README.md
 docs
 ref_docs
 archive
@@ -60,10 +60,10 @@ scripts
 security-*
 
 # Keep only necessary files for build
-\!package.json
-\!package-lock.json
-\!next.config.js
-\!tsconfig.json
-\!public
-\!src
-\!prisma
+!package.json
+!package-lock.json
+!next.config.js
+!tsconfig.json
+!public
+!src
+!prisma
