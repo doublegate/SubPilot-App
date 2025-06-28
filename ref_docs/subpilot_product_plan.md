@@ -1,8 +1,8 @@
 # SubPilot Product Plan and Technical Implementation Roadmap
 
-**Status**: ✅ PHASE 1 MVP COMPLETE - Living document for Phase 2+  
-**Phase**: Phase 1 MVP Complete, Phase 2 Planning Ready  
-**Last Updated**: 2025-06-27
+**Status**: ✅ PHASE 3 COMPLETE - Living document for Phase 4+  
+**Phase**: Phase 1, 2, and 3 Complete, Phase 4 Planning Ready  
+**Last Updated**: 2025-06-28
 
 ## Overview
 
@@ -60,14 +60,14 @@ Build the core functionality and allow users to connect a bank account, view sub
 
 ### Phase 1 Tasks
 
-- [ ] User onboarding flow (Auth.js, profile setup)
-- [ ] Bank integration (Plaid)
-- [ ] Transaction ingestion and normalization
-- [ ] Initial subscription recognition logic (regex + heuristics)
-- [ ] Subscription dashboard with timeline and category view
-- [ ] Notification system (email, in-app toasts)
-- [ ] Basic UI components (cards, charts, nav)
-- [ ] Deploy to staging
+- ✅ User onboarding flow (Auth.js, profile setup)
+- ✅ Bank integration (Plaid)
+- ✅ Transaction ingestion and normalization
+- ✅ Initial subscription recognition logic (regex + heuristics)
+- ✅ Subscription dashboard with timeline and category view
+- ✅ Notification system (email, in-app toasts)
+- ✅ Basic UI components (cards, charts, nav)
+- ✅ Deploy to staging
 
 ---
 
@@ -79,12 +79,12 @@ Enable automated insights and partial automation.
 
 ### Phase 2 Tasks
 
-- [ ] Smart categorization using OpenAI API or HuggingFace model
-- [ ] Trial tracking and renew alerting logic
-- [ ] Analytics: monthly reports, churn predictions
-- [ ] Export data (CSV, JSON)
-- [ ] Responsive and accessible layout improvements
-- [ ] Unit + e2e testing suite (Vitest + Playwright)
+- ✅ Smart categorization using OpenAI API or HuggingFace model
+- ✅ Trial tracking and renew alerting logic
+- ✅ Analytics: monthly reports, churn predictions
+- ✅ Export data (CSV, JSON, PDF, Excel)
+- ✅ Responsive and accessible layout improvements
+- ✅ Unit + e2e testing suite (Vitest + Playwright)
 
 ---
 
@@ -96,11 +96,11 @@ Make SubPilot a true control center for managing and canceling subs.
 
 ### Phase 3 Tasks
 
-- [ ] One-click cancel API integration (where supported by provider)
-- [ ] Chatbot or assistant for managing queries (LLM-powered)
-- [ ] Premium feature set (multi-account support, AI summaries)
-- [ ] Stripe payments + subscription tiering
-- [ ] PWA support for mobile
+- ✅ One-click cancel API integration (where supported by provider)
+- ✅ Chatbot or assistant for managing queries (LLM-powered)
+- ✅ Premium feature set (multi-account support, AI summaries)
+- ✅ Stripe payments + subscription tiering
+- ✅ PWA support for mobile
 
 ---
 

@@ -1,8 +1,8 @@
 # 📡 SubPilot API Reference
 
-**Last Updated**: 2025-06-25 05:42 AM EDT  
-**API Version**: v0.1.8  
-**Status**: Production Ready with 35+ Endpoints
+**Last Updated**: 2025-06-28 08:01 AM EDT  
+**API Version**: v1.3.0  
+**Status**: Production Ready with 50+ Endpoints (Phase 3 Complete)
 
 ## Overview
 
@@ -44,7 +44,10 @@ api/
 ├── subscriptions  # Subscription CRUD operations
 ├── transactions   # Transaction management
 ├── notifications  # Alert and notification system
-└── analytics      # Reporting and insights
+├── analytics      # Reporting and insights
+├── cancellation   # Automated cancellation system (Phase 3)
+├── assistant      # AI-powered chat assistant (Phase 3)
+└── billing        # Premium billing with Stripe (Phase 3)
 ```
 
 ---

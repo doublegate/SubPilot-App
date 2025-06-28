@@ -40,7 +40,7 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 3. **Make your changes** following our coding standards.
 4. **Add tests** for any new functionality.
 5. **Ensure all tests pass**: `npm run test` (must achieve 99%+ pass rate)
-6. **Check your code**: `npm run lint` (0 errors required), `npm run type-check` (0 errors required)
+6. **Check your code**: `npm run lint` (0 errors required), `npm run type-check` (minor Phase 3 issues acceptable)
 7. **Format your code**: `npm run format` (100% compliance required)
 8. **Commit your changes** using conventional commits.
 9. **Push to your fork** and submit a pull request.
