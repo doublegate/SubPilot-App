@@ -1,15 +1,46 @@
 import Stripe from 'stripe';
 import { env } from '~/env.js';
 
-// Initialize Stripe with the secret key
-export const stripe = new Stripe(env.STRIPE_SECRET_KEY ?? '', {
-  apiVersion: '2025-05-28.basil',
-  typescript: true,
-  appInfo: {
-    name: 'SubPilot',
-    version: '1.3.0',
-  },
-});
+// Lazy initialize Stripe to avoid build-time errors
+let stripeInstance: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  if (!stripeInstance) {
+    // During build, skip initialization if SKIP_ENV_VALIDATION is set
+    if (process.env.SKIP_ENV_VALIDATION === 'true' && !env.STRIPE_SECRET_KEY) {
+      // Return a mock object during build
+      return {} as Stripe;
+    }
+    
+    // During runtime, env vars must be available
+    if (!env.STRIPE_SECRET_KEY && process.env.NODE_ENV === 'production') {
+      throw new Error('STRIPE_SECRET_KEY is required in production');
+    }
+    
+    stripeInstance = new Stripe(env.STRIPE_SECRET_KEY ?? 'sk_test_dummy', {
+      apiVersion: '2025-05-28.basil',
+      typescript: true,
+      appInfo: {
+        name: 'SubPilot',
+        version: '1.3.0',
+      },
+    });
+  }
+  return stripeInstance;
+}
+
+// Export stripe as a getter for backward compatibility
+// Use Object.defineProperty to avoid immediate evaluation
+export const stripe = {} as Stripe;
+
+// Only set up the proxy if we're not in build mode
+if (process.env.SKIP_ENV_VALIDATION !== 'true') {
+  Object.setPrototypeOf(stripe, new Proxy({}, {
+    get(target, prop) {
+      return getStripe()[prop as keyof Stripe];
+    },
+  }));
+}
 
 // Stripe webhook event types we handle
 export const STRIPE_WEBHOOK_EVENTS = {
@@ -42,7 +73,7 @@ export async function verifyWebhookSignature(
   signature: string
 ): Promise<Stripe.Event> {
   try {
-    const event = stripe.webhooks.constructEvent(
+    const event = getStripe().webhooks.constructEvent(
       payload,
       signature,
       env.STRIPE_WEBHOOK_SECRET ?? ''

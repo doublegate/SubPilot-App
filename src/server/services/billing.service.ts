@@ -1,7 +1,7 @@
 import { type PrismaClient } from '@prisma/client';
 import type Stripe from 'stripe';
 import { TRPCError } from '@trpc/server';
-import { stripe, formatAmountForStripe, STRIPE_WEBHOOK_EVENTS } from '../lib/stripe';
+import { getStripe, formatAmountForStripe, STRIPE_WEBHOOK_EVENTS } from '../lib/stripe';
 import { env } from '~/env.js';
 
 export class BillingService {
@@ -26,7 +26,7 @@ export class BillingService {
     // If user already has a Stripe customer ID, retrieve it
     if (user.userSubscription?.stripeCustomerId) {
       try {
-        const customer = await stripe.customers.retrieve(user.userSubscription.stripeCustomerId);
+        const customer = await getStripe().customers.retrieve(user.userSubscription.stripeCustomerId);
         if (customer.deleted) {
           throw new Error('Customer was deleted');
         }
@@ -37,7 +37,7 @@ export class BillingService {
     }
 
     // Create new Stripe customer
-    const customer = await stripe.customers.create({
+    const customer = await getStripe().customers.create({
       email: user.email,
       name: user.name ?? undefined,
       metadata: {
@@ -75,7 +75,7 @@ export class BillingService {
 
     const customer = await this.getOrCreateStripeCustomer(userId);
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       customer: customer.id,
       payment_method_types: ['card'],
       mode: 'subscription',
@@ -126,7 +126,7 @@ export class BillingService {
       });
     }
 
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: userSubscription.stripeCustomerId,
       return_url: returnUrl,
     });
@@ -150,7 +150,7 @@ export class BillingService {
     }
 
     // Cancel at period end (user keeps access until end of billing period)
-    await stripe.subscriptions.update(userSubscription.stripeSubscriptionId, {
+    await getStripe().subscriptions.update(userSubscription.stripeSubscriptionId, {
       cancel_at_period_end: true,
     });
 
@@ -180,7 +180,7 @@ export class BillingService {
     }
 
     // Reactivate the subscription
-    await stripe.subscriptions.update(userSubscription.stripeSubscriptionId, {
+    await getStripe().subscriptions.update(userSubscription.stripeSubscriptionId, {
       cancel_at_period_end: false,
     });
 
@@ -226,10 +226,10 @@ export class BillingService {
       });
     }
 
-    const subscription = await stripe.subscriptions.retrieve(userSubscription.stripeSubscriptionId);
+    const subscription = await getStripe().subscriptions.retrieve(userSubscription.stripeSubscriptionId);
     
     // Update the subscription with the new price
-    await stripe.subscriptions.update(userSubscription.stripeSubscriptionId, {
+    await getStripe().subscriptions.update(userSubscription.stripeSubscriptionId, {
       items: [
         {
           id: subscription.items.data[0]?.id,
@@ -261,7 +261,7 @@ export class BillingService {
       return [];
     }
 
-    const invoices = await stripe.invoices.list({
+    const invoices = await getStripe().invoices.list({
       customer: userSubscription.stripeCustomerId,
       limit,
     });
@@ -280,7 +280,7 @@ export class BillingService {
       throw new Error('Invalid session metadata');
     }
 
-    const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+    const subscription = await getStripe().subscriptions.retrieve(session.subscription as string);
     
     // Create or update user subscription
     await this.prisma.userSubscription.upsert({
@@ -472,7 +472,7 @@ export class BillingService {
 
     // Update subscription status if needed
     if ((invoice as any).subscription) {
-      const subscription = await stripe.subscriptions.retrieve((invoice as any).subscription as string);
+      const subscription = await getStripe().subscriptions.retrieve((invoice as any).subscription as string);
       await this.prisma.userSubscription.update({
         where: { id: userSubscription.id },
         data: {
