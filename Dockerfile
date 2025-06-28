@@ -100,6 +100,7 @@ USER nextjs
 EXPOSE 3000
 
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
 # Health check with increased start period and using curl
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=5 \

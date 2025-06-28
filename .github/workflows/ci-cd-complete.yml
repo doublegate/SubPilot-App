@@ -259,9 +259,6 @@ jobs:
           CONTAINER_NAME="subpilot-test-${{ github.run_id }}"
           docker run -d \
             --name "$CONTAINER_NAME" \
-            --health-interval=10s \
-            --health-timeout=5s \
-            --health-retries=5 \
             -p 3000:3000 \
             -e SKIP_ENV_VALIDATION=true \
             -e NODE_ENV=production \
