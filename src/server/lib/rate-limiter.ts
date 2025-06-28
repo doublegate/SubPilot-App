@@ -138,8 +138,8 @@ async function getRedisClient(): Promise<RedisLike> {
         });
       });
       
-      redisClient = client;
-      return redisClient;
+      redisClient = client as RedisLike;
+      return client as RedisLike;
     } catch (error) {
       console.warn(
         '⚠️  Failed to connect to Redis, falling back to in-memory rate limiting'
