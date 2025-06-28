@@ -88,6 +88,9 @@ COPY --from=builder /app/prisma ./prisma
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Install curl for health checks (must be done as root)
+RUN apk add --no-cache curl
+
 # Change ownership
 RUN chown -R nextjs:nodejs /app
 
@@ -97,9 +100,6 @@ USER nextjs
 EXPOSE 3000
 
 ENV PORT=3000
-
-# Install curl for health checks
-RUN apk add --no-cache curl
 
 # Health check with increased start period and using curl
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=5 \
