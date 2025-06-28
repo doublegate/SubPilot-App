@@ -4,14 +4,18 @@
 
 SubPilot is a modern subscription management platform built with the T3 Stack. It helps users monitor, manage, and cancel recurring subscriptions by automatically detecting them from bank transactions.
 
-**Current Status**: Phase 2 Complete ✅ (AI & Analytics) - v1.1.0+ with CI/CD Excellence
-- **Released**: 2025-06-27 11:57 PM EDT (Phase 2) → 2025-06-28 02:40 AM EDT (Workflow Consolidation)
-- All Phase 2 features implemented (AI categorization, PWA, predictive analytics)
+**Current Status**: Phase 3 Development In Progress 🚀 (Automation) - v1.3.0 with Phase 3 Agents
+- **Released**: v1.3.0 on 2025-06-28 05:26 AM EDT (Docker Optimization & Health Check Stability)
+- **Phase 3 Started**: 2025-06-28 06:24 AM EDT (Parallel Agent Development)
+- Phase 2 complete (AI categorization, PWA, predictive analytics)
+- Phase 3 Agent 1: Cancellation System - COMPLETE ✅
+- Phase 3 Agent 2: AI Assistant - COMPLETE ✅
+- Phase 3 Agent 3: Premium Features - IN PROGRESS 🔄
 - 99.5% test coverage (391 tests passing)
 - Zero ESLint/TypeScript errors
 - Performance: 95/100 Lighthouse score
 - Live at: https://subpilot-test.vercel.app
-- GitHub Release: https://github.com/doublegate/SubPilot-App/releases/tag/v1.1.0
+- GitHub Release: https://github.com/doublegate/SubPilot-App/releases/tag/v1.3.0
 
 ## 🏗️ Architecture Overview
 
@@ -246,7 +250,7 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 - **GitHub URL**: <https://github.com/doublegate/SubPilot-App>
 - **Visibility**: Public repository
 - **License**: MIT License
-- **Current Version**: v1.1.0+ (Phase 2 Complete)
+- **Current Version**: v1.3.0 (Phase 2 Complete + Docker Excellence)
 
 ## 🛠️ Common Development Tasks
 
@@ -421,14 +425,44 @@ This pattern eliminates the need for non-null assertions and improves test maint
 - **Dynamic Tag References**: Extract tags from metadata outputs, not hardcoded SHAs
 - **Health Endpoint Flexibility**: Skip database checks in test environments
 - **Container Testing**: Always verify health checks pass before pushing
-- **Next.js Standalone**: Must set ENV HOSTNAME=0.0.0.0 for health checks to work
+- **Next.js Standalone**: Must set ENV HOSTNAME=0.0.0.0 for health checks to work (v1.3.0 fix)
 - **Health Check Timing**: Let Dockerfile control timing, don't override in CI
+- **ARM64 Optimization**: Conditional builds only for releases (75% faster CI/CD)
 
 ### GitHub Actions Best Practices
 - **Lowercase Image Names**: Docker registry requires lowercase (subpilot-app not SubPilot-App)
 - **Dynamic Metadata**: Use fromJSON() for accessing build metadata
 - **Environment Variables**: Pass critical config to Docker containers
 - **Job Dependencies**: Structure for maximum parallelization while maintaining safety
+
+## 🤖 Phase 3 Development Patterns
+
+### Parallel Agent Architecture
+- **Agent 1**: Cancellation System (Playwright automation, provider integrations)
+- **Agent 2**: AI Assistant (GPT-4 chat, conversation management, action execution)
+- **Agent 3**: Premium Features (Stripe billing, multi-account, feature flags)
+- **Execution**: Concurrent development with independent task agents
+
+### Cancellation System Patterns
+- **Database Models**: CancellationRequest, CancellationProvider, CancellationLog
+- **Multi-Strategy**: API integration → Web automation → Manual instructions
+- **Playwright Integration**: Browser automation with anti-detection measures
+- **Provider Abstraction**: Extensible system for adding new cancellation providers
+- **Status Tracking**: Real-time updates with retry logic and confirmation
+
+### AI Assistant Integration
+- **Conversation Management**: Persistent chat history with context awareness
+- **Action Execution**: AI can initiate cancellations, analyze spending, provide recommendations
+- **GPT-4 Integration**: Enhanced OpenAI client with conversation support
+- **UI Components**: Chat interface with message bubbles, quick actions, history
+- **Safety Features**: Action confirmation, rate limiting, cost tracking
+
+### Premium Features Architecture
+- **Stripe Integration**: Subscription billing with webhook handling
+- **Feature Flags**: Tier-based access control throughout application
+- **Multi-Account Support**: Family/team accounts with permission management
+- **Usage Tracking**: Monitor feature usage per tier for billing compliance
+- **Upgrade Flows**: Smooth onboarding and billing portal integration
 
 ## 📦 Documentation Archives
 

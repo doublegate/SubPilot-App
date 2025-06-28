@@ -7,8 +7,11 @@ import { checkRateLimit } from '@/server/lib/rate-limiter';
 // OpenAI API configuration
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const DEFAULT_MODEL = 'gpt-4o-mini';
+const DEFAULT_ASSISTANT_MODEL = 'gpt-4o'; // Better model for assistant
 const MAX_TOKENS = 500;
+const MAX_ASSISTANT_TOKENS = 2000; // More tokens for assistant responses
 const TEMPERATURE = 0.3; // Lower temperature for more consistent categorization
+const ASSISTANT_TEMPERATURE = 0.7; // Higher temperature for more natural conversation
 
 // Rate limiting for OpenAI API (reserved for future use)
 // const OPENAI_RATE_LIMIT_PER_MINUTE = 60;
@@ -20,6 +23,29 @@ const MODEL_COSTS = {
   'gpt-4o': { input: 0.0025, output: 0.01 },
   'gpt-3.5-turbo': { input: 0.0005, output: 0.0015 },
 } as const;
+
+// Chat message types
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant' | 'function';
+  content: string;
+  name?: string;
+  function_call?: {
+    name: string;
+    arguments: string;
+  };
+}
+
+export interface ChatCompletionOptions {
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  systemPrompt?: string;
+  functions?: Array<{
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  }>;
+}
 
 // Subscription categories with descriptions
 export const SUBSCRIPTION_CATEGORIES = {
@@ -680,6 +706,136 @@ export class OpenAICategorizationClient {
 
     return { total, byUser };
   }
+
+  /**
+   * Chat completion for AI assistant
+   */
+  async chatCompletion(
+    messages: ChatMessage[],
+    userId?: string,
+    options: ChatCompletionOptions = {}
+  ): Promise<{
+    content: string;
+    functionCall?: {
+      name: string;
+      arguments: Record<string, unknown>;
+    };
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
+  }> {
+    // Validate API key is available
+    this.validateApiKey();
+
+    // Rate limiting check
+    if (userId) {
+      const rateLimit = await checkRateLimit(userId, 'openai-assistant');
+      if (!rateLimit.allowed) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: 'Rate limit exceeded for AI assistant',
+        });
+      }
+    }
+
+    const {
+      model = DEFAULT_ASSISTANT_MODEL,
+      temperature = ASSISTANT_TEMPERATURE,
+      maxTokens = MAX_ASSISTANT_TOKENS,
+      systemPrompt,
+      functions,
+    } = options;
+
+    // Add system prompt if provided
+    const allMessages: ChatMessage[] = systemPrompt
+      ? [{ role: 'system', content: systemPrompt }, ...messages]
+      : messages;
+
+    try {
+      const response = await fetch(OPENAI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: allMessages,
+          temperature,
+          max_tokens: maxTokens,
+          functions,
+          function_call: functions ? 'auto' : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+      }
+
+      const data = (await response.json()) as {
+        choices?: Array<{
+          message?: {
+            content?: string;
+            function_call?: {
+              name: string;
+              arguments: string;
+            };
+          };
+        }>;
+        usage?: {
+          prompt_tokens: number;
+          completion_tokens: number;
+          total_tokens: number;
+        };
+      };
+
+      if (!data.choices?.[0]?.message) {
+        throw new Error('Invalid OpenAI response format');
+      }
+
+      const message = data.choices[0].message;
+      let functionCall: { name: string; arguments: Record<string, unknown> } | undefined;
+
+      if (message.function_call) {
+        try {
+          functionCall = {
+            name: message.function_call.name,
+            arguments: JSON.parse(message.function_call.arguments),
+          };
+        } catch {
+          console.error('Failed to parse function call arguments');
+        }
+      }
+
+      // Track costs
+      if (userId && data.usage) {
+        const modelCost = MODEL_COSTS[model as keyof typeof MODEL_COSTS] ?? MODEL_COSTS['gpt-4o'];
+        const cost = 
+          (data.usage.prompt_tokens / 1000) * modelCost.input +
+          (data.usage.completion_tokens / 1000) * modelCost.output;
+        
+        const costKey = `${userId}:${new Date().toISOString().slice(0, 7)}`;
+        const currentCost = this.costTracker.get(costKey) ?? 0;
+        this.costTracker.set(costKey, currentCost + cost);
+      }
+
+      return {
+        content: message.content ?? '',
+        functionCall,
+        usage: data.usage ? {
+          promptTokens: data.usage.prompt_tokens,
+          completionTokens: data.usage.completion_tokens,
+          totalTokens: data.usage.total_tokens,
+        } : undefined,
+      };
+    } catch (error) {
+      console.error('OpenAI chat completion error:', error);
+      throw error;
+    }
+  }
 }
 
 // Lazy singleton instance
@@ -707,5 +863,8 @@ export const openAIClient = {
   },
   get getCostStats() {
     return getOpenAIClient().getCostStats.bind(getOpenAIClient());
+  },
+  get chatCompletion() {
+    return getOpenAIClient().chatCompletion.bind(getOpenAIClient());
   },
 };

@@ -1,0 +1,86 @@
+import Stripe from 'stripe';
+import { env } from '~/env';
+
+// Initialize Stripe with the secret key
+export const stripe = new Stripe(env.STRIPE_SECRET_KEY ?? '', {
+  apiVersion: '2024-12-18.acacia',
+  typescript: true,
+  appInfo: {
+    name: 'SubPilot',
+    version: '1.3.0',
+  },
+});
+
+// Stripe webhook event types we handle
+export const STRIPE_WEBHOOK_EVENTS = {
+  // Checkout
+  CHECKOUT_SESSION_COMPLETED: 'checkout.session.completed',
+  CHECKOUT_SESSION_EXPIRED: 'checkout.session.expired',
+  
+  // Subscriptions
+  CUSTOMER_SUBSCRIPTION_CREATED: 'customer.subscription.created',
+  CUSTOMER_SUBSCRIPTION_UPDATED: 'customer.subscription.updated',
+  CUSTOMER_SUBSCRIPTION_DELETED: 'customer.subscription.deleted',
+  CUSTOMER_SUBSCRIPTION_TRIAL_WILL_END: 'customer.subscription.trial_will_end',
+  
+  // Payments
+  PAYMENT_INTENT_SUCCEEDED: 'payment_intent.succeeded',
+  PAYMENT_INTENT_PAYMENT_FAILED: 'payment_intent.payment_failed',
+  INVOICE_PAYMENT_SUCCEEDED: 'invoice.payment_succeeded',
+  INVOICE_PAYMENT_FAILED: 'invoice.payment_failed',
+  
+  // Customer
+  CUSTOMER_UPDATED: 'customer.updated',
+  CUSTOMER_DELETED: 'customer.deleted',
+} as const;
+
+export type StripeWebhookEvent = (typeof STRIPE_WEBHOOK_EVENTS)[keyof typeof STRIPE_WEBHOOK_EVENTS];
+
+// Helper function to verify webhook signatures
+export async function verifyWebhookSignature(
+  payload: string | Buffer,
+  signature: string
+): Promise<Stripe.Event> {
+  try {
+    const event = stripe.webhooks.constructEvent(
+      payload,
+      signature,
+      env.STRIPE_WEBHOOK_SECRET ?? ''
+    );
+    return event;
+  } catch (err) {
+    const error = err as Error;
+    throw new Error(`Webhook signature verification failed: ${error.message}`);
+  }
+}
+
+// Format amount for Stripe (convert dollars to cents)
+export function formatAmountForStripe(amount: number): number {
+  return Math.round(amount * 100);
+}
+
+// Format amount from Stripe (convert cents to dollars)
+export function formatAmountFromStripe(amount: number): number {
+  return amount / 100;
+}
+
+// Get Stripe price ID based on plan and billing period
+export function getStripePriceId(planName: string, billingPeriod: 'monthly' | 'yearly' = 'monthly'): string | null {
+  // These would be configured in your Stripe dashboard and stored in env vars or database
+  const priceIds: Record<string, Record<string, string>> = {
+    pro: {
+      monthly: env.STRIPE_PRICE_PRO_MONTHLY ?? '',
+      yearly: env.STRIPE_PRICE_PRO_YEARLY ?? '',
+    },
+    team: {
+      monthly: env.STRIPE_PRICE_TEAM_MONTHLY ?? '',
+      yearly: env.STRIPE_PRICE_TEAM_YEARLY ?? '',
+    },
+    enterprise: {
+      monthly: env.STRIPE_PRICE_ENTERPRISE_MONTHLY ?? '',
+      yearly: env.STRIPE_PRICE_ENTERPRISE_YEARLY ?? '',
+    },
+  };
+  
+  return priceIds[planName]?.[billingPeriod] ?? null;
+}

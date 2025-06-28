@@ -60,6 +60,15 @@ export const env = createEnv({
     ENCRYPTION_KEY: z.string().min(32).optional(),
     API_SECRET: z.string().min(32).optional(),
     PLAID_WEBHOOK_SECRET: z.string().optional(),
+    // Stripe
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    STRIPE_PRICE_PRO_MONTHLY: z.string().optional(),
+    STRIPE_PRICE_PRO_YEARLY: z.string().optional(),
+    STRIPE_PRICE_TEAM_MONTHLY: z.string().optional(),
+    STRIPE_PRICE_TEAM_YEARLY: z.string().optional(),
+    STRIPE_PRICE_ENTERPRISE_MONTHLY: z.string().optional(),
+    STRIPE_PRICE_ENTERPRISE_YEARLY: z.string().optional(),
   },
 
   /**
@@ -69,6 +78,7 @@ export const env = createEnv({
    */
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   },
 
   /**
@@ -110,8 +120,18 @@ export const env = createEnv({
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
     API_SECRET: process.env.API_SECRET,
     PLAID_WEBHOOK_SECRET: process.env.PLAID_WEBHOOK_SECRET,
+    // Stripe
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_PRICE_PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY,
+    STRIPE_PRICE_PRO_YEARLY: process.env.STRIPE_PRICE_PRO_YEARLY,
+    STRIPE_PRICE_TEAM_MONTHLY: process.env.STRIPE_PRICE_TEAM_MONTHLY,
+    STRIPE_PRICE_TEAM_YEARLY: process.env.STRIPE_PRICE_TEAM_YEARLY,
+    STRIPE_PRICE_ENTERPRISE_MONTHLY: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY,
+    STRIPE_PRICE_ENTERPRISE_YEARLY: process.env.STRIPE_PRICE_ENTERPRISE_YEARLY,
     // Client
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

@@ -8,6 +8,10 @@ import { notificationsRouter } from '@/server/api/routers/notifications';
 import { analyticsRouter } from '@/server/api/routers/analytics';
 import { categorizationRouter } from '@/server/api/routers/categorization';
 import { exportRouter } from '@/server/api/routers/export';
+import { cancellationRouter } from '@/server/api/routers/cancellation';
+import { assistantRouter } from '@/server/api/routers/assistant';
+import { billingRouter } from '@/server/api/routers/billing';
+import { accountRouter } from '@/server/api/routers/account';
 
 /**
  * This is the primary router for your server.
@@ -24,6 +28,10 @@ export const appRouter = createTRPCRouter({
   analytics: analyticsRouter,
   categorization: categorizationRouter,
   export: exportRouter,
+  cancellation: cancellationRouter,
+  assistant: assistantRouter,
+  billing: billingRouter,
+  account: accountRouter,
 });
 
 // export type definition of API

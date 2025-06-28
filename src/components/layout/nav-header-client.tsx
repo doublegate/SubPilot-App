@@ -45,29 +45,35 @@ export function NavHeaderClient() {
               Dashboard
             </Link>
             <Link
-              href="/subscriptions"
+              href="/dashboard/subscriptions"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
               Subscriptions
             </Link>
             <Link
-              href="/banks"
+              href="/dashboard/banks"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
               Banks
             </Link>
             <Link
-              href="/analytics"
+              href="/dashboard/analytics"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
               Analytics
+            </Link>
+            <Link
+              href="/dashboard/assistant"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              AI Assistant
             </Link>
           </nav>
         </div>
 
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/banks/connect">Connect Bank</Link>
+            <Link href="/dashboard/banks/connect">Connect Bank</Link>
           </Button>
 
           <ThemeToggle />
@@ -102,13 +108,16 @@ export function NavHeaderClient() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/profile">Profile</Link>
+                <Link href="/dashboard/settings">Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/settings">Settings</Link>
+                <Link href="/dashboard/settings/billing">Billing</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/help">Help & Support</Link>
+                <Link href="/dashboard/settings">Settings</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/help">Help & Support</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>

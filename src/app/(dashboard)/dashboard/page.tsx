@@ -268,18 +268,20 @@ export default function DashboardPage() {
             Here&apos;s your subscription overview.
           </p>
         </div>
-        {notifications > 0 && (
-          <button
-            onClick={() => router.push('/notifications')}
-            className="flex items-center gap-2 rounded-lg bg-cyan-50 px-3 py-2 text-sm text-cyan-700 transition-colors hover:bg-cyan-100 dark:bg-cyan-900/20 dark:text-cyan-400 dark:hover:bg-cyan-900/30"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
-            </span>
-            {notifications} New Notification{notifications !== 1 ? 's' : ''}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {notifications > 0 && (
+            <button
+              onClick={() => router.push('/notifications')}
+              className="flex items-center gap-2 rounded-lg bg-cyan-50 px-3 py-2 text-sm text-cyan-700 transition-colors hover:bg-cyan-100 dark:bg-cyan-900/20 dark:text-cyan-400 dark:hover:bg-cyan-900/30"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
+              </span>
+              {notifications} New Notification{notifications !== 1 ? 's' : ''}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Stats Overview */}

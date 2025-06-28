@@ -17,7 +17,7 @@ export default async function ProfilePage() {
         {/* Profile Information */}
         <div className="rounded-lg bg-card p-6 shadow">
           <h2 className="mb-4 text-xl font-semibold">Profile Information</h2>
-          <ProfileForm user={session!.user} />
+          <ProfileForm />
         </div>
 
         {/* Connected Accounts */}
