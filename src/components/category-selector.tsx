@@ -32,7 +32,7 @@ export function CategorySelector({
   className,
 }: CategorySelectorProps) {
   const [isUpdating, setIsUpdating] = useState(false);
-  const utils = api.useContext();
+  const utils = api.useUtils();
 
   // Fetch available categories
   const { data: categories, isLoading: categoriesLoading } =
@@ -91,7 +91,7 @@ export function CategorySelector({
   const handleCategoryChange = (newCategory: string) => {
     updateCategory.mutate({
       subscriptionId,
-      category: newCategory as any,
+      category: newCategory as keyof typeof categories,
     });
   };
 

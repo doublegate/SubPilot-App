@@ -53,11 +53,11 @@ export class ExportService {
       sub.currency,
       sub.frequency,
       sub.isActive ? 'Active' : 'Inactive',
-      sub.category || '',
+      sub.category ?? '',
       sub.nextBilling ? format(sub.nextBilling, 'yyyy-MM-dd') : '',
       sub.nextBilling ? format(sub.nextBilling, 'yyyy-MM-dd') : '',
       '',
-      sub.description || '',
+      sub.description ?? '',
     ]);
 
     // Add transaction data if requested
@@ -76,8 +76,8 @@ export class ExportService {
             sub.name,
             format(trans.date, 'yyyy-MM-dd'),
             trans.amount.toString(),
-            trans.description || '',
-          ]) || []
+            trans.description ?? '',
+          ]) ?? []
       );
     }
 
@@ -198,7 +198,7 @@ export class ExportService {
       </head>
       <body>
         <h1>SubPilot Subscription Report</h1>
-        <p>Generated for: ${user?.email || 'Unknown'}</p>
+        <p>Generated for: ${user?.email ?? 'Unknown'}</p>
         <p>Date: ${format(new Date(), 'MMMM dd, yyyy')}</p>
         
         <div class="summary">
@@ -289,7 +289,7 @@ export class ExportService {
 
     const monthlySpend = subscriptions
       .filter(s => s.frequency === 'monthly')
-      .reduce((sum, s) => sum + s.amount, 0);
+      .reduce((sum, s) => sum + Number(s.amount), 0);
 
     const yearlySpend = subscriptions.reduce((sum, s) => {
       const multiplier =
@@ -298,14 +298,14 @@ export class ExportService {
           yearly: 1,
           weekly: 52,
           quarterly: 4,
-        }[s.frequency] || 12;
+        }[s.frequency] ?? 12;
       return sum + Number(s.amount) * multiplier;
     }, 0);
 
     const categoryBreakdown = subscriptions.reduce(
       (acc, sub) => {
-        const category = sub.category || 'Uncategorized';
-        acc[category] = (acc[category] || 0) + Number(sub.amount);
+        const category = sub.category ?? 'Uncategorized';
+        acc[category] = (acc[category] ?? 0) + Number(sub.amount);
         return acc;
       },
       {} as Record<string, number>

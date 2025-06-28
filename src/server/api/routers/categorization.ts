@@ -296,7 +296,25 @@ export const categorizationRouter = createTRPCRouter({
    */
   getStats: protectedProcedure.query(async ({ ctx }) => {
     const cacheKey = `categorization-stats:${ctx.session.user.id}`;
-    const cached = cacheService.get<any>(cacheKey);
+    
+    type StatsType = {
+      transactions: {
+        total: number;
+        categorized: number;
+        percentage: number;
+      };
+      subscriptions: {
+        total: number;
+        categorized: number;
+        percentage: number;
+      };
+      categoryBreakdown: Array<{
+        category: string;
+        count: number;
+      }>;
+    };
+    
+    const cached = cacheService.get<StatsType>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -342,7 +360,7 @@ export const categorizationRouter = createTRPCRouter({
       }),
     ]);
 
-    const stats = {
+    const stats: StatsType = {
       transactions: {
         total: totalTransactions,
         categorized: categorizedTransactions,

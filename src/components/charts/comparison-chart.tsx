@@ -9,7 +9,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
   LabelList,
 } from 'recharts';
 import {
@@ -120,8 +119,15 @@ export const ComparisonChart = React.memo(function ComparisonChart({
   };
 
   // Custom label for bars
-  const renderCustomLabel = (props: any) => {
-    const { x, y, width, height, value, index } = props;
+  const renderCustomLabel = (props: {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    value?: number;
+    index?: number;
+  }) => {
+    const { x = 0, y = 0, width = 0, index = 0 } = props;
     const item = chartData[index];
     if (!item || !showPercentages) return null;
 
