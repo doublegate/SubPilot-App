@@ -24,10 +24,18 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
-> **🎉 PHASE 1 MVP COMPLETE**: 100% Complete | Version 1.0.0 | **Production Ready** | Last Updated: 2025-06-27 | [View Changelog](./CHANGELOG.md)
-> **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) - Full functionality: Bank sync, subscription management, email notifications, analytics, theme switching
+> **🎉 PHASE 1 MVP COMPLETE**: 100% Complete | Version 1.0.0-production-ready | **Production Ready with Edge Runtime Fix** | Last Updated: 2025-06-27 09:07 PM EDT | [View Changelog](./CHANGELOG.md)
+> **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app) ✅ - Full functionality: Bank sync, subscription management, email notifications, analytics, theme switching
 
 ## 🔥 Recent Updates (v1.0.0 - June 27, 2025)
+
+### 🚨 v1.0.0-production Critical Middleware Fix (June 27, 2025 - 9:07 PM EDT)
+
+- ✅ **Production Issue Resolved** - Fixed Vercel Edge Runtime middleware compatibility
+- ✅ **MIDDLEWARE_INVOCATION_FAILED** - Removed Node.js dependencies from middleware
+- ✅ **Security Features Preserved** - CSRF, XSS, CSP protection maintained
+- ✅ **Edge Runtime Optimized** - Pure Web Standard APIs for global deployment
+- ✅ **Zero Downtime Fix** - Immediate resolution with automatic redeployment
 
 ### 🎯 v1.0.0-final TypeScript Compilation Excellence (June 27, 2025)
 
@@ -81,6 +89,35 @@ SubPilot is a modern, intelligent subscription management platform that automati
 - **Test Coverage**: 99.1% (370 tests, 37 strategic skips)
 - **Code Quality**: 0 ESLint errors, 0 TypeScript errors, 0 formatting issues
 - **Live Features**: Complete subscription management platform
+
+## 🔒 Security Features
+
+SubPilot implements enterprise-grade security measures to protect sensitive financial data:
+
+- **🔐 Account Protection**
+  - Account lockout after 5 failed login attempts
+  - 30-minute lockout duration with automatic unlock
+  - Secure password hashing with bcrypt
+  - Rate limiting on authentication endpoints
+
+- **📝 Audit Logging**
+  - Comprehensive security event tracking
+  - Immutable audit trail for compliance
+  - Login/logout tracking with IP addresses
+  - Failed authentication attempt monitoring
+
+- **🛡️ Application Security**
+  - CSRF protection on all mutations
+  - XSS prevention headers
+  - Content Security Policy (CSP)
+  - Secure session management
+  - Error boundaries for fault isolation
+
+- **🔑 Data Security**
+  - End-to-end encryption for bank tokens
+  - Webhook signature verification
+  - Request signing for sensitive operations
+  - Environment-based security configuration
 
 ## 🎯 Key Features
 
@@ -196,6 +233,11 @@ SubPilot is a modern, intelligent subscription management platform that automati
    PLAID_ENV="sandbox"
    PLAID_PRODUCTS="transactions"
    PLAID_COUNTRY_CODES="US"
+
+   # Security (optional but recommended)
+   # Generate with: openssl rand -base64 32
+   ENCRYPTION_KEY="your-32-char-encryption-key"
+   API_SECRET="your-32-char-api-secret"
    ```
 
 4. **Initialize database**

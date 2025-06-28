@@ -22,6 +22,10 @@ model User {
   // Notification preferences stored as JSON
   notificationPreferences Json @default("{\"emailAlerts\":true,\"pushNotifications\":true,\"weeklyReports\":true}")
 
+  // Security fields for account lockout
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -34,6 +38,7 @@ model User {
   subscriptions Subscription[]
   transactions  Transaction[]
   notifications Notification[]
+  auditLogs     AuditLog[]
 
   @@map("users")
 }
@@ -313,4 +318,27 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// Security audit logging
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // e.g., 'user.login', 'auth.failed', 'bank.connected'
+  resource  String?  // Resource identifier (e.g., subscription ID, bank ID)
+  ipAddress String?
+  userAgent String?
+  result    String   // 'success' or 'failure'
+  metadata  Json?    // Additional data as JSON
+  error     String?  // Error message if failure
+  timestamp DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+
+  // Indexes for efficient querying
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@map("audit_logs")
 }

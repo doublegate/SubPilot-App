@@ -9,6 +9,8 @@ import { compare } from 'bcryptjs';
 import { env } from '@/env.js';
 import { db } from '@/server/db';
 import { sendVerificationRequest } from '@/lib/email';
+import { trackFailedAuth, isAccountLocked, clearFailedAuth } from '@/server/lib/rate-limiter';
+import { AuditLogger } from '@/server/lib/audit-logger';
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -78,16 +80,29 @@ export const authConfig: NextAuthConfig = {
               email: { label: 'Email', type: 'email' },
               password: { label: 'Password', type: 'password' },
             },
-            async authorize(credentials) {
+            async authorize(credentials, req) {
               if (!credentials?.email || !credentials?.password) {
                 return null;
               }
 
+              const email = credentials.email as string;
+              const ipAddress = req?.headers?.get('x-forwarded-for') ?? req?.headers?.get('x-real-ip') ?? 'unknown';
+              const userAgent = req?.headers?.get('user-agent') ?? 'unknown';
+
+              // Check if account is locked
+              const lockStatus = await isAccountLocked(email);
+              if (lockStatus.locked) {
+                await AuditLogger.logAuthFailure(email, ipAddress, userAgent, 'Account locked');
+                throw new Error(`Account locked until ${lockStatus.until?.toLocaleTimeString()}`);
+              }
+
               const user = await db.user.findUnique({
-                where: { email: credentials.email as string },
+                where: { email },
               });
 
               if (!user?.password) {
+                await trackFailedAuth(email);
+                await AuditLogger.logAuthFailure(email, ipAddress, userAgent, 'User not found');
                 return null;
               }
 
@@ -97,8 +112,20 @@ export const authConfig: NextAuthConfig = {
               );
 
               if (!isPasswordValid) {
+                const { locked, lockUntil } = await trackFailedAuth(email);
+                await AuditLogger.logAuthFailure(email, ipAddress, userAgent, 'Invalid password');
+                
+                if (locked) {
+                  await AuditLogger.logAccountLockout(user.id, 'Too many failed attempts');
+                  throw new Error(`Account locked until ${lockUntil?.toLocaleTimeString()}`);
+                }
+                
                 return null;
               }
+
+              // Clear failed attempts on successful login
+              await clearFailedAuth(email);
+              await AuditLogger.logAuth(user.id, ipAddress, userAgent);
 
               return {
                 id: user.id,

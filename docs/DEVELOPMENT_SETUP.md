@@ -122,8 +122,24 @@ SMTP_USER=""
 SMTP_PASS=""
 
 # ======================
+# SECURITY CONFIGURATION
+# ======================
+# Generate with: openssl rand -base64 32
+ENCRYPTION_KEY="your-32-char-minimum-encryption-key-here"
+API_SECRET="your-32-char-minimum-api-secret-here"
+PLAID_WEBHOOK_SECRET="your-plaid-webhook-secret-from-dashboard"
+
+# Security Settings
+ENABLE_RATE_LIMIT="true"
+ENABLE_AUDIT_LOG="true"
+MAX_LOGIN_ATTEMPTS="5"
+LOCKOUT_DURATION_MINUTES="30"
+SESSION_TIMEOUT_MINUTES="30"
+
+# ======================
 # REDIS (OPTIONAL)
 # ======================
+# Required for production rate limiting, falls back to in-memory in development
 REDIS_URL="redis://localhost:6379"
 
 # ======================
@@ -192,6 +208,10 @@ npx prisma generate
 
 # Run database migrations
 npx prisma db push
+
+# Apply security features migration (if upgrading from earlier version)
+# This adds AuditLog table and account lockout fields
+psql $DATABASE_URL < prisma/migrations/add_security_features.sql
 
 # Seed database with sample data
 npx prisma db seed

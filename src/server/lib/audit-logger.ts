@@ -199,7 +199,7 @@ export class AuditLogger {
    * Query audit logs (for admin dashboard)
    * Note: This should be heavily restricted and only accessible to admins
    */
-  static async query(_filters: {
+  static async query(filters: {
     userId?: string;
     action?: SecurityAction;
     startDate?: Date;
@@ -220,28 +220,23 @@ export class AuditLogger {
       timestamp: Date;
     }>
   > {
-    // const where: Prisma.AuditLogWhereInput = {};
-    //
-    // if (filters.userId) where.userId = filters.userId;
-    // if (filters.action) where.action = filters.action;
-    // if (filters.result) where.result = filters.result;
-    //
-    // if (filters.startDate || filters.endDate) {
-    //   where.timestamp = {
-    //     ...(filters.startDate && { gte: filters.startDate }),
-    //     ...(filters.endDate && { lte: filters.endDate }),
-    //   };
-    // }
+    const where: Prisma.AuditLogWhereInput = {};
 
-    // Note: AuditLog table needs to be added to schema
-    // For now, return empty array to prevent errors
-    return [];
+    if (filters.userId) where.userId = filters.userId;
+    if (filters.action) where.action = filters.action;
+    if (filters.result) where.result = filters.result;
 
-    // When AuditLog table is added:
-    // return await db.auditLog.findMany({
-    //   where,
-    //   orderBy: { timestamp: 'desc' },
-    //   take: filters.limit ?? 100,
-    // });
+    if (filters.startDate || filters.endDate) {
+      where.timestamp = {
+        ...(filters.startDate && { gte: filters.startDate }),
+        ...(filters.endDate && { lte: filters.endDate }),
+      };
+    }
+
+    return await db.auditLog.findMany({
+      where,
+      orderBy: { timestamp: 'desc' },
+      take: filters.limit ?? 100,
+    });
   }
 }

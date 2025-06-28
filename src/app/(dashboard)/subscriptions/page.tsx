@@ -25,6 +25,7 @@ import { AddSubscriptionModal } from '@/components/add-subscription-modal';
 import { EditSubscriptionModal } from '@/components/edit-subscription-modal';
 import { CancellationAssistant } from '@/components/cancellation-assistant';
 import { ArchiveSubscriptionModal } from '@/components/archive-subscription-modal';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 interface Subscription {
   id: string;
@@ -131,7 +132,20 @@ export default function SubscriptionsPage() {
   };
 
   return (
-    <main className="space-y-8">
+    <ErrorBoundary
+      fallback={(error, reset) => (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-8">
+          <h2 className="text-xl font-semibold text-destructive">
+            Error loading subscriptions
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+          <Button onClick={reset} variant="outline" className="mt-4">
+            Try again
+          </Button>
+        </div>
+      )}
+    >
+      <main className="space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -341,5 +355,6 @@ export default function SubscriptionsPage() {
         </>
       )}
     </main>
+    </ErrorBoundary>
   );
 }

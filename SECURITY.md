@@ -45,6 +45,8 @@ SubPilot implements multiple layers of security:
 - Session management with secure cookies
 - OAuth 2.0 for third-party providers
 - Role-based access control (RBAC)
+- **Account lockout protection** (5 failed attempts, 30-minute lockout)
+- **Failed login tracking** with automatic unlock
 
 ### Data Protection
 
@@ -53,6 +55,7 @@ SubPilot implements multiple layers of security:
 - Secure storage of API keys and tokens
 - PII data anonymization where possible
 - Regular data backups with encryption
+- **Audit logging** for compliance and security monitoring
 
 ### API Security
 
@@ -61,6 +64,8 @@ SubPilot implements multiple layers of security:
 - SQL injection prevention via Prisma ORM
 - XSS protection headers
 - CSRF protection
+- **Request signing** for sensitive operations
+- **Webhook signature verification**
 
 ### Third-Party Integrations
 
@@ -78,6 +83,9 @@ SubPilot implements multiple layers of security:
 - Secure deployment pipelines
 - Regular dependency updates
 - Container security scanning
+- **Error boundaries** for fault isolation
+- **Comprehensive audit trail** for security events
+- **In-memory/Redis rate limiting** with automatic failover
 
 ## Security Best Practices for Contributors
 
@@ -177,4 +185,4 @@ We thank the following researchers for responsibly disclosing vulnerabilities:
 
 ---
 
-Last Updated: 2025-06-21
+Last Updated: 2025-06-27

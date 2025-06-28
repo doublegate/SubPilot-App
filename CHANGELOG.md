@@ -7,6 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Security Enhancements (2025-06-27)
+
+- **Account Lockout Protection**
+  - Added automatic account lockout after 5 failed login attempts
+  - Implemented 30-minute lockout duration with automatic unlock
+  - Added `failedLoginAttempts` and `lockedUntil` fields to User model
+  - Integrated lockout logic into Auth.js credentials provider
+
+- **Comprehensive Audit Logging**
+  - Added `AuditLog` model to Prisma schema for immutable security event tracking
+  - Implemented audit logging for all authentication events (login, logout, failures)
+  - Added tracking for bank connections, subscriptions, and security events
+  - Created indexed database table for efficient audit log queries
+
+- **Enhanced Error Handling**
+  - Added ErrorBoundary components to critical layouts (dashboard, subscriptions)
+  - Implemented fault isolation to prevent cascading failures
+  - Enhanced error recovery mechanisms for better user experience
+
+- **Security Configuration**
+  - Added configurable security settings via environment variables
+  - Implemented toggles for rate limiting and audit logging
+  - Added customizable lockout duration and attempt thresholds
+
+### Changed
+
+- **Environment Configuration**
+  - Updated `.env.example` with comprehensive security settings
+  - Added security-specific environment variables documentation
+  - Enhanced Redis configuration notes for production deployment
+
+- **Documentation Updates**
+  - Updated SECURITY.md with new security features documentation
+  - Enhanced README.md security features section
+  - Added migration guide for security feature deployment
+
+## [1.0.0-production-ready] - 2025-06-27 - 9:07 PM EDT
+
+### 🚨 CRITICAL PRODUCTION FIX
+
+This release resolves a critical production middleware error on Vercel deployment.
+
+#### Fixed - (v1.0.0-production-ready)
+
+- **Vercel Edge Runtime Compatibility**
+  - Resolved `MIDDLEWARE_INVOCATION_FAILED` error (ID: iad1::qh9hd-1751072367138-c95e24979f17)
+  - Removed Node.js-specific dependencies from middleware
+  - Refactored to use only Web Standard APIs
+
+- **Security Middleware Optimization**
+  - Removed imports of `@/server/lib/rate-limiter` (incompatible with Edge Runtime)
+  - Removed imports of `@/server/lib/audit-logger` (requires Node.js runtime)
+  - Inlined essential security functions for Edge compatibility
+
+#### Changed
+
+- **Middleware Architecture**
+  - Simplified security checks to Edge-compatible implementations
+  - Moved rate limiting to API route level (tRPC middleware)
+  - Moved audit logging to API endpoints
+  - Maintained all critical security headers and CSRF protection
+
+#### Security Features Preserved
+
+- ✅ CSRF validation for mutations
+- ✅ XSS protection headers  
+- ✅ Clickjacking prevention (X-Frame-Options)
+- ✅ MIME type sniffing protection
+- ✅ Strict Transport Security (HTTPS)
+- ✅ Content Security Policy (with Plaid integration)
+- ✅ Authentication-based route protection
+
 ## [1.0.0-final-compilation] - 2025-06-27
 
 ### 🎯 TYPESCRIPT COMPILATION PERFECTION
@@ -74,7 +146,7 @@ This micro-release achieves absolute code quality excellence with 100% complianc
   - Optimized test execution speed and memory management
   - Strategic test skipping for complex integration scenarios
 
-#### Technical Details
+#### Technical Details - (v1.0.0-final)
 
 - **Files Updated**: 24+ test files with comprehensive fixes
 - **Quality Metrics**: 100% ESLint, TypeScript, and Prettier compliance
@@ -364,7 +436,7 @@ Version 0.1.9 represents the completion of Phase 1 MVP development, delivering a
 
 ## Pre-v0.1.8 Changes (Incorporated into v0.1.8)
 
-### Added
+### Added - (pre-v0.1.8)
 
 - **Theme Switching System** - Complete Light/Dark/Auto mode implementation
   - Integrated next-themes for robust theme management
@@ -374,7 +446,7 @@ Version 0.1.9 represents the completion of Phase 1 MVP development, delivering a
   - Auto mode follows system preferences in real-time
   - Smooth transitions without flashing
 
-### Fixed
+### Fixed - (pre-v0.1.8)
 
 - **OAuth Authentication** - Fixed Google and GitHub login errors
   - Added proper OAuth `Account` model to Prisma schema for Auth.js
@@ -389,7 +461,7 @@ Version 0.1.9 represents the completion of Phase 1 MVP development, delivering a
   - Added `metadata` field to notification response
   - Notifications can now be deleted and marked as read properly
 
-### Changed
+### Changed - (pre-v0.1.8)
 
 - **Project Organization** - Reorganized configuration files for cleaner structure
   - Moved build configs to `config/build/` directory
@@ -398,7 +470,7 @@ Version 0.1.9 represents the completion of Phase 1 MVP development, delivering a
   - Created symlinks to maintain build tool compatibility
   - Updated `config/README.md` with new structure documentation
 
-### Added (post-v0.1.8)
+### Added - (post-v0.1.8)
 
 - `docs/FILE-ORGANIZATION-2025-06-24.md` - Documentation of file reorganization
 - Added `usage_tracking.json` to `.gitignore`

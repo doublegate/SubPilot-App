@@ -35,12 +35,15 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 
 ```ascii
 subpilot-app/
-├── docs/                   # Comprehensive documentation
+├── docs/                   # Active documentation
 ├── ref_docs/              # Reference documentation
-├── to-dos/                # Task tracking (phase-based with 40+ documented TODOs)
+├── archive/               # Historical documentation
+│   ├── phase-1-completion/  # Phase 1 completed docs
+│   └── memory/            # Project memory archives
+├── to-dos/                # Task tracking (phase-based)
 ├── src/
 │   ├── app/               # Next.js App Router (fully implemented)
-│   ├── components/        # React components (20+ components implemented)
+│   ├── components/        # React components (20+ components)
 │   ├── server/           # Backend code
 │   │   ├── api/          # tRPC routers (6 routers with 35+ endpoints)
 │   │   ├── auth.ts       # Auth.js configuration
@@ -221,7 +224,7 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 
 5. **Testing**: Write tests as you implement features. Don't leave testing until the end.
 
-6. **Edge Runtime Compatibility**: Middleware runs in Edge Runtime. Use `auth-edge.ts` for auth checks instead of importing the full auth config.
+6. **Edge Runtime Compatibility**: Middleware runs in Edge Runtime. Use `auth-edge.ts` for auth checks instead of importing the full auth config. Complex security features (rate limiting, audit logging) must be in API routes, not middleware.
 
 ## 🎉 v1.0.0 Release Achievement
 
@@ -268,7 +271,7 @@ With Phase 1 complete, the next phase will focus on:
 - **GitHub URL**: <https://github.com/doublegate/SubPilot-App>
 - **Visibility**: Public repository
 - **License**: MIT License
-- **Current Version**: 0.1.9
+- **Current Version**: 1.0.0-production-ready
 
 ## 🛠️ Common Development Tasks
 
@@ -456,3 +459,17 @@ This pattern eliminates the need for non-null assertions and improves test maint
 - **JSON Field Access**: Type guards for database fields
 - **Component Dependencies**: Install all required UI library components
 - **Edge Runtime**: Separate auth utilities for middleware compatibility
+- **Middleware Restrictions**: No Node.js APIs, no dynamic imports, no Prisma client
+- **ESLint Overrides**: Test files need flexible typing rules for mocking
+
+## 📦 Documentation Archive
+
+### Phase 1 Completed Documentation
+All Phase 1 MVP documentation has been archived at `archive/phase-1-completion/`:
+
+- **Reports**: Code quality audits, performance analyses, security assessments
+- **Implementation**: Technical summaries, fixes, completed plans
+- **Setup Guides**: Vercel deployment documentation (completed)
+- **Release Notes**: Historical version documentation
+
+Active documentation remains in `docs/` for ongoing development reference.
