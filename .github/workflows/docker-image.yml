@@ -1,12 +1,17 @@
-name: Docker Image CI
+# DISABLED: This workflow has been replaced by ci-cd-complete.yml
+# The docker-image.yml workflow is disabled due to repository name case sensitivity issues
+# All functionality has been merged into the optimized ci-cd-complete.yml workflow
+
+name: Docker Image CI (DISABLED)
 
 on:
-  push:
-    branches: [ "main" ]
-    tags: [ "v*" ]
-  pull_request:
-    branches: [ "main" ]
+  # Disabled - replaced by ci-cd-complete.yml
   workflow_dispatch:
+    inputs:
+      force_enable:
+        description: 'Force enable this disabled workflow'
+        required: false
+        default: 'false'
 
 env:
   REGISTRY: ghcr.io
