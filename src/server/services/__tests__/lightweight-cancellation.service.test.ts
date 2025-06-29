@@ -265,7 +265,8 @@ describe('LightweightCancellationService', () => {
       const providers = service.getAvailableProviders('netflix');
 
       expect(providers.length).toBe(1);
-      expect(providers[0].name).toBe('Netflix');
+      const firstProvider = providers[0];
+      expect(firstProvider?.name).toBe('Netflix');
     });
 
     it('should filter providers by category', () => {

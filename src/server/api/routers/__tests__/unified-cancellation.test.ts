@@ -72,7 +72,6 @@ describe('unifiedCancellationRouter', () => {
     
     const ctx = createInnerTRPCContext({
       session: mockSession,
-      db: mockDb,
     });
     
     caller = unifiedCancellationRouter.createCaller(ctx);
@@ -398,8 +397,9 @@ describe('unifiedCancellationRouter', () => {
 
       expect(result.subscription.name).toBe('Netflix');
       expect(result.methods).toHaveLength(3); // auto, api, lightweight
-      expect(result.methods[0].id).toBe('auto');
-      expect(result.methods[0].isRecommended).toBe(true);
+      const firstMethod = result.methods[0];
+      expect(firstMethod?.id).toBe('auto');
+      expect(firstMethod?.isRecommended).toBe(true);
       expect(result.methods.find(m => m.id === 'api')).toBeDefined();
       expect(result.methods.find(m => m.id === 'lightweight')).toBeDefined();
       expect(result.provider?.name).toBe('Netflix');
@@ -471,13 +471,15 @@ describe('unifiedCancellationRouter', () => {
       const result = await caller.getHistory({ limit: 10 });
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('req1');
-      expect(result[0].subscription.name).toBe('Netflix');
-      expect(result[0].method).toBe('api'); // Transformed by orchestrator
-      expect(result[0].status).toBe('completed');
-      expect(result[0].confirmationCode).toBe('CONF123');
-      expect(result[1].id).toBe('req2');
-      expect(result[1].error).toBe('Manual cancellation failed');
+      const firstRequest = result[0];
+      const secondRequest = result[1];
+      expect(firstRequest?.id).toBe('req1');
+      expect(firstRequest?.subscription.name).toBe('Netflix');
+      expect(firstRequest?.method).toBe('api'); // Transformed by orchestrator
+      expect(firstRequest?.status).toBe('completed');
+      expect(firstRequest?.confirmationCode).toBe('CONF123');
+      expect(secondRequest?.id).toBe('req2');
+      expect(secondRequest?.error).toBe('Manual cancellation failed');
     });
 
     it('should filter by status', async () => {
