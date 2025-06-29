@@ -154,14 +154,20 @@ export function generateId(prefix?: string, length = 12): string {
     const array = new Uint8Array(length);
     window.crypto.getRandomValues(array);
     for (let i = 0; i < length; i++) {
-      result += chars.charAt(array[i] % chars.length);
+      const value = array[i];
+      if (value !== undefined) {
+        result += chars.charAt(value % chars.length);
+      }
     }
   } else if (typeof globalThis !== 'undefined' && globalThis.crypto) {
     // Node.js 19+ or other environments with global crypto
     const array = new Uint8Array(length);
     globalThis.crypto.getRandomValues(array);
     for (let i = 0; i < length; i++) {
-      result += chars.charAt(array[i] % chars.length);
+      const value = array[i];
+      if (value !== undefined) {
+        result += chars.charAt(value % chars.length);
+      }
     }
   } else {
     // Fallback for older Node.js versions
@@ -169,7 +175,10 @@ export function generateId(prefix?: string, length = 12): string {
       const crypto = require('crypto');
       const bytes = crypto.randomBytes(length);
       for (let i = 0; i < length; i++) {
-        result += chars.charAt(bytes[i] % chars.length);
+        const value = bytes[i];
+        if (value !== undefined) {
+          result += chars.charAt(value % chars.length);
+        }
       }
     } catch {
       // Last resort fallback
