@@ -5,7 +5,11 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.0] - 2025-06-29 - Unified Cancellation System + Complete TypeScript Compliance
+
+### 🎯 Major Achievement: Unified Cancellation System
+
+This release introduces a groundbreaking unified cancellation system that revolutionizes how users cancel subscriptions, along with complete TypeScript compliance across the entire codebase.
 
 ### Added
 
@@ -33,12 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated error messages to match service implementations
   - All TypeScript compilation errors now resolved
 
-- **Phase 2 Documentation Archiving** - 2025-06-29 17:20
-  - Created phase-2-completion archive directory structure
-  - Moved all Phase 2 related documents from root, docs/, and to-dos/
-  - Organized into implementation, releases, reports, and sessions subdirectories
-  - Added README files for each subdirectory with content descriptions
-
 - **Import Alias Standardization** - 2025-06-28 08:22
   - Fixed critical CI/CD build failure with "Cannot access before initialization" error
   - Root cause: Mixed import aliases (@/ vs ~/) causing webpack module duplication
@@ -51,6 +49,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed problematic Proxy pattern from Stripe lazy loading
   - Fixed import path inconsistency in tRPC route (@/ to ~/)
   - Simplified Stripe export to avoid complex object initialization
+
+### Changed
+
+- **Phase 2 Documentation Archiving** - 2025-06-29 17:20
+  - Created phase-2-completion archive directory structure
+  - Moved all Phase 2 related documents from root, docs/, and to-dos/
+  - Organized into implementation, releases, reports, and sessions subdirectories
+  - Added README files for each subdirectory with content descriptions
+
+### Technical Details
+
+#### Unified Cancellation System Architecture
+- **UnifiedCancellationOrchestratorService**: Central intelligence for method selection
+- **Three Distinct Services**:
+  - CancellationService (API-first approach)
+  - EventDrivenCancellationService (Background processing)
+  - LightweightCancellationService (Manual instructions)
+- **Provider Registry**: Extensible system supporting Netflix, Spotify, Adobe, Amazon, Apple
+- **Real-time Communication**: SSE endpoints for live status updates
+- **Type Safety**: Full tRPC integration with end-to-end type safety
+
+#### CI/CD Improvements
+- Complete TypeScript compilation compliance
+- Zero build errors across all environments
+- Optimized Docker builds with health check stability
+- Unified CI/CD workflow for streamlined deployment
+
+## [Unreleased]
 
 ## [1.3.0] - 2025-06-28 - Phase 3 Automation Complete + Docker Excellence
 
