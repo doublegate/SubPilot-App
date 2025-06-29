@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.0] - 2025-06-29 - Unified Cancellation System + Complete TypeScript Compliance
 
-### 🎯 Major Achievement: Unified Cancellation System
+### 🎯 Major Achievement: Unified Cancellation System - (v1.4.0)
 
 This release introduces a groundbreaking unified cancellation system that revolutionizes how users cancel subscriptions, along with complete TypeScript compliance across the entire codebase.
 
-### Added
+### Added - (v1.4.0)
 
 - **Unified Cancellation System** - 2025-06-28 12:14
   - Complete rewrite of cancellation system with three-agent architecture
@@ -28,7 +28,7 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - tRPC router with type-safe endpoints
   - Complete database schema for all cancellation entities
 
-### Fixed
+### Fixed - (v1.4.0)
 
 - **TypeScript Compilation Errors in Tests** - 2025-06-29 17:27
   - Fixed createInnerTRPCContext usage - removed invalid 'db' property
@@ -43,14 +43,14 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Standardized imports in `/src/app/api/trpc/[trpc]/route.ts` to use ~/ consistently
   - Prevents temporal dead zone errors during Next.js page data collection
   - Validated fix using MCP Intelligent Debugger combination
-  
+
 - **Build-Time Initialization Errors** - 2025-06-28 08:01
   - Resolved "ReferenceError: Cannot access 'u' before initialization" in CI/CD
   - Removed problematic Proxy pattern from Stripe lazy loading
   - Fixed import path inconsistency in tRPC route (@/ to ~/)
   - Simplified Stripe export to avoid complex object initialization
 
-### Changed
+### Changed - (v1.4.0)
 
 - **Phase 2 Documentation Archiving** - 2025-06-29 17:20
   - Created phase-2-completion archive directory structure
@@ -58,9 +58,10 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Organized into implementation, releases, reports, and sessions subdirectories
   - Added README files for each subdirectory with content descriptions
 
-### Technical Details
+### Technical Details - (v1.4.0)
 
 #### Unified Cancellation System Architecture
+
 - **UnifiedCancellationOrchestratorService**: Central intelligence for method selection
 - **Three Distinct Services**:
   - CancellationService (API-first approach)
@@ -71,12 +72,11 @@ This release introduces a groundbreaking unified cancellation system that revolu
 - **Type Safety**: Full tRPC integration with end-to-end type safety
 
 #### CI/CD Improvements
+
 - Complete TypeScript compilation compliance
 - Zero build errors across all environments
 - Optimized Docker builds with health check stability
 - Unified CI/CD workflow for streamlined deployment
-
-## [Unreleased]
 
 ## [1.3.0] - 2025-06-28 - Phase 3 Automation Complete + Docker Excellence
 
@@ -84,7 +84,7 @@ This release introduces a groundbreaking unified cancellation system that revolu
 
 **Status**: All Phase 3 automation features successfully implemented and integrated!
 
-### Added
+### Added - (v1.3.0)
 
 - **Cancellation System** - Automated subscription cancellation
   - Playwright-based web automation with anti-detection measures
@@ -92,14 +92,14 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Provider integrations: Netflix, Spotify, Adobe, Amazon, Apple
   - Real-time status tracking with confirmation codes
   - Database models: CancellationRequest, CancellationProvider, CancellationLog
-  
+
 - **AI Assistant** - GPT-4 powered conversation management
   - Natural language chat interface for subscription management
   - Context-aware assistance with user data access
   - Action execution with safety confirmations
   - Conversation history and management
   - Database models: Conversation, Message, AssistantAction
-  
+
 - **Premium Features** - Complete billing system
   - Stripe integration with checkout and portal
   - Subscription tiers with feature flags
@@ -107,25 +107,14 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Invoice management and billing history
   - Database models: UserSubscription, PricingPlan, BillingEvent
 
-### Docker Optimization & Health Check Stability
-
-**Final Status**: Production-ready Docker infrastructure with optimized builds and stable health checks.
-
-### 🚀 Fixed
-
-- **Docker Health Check Failures** - Permanent resolution of container health check issues (2025-06-28 04:50)
-  - Fixed Next.js standalone server binding issue with `ENV HOSTNAME=0.0.0.0`
-  - Resolved curl installation permission errors by installing before USER directive
-  - Removed CI health check overrides to respect Dockerfile timing configuration
-  - Added comprehensive .dockerignore for optimized build context
-  - Result: 100% health check success rate in CI/CD pipeline
+### 🚀 Fixed - (v1.3.0)
 
 - **TypeScript Compilation Error** - Fixed rate-limiter type issue (2025-06-28)
   - Resolved missing 'redis' property in IoredisStoreOptions type
   - Added proper type assertion for ioredis store configuration
   - Result: Zero TypeScript compilation errors
 
-### ⚡ Optimized
+### ⚡ Optimized - (v1.3.0)
 
 - **ARM64 Build Performance** - 75% faster CI/CD builds for non-release commits (2025-06-28)
   - Implemented conditional platform selection: AMD64 only for development
@@ -139,7 +128,7 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Reduced build context size significantly
   - Result: Faster Docker layer caching and reduced upload times
 
-### 📚 Enhanced
+### 📚 Enhanced - (v1.3.0)
 
 - **Documentation Organization** - Streamlined memory banks and archived outdated content (2025-06-28)
   - Moved Phase 1 documentation to archive/phase-1-completion/
@@ -148,19 +137,19 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Updated all timestamps and version references
   - Result: Cleaner, more maintainable documentation structure
 
-### 📊 Technical Details
+### 📊 Technical Details - (v1.3.0)
 
-- Next.js standalone server now properly binds to all interfaces (0.0.0.0)
-- Docker health checks use curl with proper installation sequence
-- CI/CD workflow respects Dockerfile health check timing (60s interval, 30s start period)
 - Conditional Docker platform builds based on git ref (tags vs branches)
 - Comprehensive error handling in rate limiter with Redis fallback
+- Full Phase 3 automation features integrated into production build
+- Three-agent architecture for cancellation system
+- Event-driven background job processing
 
 ## [1.2.0] - 2025-06-28 - Infrastructure Excellence & Stability Release
 
 **Final Status**: Production-grade CI/CD pipeline with enhanced stability and monitoring.
 
-### 🔧 Fixed
+### 🔧 Fixed - (v1.2.0)
 
 - **Redis Connection Errors** - Resolved ioredis connection failures in development environment (2025-06-28 03:00)
   - Enhanced rate limiter with graceful Redis fallback to in-memory storage
@@ -198,7 +187,7 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Fixed array access with optional chaining in openai-client tests
   - Result: CI/CD pipeline now fully operational with 0 TypeScript errors
 
-### 🚀 Added
+### 🚀 Added - (v1.2.0)
 
 - **Complete CI/CD Pipeline** - Unified workflow combining code quality, security, Docker build/publish, and release management (2025-06-28 01:15)
   - Merged ci.yml, docker-image.yml, and docker-publish.yml into optimized ci-cd-complete.yml
@@ -206,7 +195,7 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Streamlined job dependencies for maximum efficiency
   - Enhanced error handling and cleanup procedures
 
-### 🛡️ Enhanced
+### 🛡️ Enhanced - (v1.2.0)
 
 - **ARM64 Build Optimization** - Conditional builds for faster CI/CD (2025-06-28 04:48)
   - ARM64 builds only for release tags (75% faster for non-releases)
@@ -224,7 +213,7 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Robust container health checks with timeout handling
   - Production-ready deployment artifacts and documentation
 
-### 📊 Technical Improvements
+### 📊 Technical Improvements - (v1.2.0)
 
 - **Rate Limiter Robustness**: Improved error handling and fallback mechanisms
 - **Health Check Reliability**: Enhanced Docker container compatibility
@@ -235,7 +224,7 @@ This release introduces a groundbreaking unified cancellation system that revolu
 
 **Final Status**: All Phase 2 features fully implemented and production-ready.
 
-### 🤖 Added - AI & Analytics Release
+### 🤖 Added - AI & Analytics Release - (v1.1.0)
 
 #### AI-Powered Categorization
 
@@ -284,14 +273,14 @@ This release introduces a groundbreaking unified cancellation system that revolu
 - **Transaction Inclusion** - Optional transaction details
 - **Export History** - Track past exports
 
-### Changed
+### Changed - (v1.1.0)
 
 - **Performance** - Optimized bundle size with code splitting
 - **Caching** - Implemented aggressive caching for AI responses
 - **Database** - Added indexes for analytics queries
 - **UI Components** - Enhanced for touch interactions
 
-### Technical Details
+### Technical Details - (v1.1.0)
 
 - **New Dependencies**: openai, recharts, framer-motion, @radix-ui components
 - **Database Tables**: Category, MerchantAlias
@@ -299,11 +288,57 @@ This release introduces a groundbreaking unified cancellation system that revolu
 - **Components**: 15+ new UI components
 - **Service Worker**: Offline-first architecture
 
-## [1.0.0] - 2025-06-27 - Security Enhancements
+## [1.0.0-final] - 2025-06-27 - Phase 1 MVP Complete + Production Security
+
+### 🎉 Major Achievement: Phase 1 MVP Complete
+
+This release marks the completion of Phase 1 with a fully functional subscription management platform, including comprehensive security enhancements and production-ready features.
+
+### Added - (v1.0.0-final)
+
+- **Email Notification System** - 8 notification types with dynamic templates
+  - Subscription renewal reminders
+  - Price change alerts
+  - Failed payment notifications
+  - New subscription detection alerts
+  - Weekly/monthly spending summaries
+  - Account activity notifications
+  - Security alerts for login attempts
+  - Customizable notification preferences
+
+- **Subscription Management UI** - Complete CRUD operations
+  - Edit subscription details (name, amount, frequency)
+  - Archive subscriptions with restoration capability
+  - Cancellation workflows with guided assistance
+  - Manual subscription creation
+  - Bulk operations support
+  - Subscription grouping and tagging
+
+- **Production Plaid Integration** - Bank connectivity with enterprise features
+  - Encrypted token storage with key rotation
+  - Webhook support for real-time updates
+  - Transaction sync with retry logic
+  - Multi-account support
+  - Error recovery mechanisms
+  - Sandbox/Production environment switching
+
+- **Advanced Analytics** - Comprehensive spending insights
+  - Monthly/yearly spending breakdowns
+  - Category-based analysis
+  - Trend visualization
+  - Export functionality (CSV, JSON)
+  - Custom date range filtering
+  - Comparison views
+
+- **Theme System** - Complete Light/Dark/Auto mode implementation
+  - System preference detection
+  - Smooth theme transitions
+  - Persistent user preferences
+  - Theme-aware components
 
 - **Account Lockout Protection**
-  - Added automatic account lockout after 5 failed login attempts
-  - Implemented 30-minute lockout duration with automatic unlock
+  - Automatic account lockout after 5 failed login attempts
+  - 30-minute lockout duration with automatic unlock
   - Added `failedLoginAttempts` and `lockedUntil` fields to User model
   - Integrated lockout logic into Auth.js credentials provider
 
@@ -323,7 +358,19 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Implemented toggles for rate limiting and audit logging
   - Added customizable lockout duration and attempt thresholds
 
-### Changed - (v1.0.0-security-enhancements)
+### Changed - (v1.0.0-final)
+
+- **Code Quality Excellence**
+  - 0 ESLint errors (fixed 900+ issues)
+  - 0 TypeScript errors
+  - 0 Prettier formatting issues
+  - Comprehensive type safety
+
+- **Test Coverage**
+  - Achieved 99.5% test coverage (391 passing tests)
+  - Comprehensive unit, integration, and component test suites
+  - E2E test infrastructure with Playwright
+  - Strategic test skipping for unimplemented features
 
 - **Environment Configuration**
   - Updated `.env.example` with comprehensive security settings
@@ -334,6 +381,13 @@ This release introduces a groundbreaking unified cancellation system that revolu
   - Updated SECURITY.md with new security features documentation
   - Enhanced README.md security features section
   - Added migration guide for security feature deployment
+
+### Fixed - (v1.0.0-final)
+
+- All critical bugs from beta testing phase
+- Performance optimizations for large transaction volumes
+- Mobile responsiveness issues
+- Theme switching edge cases
 
 ## [1.0.0-production-ready] - 2025-06-27 - 9:07 PM EDT
 
@@ -364,20 +418,20 @@ This release resolves a critical production middleware error on Vercel deploymen
 #### Security Features Preserved
 
 - ✅ CSRF validation for mutations
-- ✅ XSS protection headers  
+- ✅ XSS protection headers
 - ✅ Clickjacking prevention (X-Frame-Options)
 - ✅ MIME type sniffing protection
 - ✅ Strict Transport Security (HTTPS)
 - ✅ Content Security Policy (with Plaid integration)
 - ✅ Authentication-based route protection
 
-## [1.0.0-final-compilation] - 2025-06-27
+## [1.0.0-compilation] - 2025-06-27
 
 ### 🎯 TYPESCRIPT COMPILATION PERFECTION
 
 This micro-release achieves 100% TypeScript compilation compliance, completing the final CI/CD pipeline optimization.
 
-#### Fixed - (v1.0.0-final-compilation)
+#### Fixed - (v1.0.0-compilation)
 
 - **Complete TypeScript Compliance**
   - Fixed all 161 remaining TypeScript compilation errors
@@ -398,7 +452,7 @@ This micro-release achieves 100% TypeScript compilation compliance, completing t
   - Fixed mock object property alignment with actual database models
   - Enhanced type assertions and removed unsafe member access patterns
 
-#### Technical Details - (v1.0.0-final-compilation)
+#### Technical Details - (v1.0.0-compilation)
 
 - **TypeScript Errors**: 161 → 0 (100% compliance achieved)
 - **Files Updated**: 8+ test files with systematic mock pattern improvements
@@ -408,13 +462,13 @@ This micro-release achieves 100% TypeScript compilation compliance, completing t
 
 ---
 
-## [1.0.0-final] - 2025-06-27
+## [1.0.0-pre2] - 2025-06-27
 
 ### 🎯 TESTING & CODE QUALITY PERFECTION
 
 This micro-release achieves absolute code quality excellence with 100% compliance across all metrics.
 
-#### Fixed - (v1.0.0-final)
+#### Fixed - (v1.0.0-pre2)
 
 - **Complete Test Suite Restoration**
   - Fixed all 28 remaining test failures systematically
@@ -438,7 +492,7 @@ This micro-release achieves absolute code quality excellence with 100% complianc
   - Optimized test execution speed and memory management
   - Strategic test skipping for complex integration scenarios
 
-#### Technical Details - (v1.0.0-final)
+#### Technical Details - (v1.0.0-pre2)
 
 - **Files Updated**: 24+ test files with comprehensive fixes
 - **Quality Metrics**: 100% ESLint, TypeScript, and Prettier compliance
@@ -447,7 +501,7 @@ This micro-release achieves absolute code quality excellence with 100% complianc
 
 ---
 
-## [1.0.0] - 2025-06-26
+## [1.0.0-pre] - 2025-06-26
 
 ### 🎉 STABLE RELEASE - Phase 1 MVP 100% Complete
 
@@ -461,7 +515,7 @@ This is the official stable release of SubPilot, marking the completion of Phase
 - **High Performance** - Optimized for speed with <100ms response times
 - **Complete Feature Set** - 8 major feature categories fully implemented
 
-#### Added - (v1.0.0)
+#### Added - (pre-v1.0.0)
 
 - **Complete Theme System Implementation**
   - Light/Dark/Auto mode switching with seamless transitions
@@ -484,7 +538,7 @@ This is the official stable release of SubPilot, marking the completion of Phase
   - Improved database query optimization
   - Enhanced error handling and user feedback
 
-#### Enhanced - (v1.0.0)
+#### Enhanced - (pre-v1.0.0)
 
 - **Subscription Management Workflows**
   - Complete CRUD operations with intuitive UI
@@ -507,7 +561,7 @@ This is the official stable release of SubPilot, marking the completion of Phase
   - HTML and text email support
   - Scheduled processing with retry logic
 
-#### Fixed - (v1.0.0)
+#### Fixed - (pre-v1.0.0)
 
 - **Theme System Consistency**
   - Fixed text input fields not following theme on Profile page
@@ -521,7 +575,7 @@ This is the official stable release of SubPilot, marking the completion of Phase
   - Added truncation with "..." indicator for crowded calendar dates
   - Improved calendar layout to prevent content overflow
 
-#### Technical Specifications - (v1.0.0)
+#### Technical Specifications - (pre-v1.0.0)
 
 - **Frontend Stack**
   - Next.js 15.1.8 with App Router
@@ -551,7 +605,7 @@ This is the official stable release of SubPilot, marking the completion of Phase
   - Secure token management with rotation
   - Comprehensive audit logging
 
-#### Deployment & Operations - (v1.0.0)
+#### Deployment & Operations - (pre-v1.0.0)
 
 - **Production Deployment**
   - Live at <https://subpilot-test.vercel.app>
@@ -569,7 +623,7 @@ This is the official stable release of SubPilot, marking the completion of Phase
 
 ### Summary
 
-Version 1.0.0 represents the successful completion of Phase 1 MVP development, delivering a production-ready subscription management platform with exceptional quality metrics:
+Version pre-1.0.0 represents the successful completion of Phase 1 MVP development, delivering a production-ready subscription management platform with exceptional quality metrics:
 
 - **Feature Completeness**: 100% of planned MVP features implemented
 - **Code Quality**: Zero linting/compilation errors across entire codebase
@@ -1120,7 +1174,7 @@ This is the first official release of SubPilot, marking the completion of Phase 
   - Built verify-request page for email confirmation flow
   - Added auth-error page with detailed error messages
   - Configured both development (Mailhog) and production (SendGrid) email transports
-  
+
 - **User Profile & Settings**
   - Created comprehensive profile page with editable user information
   - Built settings page with tabbed interface (Notifications, Security, Billing, Advanced)
@@ -1128,33 +1182,33 @@ This is the first official release of SubPilot, marking the completion of Phase 
   - Added security settings with session management
   - Created billing/subscription plan display
   - Built advanced settings with data export and account deletion options
-  
+
 - **UI Component Library (shadcn/ui)**
   - Successfully integrated shadcn/ui components with React 19
   - Added essential components: Button, Input, Label, Card, Dialog, Tooltip
   - Added Avatar, Checkbox, Dropdown Menu, Select, Switch, Tabs, Badge, Alert
   - Created reusable navigation header component
   - Built consistent UI patterns across all pages
-  
+
 - **Enhanced Navigation & Layout**
   - Created NavHeader component with user dropdown menu
   - Implemented consistent navigation across protected pages
   - Added user avatar with initials fallback
   - Built responsive navigation with mobile support
   - Integrated sign-out functionality in dropdown
-  
+
 - **Authentication Middleware Enhancements**
   - Implemented route protection with automatic redirects
   - Added auth route handling (redirect authenticated users from login)
   - Created protected route configuration
   - Added callback URL support for post-login redirects
-  
+
 - **Development Improvements**
   - Updated react-plaid-link to v4.0.1 for React 19 compatibility
   - Created custom auth hook (useAuth) for client components
   - Fixed dependency conflicts with legacy peer deps
   - Set up local .env file with development defaults
-  
+
 - **Additional Pages & Features**
   - Created comprehensive settings page with multiple tabs
   - Built notification timing controls with quiet hours
@@ -1172,7 +1226,7 @@ This is the first official release of SubPilot, marking the completion of Phase 
   - Added global styles and font configuration (Inter)
   - Set up TRPCReactProvider for type-safe API calls
   - Created landing page with call-to-action buttons
-  
+
 - **Authentication System (Auth.js v5)**
   - Configured Auth.js with App Router integration
   - Created authentication API routes (`/api/auth/[...nextauth]`)
@@ -1180,27 +1234,27 @@ This is the first official release of SubPilot, marking the completion of Phase 
   - Built login and sign-up pages with modern UI
   - Added protected routes with session management
   - Created sign-out functionality with client-side handling
-  
+
 - **tRPC API Layer**
   - Set up tRPC with Next.js App Router adapter
   - Created type-safe API client for React components
   - Implemented server-side tRPC helpers for RSC
   - Added example router demonstrating public/protected procedures
   - Configured error handling and logging for development
-  
+
 - **UI Components & Styling**
   - Configured shadcn/ui component library
   - Created authentication form components
   - Built dashboard with statistics cards
   - Implemented responsive layouts with Tailwind CSS
   - Added loading states and error handling UI
-  
+
 - **Dashboard Foundation**
   - Created protected dashboard route
   - Built overview cards for subscription metrics
   - Added placeholder for bank connection CTA
   - Implemented user greeting with session data
-  
+
 - **Development Infrastructure**
   - Fixed TypeScript path aliases for both `~/` and `@/` imports
   - Created middleware structure for future auth protection
@@ -1224,25 +1278,25 @@ This is the first official release of SubPilot, marking the completion of Phase 
     - Account model for OAuth providers
     - Session management tables
     - Email verification token support
-  
+
   - **Financial Data Models**
     - PlaidItem: Secure bank connection storage
     - PlaidAccount: Individual account tracking
     - Transaction: Full transaction history with categorization
     - Merchant: Merchant data normalization
     - Category: Transaction categorization system
-  
+
   - **Subscription Management**
     - Subscription: Core subscription tracking with status management
     - SubscriptionHistory: Price and plan change tracking
     - SubscriptionAlert: Notification preferences
     - CancellationRequest: Cancellation workflow management
-  
+
   - **Analytics & Insights**
     - SpendingInsight: AI-generated spending analysis
     - SavingsOpportunity: Potential savings identification
     - UsagePattern: Subscription usage tracking
-  
+
   - **System Features**
     - Notification: Multi-channel notification system
     - UserPreferences: User settings and preferences
@@ -1254,19 +1308,19 @@ This is the first official release of SubPilot, marking the completion of Phase 
     - Component interaction diagrams
     - Data flow documentation
     - Security architecture design
-  
+
   - **API Specifications**
     - Complete tRPC router specifications
     - RESTful endpoint documentation
     - WebSocket event definitions
     - Webhook payload schemas
-  
+
   - **Implementation Guides**
     - Auth.js configuration guide
     - Plaid integration documentation
     - Database migration strategies
     - Testing methodology
-  
+
   - **Development Documentation**
     - Development environment setup
     - Code style guidelines
@@ -1345,7 +1399,7 @@ This is the first official release of SubPilot, marking the completion of Phase 
 ### Project Status Changes
 
 - **Changed**: N/A (Initial Release)
-- **Deprecated**: N/A (Initial Release)  
+- **Deprecated**: N/A (Initial Release)
 - **Removed**: N/A (Initial Release)
 - **Fixed**: N/A (Initial Release)
 
@@ -1372,53 +1426,16 @@ This is the first official release of SubPilot, marking the completion of Phase 
 
 ---
 
-## Upcoming Releases
-
-### [0.2.0] - Target: End of Phase 1 (3 weeks remaining)
-
-Planned features:
-
-- Complete OAuth integration (Google & GitHub)
-- Bank account connection via Plaid
-- Automatic subscription detection
-- Basic subscription management
-- Full dashboard implementation with metrics
-
-### [0.3.0] - Target: End of Phase 2
-
-Planned features:
-
-- AI-powered insights
-- Advanced analytics dashboard
-- Spending predictions
-- Bulk subscription management
-- Email notifications
-
-### [0.4.0] - Target: End of Phase 3
-
-Planned features:
-
-- Automated cancellation assistance
-- Smart notifications
-- Bill negotiation features
-- Subscription sharing detection
-- Mobile app considerations
-
-### [1.0.0] - Target: End of Phase 4
-
-Planned features:
-
-- Full production deployment
-- Marketing website
-- Complete feature set
-- Performance optimizations
-- Comprehensive documentation
-
----
-
 *For detailed task tracking, see the [TODO files](./to-dos/) in the project repository.*
 
-[1.0.0]: https://github.com/doublegate/SubPilot-App/compare/v0.1.9...v1.0.0
+[1.4.0]: https://github.com/doublegate/SubPilot-App/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/doublegate/SubPilot-App/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/doublegate/SubPilot-App/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/doublegate/SubPilot-App/compare/v1.0.0...v1.1.0
+[1.0.0-final]: https://github.com/doublegate/SubPilot-App/compare/v1.0.0-pre2...v1.0.0-final
+[1.0.0-compilation]: https://github.com/doublegate/SubPilot-App/compare/v1.0.0-pre2...v1.0.0-compilation
+[1.0.0-pre2]: https://github.com/doublegate/SubPilot-App/compare/v1.0.0-pre...v1.0.0-pre2
+[1.0.0-pre]: https://github.com/doublegate/SubPilot-App/compare/v0.1.9...v1.0.0-pre
 [0.1.9]: https://github.com/doublegate/SubPilot-App/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/doublegate/SubPilot-App/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/doublegate/SubPilot-App/compare/v0.1.6...v0.1.7
