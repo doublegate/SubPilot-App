@@ -1,20 +1,58 @@
 # Archived Environment Files
 
-These files were moved here to reduce confusion about which environment files to use.
+This directory contains archived environment configuration files that have been consolidated into the main `.env.example` file.
 
-## Why Archived?
+## ⚠️ SECURITY NOTICE
 
-- **Too many similar files**: Having `.env`, `.env.local`, `.env.development.local`, etc. was confusing
-- **Redundant configurations**: Most had overlapping or duplicate settings
-- **Simplified structure**: Now we use just `.env.local` for development and templates in `config/`
+**IMPORTANT**: Several files containing actual secrets have been removed from this archive for security reasons. Never commit files with real credentials to version control.
 
-## Old Files
+## Current Structure
 
-- `.env` - Generic environment file (ambiguous purpose)
-- `.env.development.local` - Redundant with `.env.local`
-- `.env.production` - Production configs should be in deployment platform
-- `.env.local.docker` - Consolidated into `config/docker/docker.env.development`
+The project now uses a simplified environment configuration:
+- **`.env.example`** - Comprehensive example with all configuration options (in project root)
+- **`.env.local`** - Your actual environment configuration (git-ignored)
 
-## New Structure
+## Archived Files
 
-See `/config/ENV_SETUP.md` for the new simplified structure.
+### Removed for Security (contained actual secrets):
+- `.env.development.local` - Contained Vercel/Neon database credentials
+- `.env.local.docker` - Contained Plaid sandbox credentials
+- `.env` - Contained Neon database credentials
+
+### Remaining Archives:
+- **`.env.production.example`** - Template for production environment variables
+- **`.env.security.example`** - Security-specific configuration options
+- **`.env.example.simple`** - Simplified quick-start configuration
+- **`.env.temp`** - Temporary file (duplicate of old .env.example)
+
+## Migration Guide
+
+All unique configuration options from these files have been consolidated into the main `.env.example` file with:
+- Clear section headers
+- Development vs production value examples
+- Helpful comments and generation commands
+- Phase 3 automation settings (Stripe, Playwright, AI Assistant)
+
+## Best Practices
+
+1. **Never commit real secrets** - Use `.env.local` for actual values
+2. **Use example files as templates** - Copy `.env.example` to `.env.local`
+3. **Production secrets in deployment platform** - Use Vercel/hosting environment variables
+4. **Generate secure secrets** - Use `openssl rand -base64 32` for secret keys
+5. **Review .gitignore** - Ensure all sensitive files are excluded
+
+## Configuration Categories
+
+The consolidated `.env.example` includes:
+- Database configuration (PostgreSQL/Neon)
+- Authentication (Auth.js, OAuth providers)
+- Bank integration (Plaid API)
+- Email services (SendGrid, SMTP)
+- Security settings (encryption, rate limiting)
+- External APIs (OpenAI, monitoring)
+- Feature flags and analytics
+- PWA configuration
+- Production/deployment settings
+- Phase 3 automation (NEW)
+
+For detailed setup instructions, see `/docs/DEVELOPMENT_SETUP.md`.
