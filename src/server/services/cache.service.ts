@@ -61,7 +61,11 @@ export class CacheService {
    * Invalidate cache entries matching pattern
    */
   invalidate(pattern: string): void {
-    const regex = new RegExp(pattern.replace('*', '.*'));
+    // Escape special regex characters except for our wildcard
+    const escapedPattern = pattern
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*');
+    const regex = new RegExp(`^${escapedPattern}$`);
 
     for (const key of this.cache.keys()) {
       if (regex.test(key)) {

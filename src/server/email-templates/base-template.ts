@@ -107,9 +107,13 @@ export function baseEmailTemplate({
     </html>
   `;
 
-  // Extract text content from HTML by removing tags
+  // Extract text content from HTML by removing tags safely
   const text =
-    sanitizeHtml(content).replace(/\s+/g, ' ').trim() +
+    sanitizeHtml(content, {
+      allowedTags: [],
+      allowedAttributes: {},
+      textFilter: (text) => text.replace(/\s+/g, ' ').trim()
+    }) +
     `\n\n© ${currentYear} SubPilot. All rights reserved.`;
 
   return { html, text };

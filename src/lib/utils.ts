@@ -149,8 +149,34 @@ export function generateId(prefix?: string, length = 12): string {
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
 
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  // Use crypto.getRandomValues for secure random generation
+  if (typeof window !== 'undefined' && window.crypto) {
+    const array = new Uint8Array(length);
+    window.crypto.getRandomValues(array);
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(array[i] % chars.length);
+    }
+  } else if (typeof globalThis !== 'undefined' && globalThis.crypto) {
+    // Node.js 19+ or other environments with global crypto
+    const array = new Uint8Array(length);
+    globalThis.crypto.getRandomValues(array);
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(array[i] % chars.length);
+    }
+  } else {
+    // Fallback for older Node.js versions
+    try {
+      const crypto = require('crypto');
+      const bytes = crypto.randomBytes(length);
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(bytes[i] % chars.length);
+      }
+    } catch {
+      // Last resort fallback
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+    }
   }
 
   return prefix ? `${prefix}-${result}` : result;

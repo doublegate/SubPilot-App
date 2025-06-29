@@ -14,6 +14,10 @@ on:
     - cron: '22 4 * * *'
   workflow_dispatch:
 
+# Default permissions for all jobs
+permissions:
+  contents: read
+
 env:
   NODE_VERSION: '20.18'
   REGISTRY: ghcr.io
