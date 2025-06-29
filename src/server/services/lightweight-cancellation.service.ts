@@ -568,18 +568,18 @@ export class LightweightCancellationService {
     // Fallback to default template
     const defaultTemplate = PROVIDER_REGISTRY.default;
     return {
-      ...defaultTemplate,
+      ...defaultTemplate!,
       id: 'default',
       name: subscriptionName,
-      category: defaultTemplate.category || 'other',
-      difficulty: defaultTemplate.difficulty || 'medium',
-      estimatedTime: defaultTemplate.estimatedTime || 10,
-      requiresLogin: defaultTemplate.requiresLogin,
-      hasRetentionOffers: defaultTemplate.hasRetentionOffers,
-      supportsRefunds: defaultTemplate.supportsRefunds,
-      steps: defaultTemplate.steps,
-      tips: defaultTemplate.tips,
-      warnings: defaultTemplate.warnings,
+      category: defaultTemplate?.category || 'other',
+      difficulty: defaultTemplate?.difficulty || 'medium',
+      estimatedTime: defaultTemplate?.estimatedTime || 10,
+      requiresLogin: defaultTemplate?.requiresLogin ?? true,
+      hasRetentionOffers: defaultTemplate?.hasRetentionOffers ?? false,
+      supportsRefunds: defaultTemplate?.supportsRefunds ?? false,
+      steps: defaultTemplate?.steps || [],
+      tips: defaultTemplate?.tips || [],
+      warnings: defaultTemplate?.warnings || [],
     };
   }
 

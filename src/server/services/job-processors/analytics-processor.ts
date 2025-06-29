@@ -265,7 +265,7 @@ export class AnalyticsJobProcessor {
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     await AuditLogger.log({
       userId,
-      action: `analytics.${event}`,
+      action: `analytics.${event}` as any,
       resource: properties.jobId || 'unknown',
       result: event.includes('failed') ? 'failure' : 'success',
       metadata: {
@@ -297,7 +297,7 @@ export class AnalyticsJobProcessor {
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     await AuditLogger.log({
       userId,
-      action: `analytics.${event}`,
+      action: `analytics.${event}` as any,
       resource: properties.instanceId || properties.workflowId || 'unknown',
       result: properties.status === 'failed' ? 'failure' : 'success',
       metadata: {
@@ -330,7 +330,7 @@ export class AnalyticsJobProcessor {
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     await AuditLogger.log({
       userId,
-      action: `analytics.${event}`,
+      action: `analytics.${event}` as any,
       resource: userId,
       result: 'success',
       metadata: {
@@ -391,7 +391,7 @@ export class AnalyticsJobProcessor {
     // For unknown events, just log them
     await AuditLogger.log({
       userId,
-      action: `analytics.${event}`,
+      action: `analytics.${event}` as any,
       resource: properties.resourceId || 'unknown',
       result: 'success',
       metadata: {

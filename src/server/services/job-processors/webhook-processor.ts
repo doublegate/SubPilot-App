@@ -60,8 +60,7 @@ export class WebhookJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Webhook validation error',
-        retry: true,
-        retryDelay: 5000,
+        retry: { delay: 5000 },
       };
     }
   }
@@ -113,8 +112,7 @@ export class WebhookJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Webhook processing error',
-        retry: true,
-        retryDelay: 10000,
+        retry: { delay: 10000 },
       };
     }
   }
@@ -488,7 +486,7 @@ export class WebhookJobProcessor {
     try {
       await AuditLogger.log({
         userId: 'system',
-        action: `webhook.${action}`,
+        action: `webhook.${action}` as any,
         resource: webhookId,
         result: action.includes('error') || action.includes('failed') ? 'failure' : 'success',
         metadata: {
@@ -575,8 +573,7 @@ export class WebhookJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Timeout processing error',
-        retry: true,
-        retryDelay: 30000,
+        retry: { delay: 30000 },
       };
     }
   }

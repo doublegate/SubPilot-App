@@ -33,6 +33,7 @@ export interface JobResult {
   data?: any;
   error?: string;
   duration?: number;
+  retry?: boolean | { delay?: number; attempts?: number };
 }
 
 /**

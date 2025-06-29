@@ -93,7 +93,7 @@ export class JobProcessorRegistry {
 
           // Log successful processing
           await AuditLogger.log({
-            userId: job.userId || 'system',
+            userId: job.data?.userId || 'system',
             action: 'job.processed',
             resource: job.id,
             result: result.success ? 'success' : 'failure',
@@ -117,7 +117,7 @@ export class JobProcessorRegistry {
 
           // Log processing error
           await AuditLogger.log({
-            userId: job.userId || 'system',
+            userId: job.data?.userId || 'system',
             action: 'job.error',
             resource: job.id,
             result: 'failure',
@@ -133,16 +133,15 @@ export class JobProcessorRegistry {
           return {
             success: false,
             error: errorMessage,
-            retry: true,
-            retryDelay: Math.min(1000 * Math.pow(2, job.attempts), 300000), // Exponential backoff, max 5 minutes
+            retry: { 
+              delay: Math.min(1000 * Math.pow(2, job.attempts), 300000) // Exponential backoff, max 5 minutes
+            },
           };
         }
       });
     }
 
-    // Start the job queue processing
-    await jobQueue.startProcessing();
-
+    // Job queue starts automatically in its constructor
     this.isStarted = true;
     console.log('[JobProcessorRegistry] All job processors started');
 
@@ -168,7 +167,7 @@ export class JobProcessorRegistry {
     }
 
     const jobQueue = getJobQueue();
-    await jobQueue.stopProcessing();
+    jobQueue.stopProcessing();
 
     this.isStarted = false;
     console.log('[JobProcessorRegistry] All job processors stopped');
@@ -260,7 +259,7 @@ export const checkJobProcessorHealth = async (): Promise<{
 
     const stats = registryInstance.getStats();
     const jobQueue = getJobQueue();
-    const queueStats = await jobQueue.getStats();
+    const queueStats = jobQueue.getStats();
 
     return {
       healthy: stats.isStarted,

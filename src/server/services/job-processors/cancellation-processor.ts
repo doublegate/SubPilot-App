@@ -81,8 +81,7 @@ export class CancellationJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Validation failed',
-        retry: true,
-        retryDelay: 5000,
+        retry: { delay: 5000 },
       };
     }
   }
@@ -183,8 +182,7 @@ export class CancellationJobProcessor {
         return {
           success: false,
           error: apiResult.error,
-          retry: apiResult.retryable,
-          retryDelay: 10000,
+          retry: apiResult.retryable ? { delay: 10000 } : false,
         };
       }
     } catch (error) {
@@ -192,8 +190,7 @@ export class CancellationJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'API cancellation failed',
-        retry: true,
-        retryDelay: 15000,
+        retry: { delay: 15000 },
       };
     }
   }
@@ -239,7 +236,8 @@ export class CancellationJobProcessor {
           where: { id: requestId },
           data: {
             status: 'processing',
-            metadata: {
+            // Store webhook info in error details temporarily
+            errorDetails: {
               webhookId: webhookResult.webhookId,
               expectedConfirmation: webhookResult.expectedAt,
             },
@@ -257,8 +255,7 @@ export class CancellationJobProcessor {
         return {
           success: false,
           error: webhookResult.error,
-          retry: webhookResult.retryable,
-          retryDelay: 20000,
+          retry: webhookResult.retryable ? { delay: 20000 } : false,
         };
       }
     } catch (error) {
@@ -266,8 +263,7 @@ export class CancellationJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Webhook cancellation failed',
-        retry: true,
-        retryDelay: 20000,
+        retry: { delay: 20000 },
       };
     }
   }
@@ -341,8 +337,7 @@ export class CancellationJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to generate instructions',
-        retry: true,
-        retryDelay: 5000,
+        retry: { delay: 5000 },
       };
     }
   }
@@ -374,8 +369,7 @@ export class CancellationJobProcessor {
         return {
           success: false,
           error: 'Cancellation not completed yet',
-          retry: true,
-          retryDelay: 30000,
+          retry: { delay: 30000 },
         };
       }
 
@@ -415,8 +409,7 @@ export class CancellationJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Confirmation failed',
-        retry: true,
-        retryDelay: 10000,
+        retry: { delay: 10000 },
       };
     }
   }
@@ -505,8 +498,7 @@ export class CancellationJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Status update failed',
-        retry: true,
-        retryDelay: 5000,
+        retry: { delay: 5000 },
       };
     }
   }

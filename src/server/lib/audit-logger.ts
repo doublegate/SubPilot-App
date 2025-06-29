@@ -23,7 +23,21 @@ export type SecurityAction =
   | 'webhook.cancellation_request_not_found'
   | 'webhook.cancellation_confirmed'
   | 'webhook.cancellation_error'
-  | 'realtime.sse_connected';
+  | 'realtime.sse_connected'
+  | 'analytics.cancellation_completed'
+  | 'analytics.cancellation_failed'
+  | 'analytics.notification_sent'
+  | 'analytics.aggregation_completed'
+  | 'webhook.processed'
+  | 'job.processed'
+  | 'job.error'
+  | 'job_processors.started'
+  | 'job_processors.stopped'
+  | 'notification.sent'
+  | 'notification.error'
+  | 'cancellation.confirmed'
+  | 'cancellation.orchestration_failed'
+  | 'create';
 
 export interface SecurityEvent {
   userId?: string;

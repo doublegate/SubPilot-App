@@ -53,7 +53,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-      return await (orchestrator as any).getCancellationStatus(
+      return await orchestrator.getCancellationStatus(
         ctx.session.user.id,
         input.requestId,
         input.orchestrationId
@@ -73,7 +73,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-      return await (orchestrator as any).retryCancellation(
+      return await orchestrator.retryCancellation(
         ctx.session.user.id,
         input.requestId,
         {
@@ -95,7 +95,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-      return await (orchestrator as any).cancelCancellationRequest(
+      return await orchestrator.cancelCancellationRequest(
         ctx.session.user.id,
         input.requestId,
         input.reason
@@ -113,7 +113,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-      return await (orchestrator as any).getUnifiedAnalytics(
+      return await orchestrator.getUnifiedAnalytics(
         ctx.session.user.id,
         input.timeframe
       );
@@ -401,7 +401,9 @@ export const unifiedCancellationRouter = createTRPCRouter({
 
       return requests.map(request => {
         const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-        const method = (orchestrator as any).determineServiceFromRequest(request);
+        const method = request.method === 'manual' ? 'lightweight' : 
+                      request.method === 'web_automation' ? 'event_driven' : 
+                      request.method;
         
         return {
           id: request.id,

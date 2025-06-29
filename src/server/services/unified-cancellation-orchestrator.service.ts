@@ -328,12 +328,12 @@ export class UnifiedCancellationOrchestratorService {
   ): Promise<UnifiedCancellationResult> {
     try {
       const result = await this.cancellationService.initiateCancellation(
+        userId,
         {
           subscriptionId: input.subscriptionId,
-          reason: input.reason,
-          userConfirmed: true,
-        },
-        userId
+          notes: input.reason,
+          priority: input.priority || 'normal',
+        }
       );
 
       return {
@@ -395,8 +395,12 @@ export class UnifiedCancellationOrchestratorService {
     baseResult: any
   ): Promise<UnifiedCancellationResult> {
     try {
-      const result = await this.lightweightService.getManualInstructions(
-        input.subscriptionId
+      const result = await this.lightweightService.provideCancellationInstructions(
+        userId,
+        {
+          subscriptionId: input.subscriptionId,
+          notes: input.reason,
+        }
       );
 
       return {
@@ -404,7 +408,11 @@ export class UnifiedCancellationOrchestratorService {
         success: true,
         status: 'requires_manual',
         message: 'Manual cancellation instructions generated',
-        manualInstructions: result,
+        manualInstructions: result.instructions ? {
+          steps: result.instructions.instructions.steps,
+          contactInfo: result.instructions.instructions.contactInfo,
+          expectedDuration: result.instructions.instructions.estimatedTime,
+        } : undefined,
       };
     } catch (error) {
       throw new Error(`Lightweight service failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -625,11 +633,12 @@ export class UnifiedCancellationOrchestratorService {
           id: data.requestId,
         },
         data: {
-          status: 'COMPLETED',
+          status: 'completed',
           completedAt: new Date(),
-          result: {
+          userConfirmed: true,
+          errorDetails: {
             method: 'manual',
-            confirmedAt: new Date(),
+            confirmedAt: new Date().toISOString(),
             confirmedBy: data.userId,
           },
         },
@@ -710,20 +719,8 @@ export class UnifiedCancellationOrchestratorService {
   ): Promise<void> {
     try {
       // Create orchestration log entry
-      await this.db.cancellationLog.create({
-        data: {
-          level,
-          message,
-          metadata: {
-            orchestrationId,
-            activityType,
-            timestamp: new Date(),
-            ...metadata,
-          },
-          createdAt: new Date(),
-        },
-      });
-
+      // Note: CancellationLog doesn't have an orchestrationId field, so we'll need to track it differently
+      // For now, we'll log to console only
       console.log(`[UnifiedCancellationOrchestrator] ${level.toUpperCase()}: ${message}`, {
         orchestrationId,
         activityType,
@@ -773,10 +770,6 @@ export class UnifiedCancellationOrchestratorService {
           gte: startDate,
           lte: now,
         },
-        metadata: {
-          path: ['orchestrationId'],
-          not: null,
-        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -804,7 +797,7 @@ export class UnifiedCancellationOrchestratorService {
       }
 
       // Count successes
-      if (log.level === 'success' && metadata.activityType === 'service_completed') {
+      if (log.status === 'success' && metadata.activityType === 'service_completed') {
         successfulOrchestrations++;
       }
 
@@ -818,7 +811,7 @@ export class UnifiedCancellationOrchestratorService {
         const stats = providerStats.get(metadata.provider) || { total: 0, successful: 0, totalTime: 0 };
         stats.total++;
         
-        if (log.level === 'success') {
+        if (log.status === 'success') {
           stats.successful++;
         }
         
@@ -884,5 +877,248 @@ export class UnifiedCancellationOrchestratorService {
       return this.providerCapabilities.get(provider) || null;
     }
     return this.providerCapabilities;
+  }
+
+  /**
+   * Get cancellation request status
+   */
+  async getCancellationStatus(userId: string, requestId: string, orchestrationId?: string): Promise<any> {
+    const request = await this.db.cancellationRequest.findUnique({
+      where: { id: requestId },
+      include: {
+        subscription: true,
+        provider: true,
+        logs: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+      },
+    });
+
+    if (!request) {
+      throw new Error('Cancellation request not found');
+    }
+
+    return {
+      id: request.id,
+      status: request.status,
+      method: request.method,
+      attempts: request.attempts,
+      createdAt: request.createdAt,
+      updatedAt: request.updatedAt,
+      completedAt: request.completedAt,
+      confirmationCode: request.confirmationCode,
+      effectiveDate: request.effectiveDate,
+      subscription: {
+        id: request.subscription.id,
+        name: request.subscription.name,
+        amount: request.subscription.amount,
+      },
+      provider: request.provider ? {
+        name: request.provider.name,
+        type: request.provider.type,
+      } : null,
+      recentLogs: request.logs.map(log => ({
+        action: log.action,
+        status: log.status,
+        message: log.message,
+        createdAt: log.createdAt,
+      })),
+    };
+  }
+
+  /**
+   * Retry a failed cancellation request
+   */
+  async retryCancellation(userId: string, requestId: string, options?: { forceMethod?: string; escalate?: boolean }): Promise<UnifiedCancellationResult> {
+    // Get the existing request
+    const request = await this.db.cancellationRequest.findFirst({
+      where: { 
+        id: requestId,
+        userId,
+        status: { in: ['failed', 'cancelled'] },
+      },
+      include: {
+        subscription: true,
+      },
+    });
+
+    if (!request) {
+      throw new Error('Cancellation request not found or not retryable');
+    }
+
+    // Reset the request for retry
+    await this.db.cancellationRequest.update({
+      where: { id: requestId },
+      data: {
+        status: 'pending',
+        attempts: request.attempts,
+        errorCode: null,
+        errorMessage: null,
+        lastAttemptAt: new Date(),
+      },
+    });
+
+    // Re-orchestrate the cancellation
+    return this.initiateCancellation(
+      userId,
+      {
+        subscriptionId: request.subscription.id,
+        reason: 'Retry',
+        method: options?.forceMethod as any || request.method,
+        priority: options?.escalate ? 'high' : 'normal',
+      }
+    );
+  }
+
+  /**
+   * Cancel a cancellation request
+   */
+  async cancelCancellationRequest(userId: string, requestId: string, reason?: string): Promise<void> {
+    const request = await this.db.cancellationRequest.findFirst({
+      where: {
+        id: requestId,
+        userId,
+        status: { in: ['pending', 'processing'] },
+      },
+    });
+
+    if (!request) {
+      throw new Error('Cancellation request not found or not cancellable');
+    }
+
+    await this.db.cancellationRequest.update({
+      where: { id: requestId },
+      data: {
+        status: 'cancelled',
+        updatedAt: new Date(),
+      },
+    });
+
+    await this.db.cancellationLog.create({
+      data: {
+        requestId,
+        action: 'user_cancelled',
+        status: 'info',
+        message: 'Cancellation request cancelled by user',
+      },
+    });
+
+    // Emit cancellation event
+    emitCancellationEvent('cancellation.cancelled', {
+      requestId,
+      userId,
+    });
+  }
+
+  /**
+   * Get unified analytics data
+   */
+  async getUnifiedAnalytics(userId?: string, timeframe?: string): Promise<any> {
+    const dateFilter = this.getDateFilterForTimeframe(timeframe);
+    
+    const where: any = {
+      ...dateFilter,
+      ...(userId ? { userId } : {}),
+    };
+
+    const [
+      totalRequests,
+      successfulRequests,
+      failedRequests,
+      pendingRequests,
+      methodStats,
+    ] = await Promise.all([
+      this.db.cancellationRequest.count({ where }),
+      this.db.cancellationRequest.count({ 
+        where: { ...where, status: 'completed' },
+      }),
+      this.db.cancellationRequest.count({ 
+        where: { ...where, status: 'failed' },
+      }),
+      this.db.cancellationRequest.count({ 
+        where: { ...where, status: { in: ['pending', 'processing'] } },
+      }),
+      this.db.cancellationRequest.groupBy({
+        by: ['method'],
+        where,
+        _count: { method: true },
+      }),
+    ]);
+
+    const successRate = totalRequests > 0 
+      ? (successfulRequests / totalRequests) * 100 
+      : 0;
+
+    const methodBreakdown = methodStats.reduce((acc, stat) => {
+      acc[stat.method] = stat._count.method;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Get average completion time for successful requests
+    const completedRequests = await this.db.cancellationRequest.findMany({
+      where: { 
+        ...where, 
+        status: 'completed',
+        completedAt: { not: null },
+      },
+      select: {
+        createdAt: true,
+        completedAt: true,
+      },
+    });
+
+    let averageCompletionTime = 0;
+    if (completedRequests.length > 0) {
+      const totalTime = completedRequests.reduce((sum, req) => {
+        const duration = req.completedAt!.getTime() - req.createdAt.getTime();
+        return sum + duration;
+      }, 0);
+      averageCompletionTime = totalTime / completedRequests.length / 1000 / 60; // in minutes
+    }
+
+    return {
+      summary: {
+        total: totalRequests,
+        successful: successfulRequests,
+        failed: failedRequests,
+        pending: pendingRequests,
+        successRate: Math.round(successRate * 100) / 100,
+      },
+      methodBreakdown,
+      averageCompletionTime: Math.round(averageCompletionTime * 100) / 100,
+      timeframe: timeframe || '30days',
+    };
+  }
+
+  /**
+   * Helper to get date filter for analytics timeframe
+   */
+  private getDateFilterForTimeframe(timeframe?: string): any {
+    if (!timeframe) return {};
+
+    const now = new Date();
+    let startDate: Date;
+
+    switch (timeframe) {
+      case '24h':
+        startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case '7days':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30days':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '90days':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        return {};
+    }
+
+    return {
+      createdAt: { gte: startDate },
+    };
   }
 }

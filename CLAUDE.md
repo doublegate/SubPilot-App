@@ -9,6 +9,7 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 - **Phase 3 Started**: 2025-06-28 06:24 AM EDT (Parallel Agent Development)
 - **Phase 3 Completed**: 2025-06-28 06:24 AM EDT (All automation features implemented)
 - **Unified Cancellation System**: 2025-06-28 12:14 PM EDT (Complete rewrite with three-agent architecture)
+- **Last Updated**: 2025-06-28 12:29 PM EDT
 - Phase 2 complete (AI categorization, PWA, predictive analytics)
 - Phase 3 Agent 1: Cancellation System - COMPLETE ✅
 - Phase 3 Agent 2: AI Assistant - COMPLETE ✅
@@ -200,8 +201,8 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 
 **Phase 1**: MVP ✅ Complete (v1.0.0)
 **Phase 2**: Advanced Features ✅ Complete (v1.1.0+)
-**Phase 3**: Automation 📋 Next Focus
-**Phase 4**: Launch & Marketing 📋 Future
+**Phase 3**: Automation ✅ Complete (v1.3.0+)
+**Phase 4**: Launch & Marketing 📋 Next Focus
 
 ## ⚠️ Important Notes
 
@@ -474,3 +475,26 @@ This pattern eliminates the need for non-null assertions and improves test maint
 - **Session Summaries**: `archive/session/`
 
 Active documentation remains in `docs/` for ongoing development.
+
+## 🚀 Unified Cancellation System
+
+### Three-Agent Architecture
+The unified cancellation system combines three distinct approaches into an intelligent orchestration service:
+
+1. **API-First Agent** - Direct provider API integration with webhook support
+2. **Event-Driven Agent** - Background job processing with workflow orchestration  
+3. **Lightweight Agent** - Manual instructions with user confirmation flow
+
+### Key Components
+- **UnifiedCancellationOrchestratorService** - Central intelligence for method selection
+- **Job Queue System** - Background processing with retry logic
+- **Event Bus** - Real-time communication between components
+- **Workflow Engine** - Complex multi-step process orchestration
+- **Server-Sent Events** - Real-time progress updates to UI
+
+### Benefits
+- Intelligent method selection based on provider capabilities
+- Automatic fallback between methods (API → Automation → Manual)
+- Higher success rates through optimal routing
+- Better transparency with real-time updates
+- Clean architecture with separation of concerns

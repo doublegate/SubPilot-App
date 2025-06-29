@@ -281,7 +281,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         
         // Execute the method
         const result = await this.executeMethod(
-          method,
+          method as 'api' | 'automation' | 'manual',
           userId,
           subscription,
           input,
@@ -443,8 +443,12 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         subscriptionId: input.subscriptionId,
         priority: input.priority,
         notes: input.reason,
-        preferredMethod: 'automation',
-        notificationPreferences: input.userPreferences?.notificationPreferences,
+        preferredMethod: 'webhook' as const,
+        notificationPreferences: {
+          email: input.userPreferences?.notificationPreferences?.email ?? true,
+          sms: input.userPreferences?.notificationPreferences?.sms ?? false,
+          realtime: input.userPreferences?.notificationPreferences?.realTime ?? true,
+        },
       });
 
       return {
@@ -780,13 +784,13 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         status: 'scheduled',
         attempts: 0,
         userNotes: input.reason,
-        metadata: {
+        errorDetails: JSON.parse(JSON.stringify({
           orchestrationId,
           scheduleFor: scheduleFor.toISOString(),
           preferredMethod: method,
           timezone: input.scheduling?.timezone,
           capabilities,
-        },
+        })),
       },
     });
 

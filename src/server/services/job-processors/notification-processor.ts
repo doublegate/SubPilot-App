@@ -83,8 +83,7 @@ export class NotificationJobProcessor {
         return {
           success: false,
           error: 'Notification scheduled for future',
-          retry: true,
-          retryDelay: scheduledFor.getTime() - Date.now(),
+          retry: { delay: scheduledFor.getTime() - Date.now() },
         };
       }
 
@@ -135,12 +134,14 @@ export class NotificationJobProcessor {
         userId,
         action: 'notification.sent',
         resource: `notification_${notificationType}`,
-        result: hasError ? 'partial_success' : 'success',
+        result: hasError ? 'failure' : 'success',
+        error: hasError ? 'Some channels failed' : undefined,
         metadata: {
           notificationType,
           channels: userChannels,
           results,
           jobId: job.id,
+          partialSuccess: hasError,
         },
       });
 
@@ -165,8 +166,7 @@ export class NotificationJobProcessor {
           results,
         },
         error: hasError ? 'Some channels failed' : undefined,
-        retry: hasError,
-        retryDelay: hasError ? 30000 : undefined,
+        retry: hasError ? { delay: 30000 } : false,
       };
     } catch (error) {
       console.error('[NotificationProcessor] Error sending notification:', error);
@@ -183,8 +183,7 @@ export class NotificationJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Notification processing failed',
-        retry: true,
-        retryDelay: 60000, // 1 minute
+        retry: { delay: 60000 }, // 1 minute
       };
     }
   }
@@ -375,19 +374,17 @@ export class NotificationJobProcessor {
     data: any
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      const result = await this.emailService.sendNotificationEmail({
+      // Use sendEmail directly from the email module
+      const sendEmail = (await import('@/lib/email')).sendEmail;
+      await sendEmail({
         to: user.email,
         subject: content.title,
         html: content.htmlMessage || content.message,
-        data: {
-          userName: user.name || 'User',
-          ...data,
-        },
+        text: content.message,
       });
 
       return {
         success: true,
-        messageId: result.messageId,
       };
     } catch (error) {
       return {
@@ -564,8 +561,7 @@ export class NotificationJobProcessor {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Bulk notification failed',
-        retry: true,
-        retryDelay: 120000, // 2 minutes
+        retry: { delay: 120000 }, // 2 minutes
       };
     }
   }
