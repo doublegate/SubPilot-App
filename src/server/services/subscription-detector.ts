@@ -4,6 +4,7 @@ import {
   type Subscription,
 } from '@prisma/client';
 import { type Decimal } from '@prisma/client/runtime/library';
+import { getCategoryDisplayName } from '@/lib/category-utils';
 
 interface DetectionResult {
   isSubscription: boolean;
@@ -38,6 +39,144 @@ export class SubscriptionDetector {
 
   constructor(db: PrismaClient) {
     this.db = db;
+  }
+
+  /**
+   * Normalize merchant name for consistent comparison
+   */
+  private normalizeMerchantName(name: string): string {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s]/g, '') // Remove special characters
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/\b(inc|corp|llc|ltd|company|co)\b/g, '') // Remove corporate suffixes
+      .trim();
+  }
+
+  /**
+   * Find existing subscription with smart matching
+   */
+  private async findExistingSubscription(
+    userId: string,
+    merchantName: string
+  ): Promise<any> {
+    const normalizedName = this.normalizeMerchantName(merchantName);
+    
+    // First try exact match
+    let existing = await this.db.subscription.findFirst({
+      where: {
+        userId,
+        name: merchantName,
+      },
+    });
+
+    if (existing) return existing;
+
+    // Try case-insensitive match
+    existing = await this.db.subscription.findFirst({
+      where: {
+        userId,
+        name: {
+          mode: 'insensitive',
+          equals: merchantName,
+        },
+      },
+    });
+
+    if (existing) return existing;
+
+    // Try normalized name match - check for similar merchants
+    const possibleMatches = await this.db.subscription.findMany({
+      where: {
+        userId,
+        OR: [
+          {
+            name: {
+              mode: 'insensitive',
+              contains: normalizedName.split(' ')[0], // Match first word
+            },
+          },
+          {
+            name: {
+              mode: 'insensitive',
+              contains: merchantName.split(' ')[0],
+            },
+          },
+        ],
+      },
+    });
+
+    // Find the best match by comparing normalized names
+    for (const match of possibleMatches) {
+      const matchNormalized = this.normalizeMerchantName(match.name);
+      if (matchNormalized === normalizedName) {
+        return match;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Clean up duplicate subscriptions for a user
+   * This consolidates subscriptions that are essentially the same but have different names
+   */
+  async cleanupDuplicateSubscriptions(userId: string): Promise<number> {
+    console.log(`Cleaning up duplicate subscriptions for user ${userId}`);
+    
+    const subscriptions = await this.db.subscription.findMany({
+      where: { userId, isActive: true },
+      orderBy: { createdAt: 'asc' }, // Keep oldest entries
+    });
+
+    const groups = new Map<string, any[]>();
+    let duplicatesRemoved = 0;
+
+    // Group subscriptions by normalized name
+    for (const subscription of subscriptions) {
+      const normalizedName = this.normalizeMerchantName(subscription.name);
+      if (!groups.has(normalizedName)) {
+        groups.set(normalizedName, []);
+      }
+      groups.get(normalizedName)!.push(subscription);
+    }
+
+    // Process groups with duplicates
+    for (const [normalizedName, group] of groups) {
+      if (group.length > 1) {
+        console.log(`Found ${group.length} duplicates for "${normalizedName}"`);
+        
+        // Keep the best subscription (prioritize AI-categorized and newer data)
+        const keeper = group.reduce((best, current) => {
+          // Prefer AI-categorized over non-categorized
+          if (current.aiCategory && !best.aiCategory) return current;
+          if (best.aiCategory && !current.aiCategory) return best;
+          
+          // Prefer higher detection confidence
+          if (current.detectionConfidence > best.detectionConfidence) return current;
+          if (best.detectionConfidence > current.detectionConfidence) return best;
+          
+          // Prefer newer data
+          if (current.updatedAt > best.updatedAt) return current;
+          return best;
+        });
+
+        // Remove the duplicates
+        for (const subscription of group) {
+          if (subscription.id !== keeper.id) {
+            await this.db.subscription.delete({
+              where: { id: subscription.id },
+            });
+            duplicatesRemoved++;
+            console.log(`Removed duplicate subscription: ${subscription.name} (ID: ${subscription.id})`);
+          }
+        }
+      }
+    }
+
+    console.log(`Cleanup complete: removed ${duplicatesRemoved} duplicate subscriptions`);
+    return duplicatesRemoved;
   }
 
   /**
@@ -471,14 +610,11 @@ export class SubscriptionDetector {
       }
 
       try {
-        // Check if subscription already exists
-        const existing = await this.db.subscription.findFirst({
-          where: {
-            userId,
-            name: result.merchantName,
-            // Don't filter by status - update inactive ones too
-          },
-        });
+        // Check if subscription already exists using smart matching
+        const existing = await this.findExistingSubscription(
+          userId,
+          result.merchantName
+        );
 
         if (!existing) {
           // Create new subscription
@@ -487,7 +623,7 @@ export class SubscriptionDetector {
               userId,
               name: result.merchantName,
               description: `Recurring payment to ${result.merchantName}`,
-              category: 'other', // Default category, will be updated by AI
+              category: getCategoryDisplayName('other'), // Default category with proper capitalization
               amount: result.averageAmount,
               currency: 'USD',
               frequency: result.frequency,
@@ -577,6 +713,19 @@ export class SubscriptionDetector {
     console.log(
       `Subscription processing complete: ${created} created, ${updated} updated, ${skipped} skipped, ${errors} errors`
     );
+
+    // Clean up any duplicates that may have been created
+    if (created > 0 || updated > 0) {
+      try {
+        const duplicatesRemoved = await this.cleanupDuplicateSubscriptions(userId);
+        if (duplicatesRemoved > 0) {
+          console.log(`Removed ${duplicatesRemoved} duplicate subscriptions during cleanup`);
+        }
+      } catch (error) {
+        console.error('Failed to cleanup duplicate subscriptions:', error);
+        // Don't fail the whole process if cleanup fails
+      }
+    }
 
     return createdSubscriptions;
   }

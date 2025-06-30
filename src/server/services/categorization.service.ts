@@ -4,6 +4,7 @@ import {
   SUBSCRIPTION_CATEGORIES,
 } from '@/server/lib/openai-client';
 import { cacheService } from './cache.service';
+import { getCategoryDisplayName, normalizeCategoryKey } from '@/lib/category-utils';
 
 /**
  * Service for categorizing subscriptions and transactions
@@ -363,18 +364,29 @@ export class CategorizationService {
         userId
       );
 
-      // Update subscription
+      // Update subscription with normalized name and category
+      const normalizedCategory = normalizeCategoryKey(result.category);
+      const displayCategory = getCategoryDisplayName(normalizedCategory);
+      
+      const updateData: any = {
+        aiCategory: normalizedCategory,
+        aiCategoryConfidence: result.confidence,
+        category: displayCategory, // Store the properly capitalized display name
+      };
+
+      // If AI provided a normalized merchant name, update it
+      if (result.merchantName && result.merchantName !== subscription.name) {
+        updateData.name = result.merchantName;
+        console.log(`Updated subscription name: "${subscription.name}" -> "${result.merchantName}"`);
+      }
+
       await this.db.subscription.update({
         where: { id: subscriptionId },
-        data: {
-          aiCategory: result.category,
-          aiCategoryConfidence: result.confidence,
-          category: result.category, // Also update the main category field
-        },
+        data: updateData,
       });
 
       return {
-        category: result.category,
+        category: displayCategory,
         confidence: result.confidence,
       };
     } catch (error) {
@@ -391,14 +403,17 @@ export class CategorizationService {
     userId: string,
     category: string
   ): Promise<void> {
+    const normalizedCategory = normalizeCategoryKey(category);
+    const displayCategory = getCategoryDisplayName(normalizedCategory);
+    
     await this.db.subscription.update({
       where: {
         id: subscriptionId,
         userId,
       },
       data: {
-        categoryOverride: category,
-        category, // Update main category field
+        categoryOverride: displayCategory,
+        category: displayCategory, // Update main category field with proper capitalization
       },
     });
 

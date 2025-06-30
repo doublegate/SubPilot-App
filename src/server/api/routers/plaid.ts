@@ -375,6 +375,37 @@ export const plaidRouter = createTRPCRouter({
   }),
 
   /**
+   * Get Plaid items with their accounts for banks page
+   */
+  getItems: protectedProcedure.query(async ({ ctx }) => {
+    const plaidItems = await ctx.db.plaidItem.findMany({
+      where: { userId: ctx.session.user.id },
+      include: {
+        bankAccounts: {
+          where: { isActive: true },
+          orderBy: { name: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            mask: true,
+          },
+        },
+      },
+      orderBy: { institutionName: 'asc' },
+    });
+
+    return plaidItems.map(item => ({
+      id: item.id,
+      institutionName: item.institutionName,
+      institutionId: item.institutionId,
+      accounts: item.bankAccounts,
+      lastSyncedAt: item.lastSyncedAt,
+      consentExpirationTime: item.consentExpirationTime,
+    }));
+  }),
+
+  /**
    * Sync transactions for accounts
    */
   syncTransactions: protectedProcedure
@@ -775,6 +806,68 @@ export const plaidRouter = createTRPCRouter({
       });
 
       return { success: true };
+    }),
+
+  /**
+   * Delete/remove a Plaid item and its bank accounts
+   */
+  deleteItem: protectedProcedure
+    .input(
+      z.object({
+        itemId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Use the existing disconnectAccount logic with plaidItemId
+      return ctx.db.$transaction(async (db) => {
+        // Verify ownership
+        const plaidItem = await db.plaidItem.findFirst({
+          where: {
+            id: input.itemId,
+            userId: ctx.session.user.id,
+          },
+        });
+
+        if (!plaidItem) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Bank connection not found',
+          });
+        }
+
+        // Remove the item from Plaid (optional - keeps historical data)
+        if (isPlaidConfigured() && plaidItem.accessToken) {
+          const plaidClient = plaid();
+          if (plaidClient) {
+            try {
+              const accessToken = await decrypt(plaidItem.accessToken);
+              await plaidWithRetry(
+                () =>
+                  plaidClient.itemRemove({
+                    access_token: accessToken,
+                  }),
+                'itemRemove'
+              );
+            } catch (error) {
+              console.error('Failed to remove item from Plaid:', error);
+              // Continue with local cleanup even if Plaid removal fails
+            }
+          }
+        }
+
+        // Mark bank accounts as inactive instead of deleting
+        await db.bankAccount.updateMany({
+          where: { plaidItemId: input.itemId },
+          data: { isActive: false },
+        });
+
+        // Delete the Plaid item
+        await db.plaidItem.delete({
+          where: { id: input.itemId },
+        });
+
+        return { success: true };
+      });
     }),
 
   /**

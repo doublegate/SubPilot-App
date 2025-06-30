@@ -12,6 +12,35 @@ import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 
 export const authRouter = createTRPCRouter({
   /**
+   * Get current authenticated user with all fields
+   */
+  getCurrentUser: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        image: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+        notificationPreferences: true,
+        isAdmin: true,
+      },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'User not found',
+      });
+    }
+
+    return user;
+  }),
+
+  /**
    * Get current authenticated user
    */
   getUser: protectedProcedure.query(async ({ ctx }) => {
@@ -26,6 +55,7 @@ export const authRouter = createTRPCRouter({
         createdAt: true,
         updatedAt: true,
         notificationPreferences: true,
+        isAdmin: true,
       },
     });
 

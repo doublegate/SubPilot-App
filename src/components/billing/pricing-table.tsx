@@ -142,11 +142,11 @@ export function PricingTable() {
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-6 md:gap-8 lg:grid-cols-3 max-w-7xl mx-auto">
         {PLANS.map(plan => (
           <Card
             key={plan.name}
-            className={plan.popular ? 'relative border-primary shadow-lg' : ''}
+            className={`flex flex-col h-full ${plan.popular ? 'relative border-primary shadow-lg scale-105' : ''}`}
           >
             {plan.popular && (
               <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -159,19 +159,19 @@ export function PricingTable() {
               <CardDescription>{plan.description}</CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 flex-1">
               {/* Price */}
               <div>
                 <div className="flex items-baseline">
-                  <span className="text-4xl font-bold">
+                  <span className="text-2xl sm:text-3xl font-bold">
                     ${plan.price[billingPeriod]}
                   </span>
-                  <span className="ml-2 text-muted-foreground">
+                  <span className="ml-1 text-sm sm:text-base text-muted-foreground">
                     /{billingPeriod === 'monthly' ? 'month' : 'year'}
                   </span>
                 </div>
                 {billingPeriod === 'yearly' && plan.price.monthly > 0 && (
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                     ${plan.price.monthly}/month billed annually
                   </p>
                 )}

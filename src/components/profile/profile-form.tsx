@@ -47,12 +47,27 @@ export function ProfileForm() {
           </Avatar>
         </div>
         <div className="flex-1">
-          <Label className="text-sm font-medium">Profile Picture</Label>
+          <Label className="text-sm font-medium block mb-2">Profile Picture</Label>
+          <input
+            type="file"
+            id="avatar-upload"
+            className="hidden"
+            accept="image/*"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                // TODO: Implement avatar upload
+                toast.info('Avatar upload feature coming soon!');
+              }
+            }}
+          />
           <Button
             type="button"
-            variant="link"
-            className="h-auto p-0 text-sm font-medium"
+            variant="outline"
+            size="sm"
+            className="text-sm"
             disabled={isLoading}
+            onClick={() => document.getElementById('avatar-upload')?.click()}
           >
             Change avatar
           </Button>

@@ -156,11 +156,16 @@ async function main() {
   console.log('\n✨ All done!');
 }
 
-main()
-  .catch(e => {
-    console.error('Error seeding pricing plans:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Only run if called directly
+if (require.main === module) {
+  main()
+    .catch(e => {
+      console.error('Error seeding pricing plans:', e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
+
+export { main as seedPricingPlans };

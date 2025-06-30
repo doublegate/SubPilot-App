@@ -632,4 +632,28 @@ export const subscriptionsRouter = createTRPCRouter({
         },
       };
     }),
+
+  /**
+   * Clean up duplicate subscriptions for the current user
+   */
+  cleanupDuplicates: protectedProcedure.mutation(async ({ ctx }) => {
+    try {
+      const detector = new SubscriptionDetector(ctx.db);
+      const duplicatesRemoved = await detector.cleanupDuplicateSubscriptions(
+        ctx.session.user.id
+      );
+      
+      return {
+        success: true,
+        duplicatesRemoved,
+        message: `Removed ${duplicatesRemoved} duplicate subscription${duplicatesRemoved !== 1 ? 's' : ''}`
+      };
+    } catch (error) {
+      console.error('Failed to cleanup duplicates:', error);
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to cleanup duplicate subscriptions',
+      });
+    }
+  }),
 });

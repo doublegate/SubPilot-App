@@ -28,6 +28,10 @@ export function NavHeaderClient() {
         .toUpperCase()
     : (session.user.email?.[0]?.toUpperCase() ?? 'U');
 
+  // Check if user is admin
+  // @ts-expect-error - isAdmin is added to the user type
+  const isAdmin = session.user.isAdmin === true;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
@@ -45,25 +49,25 @@ export function NavHeaderClient() {
               Dashboard
             </Link>
             <Link
-              href="/dashboard/subscriptions"
+              href="/subscriptions"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
               Subscriptions
             </Link>
             <Link
-              href="/dashboard/banks"
+              href="/banks"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
               Banks
             </Link>
             <Link
-              href="/dashboard/analytics"
+              href="/analytics"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
               Analytics
             </Link>
             <Link
-              href="/dashboard/assistant"
+              href="/assistant"
               className="text-sm font-medium transition-colors hover:text-primary"
             >
               AI Assistant
@@ -73,7 +77,7 @@ export function NavHeaderClient() {
 
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/banks/connect">Connect Bank</Link>
+            <Link href="/banks/connect">Connect Bank</Link>
           </Button>
 
           <ThemeToggle />
@@ -108,17 +112,27 @@ export function NavHeaderClient() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings">Profile</Link>
+                <Link href="/settings">Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings/billing">Billing</Link>
+                <Link href="/settings/billing">Billing</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings">Settings</Link>
+                <Link href="/settings">Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/help">Help & Support</Link>
+                <Link href="/help">Help & Support</Link>
               </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin" className="text-cyan-600 dark:text-cyan-400">
+                      Admin Panel
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <SignOutButton />

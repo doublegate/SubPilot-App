@@ -74,17 +74,19 @@ export default function BillingPage() {
                 Upgrade your plan to unlock premium features and remove limits
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:p-6">
               <Suspense
                 fallback={
-                  <div className="grid gap-8 lg:grid-cols-3">
+                  <div className="grid gap-8 lg:grid-cols-3 p-6">
                     <Skeleton className="h-96" />
                     <Skeleton className="h-96" />
                     <Skeleton className="h-96" />
                   </div>
                 }
               >
-                <PricingTable />
+                <div className="w-full overflow-x-auto p-6">
+                  <PricingTable />
+                </div>
               </Suspense>
             </CardContent>
           </Card>

@@ -78,7 +78,7 @@ npm run db:push      # Push schema changes to database
 npm run db:generate  # Generate Prisma client
 npm run db:studio    # Open Prisma Studio GUI
 npm run db:migrate   # Create and apply migrations
-npm run db:seed      # Seed database with test data
+npm run db:seed      # Seed database with test data (includes all seed files)
 npm run db:reset     # Reset database (CAUTION: deletes all data)
 
 # Code Quality

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { SubscriptionList } from '@/components/subscription-list';
 import { DashboardStats } from '@/components/dashboard-stats';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Plus,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AddSubscriptionModal } from '@/components/add-subscription-modal';
@@ -47,6 +49,8 @@ interface Subscription {
 }
 
 export default function SubscriptionsPage() {
+  const router = useRouter();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -93,6 +97,14 @@ export default function SubscriptionsPage() {
         } else {
           toast.info('No new subscriptions detected');
         }
+        
+        // Refresh the data and then refresh the page to ensure all components update
+        void refetch().then(() => {
+          // Small delay to allow the toast to be seen before refresh
+          setTimeout(() => {
+            router.refresh();
+          }, 1500);
+        });
       },
       onError: error => {
         toast.error('Failed to detect subscriptions', {
@@ -101,6 +113,23 @@ export default function SubscriptionsPage() {
       },
     }
   );
+
+  // Cleanup duplicates mutation
+  const cleanupDuplicates = api.subscriptions.cleanupDuplicates.useMutation({
+    onSuccess: data => {
+      if (data.duplicatesRemoved > 0) {
+        toast.success(data.message);
+      } else {
+        toast.info('No duplicate subscriptions found');
+      }
+      void refetch();
+    },
+    onError: error => {
+      toast.error('Failed to cleanup duplicates', {
+        description: error.message,
+      });
+    },
+  });
 
   // Filter subscriptions based on search query
   const filteredSubscriptions =
@@ -158,6 +187,24 @@ export default function SubscriptionsPage() {
             <Button variant="outline" onClick={() => setAddModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add Subscription
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => cleanupDuplicates.mutate()}
+              disabled={cleanupDuplicates.isPending}
+              title="Remove duplicate subscriptions with similar names"
+            >
+              {cleanupDuplicates.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cleaning...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Clean Duplicates
+                </>
+              )}
             </Button>
             <Button
               type="button"

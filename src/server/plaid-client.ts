@@ -1,6 +1,10 @@
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 import { env } from '@/env.js';
 
+// NOTE: The Plaid SDK (v36.0.0) generates Node.js deprecation warnings for url.parse()
+// This is a known issue in the Plaid SDK itself and cannot be fixed in our codebase.
+// See docs/TROUBLESHOOTING.md for more details.
+
 // Retry configuration
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;

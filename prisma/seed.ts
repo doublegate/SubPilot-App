@@ -4,11 +4,46 @@ import { hash } from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
+  console.log('🌱 Seeding database...');
+
+  // Create admin user if it doesn't exist
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@subpilot.app';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456';
+  
+  const existingAdmin = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: adminEmail },
+        { isAdmin: true },
+      ],
+    },
+  });
+
+  if (!existingAdmin) {
+    console.log('🔑 Creating admin user...');
+    const hashedAdminPassword = await hash(adminPassword, 12);
+    
+    const adminUser = await prisma.user.create({
+      data: {
+        email: adminEmail,
+        name: 'Admin',
+        password: hashedAdminPassword,
+        emailVerified: new Date(),
+        isAdmin: true,
+      },
+    });
+    
+    console.log('✅ Created admin user:');
+    console.log('   Email:', adminEmail);
+    console.log('   Password:', adminPassword);
+    console.log('   User ID:', adminUser.id);
+  } else {
+    console.log('✅ Admin user already exists');
+  }
+
   // Create a test user for development
   const email = 'test@subpilot.dev';
   const password = 'testpassword123';
-
-  console.log('🌱 Seeding database...');
 
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
@@ -52,10 +87,40 @@ async function main() {
   });
 
   console.log('✅ Sample data created!');
+  
+  // Run other seed files
+  console.log('\n🏷️ Seeding pricing plans...');
+  try {
+    const { seedPricingPlans } = await import('./seed-pricing-plans');
+    await seedPricingPlans();
+  } catch (error) {
+    console.log('⚠️ Could not seed pricing plans:', error);
+  }
+  
+  console.log('\n🔌 Seeding cancellation providers...');
+  try {
+    const { seedCancellationProviders } = await import('./seed-cancellation-providers');
+    await seedCancellationProviders();
+  } catch (error) {
+    console.log('⚠️ Could not seed cancellation providers:', error);
+  }
+  
+  console.log('\n📁 Seeding categories...');
+  try {
+    const { seedCategories } = await import('../scripts/seed-categories');
+    await seedCategories();
+  } catch (error) {
+    console.log('⚠️ Could not seed categories:', error);
+  }
+  
   console.log('\n🎉 Database seeded successfully!');
   console.log('\n📝 Login credentials:');
-  console.log('   Email: test@subpilot.dev');
-  console.log('   Password: testpassword123');
+  console.log('   Admin User:');
+  console.log('     Email:', adminEmail);
+  console.log('     Password:', adminPassword);
+  console.log('\n   Test User:');
+  console.log('     Email: test@subpilot.dev');
+  console.log('     Password: testpassword123');
 }
 
 main()

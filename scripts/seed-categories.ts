@@ -176,13 +176,17 @@ async function seedCategories() {
   }
 }
 
-// Run the seed function
-seedCategories()
-  .then(() => {
-    console.log('\n✨ Category seeding completed successfully!');
-    process.exit(0);
-  })
-  .catch(error => {
-    console.error('\n❌ Category seeding failed:', error);
-    process.exit(1);
-  });
+// Only run if called directly
+if (require.main === module) {
+  seedCategories()
+    .then(() => {
+      console.log('\n✨ Category seeding completed successfully!');
+      process.exit(0);
+    })
+    .catch(error => {
+      console.error('\n❌ Category seeding failed:', error);
+      process.exit(1);
+    });
+}
+
+export { seedCategories };

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { api } from '@/trpc/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -23,7 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { TimeSeriesChart } from '@/components/charts/time-series-chart';
 import { ComparisonChart } from '@/components/charts/comparison-chart';
 import { InsightsCard, type Insight } from '@/components/charts/insights-card';
-import { HeatmapChart } from '@/components/charts/heatmap-chart';
+import { HeatmapChartEnhanced } from '@/components/charts/heatmap-chart-enhanced';
 import { CategoryBreakdownChart } from '@/components/analytics/category-breakdown-chart';
 import {
   TrendingUp,
@@ -41,6 +42,7 @@ import { toast } from 'sonner';
 type TimeRange = 'week' | 'month' | 'quarter' | 'year' | 'all';
 
 export default function AdvancedAnalyticsPage() {
+  const router = useRouter();
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const [comparisonType, setComparisonType] = useState<
     'month-over-month' | 'year-over-year' | 'quarter-over-quarter'
@@ -129,8 +131,16 @@ export default function AdvancedAnalyticsPage() {
       action: {
         label: 'View Details',
         onClick: () => {
-          // Navigate to subscriptions with filter
-          console.log('View optimization details:', opt);
+          // Navigate to subscriptions with filter based on optimization type
+          if (opt.type === 'duplicate_services') {
+            router.push('/subscriptions?filter=duplicates');
+          } else if (opt.type === 'unused_services') {
+            router.push('/subscriptions?filter=unused');
+          } else if (opt.type === 'expensive_services') {
+            router.push('/subscriptions?filter=expensive');
+          } else {
+            router.push('/subscriptions');
+          }
         },
       },
     })) ?? []),
@@ -428,7 +438,7 @@ export default function AdvancedAnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="heatmap" className="space-y-4">
-          <HeatmapChart
+          <HeatmapChartEnhanced
             data={heatmapData}
             title="Spending Heatmap"
             description="Daily spending patterns throughout the year"

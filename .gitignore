@@ -55,6 +55,7 @@ prisma/*.db-journal
 prisma/migrations/**/migration_lock.toml
 
 # IDE
+.cursorignore
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
