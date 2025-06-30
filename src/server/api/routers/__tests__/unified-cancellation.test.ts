@@ -69,11 +69,11 @@ describe('unifiedCancellationRouter', () => {
 
   beforeEach(() => {
     mockReset(mockDb);
-    
+
     const ctx = createInnerTRPCContext({
       session: mockSession,
     });
-    
+
     caller = unifiedCancellationRouter.createCaller(ctx);
   });
 
@@ -92,14 +92,19 @@ describe('unifiedCancellationRouter', () => {
         totalSteps: 4,
         completedSteps: 0,
         fallbackAvailable: true,
-        subscriptionUrl: '/api/cancellation/stream/req123?orchestration=orch123',
+        subscriptionUrl:
+          '/api/cancellation/stream/req123?orchestration=orch123',
       };
 
       const { UnifiedCancellationOrchestratorService } = await import(
         '@/server/services/unified-cancellation-orchestrator.service'
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(mockDb);
-      (mockOrchestrator.initiateCancellation as any).mockResolvedValue(mockResult);
+      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
+        mockDb
+      );
+      (mockOrchestrator.initiateCancellation as any).mockResolvedValue(
+        mockResult
+      );
 
       const input = {
         subscriptionId: 'sub123',
@@ -156,8 +161,12 @@ describe('unifiedCancellationRouter', () => {
       const { UnifiedCancellationOrchestratorService } = await import(
         '@/server/services/unified-cancellation-orchestrator.service'
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(mockDb);
-      (mockOrchestrator.getCancellationStatus as any).mockResolvedValue(mockStatus);
+      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
+        mockDb
+      );
+      (mockOrchestrator.getCancellationStatus as any).mockResolvedValue(
+        mockStatus
+      );
 
       const result = await caller.getStatus({
         requestId: 'req123',
@@ -189,8 +198,12 @@ describe('unifiedCancellationRouter', () => {
       const { UnifiedCancellationOrchestratorService } = await import(
         '@/server/services/unified-cancellation-orchestrator.service'
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(mockDb);
-      (mockOrchestrator.retryCancellation as any).mockResolvedValue(mockRetryResult);
+      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
+        mockDb
+      );
+      (mockOrchestrator.retryCancellation as any).mockResolvedValue(
+        mockRetryResult
+      );
 
       const result = await caller.retry({
         requestId: 'req123',
@@ -217,8 +230,12 @@ describe('unifiedCancellationRouter', () => {
       const { UnifiedCancellationOrchestratorService } = await import(
         '@/server/services/unified-cancellation-orchestrator.service'
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(mockDb);
-      (mockOrchestrator.cancelCancellationRequest as any).mockResolvedValue(mockCancelResult);
+      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
+        mockDb
+      );
+      (mockOrchestrator.cancelCancellationRequest as any).mockResolvedValue(
+        mockCancelResult
+      );
 
       const result = await caller.cancel({
         requestId: 'req123',
@@ -281,8 +298,12 @@ describe('unifiedCancellationRouter', () => {
       const { UnifiedCancellationOrchestratorService } = await import(
         '@/server/services/unified-cancellation-orchestrator.service'
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(mockDb);
-      (mockOrchestrator.getUnifiedAnalytics as any).mockResolvedValue(mockAnalytics);
+      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
+        mockDb
+      );
+      (mockOrchestrator.getUnifiedAnalytics as any).mockResolvedValue(
+        mockAnalytics
+      );
 
       const result = await caller.getAnalytics({ timeframe: 'month' });
 
@@ -297,7 +318,9 @@ describe('unifiedCancellationRouter', () => {
   describe('getProviderCapabilities', () => {
     it('should return provider capabilities for known provider', async () => {
       mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
-      mockDb.cancellationProvider.findFirst.mockResolvedValue(mockProvider as any);
+      mockDb.cancellationProvider.findFirst.mockResolvedValue(
+        mockProvider as any
+      );
 
       const result = await caller.getProviderCapabilities({
         subscriptionId: 'sub123',
@@ -353,7 +376,9 @@ describe('unifiedCancellationRouter', () => {
         ...mockSubscription,
         status: 'cancelled',
       };
-      mockDb.subscription.findFirst.mockResolvedValue(cancelledSubscription as any);
+      mockDb.subscription.findFirst.mockResolvedValue(
+        cancelledSubscription as any
+      );
 
       const result = await caller.canCancel({ subscriptionId: 'sub123' });
 
@@ -373,7 +398,9 @@ describe('unifiedCancellationRouter', () => {
 
       expect(result.canCancel).toBe(false);
       expect(result.reason).toBe('cancellation_in_progress');
-      expect(result.message).toBe('A cancellation request is already in progress');
+      expect(result.message).toBe(
+        'A cancellation request is already in progress'
+      );
       expect(result.requestId).toBe('req123');
     });
 
@@ -389,7 +416,9 @@ describe('unifiedCancellationRouter', () => {
   describe('getAvailableMethods', () => {
     it('should return available cancellation methods', async () => {
       mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
-      mockDb.cancellationProvider.findFirst.mockResolvedValue(mockProvider as any);
+      mockDb.cancellationProvider.findFirst.mockResolvedValue(
+        mockProvider as any
+      );
 
       const result = await caller.getAvailableMethods({
         subscriptionId: 'sub123',
@@ -466,7 +495,9 @@ describe('unifiedCancellationRouter', () => {
         },
       ];
 
-      mockDb.cancellationRequest.findMany.mockResolvedValue(mockHistoryRequests as any);
+      mockDb.cancellationRequest.findMany.mockResolvedValue(
+        mockHistoryRequests as any
+      );
 
       const result = await caller.getHistory({ limit: 10 });
 
@@ -496,7 +527,9 @@ describe('unifiedCancellationRouter', () => {
         },
       ];
 
-      mockDb.cancellationRequest.findMany.mockResolvedValue(mockCompletedRequests as any);
+      mockDb.cancellationRequest.findMany.mockResolvedValue(
+        mockCompletedRequests as any
+      );
 
       const result = await caller.getHistory({ status: 'completed' });
 
@@ -519,7 +552,9 @@ describe('unifiedCancellationRouter', () => {
         { method: 'web_automation', status: 'completed' },
       ];
 
-      mockDb.cancellationRequest.findMany.mockResolvedValue(mockRecentRequests as any);
+      mockDb.cancellationRequest.findMany.mockResolvedValue(
+        mockRecentRequests as any
+      );
 
       const result = await caller.getSystemHealth();
 
@@ -541,12 +576,16 @@ describe('unifiedCancellationRouter', () => {
         status: 'pending',
       };
 
-      mockDb.cancellationRequest.findFirst.mockResolvedValue(mockRequest as any);
+      mockDb.cancellationRequest.findFirst.mockResolvedValue(
+        mockRequest as any
+      );
 
       const { UnifiedCancellationOrchestratorService } = await import(
         '@/server/services/unified-cancellation-orchestrator.service'
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(mockDb);
+      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
+        mockDb
+      );
       const mockLightweightService = {
         confirmCancellation: vi.fn().mockResolvedValue({
           requestId: 'req123',
@@ -576,7 +615,9 @@ describe('unifiedCancellationRouter', () => {
         status: 'pending',
       };
 
-      mockDb.cancellationRequest.findFirst.mockResolvedValue(mockRequest as any);
+      mockDb.cancellationRequest.findFirst.mockResolvedValue(
+        mockRequest as any
+      );
 
       await expect(
         caller.confirmManual({

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LightweightCancellationService } from '../lightweight-cancellation.service';
-import { PrismaClient } from '@prisma/client';
+import { type PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 
 // Mock Prisma client
@@ -56,11 +56,13 @@ describe('LightweightCancellationService', () => {
   describe('provideCancellationInstructions', () => {
     it('should provide instructions for Netflix subscription', async () => {
       // Mock subscription exists
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(mockSubscription);
-      
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        mockSubscription
+      );
+
       // Mock no existing cancellation request
       vi.mocked(mockDb.cancellationRequest.findFirst).mockResolvedValue(null);
-      
+
       // Mock request creation
       const mockRequest = {
         id: 'req_123',
@@ -69,7 +71,9 @@ describe('LightweightCancellationService', () => {
         method: 'manual',
         status: 'pending',
       };
-      vi.mocked(mockDb.cancellationRequest.create).mockResolvedValue(mockRequest as any);
+      vi.mocked(mockDb.cancellationRequest.create).mockResolvedValue(
+        mockRequest as any
+      );
 
       // Mock log creation
       vi.mocked(mockDb.cancellationLog.create).mockResolvedValue({} as any);
@@ -93,7 +97,9 @@ describe('LightweightCancellationService', () => {
         name: 'Unknown Service XYZ',
       };
 
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(unknownSubscription);
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        unknownSubscription
+      );
       vi.mocked(mockDb.cancellationRequest.findFirst).mockResolvedValue(null);
       vi.mocked(mockDb.cancellationRequest.create).mockResolvedValue({
         id: 'req_123',
@@ -129,7 +135,9 @@ describe('LightweightCancellationService', () => {
         status: 'cancelled',
       };
 
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(cancelledSubscription);
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        cancelledSubscription
+      );
 
       await expect(
         service.provideCancellationInstructions('user_123', {
@@ -139,8 +147,10 @@ describe('LightweightCancellationService', () => {
     });
 
     it('should throw error if cancellation already in progress', async () => {
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(mockSubscription);
-      
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        mockSubscription
+      );
+
       // Mock existing cancellation request
       vi.mocked(mockDb.cancellationRequest.findFirst).mockResolvedValue({
         id: 'existing_req',
@@ -166,7 +176,9 @@ describe('LightweightCancellationService', () => {
     };
 
     it('should confirm successful cancellation', async () => {
-      vi.mocked(mockDb.cancellationRequest.findFirst).mockResolvedValue(mockRequest as any);
+      vi.mocked(mockDb.cancellationRequest.findFirst).mockResolvedValue(
+        mockRequest as any
+      );
       vi.mocked(mockDb.cancellationRequest.update).mockResolvedValue({} as any);
       vi.mocked(mockDb.subscription.update).mockResolvedValue({} as any);
       vi.mocked(mockDb.cancellationLog.create).mockResolvedValue({} as any);
@@ -189,7 +201,9 @@ describe('LightweightCancellationService', () => {
     });
 
     it('should handle failed cancellation', async () => {
-      vi.mocked(mockDb.cancellationRequest.findFirst).mockResolvedValue(mockRequest as any);
+      vi.mocked(mockDb.cancellationRequest.findFirst).mockResolvedValue(
+        mockRequest as any
+      );
       vi.mocked(mockDb.cancellationRequest.update).mockResolvedValue({} as any);
       vi.mocked(mockDb.cancellationLog.create).mockResolvedValue({} as any);
 
@@ -232,12 +246,14 @@ describe('LightweightCancellationService', () => {
         },
       ];
 
-      vi.mocked(mockDb.cancellationRequest.findMany).mockResolvedValue(mockHistory as any);
+      vi.mocked(mockDb.cancellationRequest.findMany).mockResolvedValue(
+        mockHistory as any
+      );
 
       const result = await service.getCancellationHistory('user_123', 10);
 
       expect(result).toHaveLength(1);
-      expect(result[0]!).toMatchObject({
+      expect(result[0]).toMatchObject({
         id: 'req_1',
         status: 'completed',
         method: 'manual',

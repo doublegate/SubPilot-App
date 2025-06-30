@@ -642,11 +642,11 @@ export const subscriptionsRouter = createTRPCRouter({
       const duplicatesRemoved = await detector.cleanupDuplicateSubscriptions(
         ctx.session.user.id
       );
-      
+
       return {
         success: true,
         duplicatesRemoved,
-        message: `Removed ${duplicatesRemoved} duplicate subscription${duplicatesRemoved !== 1 ? 's' : ''}`
+        message: `Removed ${duplicatesRemoved} duplicate subscription${duplicatesRemoved !== 1 ? 's' : ''}`,
       };
     } catch (error) {
       console.error('Failed to cleanup duplicates:', error);

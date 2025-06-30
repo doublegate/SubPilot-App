@@ -62,7 +62,7 @@ export class SubscriptionDetector {
     merchantName: string
   ): Promise<any> {
     const normalizedName = this.normalizeMerchantName(merchantName);
-    
+
     // First try exact match
     let existing = await this.db.subscription.findFirst({
       where: {
@@ -124,7 +124,7 @@ export class SubscriptionDetector {
    */
   async cleanupDuplicateSubscriptions(userId: string): Promise<number> {
     console.log(`Cleaning up duplicate subscriptions for user ${userId}`);
-    
+
     const subscriptions = await this.db.subscription.findMany({
       where: { userId, isActive: true },
       orderBy: { createdAt: 'asc' }, // Keep oldest entries
@@ -146,17 +146,19 @@ export class SubscriptionDetector {
     for (const [normalizedName, group] of groups) {
       if (group.length > 1) {
         console.log(`Found ${group.length} duplicates for "${normalizedName}"`);
-        
+
         // Keep the best subscription (prioritize AI-categorized and newer data)
         const keeper = group.reduce((best, current) => {
           // Prefer AI-categorized over non-categorized
           if (current.aiCategory && !best.aiCategory) return current;
           if (best.aiCategory && !current.aiCategory) return best;
-          
+
           // Prefer higher detection confidence
-          if (current.detectionConfidence > best.detectionConfidence) return current;
-          if (best.detectionConfidence > current.detectionConfidence) return best;
-          
+          if (current.detectionConfidence > best.detectionConfidence)
+            return current;
+          if (best.detectionConfidence > current.detectionConfidence)
+            return best;
+
           // Prefer newer data
           if (current.updatedAt > best.updatedAt) return current;
           return best;
@@ -169,13 +171,17 @@ export class SubscriptionDetector {
               where: { id: subscription.id },
             });
             duplicatesRemoved++;
-            console.log(`Removed duplicate subscription: ${subscription.name} (ID: ${subscription.id})`);
+            console.log(
+              `Removed duplicate subscription: ${subscription.name} (ID: ${subscription.id})`
+            );
           }
         }
       }
     }
 
-    console.log(`Cleanup complete: removed ${duplicatesRemoved} duplicate subscriptions`);
+    console.log(
+      `Cleanup complete: removed ${duplicatesRemoved} duplicate subscriptions`
+    );
     return duplicatesRemoved;
   }
 
@@ -332,22 +338,6 @@ export class SubscriptionDetector {
       .filter(group => group.transactions.length >= this.MIN_TRANSACTIONS);
   }
 
-  /**
-   * Normalize merchant names to handle variations
-   */
-  private normalizeMerchantName(name: string): string {
-    // Keep the original name if it's too short after normalization
-    const normalized = name
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .replace(/[*#]+\d+$/, '') // Remove trailing transaction IDs like *1234 or #5678
-      .replace(/\b(inc|llc|ltd|corp|corporation|company|co)\b\.?$/i, '') // Remove company suffixes
-      .trim();
-
-    // If normalization made the name too short, use the original
-    return normalized.length < 3 ? name.trim() : normalized;
-  }
 
   /**
    * Analyze a group of transactions from the same merchant
@@ -717,9 +707,12 @@ export class SubscriptionDetector {
     // Clean up any duplicates that may have been created
     if (created > 0 || updated > 0) {
       try {
-        const duplicatesRemoved = await this.cleanupDuplicateSubscriptions(userId);
+        const duplicatesRemoved =
+          await this.cleanupDuplicateSubscriptions(userId);
         if (duplicatesRemoved > 0) {
-          console.log(`Removed ${duplicatesRemoved} duplicate subscriptions during cleanup`);
+          console.log(
+            `Removed ${duplicatesRemoved} duplicate subscriptions during cleanup`
+          );
         }
       } catch (error) {
         console.error('Failed to cleanup duplicate subscriptions:', error);

@@ -2,7 +2,7 @@ import { emitCancellationEvent } from './event-bus';
 
 /**
  * Mock Job Queue System for Cancellation Processing
- * 
+ *
  * In a production environment, this would be replaced with a real job queue
  * system like Bull/BullMQ, Agenda, or cloud-based solutions like AWS SQS.
  */
@@ -44,7 +44,7 @@ class MockJobQueue {
   private processors = new Map<string, (job: Job) => Promise<JobResult>>();
   private isProcessing = false;
   private processingInterval?: NodeJS.Timeout;
-  
+
   constructor() {
     this.startProcessing();
   }
@@ -58,7 +58,7 @@ class MockJobQueue {
     options: JobOptions = {}
   ): Promise<string> {
     const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const job: Job = {
       id: jobId,
       type,
@@ -136,7 +136,7 @@ class MockJobQueue {
    */
   private startProcessing(): void {
     if (this.isProcessing) return;
-    
+
     this.isProcessing = true;
     this.processingInterval = setInterval(() => {
       this.processNextJob();
@@ -162,8 +162,9 @@ class MockJobQueue {
    */
   private async processNextJob(): Promise<void> {
     // Get next pending job (highest priority first)
-    const pendingJobs = this.getJobsByStatus('pending')
-      .sort((a, b) => (b.options.priority || 0) - (a.options.priority || 0));
+    const pendingJobs = this.getJobsByStatus('pending').sort(
+      (a, b) => (b.options.priority || 0) - (a.options.priority || 0)
+    );
 
     if (pendingJobs.length === 0) return;
 
@@ -188,7 +189,9 @@ class MockJobQueue {
       attempt: job.attempts,
     });
 
-    console.log(`[JobQueue] Processing job ${job.id} (attempt ${job.attempts})`);
+    console.log(
+      `[JobQueue] Processing job ${job.id} (attempt ${job.attempts})`
+    );
 
     try {
       // Set timeout for job processing
@@ -199,10 +202,7 @@ class MockJobQueue {
       });
 
       // Process job with timeout
-      const result = await Promise.race([
-        processor(job),
-        timeoutPromise,
-      ]);
+      const result = await Promise.race([processor(job), timeoutPromise]);
 
       if (result.success) {
         // Job completed successfully
@@ -213,7 +213,8 @@ class MockJobQueue {
           jobId: job.id,
           type: job.type,
           result: result.data,
-          duration: job.completedAt.getTime() - job.processingStartedAt!.getTime(),
+          duration:
+            job.completedAt.getTime() - job.processingStartedAt.getTime(),
           attempts: job.attempts,
         });
 
@@ -221,16 +222,16 @@ class MockJobQueue {
       } else {
         throw new Error(result.error || 'Job failed without error message');
       }
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       job.error = errorMessage;
 
       // Check if we should retry
       if (job.attempts < (job.options.maxAttempts || 3)) {
         // Schedule retry
         job.status = 'pending';
-        
+
         // Calculate backoff delay
         const backoffDelay = this.calculateBackoffDelay(job);
         if (backoffDelay > 0) {
@@ -251,7 +252,9 @@ class MockJobQueue {
           error: errorMessage,
         });
 
-        console.log(`[JobQueue] Job ${job.id} failed, scheduling retry (attempt ${job.attempts + 1})`);
+        console.log(
+          `[JobQueue] Job ${job.id} failed, scheduling retry (attempt ${job.attempts + 1})`
+        );
       } else {
         // Max attempts reached, mark as failed
         job.status = 'failed';
@@ -265,7 +268,10 @@ class MockJobQueue {
           finalFailure: true,
         });
 
-        console.error(`[JobQueue] Job ${job.id} failed permanently after ${job.attempts} attempts:`, errorMessage);
+        console.error(
+          `[JobQueue] Job ${job.id} failed permanently after ${job.attempts} attempts:`,
+          errorMessage
+        );
       }
     }
   }
@@ -316,8 +322,11 @@ class MockJobQueue {
     let cleaned = 0;
 
     for (const [jobId, job] of this.jobs.entries()) {
-      if ((job.status === 'completed' || job.status === 'failed') && 
-          job.completedAt && job.completedAt < cutoff) {
+      if (
+        (job.status === 'completed' || job.status === 'failed') &&
+        job.completedAt &&
+        job.completedAt < cutoff
+      ) {
         this.jobs.delete(jobId);
         cleaned++;
       }
@@ -349,7 +358,9 @@ class MockJobQueue {
   clear(): void {
     const processing = this.getJobsByStatus('processing');
     if (processing.length > 0) {
-      console.warn(`[JobQueue] Cannot clear queue with ${processing.length} jobs still processing`);
+      console.warn(
+        `[JobQueue] Cannot clear queue with ${processing.length} jobs still processing`
+      );
       return;
     }
 
@@ -367,7 +378,7 @@ let jobQueue: MockJobQueue | null = null;
 export function getJobQueue(): MockJobQueue {
   if (!jobQueue) {
     jobQueue = new MockJobQueue();
-    
+
     // Register default cancellation job processors
     registerDefaultProcessors(jobQueue);
   }
@@ -379,12 +390,12 @@ export function getJobQueue(): MockJobQueue {
  */
 function registerDefaultProcessors(queue: MockJobQueue): void {
   // Validation job processor
-  queue.registerProcessor('cancellation.validate', async (job) => {
+  queue.registerProcessor('cancellation.validate', async job => {
     console.log(`[JobProcessor] Validating cancellation request:`, job.data);
-    
+
     // Simulate validation logic
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     return {
       success: true,
       data: {
@@ -395,15 +406,15 @@ function registerDefaultProcessors(queue: MockJobQueue): void {
   });
 
   // API cancellation processor
-  queue.registerProcessor('cancellation.api', async (job) => {
+  queue.registerProcessor('cancellation.api', async job => {
     console.log(`[JobProcessor] Processing API cancellation:`, job.data);
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // Simulate 80% success rate
     const success = Math.random() > 0.2;
-    
+
     if (success) {
       return {
         success: true,
@@ -421,12 +432,12 @@ function registerDefaultProcessors(queue: MockJobQueue): void {
   });
 
   // Manual instructions generator
-  queue.registerProcessor('cancellation.manual_instructions', async (job) => {
+  queue.registerProcessor('cancellation.manual_instructions', async job => {
     console.log(`[JobProcessor] Generating manual instructions:`, job.data);
-    
+
     // Simulate instruction generation
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     return {
       success: true,
       data: {
@@ -445,15 +456,15 @@ function registerDefaultProcessors(queue: MockJobQueue): void {
   });
 
   // Scheduled cancellation starter
-  queue.registerProcessor('cancellation.scheduled_start', async (job) => {
+  queue.registerProcessor('cancellation.scheduled_start', async job => {
     console.log(`[JobProcessor] Starting scheduled cancellation:`, job.data);
-    
+
     // Emit event to start the actual cancellation process
     emitCancellationEvent('cancellation.scheduled_triggered', {
       requestId: job.data.requestId,
       originalScheduleTime: job.data.originalScheduleTime,
     });
-    
+
     return {
       success: true,
       data: {
@@ -470,10 +481,13 @@ function registerDefaultProcessors(queue: MockJobQueue): void {
  * Cleanup job queue periodically
  */
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const queue = getJobQueue();
-    queue.cleanup();
-  }, 60 * 60 * 1000); // Cleanup every hour
+  setInterval(
+    () => {
+      const queue = getJobQueue();
+      queue.cleanup();
+    },
+    60 * 60 * 1000
+  ); // Cleanup every hour
 }
 
 /**
@@ -482,7 +496,7 @@ if (typeof setInterval !== 'undefined') {
 export function checkJobQueueHealth() {
   const queue = getJobQueue();
   const stats = queue.getStats();
-  
+
   return {
     status: stats.failed > stats.completed * 0.1 ? 'degraded' : 'healthy',
     stats,
@@ -490,4 +504,3 @@ export function checkJobQueueHealth() {
     lastProcessed: new Date(),
   };
 }
-

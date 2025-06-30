@@ -19,7 +19,7 @@ const providers = [
       'Select "Account" from the dropdown menu',
       'Under "Membership & Billing", click "Cancel Membership"',
       'Confirm your cancellation',
-      'Save the confirmation code displayed on screen'
+      'Save the confirmation code displayed on screen',
     ],
     logo: 'https://assets.nflxext.com/ffe/siteui/common/icons/nficon2016.ico',
     category: 'Streaming',
@@ -48,7 +48,7 @@ const providers = [
       'Click "CHANGE OR CANCEL" in the Your plan section',
       'Select "Cancel Premium"',
       'Follow the cancellation flow',
-      'Note down any confirmation details'
+      'Note down any confirmation details',
     ],
     logo: 'https://www.spotify.com/favicon.ico',
     category: 'Music',
@@ -76,7 +76,7 @@ const providers = [
       'Click "Manage plan"',
       'Select "Cancel plan"',
       'You may need to call customer service to complete cancellation',
-      'Be prepared for retention offers'
+      'Be prepared for retention offers',
     ],
     logo: 'https://www.adobe.com/favicon.ico',
     category: 'Software',
@@ -102,7 +102,7 @@ const providers = [
       'Click "Update, cancel and more"',
       'Select "End membership"',
       'Choose whether to end now or at the end of current period',
-      'Follow the prompts to confirm cancellation'
+      'Follow the prompts to confirm cancellation',
     ],
     logo: 'https://www.amazon.com/favicon.ico',
     category: 'Shopping',
@@ -129,13 +129,13 @@ const providers = [
       'Go to your Account page',
       'Click "Cancel" in the Your Subscription section',
       'Select your cancellation date',
-      'Confirm the cancellation'
+      'Confirm the cancellation',
     ],
     logo: 'https://www.hulu.com/favicon.ico',
     category: 'Streaming',
     difficulty: 'easy',
     averageTime: 4,
-    successRate: 0.90,
+    successRate: 0.9,
     isActive: true,
     supportsRefunds: false,
     requires2FA: false,
@@ -155,7 +155,7 @@ const providers = [
       'Go to "Subscription" section',
       'Click "Cancel Subscription"',
       'Follow the cancellation process',
-      'Save any confirmation information'
+      'Save any confirmation information',
     ],
     logo: 'https://www.disneyplus.com/favicon.ico',
     category: 'Streaming',
@@ -181,7 +181,7 @@ const providers = [
       'Click "MANAGE"',
       'Select "Cancel membership"',
       'Choose when to cancel',
-      'Confirm your cancellation'
+      'Confirm your cancellation',
     ],
     logo: 'https://www.youtube.com/favicon.ico',
     category: 'Streaming',
@@ -207,7 +207,7 @@ const providers = [
       'Find your Microsoft 365 subscription',
       'Select "Manage"',
       'Choose "Cancel subscription"',
-      'Follow the cancellation wizard'
+      'Follow the cancellation wizard',
     ],
     logo: 'https://www.microsoft.com/favicon.ico',
     category: 'Software',
@@ -236,7 +236,7 @@ const providers = [
       'Go to the "Plan" tab',
       'Click "Cancel plan"',
       'Confirm your cancellation',
-      'Note the effective date'
+      'Note the effective date',
     ],
     logo: 'https://www.dropbox.com/static/30168/images/favicon.ico',
     category: 'Storage',
@@ -262,7 +262,7 @@ const providers = [
       'Find your subscription plan',
       'Click "Cancel Subscription"',
       'Select cancellation date',
-      'Confirm the cancellation'
+      'Confirm the cancellation',
     ],
     logo: 'https://zoom.us/favicon.ico',
     category: 'Software',
@@ -291,12 +291,15 @@ async function seedCancellationProviders() {
           data: {
             ...provider,
             successRate: provider.successRate, // Prisma will handle Decimal conversion
-            automationScript: provider.type === 'api' ? {
-              endpoint: provider.apiEndpoint,
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              authRequired: provider.requiresAuth,
-            } : {},
+            automationScript:
+              provider.type === 'api'
+                ? {
+                    endpoint: provider.apiEndpoint,
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    authRequired: provider.requiresAuth,
+                  }
+                : {},
             selectors: provider.type === 'web_automation' ? {} : {},
             instructions: provider.instructions || [],
           },
@@ -304,11 +307,14 @@ async function seedCancellationProviders() {
       )
     );
 
-    console.log(`✅ Successfully seeded ${results.length} cancellation providers:`);
+    console.log(
+      `✅ Successfully seeded ${results.length} cancellation providers:`
+    );
     results.forEach(provider => {
-      console.log(`  - ${provider.name} (${provider.type}, ${Math.round(provider.successRate.toNumber() * 100)}% success rate)`);
+      console.log(
+        `  - ${provider.name} (${provider.type}, ${Math.round(provider.successRate.toNumber() * 100)}% success rate)`
+      );
     });
-
   } catch (error) {
     console.error('❌ Error seeding cancellation providers:', error);
     throw error;
@@ -321,7 +327,7 @@ async function main() {
 }
 
 // Run if script is executed directly
-main().catch((error) => {
+main().catch(error => {
   console.error(error);
   process.exit(1);
 });

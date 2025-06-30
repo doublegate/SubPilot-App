@@ -15,25 +15,25 @@ import { PlanManagement } from '@/components/admin/plan-management';
 import { BillingStats } from '@/components/admin/billing-stats';
 import { RevenueChart } from '@/components/admin/revenue-chart';
 import Link from 'next/link';
-import { 
-  CreditCard, 
-  Settings, 
-  BarChart3, 
-  Receipt, 
+import {
+  CreditCard,
+  Settings,
+  BarChart3,
+  Receipt,
   ExternalLink,
   AlertCircle,
 } from 'lucide-react';
 
 async function BillingOverview() {
   const stats = await api.admin.getBillingStats();
-  
+
   return (
     <div className="space-y-6">
       <BillingStats stats={stats} />
-      
+
       <div className="grid gap-6 lg:grid-cols-2">
         <RevenueChart />
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
@@ -41,7 +41,7 @@ async function BillingOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.recentTransactions.map((tx) => (
+              {stats.recentTransactions.map(tx => (
                 <div key={tx.id} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{tx.userEmail}</p>
@@ -82,7 +82,8 @@ export default function BillingPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-yellow-700 dark:text-yellow-300">
-            You are currently using Stripe in test mode. Remember to switch to live mode before launching.
+            You are currently using Stripe in test mode. Remember to switch to
+            live mode before launching.
           </p>
           <div className="mt-4 flex gap-3">
             <a
@@ -142,7 +143,7 @@ export default function BillingPage() {
 
         <TabsContent value="config" className="space-y-6">
           <StripeConfigCard />
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Webhook Configuration</CardTitle>
@@ -158,7 +159,7 @@ export default function BillingPage() {
                     {process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/stripe
                   </p>
                 </div>
-                
+
                 <div>
                   <p className="text-sm font-medium">Required Events</p>
                   <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
@@ -169,7 +170,7 @@ export default function BillingPage() {
                     <li>• invoice.payment_failed</li>
                   </ul>
                 </div>
-                
+
                 <a
                   href="https://dashboard.stripe.com/webhooks"
                   target="_blank"

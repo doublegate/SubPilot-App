@@ -36,38 +36,42 @@ export function LightweightCancellationModal({
   onInstructionsGenerated,
 }: LightweightCancellationModalProps) {
   const [notes, setNotes] = useState('');
-  const [step, setStep] = useState<'preview' | 'confirm' | 'instructions'>('preview');
+  const [step, setStep] = useState<'preview' | 'confirm' | 'instructions'>(
+    'preview'
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [instructions, setInstructions] = useState<any>(null);
   const [requestId, setRequestId] = useState<string>('');
 
   // Preview instructions before creating request
-  const { data: preview, isLoading: previewLoading } = api.lightweightCancellation.previewInstructions.useQuery(
-    { subscriptionId },
-    { enabled: isOpen && step === 'preview' }
-  );
+  const { data: preview, isLoading: previewLoading } =
+    api.lightweightCancellation.previewInstructions.useQuery(
+      { subscriptionId },
+      { enabled: isOpen && step === 'preview' }
+    );
 
-  const getInstructions = api.lightweightCancellation.getInstructions.useMutation({
-    onSuccess: (result) => {
-      setInstructions(result.instructions);
-      setRequestId(result.requestId);
-      setStep('instructions');
-      setIsLoading(false);
-      onInstructionsGenerated(result.requestId);
-      toast({
-        title: 'Instructions Generated',
-        description: 'Follow the steps below to cancel your subscription.',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Failed to Generate Instructions',
-        description: error.message,
-        variant: 'destructive',
-      });
-      setIsLoading(false);
-    },
-  });
+  const getInstructions =
+    api.lightweightCancellation.getInstructions.useMutation({
+      onSuccess: result => {
+        setInstructions(result.instructions);
+        setRequestId(result.requestId);
+        setStep('instructions');
+        setIsLoading(false);
+        onInstructionsGenerated(result.requestId);
+        toast({
+          title: 'Instructions Generated',
+          description: 'Follow the steps below to cancel your subscription.',
+        });
+      },
+      onError: error => {
+        toast({
+          title: 'Failed to Generate Instructions',
+          description: error.message,
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+      },
+    });
 
   const handleConfirm = async () => {
     setIsLoading(true);
@@ -93,11 +97,14 @@ export function LightweightCancellationModal({
   const renderPreview = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <Icons.fileText className="mx-auto h-12 w-12 text-blue-600 mb-4" />
-        <h3 className="text-lg font-semibold">Manual Cancellation Instructions</h3>
-        <p className="text-sm text-muted-foreground mt-2">
-          We'll provide you with step-by-step instructions to cancel your subscription manually.
-          This approach is simple, reliable, and gives you full control over the process.
+        <Icons.fileText className="mx-auto mb-4 h-12 w-12 text-blue-600" />
+        <h3 className="text-lg font-semibold">
+          Manual Cancellation Instructions
+        </h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          We'll provide you with step-by-step instructions to cancel your
+          subscription manually. This approach is simple, reliable, and gives
+          you full control over the process.
         </p>
       </div>
 
@@ -105,8 +112,15 @@ export function LightweightCancellationModal({
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">{preview.instructions.provider.name}</CardTitle>
-              <Badge variant="outline" className={getDifficultyColor(preview.instructions.instructions.difficulty)}>
+              <CardTitle className="text-base">
+                {preview.instructions.provider.name}
+              </CardTitle>
+              <Badge
+                variant="outline"
+                className={getDifficultyColor(
+                  preview.instructions.instructions.difficulty
+                )}
+              >
                 {preview.instructions.instructions.difficulty} difficulty
               </Badge>
             </div>
@@ -115,14 +129,16 @@ export function LightweightCancellationModal({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Estimated Time:</span>
-                <div className="font-medium">{preview.instructions.instructions.estimatedTime}</div>
+                <div className="font-medium">
+                  {preview.instructions.instructions.estimatedTime}
+                </div>
               </div>
               <div>
                 <span className="text-muted-foreground">Method:</span>
                 <div className="font-medium">Manual Instructions</div>
               </div>
             </div>
-            
+
             {preview.instructions.provider.supportsRefunds && (
               <Alert>
                 <Icons.dollarSign className="h-4 w-4" />
@@ -141,7 +157,7 @@ export function LightweightCancellationModal({
           id="notes"
           placeholder="Any specific reasons or requirements for cancellation..."
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={e => setNotes(e.target.value)}
           rows={3}
         />
       </div>
@@ -149,8 +165,9 @@ export function LightweightCancellationModal({
       <Alert>
         <Icons.info className="h-4 w-4" />
         <AlertDescription>
-          You'll receive detailed, step-by-step instructions tailored to {subscriptionName}. 
-          Once you complete the cancellation, you can confirm it in the app to update your records.
+          You'll receive detailed, step-by-step instructions tailored to{' '}
+          {subscriptionName}. Once you complete the cancellation, you can
+          confirm it in the app to update your records.
         </AlertDescription>
       </Alert>
     </div>
@@ -162,10 +179,12 @@ export function LightweightCancellationModal({
     const { provider, instructions: inst } = instructions;
 
     return (
-      <div className="space-y-6 max-h-[600px] overflow-y-auto">
+      <div className="max-h-[600px] space-y-6 overflow-y-auto">
         <div className="text-center">
-          <Icons.checkCircle className="mx-auto h-8 w-8 text-green-600 mb-2" />
-          <h3 className="text-lg font-semibold">Cancellation Instructions Ready</h3>
+          <Icons.checkCircle className="mx-auto mb-2 h-8 w-8 text-green-600" />
+          <h3 className="text-lg font-semibold">
+            Cancellation Instructions Ready
+          </h3>
           <p className="text-sm text-muted-foreground">
             Follow these steps to cancel your {provider.name} subscription
           </p>
@@ -175,7 +194,10 @@ export function LightweightCancellationModal({
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>{provider.name}</span>
-              <Badge variant="outline" className={getDifficultyColor(inst.difficulty)}>
+              <Badge
+                variant="outline"
+                className={getDifficultyColor(inst.difficulty)}
+              >
                 {inst.difficulty} • {inst.estimatedTime}
               </Badge>
             </CardTitle>
@@ -184,13 +206,19 @@ export function LightweightCancellationModal({
             <p className="text-sm text-muted-foreground">{inst.overview}</p>
 
             {/* Contact Information */}
-            {(inst.contactInfo.website || inst.contactInfo.phone || inst.contactInfo.chatUrl) && (
+            {(inst.contactInfo.website ||
+              inst.contactInfo.phone ||
+              inst.contactInfo.chatUrl) && (
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">Quick Access:</h4>
+                <h4 className="text-sm font-medium">Quick Access:</h4>
                 <div className="flex flex-wrap gap-2">
                   {inst.contactInfo.website && (
                     <Button variant="outline" size="sm" asChild>
-                      <a href={inst.contactInfo.website} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={inst.contactInfo.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <Icons.externalLink className="mr-1 h-3 w-3" />
                         Website
                       </a>
@@ -206,7 +234,11 @@ export function LightweightCancellationModal({
                   )}
                   {inst.contactInfo.chatUrl && (
                     <Button variant="outline" size="sm" asChild>
-                      <a href={inst.contactInfo.chatUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={inst.contactInfo.chatUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <Icons.messageCircle className="mr-1 h-3 w-3" />
                         Live Chat
                       </a>
@@ -220,11 +252,11 @@ export function LightweightCancellationModal({
 
             {/* Steps */}
             <div className="space-y-3">
-              <h4 className="font-medium text-sm">Cancellation Steps:</h4>
+              <h4 className="text-sm font-medium">Cancellation Steps:</h4>
               <ol className="space-y-2">
                 {inst.steps.map((step: string, index: number) => (
                   <li key={index} className="flex gap-3 text-sm">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-medium">
+                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-800">
                       {index + 1}
                     </span>
                     <span>{step}</span>
@@ -238,14 +270,17 @@ export function LightweightCancellationModal({
               <>
                 <Separator />
                 <div className="space-y-2">
-                  <h4 className="font-medium text-sm flex items-center gap-1">
+                  <h4 className="flex items-center gap-1 text-sm font-medium">
                     <Icons.lightbulb className="h-4 w-4" />
                     Helpful Tips:
                   </h4>
                   <ul className="space-y-1">
                     {inst.tips.map((tip: string, index: number) => (
-                      <li key={index} className="text-sm text-muted-foreground flex gap-2">
-                        <Icons.check className="h-3 w-3 mt-0.5 flex-shrink-0 text-green-600" />
+                      <li
+                        key={index}
+                        className="flex gap-2 text-sm text-muted-foreground"
+                      >
+                        <Icons.check className="mt-0.5 h-3 w-3 flex-shrink-0 text-green-600" />
                         <span>{tip}</span>
                       </li>
                     ))}
@@ -259,14 +294,17 @@ export function LightweightCancellationModal({
               <>
                 <Separator />
                 <div className="space-y-2">
-                  <h4 className="font-medium text-sm flex items-center gap-1 text-orange-700">
+                  <h4 className="flex items-center gap-1 text-sm font-medium text-orange-700">
                     <Icons.alertTriangle className="h-4 w-4" />
                     Important Warnings:
                   </h4>
                   <ul className="space-y-1">
                     {inst.warnings.map((warning: string, index: number) => (
-                      <li key={index} className="text-sm text-orange-700 flex gap-2">
-                        <Icons.alertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                      <li
+                        key={index}
+                        className="flex gap-2 text-sm text-orange-700"
+                      >
+                        <Icons.alertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
                         <span>{warning}</span>
                       </li>
                     ))}
@@ -280,8 +318,9 @@ export function LightweightCancellationModal({
         <Alert>
           <Icons.info className="h-4 w-4" />
           <AlertDescription>
-            After completing these steps, use the "Confirm Cancellation" button in your dashboard 
-            to update your subscription status and provide any confirmation details.
+            After completing these steps, use the "Confirm Cancellation" button
+            in your dashboard to update your subscription status and provide any
+            confirmation details.
           </AlertDescription>
         </Alert>
       </div>
@@ -298,13 +337,14 @@ export function LightweightCancellationModal({
             ) : (
               <Icons.x className="h-5 w-5 text-red-600" />
             )}
-            {step === 'instructions' ? 'Cancellation Instructions' : `Cancel ${subscriptionName}`}
+            {step === 'instructions'
+              ? 'Cancellation Instructions'
+              : `Cancel ${subscriptionName}`}
           </DialogTitle>
           <DialogDescription>
-            {step === 'instructions' 
+            {step === 'instructions'
               ? 'Follow these instructions to cancel your subscription manually.'
-              : 'Get step-by-step instructions to cancel your subscription manually.'
-            }
+              : 'Get step-by-step instructions to cancel your subscription manually.'}
           </DialogDescription>
         </DialogHeader>
 

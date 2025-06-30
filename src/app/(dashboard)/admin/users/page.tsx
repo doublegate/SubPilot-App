@@ -50,7 +50,7 @@ async function UserManagement() {
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select defaultValue="all">
@@ -66,7 +66,7 @@ async function UserManagement() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="plan">Subscription Plan</Label>
               <Select defaultValue="all">
@@ -82,7 +82,7 @@ async function UserManagement() {
               </Select>
             </div>
           </div>
-          
+
           <div className="mt-4 flex justify-end">
             <Button variant="outline" size="sm">
               <Filter className="mr-2 h-4 w-4" />

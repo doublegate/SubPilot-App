@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
 import { auth } from '@/server/auth.config';
 import { getRealtimeNotificationManager } from '@/server/lib/realtime-notifications';
 import { AuditLogger } from '@/server/lib/audit-logger';
 
 /**
  * Server-Sent Events endpoint for real-time notifications
- * 
+ *
  * Usage: GET /api/realtime/notifications
  * Returns: text/event-stream with real-time notifications
  */
@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
   try {
     // Authenticate the user
     const session = await auth();
-    
+
     if (!session?.user?.id) {
-      return new Response('Unauthorized', { 
+      return new Response('Unauthorized', {
         status: 401,
         headers: {
           'Content-Type': 'text/plain',
@@ -25,13 +25,16 @@ export async function GET(request: NextRequest) {
 
     const userId = session.user.id;
     const url = new URL(request.url);
-    const connectionId = url.searchParams.get('connectionId') || 
+    const connectionId =
+      url.searchParams.get('connectionId') ||
       `conn_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 
     // Get real-time notification manager
     const realtimeManager = getRealtimeNotificationManager();
 
-    console.log(`[RealtimeSSE] Client connected: ${connectionId} for user ${userId}`);
+    console.log(
+      `[RealtimeSSE] Client connected: ${connectionId} for user ${userId}`
+    );
 
     // Create the SSE stream
     const stream = new ReadableStream({
@@ -40,7 +43,7 @@ export async function GET(request: NextRequest) {
         const sseData = `event: connection\ndata: ${JSON.stringify({
           status: 'connected',
           timestamp: new Date().toISOString(),
-          connectionId
+          connectionId,
         })}\n\n`;
         controller.enqueue(new TextEncoder().encode(sseData));
 
@@ -48,7 +51,7 @@ export async function GET(request: NextRequest) {
         const pingInterval = setInterval(() => {
           try {
             const pingData = `event: ping\ndata: ${JSON.stringify({
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
             })}\n\n`;
             controller.enqueue(new TextEncoder().encode(pingData));
           } catch (error) {
@@ -61,14 +64,14 @@ export async function GET(request: NextRequest) {
         return () => {
           clearInterval(pingInterval);
         };
-      }
+      },
     });
 
     // Set up proper SSE headers
     const headers = new Headers({
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Cache-Control',
       'X-Accel-Buffering': 'no', // Disable nginx buffering
@@ -91,10 +94,9 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers,
     });
-
   } catch (error) {
     console.error('[RealtimeSSE] Error setting up SSE connection:', error);
-    
+
     return new Response('Internal Server Error', {
       status: 500,
       headers: {
@@ -130,7 +132,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return new Response('Unauthorized', { status: 401 });
     }
@@ -145,13 +147,13 @@ export async function POST(request: NextRequest) {
     }
 
     const realtimeManager = getRealtimeNotificationManager();
-    
+
     // Send test notification
     realtimeManager.sendToUser(session.user.id, {
-      type: type as any,
+      type: type,
       title,
       message,
-      priority: priority as any,
+      priority: priority,
       data: {
         ...data,
         test: true,
@@ -169,10 +171,9 @@ export async function POST(request: NextRequest) {
         priority,
       },
     });
-
   } catch (error) {
     console.error('[RealtimeSSE] Error sending test notification:', error);
-    
+
     return new Response('Internal Server Error', { status: 500 });
   }
 }

@@ -5,6 +5,42 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-06-29 21:14 - Critical TypeScript Compilation Fixes
+
+### Fixed
+
+- **Missing @tanstack/react-table Dependency** - 2025-06-29 21:00
+  - Installed missing `@tanstack/react-table@^8.21.3` package
+  - Resolved "Module not found" errors in admin data table components
+  - Fixed CI/CD pipeline build failures
+
+- **Duplicate Function Implementations** - 2025-06-29 21:02
+  - Removed duplicate `normalizeMerchantName` function in subscription-detector.ts
+  - Kept primary implementation (lines 47-55), removed secondary (lines 344-356)
+  - Resolved TypeScript "Duplicate function implementation" error
+
+- **API Contract Violations** - 2025-06-29 21:05
+  - Fixed bank account sync parameter mismatch (itemId vs accountId)
+  - Updated plaid router to accept both `itemId` and `accountId` parameters
+  - Restored bank account synchronization functionality
+
+- **Test Mock Updates** - 2025-06-29 21:08
+  - Added missing `isAdmin: false` property to user mock in performance tests
+  - Fixed TypeScript compilation errors in test suites
+  - Aligned test mocks with current Prisma schema
+
+- **Component Interface Alignment** - 2025-06-29 21:10
+  - Updated BankAccountCard component interface to match API response
+  - Changed from lastSyncedAt/consentExpirationTime to lastWebhook/status
+  - Fixed property access errors in analytics and admin components
+
+### Changed
+
+- **Type Safety Improvements** - 2025-06-29 21:12
+  - Updated analytics page type comparisons to match actual enum values
+  - Added proper null checks in admin users column component
+  - Fixed return type annotation in init-admin.ts promptPassword function
+
 ## [1.4.0] - 2025-06-29 - Phase 3 Complete: Unified Cancellation System + TypeScript Excellence
 
 ### 🎯 Major Achievement: Unified Cancellation System - (v1.4.0)

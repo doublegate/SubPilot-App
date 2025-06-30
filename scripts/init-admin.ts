@@ -1,13 +1,13 @@
 #!/usr/bin/env tsx
 /**
  * Admin Initialization Script
- * 
+ *
  * This script creates the initial admin user for SubPilot.
  * Run this after setting up the database for the first time.
- * 
+ *
  * Usage:
  *   npm run init:admin
- * 
+ *
  * Environment Variables:
  *   ADMIN_EMAIL - Email for the admin user (default: admin@subpilot.app)
  *   ADMIN_PASSWORD - Password for the admin user (will prompt if not set)
@@ -35,7 +35,7 @@ async function promptPassword(): Promise<string> {
   // Hide password input
   const password = await question('Enter admin password: ');
   console.log(); // New line after password
-  return password as string;
+  return String(password);
 }
 
 async function main() {
@@ -50,10 +50,7 @@ async function main() {
   // Check if admin already exists
   const existingAdmin = await prisma.user.findFirst({
     where: {
-      OR: [
-        { email: adminEmail },
-        { isAdmin: true },
-      ],
+      OR: [{ email: adminEmail }, { isAdmin: true }],
     },
   });
 
@@ -62,7 +59,7 @@ async function main() {
     console.log(`   Email: ${existingAdmin.email}`);
     console.log(`   Name: ${existingAdmin.name || 'Not set'}`);
     console.log(`   Is Admin: ${existingAdmin.isAdmin ? 'Yes' : 'No'}`);
-    
+
     if (!existingAdmin.isAdmin) {
       console.log('\n🔄 Upgrading existing user to admin...');
       await prisma.user.update({
@@ -73,7 +70,7 @@ async function main() {
     } else {
       console.log('\n✅ Admin user is already set up!');
     }
-    
+
     process.exit(0);
   }
 
@@ -81,9 +78,9 @@ async function main() {
   if (!adminPassword) {
     console.log('Please set a secure password for the admin account.');
     console.log('Password requirements: minimum 8 characters\n');
-    
+
     adminPassword = await promptPassword();
-    
+
     // Validate password
     if (!adminPassword || adminPassword.length < 8) {
       console.error('❌ Password must be at least 8 characters long');
@@ -126,7 +123,8 @@ async function main() {
         userId: adminUser.id,
         type: 'admin_welcome',
         title: 'Welcome to SubPilot Admin! 🚀',
-        message: 'You now have full administrative access. Visit /admin to manage your SubPilot instance.',
+        message:
+          'You now have full administrative access. Visit /admin to manage your SubPilot instance.',
         severity: 'info',
         scheduledFor: new Date(),
       },
@@ -161,7 +159,7 @@ async function main() {
     try {
       const envPath = join(process.cwd(), '.env.local');
       let envContent = '';
-      
+
       try {
         envContent = readFileSync(envPath, 'utf-8');
       } catch {
@@ -174,9 +172,10 @@ async function main() {
         console.log('\n📝 Added ADMIN_EMAIL to .env.local');
       }
     } catch (error) {
-      console.log('\n⚠️  Could not update .env.local - please add ADMIN_EMAIL manually');
+      console.log(
+        '\n⚠️  Could not update .env.local - please add ADMIN_EMAIL manually'
+      );
     }
-
   } catch (error) {
     console.error('\n❌ Failed to create admin user:', error);
     process.exit(1);
@@ -184,7 +183,7 @@ async function main() {
 }
 
 main()
-  .catch((error) => {
+  .catch(error => {
     console.error('❌ Initialization error:', error);
     process.exit(1);
   })

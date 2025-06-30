@@ -49,10 +49,11 @@ export class AnalyticsJobProcessor {
       };
     } catch (error) {
       console.error('[AnalyticsProcessor] Error processing analytics:', error);
-      
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Analytics processing error',
+        error:
+          error instanceof Error ? error.message : 'Analytics processing error',
       } as any;
     }
   }
@@ -96,11 +97,17 @@ export class AnalyticsJobProcessor {
         },
       };
     } catch (error) {
-      console.error('[AnalyticsProcessor] Error processing aggregation:', error);
-      
+      console.error(
+        '[AnalyticsProcessor] Error processing aggregation:',
+        error
+      );
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Aggregation processing error',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Aggregation processing error',
       } as any;
     }
   }
@@ -118,37 +125,69 @@ export class AnalyticsJobProcessor {
       // Process based on event type
       switch (event) {
         case 'cancellation.initiated':
-          return await this.trackCancellationInitiated(userId, properties, timestamp);
-        
+          return await this.trackCancellationInitiated(
+            userId,
+            properties,
+            timestamp
+          );
+
         case 'cancellation.completed':
-          return await this.trackCancellationCompleted(userId, properties, timestamp);
-        
+          return await this.trackCancellationCompleted(
+            userId,
+            properties,
+            timestamp
+          );
+
         case 'cancellation.failed':
-          return await this.trackCancellationFailed(userId, properties, timestamp);
-        
+          return await this.trackCancellationFailed(
+            userId,
+            properties,
+            timestamp
+          );
+
         case 'job.queued':
         case 'job.completed':
         case 'job.failed':
           return await this.trackJobEvent(userId, event, properties, timestamp);
-        
+
         case 'workflow.started':
         case 'workflow.completed':
-          return await this.trackWorkflowEvent(userId, event, properties, timestamp);
-        
+          return await this.trackWorkflowEvent(
+            userId,
+            event,
+            properties,
+            timestamp
+          );
+
         case 'user.login':
         case 'user.logout':
-          return await this.trackUserEvent(userId, event, properties, timestamp);
-        
+          return await this.trackUserEvent(
+            userId,
+            event,
+            properties,
+            timestamp
+          );
+
         case 'notification.sent':
-          return await this.trackNotificationEvent(userId, properties, timestamp);
-        
+          return await this.trackNotificationEvent(
+            userId,
+            properties,
+            timestamp
+          );
+
         default:
-          return await this.trackGenericEvent(userId, event, properties, timestamp);
+          return await this.trackGenericEvent(
+            userId,
+            event,
+            properties,
+            timestamp
+          );
       }
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Event processing error',
+        error:
+          error instanceof Error ? error.message : 'Event processing error',
       };
     }
   }
@@ -432,14 +471,14 @@ export class AnalyticsJobProcessor {
 
     const [total, completed, failed, pending] = await Promise.all([
       this.db.cancellationRequest.count({ where }),
-      this.db.cancellationRequest.count({ 
-        where: { ...where, status: 'completed' } 
+      this.db.cancellationRequest.count({
+        where: { ...where, status: 'completed' },
       }),
-      this.db.cancellationRequest.count({ 
-        where: { ...where, status: 'failed' } 
+      this.db.cancellationRequest.count({
+        where: { ...where, status: 'failed' },
       }),
-      this.db.cancellationRequest.count({ 
-        where: { ...where, status: { in: ['pending', 'processing'] } } 
+      this.db.cancellationRequest.count({
+        where: { ...where, status: { in: ['pending', 'processing'] } },
       }),
     ]);
 
@@ -461,10 +500,13 @@ export class AnalyticsJobProcessor {
       failed,
       pending,
       successRate,
-      methodBreakdown: methodStats.reduce((acc, stat) => {
-        acc[stat.method] = stat._count.method;
-        return acc;
-      }, {} as Record<string, number>),
+      methodBreakdown: methodStats.reduce(
+        (acc, stat) => {
+          acc[stat.method] = stat._count.method;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
     };
   }
 
@@ -548,9 +590,10 @@ export class AnalyticsJobProcessor {
       }),
     ]);
 
-    const errorRate = totalOperations > 0 
-      ? Math.round((failedOperations / totalOperations) * 100) 
-      : 0;
+    const errorRate =
+      totalOperations > 0
+        ? Math.round((failedOperations / totalOperations) * 100)
+        : 0;
 
     // Get most common errors
     const commonErrors = await this.db.auditLog.groupBy({
@@ -612,10 +655,13 @@ export class AnalyticsJobProcessor {
   /**
    * Get date range for timeframe
    */
-  private getTimeframeDates(timeframe: string): { startDate: Date; endDate: Date } {
+  private getTimeframeDates(timeframe: string): {
+    startDate: Date;
+    endDate: Date;
+  } {
     const now = new Date();
     const endDate = new Date(now);
-    let startDate = new Date(now);
+    const startDate = new Date(now);
 
     switch (timeframe) {
       case 'hour':

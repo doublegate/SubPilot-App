@@ -40,26 +40,31 @@ export function CancellationConfirmationModal({
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const confirmCancellation = api.lightweightCancellation.confirmCancellation.useMutation({
-    onSuccess: (result) => {
-      toast({
-        title: result.status === 'completed' ? 'Cancellation Confirmed' : 'Cancellation Noted',
-        description: result.status === 'completed' 
-          ? 'Your subscription has been marked as cancelled.'
-          : 'We\'ve noted that the cancellation was unsuccessful. You can try again or contact support.',
-      });
-      onConfirmed();
-      resetForm();
-    },
-    onError: (error) => {
-      toast({
-        title: 'Failed to Confirm Cancellation',
-        description: error.message,
-        variant: 'destructive',
-      });
-      setIsSubmitting(false);
-    },
-  });
+  const confirmCancellation =
+    api.lightweightCancellation.confirmCancellation.useMutation({
+      onSuccess: result => {
+        toast({
+          title:
+            result.status === 'completed'
+              ? 'Cancellation Confirmed'
+              : 'Cancellation Noted',
+          description:
+            result.status === 'completed'
+              ? 'Your subscription has been marked as cancelled.'
+              : "We've noted that the cancellation was unsuccessful. You can try again or contact support.",
+        });
+        onConfirmed();
+        resetForm();
+      },
+      onError: error => {
+        toast({
+          title: 'Failed to Confirm Cancellation',
+          description: error.message,
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+      },
+    });
 
   const resetForm = () => {
     setWasSuccessful('');
@@ -80,9 +85,11 @@ export function CancellationConfirmationModal({
     }
 
     setIsSubmitting(true);
-    
-    const effectiveDateObj = effectiveDate ? new Date(effectiveDate) : undefined;
-    
+
+    const effectiveDateObj = effectiveDate
+      ? new Date(effectiveDate)
+      : undefined;
+
     await confirmCancellation.mutateAsync({
       requestId,
       wasSuccessful: wasSuccessful === 'yes',
@@ -108,7 +115,8 @@ export function CancellationConfirmationModal({
             Confirm Cancellation Status
           </DialogTitle>
           <DialogDescription>
-            Please let us know if you were able to successfully cancel your {subscriptionName} subscription.
+            Please let us know if you were able to successfully cancel your{' '}
+            {subscriptionName} subscription.
           </DialogDescription>
         </DialogHeader>
 
@@ -134,7 +142,7 @@ export function CancellationConfirmationModal({
 
           {/* Confirmation Details (only if successful) */}
           {wasSuccessful === 'yes' && (
-            <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="space-y-4 rounded-lg border border-green-200 bg-green-50 p-4">
               <div className="space-y-2">
                 <Label htmlFor="confirmation-code">
                   Confirmation Code/Number (Optional)
@@ -143,10 +151,11 @@ export function CancellationConfirmationModal({
                   id="confirmation-code"
                   placeholder="e.g., CANCEL123456, REF#789"
                   value={confirmationCode}
-                  onChange={(e) => setConfirmationCode(e.target.value)}
+                  onChange={e => setConfirmationCode(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  If you received a cancellation confirmation number, enter it here.
+                  If you received a cancellation confirmation number, enter it
+                  here.
                 </p>
               </div>
 
@@ -158,11 +167,12 @@ export function CancellationConfirmationModal({
                   id="effective-date"
                   type="date"
                   value={effectiveDate}
-                  onChange={(e) => setEffectiveDate(e.target.value)}
+                  onChange={e => setEffectiveDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
                 />
                 <p className="text-xs text-muted-foreground">
-                  When does the cancellation take effect? Leave blank if immediate.
+                  When does the cancellation take effect? Leave blank if
+                  immediate.
                 </p>
               </div>
             </div>
@@ -171,17 +181,18 @@ export function CancellationConfirmationModal({
           {/* Additional Notes */}
           <div className="space-y-2">
             <Label htmlFor="notes">
-              {wasSuccessful === 'no' ? 'What went wrong?' : 'Additional Notes'} (Optional)
+              {wasSuccessful === 'no' ? 'What went wrong?' : 'Additional Notes'}{' '}
+              (Optional)
             </Label>
             <Textarea
               id="notes"
               placeholder={
-                wasSuccessful === 'no' 
-                  ? "Describe any issues you encountered during cancellation..."
-                  : "Any additional details about the cancellation process..."
+                wasSuccessful === 'no'
+                  ? 'Describe any issues you encountered during cancellation...'
+                  : 'Any additional details about the cancellation process...'
               }
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={e => setNotes(e.target.value)}
               rows={3}
             />
           </div>
@@ -191,19 +202,24 @@ export function CancellationConfirmationModal({
             <Alert>
               <Icons.helpCircle className="h-4 w-4" />
               <AlertDescription>
-                If you're having trouble cancelling, consider contacting customer support directly. 
-                We can also help you find alternative cancellation methods.
+                If you're having trouble cancelling, consider contacting
+                customer support directly. We can also help you find alternative
+                cancellation methods.
               </AlertDescription>
             </Alert>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting || !wasSuccessful}
           >
             {isSubmitting ? (

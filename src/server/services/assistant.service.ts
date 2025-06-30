@@ -531,14 +531,14 @@ If you need to take an action, use the appropriate function.`;
   ) {
     // Map function names to action types
     const functionToActionMap: Record<string, AssistantAction> = {
-      'analyzeSpending': ASSISTANT_ACTIONS.ANALYZE_SPENDING,
-      'cancelSubscription': ASSISTANT_ACTIONS.CANCEL_SUBSCRIPTION,
-      'findSavings': ASSISTANT_ACTIONS.FIND_SAVINGS,
-      'getSubscriptionInfo': ASSISTANT_ACTIONS.GET_SUBSCRIPTION_INFO,
-      'setReminder': ASSISTANT_ACTIONS.SET_REMINDER,
-      'explainCharge': ASSISTANT_ACTIONS.EXPLAIN_CHARGE,
-      'suggestAlternatives': ASSISTANT_ACTIONS.SUGGEST_ALTERNATIVES,
-      'exportData': ASSISTANT_ACTIONS.EXPORT_DATA,
+      analyzeSpending: ASSISTANT_ACTIONS.ANALYZE_SPENDING,
+      cancelSubscription: ASSISTANT_ACTIONS.CANCEL_SUBSCRIPTION,
+      findSavings: ASSISTANT_ACTIONS.FIND_SAVINGS,
+      getSubscriptionInfo: ASSISTANT_ACTIONS.GET_SUBSCRIPTION_INFO,
+      setReminder: ASSISTANT_ACTIONS.SET_REMINDER,
+      explainCharge: ASSISTANT_ACTIONS.EXPLAIN_CHARGE,
+      suggestAlternatives: ASSISTANT_ACTIONS.SUGGEST_ALTERNATIVES,
+      exportData: ASSISTANT_ACTIONS.EXPORT_DATA,
     };
 
     const actionType = functionToActionMap[type] || type;

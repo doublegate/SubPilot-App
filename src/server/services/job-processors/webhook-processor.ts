@@ -21,8 +21,12 @@ export class WebhookJobProcessor {
       const validation = this.validateWebhookPayload(provider, payload);
 
       if (!validation.valid) {
-        await this.logWebhookActivity(webhookId, 'validation_failed', validation.error || 'Invalid payload');
-        
+        await this.logWebhookActivity(
+          webhookId,
+          'validation_failed',
+          validation.error || 'Invalid payload'
+        );
+
         return {
           success: false,
           error: validation.error || 'Webhook validation failed',
@@ -31,11 +35,19 @@ export class WebhookJobProcessor {
       }
 
       // Verify webhook authenticity (signature, timestamp, etc.)
-      const authValidation = await this.verifyWebhookAuthenticity(provider, payload, job.data.headers);
+      const authValidation = await this.verifyWebhookAuthenticity(
+        provider,
+        payload,
+        job.data.headers
+      );
 
       if (!authValidation.valid) {
-        await this.logWebhookActivity(webhookId, 'auth_failed', authValidation.error || 'Authentication failed');
-        
+        await this.logWebhookActivity(
+          webhookId,
+          'auth_failed',
+          authValidation.error || 'Authentication failed'
+        );
+
         return {
           success: false,
           error: authValidation.error || 'Webhook authentication failed',
@@ -43,7 +55,11 @@ export class WebhookJobProcessor {
         };
       }
 
-      await this.logWebhookActivity(webhookId, 'validation_passed', 'Webhook validation completed successfully');
+      await this.logWebhookActivity(
+        webhookId,
+        'validation_passed',
+        'Webhook validation completed successfully'
+      );
 
       return {
         success: true,
@@ -55,11 +71,16 @@ export class WebhookJobProcessor {
         },
       };
     } catch (error) {
-      await this.logWebhookActivity(webhookId, 'validation_error', error instanceof Error ? error.message : 'Unknown error');
-      
+      await this.logWebhookActivity(
+        webhookId,
+        'validation_error',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Webhook validation error',
+        error:
+          error instanceof Error ? error.message : 'Webhook validation error',
         retry: { delay: 5000 },
       };
     }
@@ -76,8 +97,12 @@ export class WebhookJobProcessor {
       const extractedData = this.extractWebhookData(provider, payload);
 
       if (!extractedData.success) {
-        await this.logWebhookActivity(webhookId, 'extraction_failed', extractedData.error || 'Data extraction failed');
-        
+        await this.logWebhookActivity(
+          webhookId,
+          'extraction_failed',
+          extractedData.error || 'Data extraction failed'
+        );
+
         return {
           success: false,
           error: extractedData.error || 'Failed to extract webhook data',
@@ -86,9 +111,18 @@ export class WebhookJobProcessor {
       }
 
       // Store webhook processing result
-      await this.storeWebhookResult(webhookId, provider, extractedData.data, requestId);
+      await this.storeWebhookResult(
+        webhookId,
+        provider,
+        extractedData.data,
+        requestId
+      );
 
-      await this.logWebhookActivity(webhookId, 'data_processed', 'Webhook data processed successfully');
+      await this.logWebhookActivity(
+        webhookId,
+        'data_processed',
+        'Webhook data processed successfully'
+      );
 
       // Emit webhook received event for workflow engine
       emitCancellationEvent('webhook.received', {
@@ -107,11 +141,16 @@ export class WebhookJobProcessor {
         },
       };
     } catch (error) {
-      await this.logWebhookActivity(webhookId, 'processing_error', error instanceof Error ? error.message : 'Unknown error');
-      
+      await this.logWebhookActivity(
+        webhookId,
+        'processing_error',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Webhook processing error',
+        error:
+          error instanceof Error ? error.message : 'Webhook processing error',
         retry: { delay: 10000 },
       };
     }
@@ -120,7 +159,10 @@ export class WebhookJobProcessor {
   /**
    * Validate webhook payload structure based on provider
    */
-  private validateWebhookPayload(provider: string, payload: any): {
+  private validateWebhookPayload(
+    provider: string,
+    payload: any
+  ): {
     valid: boolean;
     error?: string;
     processedPayload?: any;
@@ -167,7 +209,7 @@ export class WebhookJobProcessor {
         const now = Date.now();
         const webhookTime = new Date(timestamp).getTime();
         const timeDiff = Math.abs(now - webhookTime);
-        
+
         // Reject webhooks older than 5 minutes
         if (timeDiff > 300000) {
           return { valid: false, error: 'Webhook timestamp too old' };
@@ -193,7 +235,10 @@ export class WebhookJobProcessor {
   /**
    * Extract relevant data from webhook payload
    */
-  private extractWebhookData(provider: string, payload: any): {
+  private extractWebhookData(
+    provider: string,
+    payload: any
+  ): {
     success: boolean;
     data?: any;
     error?: string;
@@ -252,14 +297,18 @@ export class WebhookJobProcessor {
     processedPayload?: any;
   } {
     const requiredFields = ['event_type', 'subscription_id', 'user_id'];
-    
+
     for (const field of requiredFields) {
       if (!payload[field]) {
         return { valid: false, error: `Missing required field: ${field}` };
       }
     }
 
-    if (!['subscription.cancelled', 'subscription.updated'].includes(payload.event_type)) {
+    if (
+      !['subscription.cancelled', 'subscription.updated'].includes(
+        payload.event_type
+      )
+    ) {
       return { valid: false, error: 'Invalid event type' };
     }
 
@@ -304,7 +353,7 @@ export class WebhookJobProcessor {
     error?: string;
     processedPayload?: any;
   } {
-    if (!payload.event || !payload.event.type) {
+    if (!payload.event?.type) {
       return { valid: false, error: 'Missing event type' };
     }
 
@@ -361,7 +410,11 @@ export class WebhookJobProcessor {
   /**
    * Provider-specific data extractors
    */
-  private extractNetflixData(payload: any): { success: boolean; data?: any; error?: string } {
+  private extractNetflixData(payload: any): {
+    success: boolean;
+    data?: any;
+    error?: string;
+  } {
     return {
       success: true,
       data: {
@@ -369,8 +422,13 @@ export class WebhookJobProcessor {
         eventType: payload.eventType,
         subscriptionId: payload.subscriptionId,
         userId: payload.userId,
-        status: payload.eventType === 'subscription.cancelled' ? 'cancelled' : 'updated',
-        effectiveDate: payload.effectiveDate ? new Date(payload.effectiveDate) : new Date(),
+        status:
+          payload.eventType === 'subscription.cancelled'
+            ? 'cancelled'
+            : 'updated',
+        effectiveDate: payload.effectiveDate
+          ? new Date(payload.effectiveDate)
+          : new Date(),
         metadata: {
           cancellationReason: payload.cancellationReason,
           originalPayload: payload,
@@ -379,7 +437,11 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractSpotifyData(payload: any): { success: boolean; data?: any; error?: string } {
+  private extractSpotifyData(payload: any): {
+    success: boolean;
+    data?: any;
+    error?: string;
+  } {
     return {
       success: true,
       data: {
@@ -388,7 +450,9 @@ export class WebhookJobProcessor {
         subscriptionId: payload.subscriptionId,
         userId: payload.userId,
         status: 'cancelled',
-        effectiveDate: payload.cancelledAt ? new Date(payload.cancelledAt) : new Date(),
+        effectiveDate: payload.cancelledAt
+          ? new Date(payload.cancelledAt)
+          : new Date(),
         metadata: {
           originalPayload: payload,
         },
@@ -396,7 +460,11 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractAdobeData(payload: any): { success: boolean; data?: any; error?: string } {
+  private extractAdobeData(payload: any): {
+    success: boolean;
+    data?: any;
+    error?: string;
+  } {
     return {
       success: true,
       data: {
@@ -405,7 +473,9 @@ export class WebhookJobProcessor {
         subscriptionId: payload.subscriptionId,
         customerId: payload.customerId,
         status: payload.eventType.includes('cancel') ? 'cancelled' : 'updated',
-        effectiveDate: payload.timestamp ? new Date(payload.timestamp) : new Date(),
+        effectiveDate: payload.timestamp
+          ? new Date(payload.timestamp)
+          : new Date(),
         metadata: {
           originalPayload: payload,
         },
@@ -413,9 +483,13 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractStripeData(payload: any): { success: boolean; data?: any; error?: string } {
+  private extractStripeData(payload: any): {
+    success: boolean;
+    data?: any;
+    error?: string;
+  } {
     const subscription = payload.data?.object;
-    
+
     return {
       success: true,
       data: {
@@ -424,8 +498,8 @@ export class WebhookJobProcessor {
         subscriptionId: subscription?.id,
         customerId: subscription?.customer,
         status: subscription?.status,
-        effectiveDate: subscription?.canceled_at 
-          ? new Date(subscription.canceled_at * 1000) 
+        effectiveDate: subscription?.canceled_at
+          ? new Date(subscription.canceled_at * 1000)
           : new Date(),
         metadata: {
           stripeEvent: payload,
@@ -434,7 +508,11 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractGenericData(payload: any): { success: boolean; data?: any; error?: string } {
+  private extractGenericData(payload: any): {
+    success: boolean;
+    data?: any;
+    error?: string;
+  } {
     return {
       success: true,
       data: {
@@ -452,11 +530,14 @@ export class WebhookJobProcessor {
   /**
    * Signature verification methods
    */
-  private verifyStripeSignature(payload: any, headers: any): { valid: boolean; error?: string } {
+  private verifyStripeSignature(
+    payload: any,
+    headers: any
+  ): { valid: boolean; error?: string } {
     // In a real implementation, you'd verify the Stripe signature
     // using the webhook secret and the stripe library
     const signature = headers?.['stripe-signature'];
-    
+
     if (!signature) {
       return { valid: false, error: 'Missing Stripe signature' };
     }
@@ -465,10 +546,15 @@ export class WebhookJobProcessor {
     return { valid: true };
   }
 
-  private simulateSignatureVerification(provider: string, payload: any, headers: any): { valid: boolean; error?: string } {
+  private simulateSignatureVerification(
+    provider: string,
+    payload: any,
+    headers: any
+  ): { valid: boolean; error?: string } {
     // Simulate signature verification for demo providers
-    const signature = headers?.['x-signature'] || headers?.['x-webhook-signature'];
-    
+    const signature =
+      headers?.['x-signature'] || headers?.['x-webhook-signature'];
+
     // For demo purposes, we'll accept webhooks with any signature or no signature
     // In production, you'd implement proper signature verification
     return { valid: true };
@@ -488,7 +574,10 @@ export class WebhookJobProcessor {
         userId: 'system',
         action: `webhook.${action}` as any,
         resource: webhookId,
-        result: action.includes('error') || action.includes('failed') ? 'failure' : 'success',
+        result:
+          action.includes('error') || action.includes('failed')
+            ? 'failure'
+            : 'success',
         metadata: {
           webhookId,
           message,
@@ -572,7 +661,8 @@ export class WebhookJobProcessor {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Timeout processing error',
+        error:
+          error instanceof Error ? error.message : 'Timeout processing error',
         retry: { delay: 30000 },
       };
     }

@@ -10,18 +10,18 @@ interface ProviderTemplate {
   difficulty: 'easy' | 'medium' | 'hard';
   estimatedTime: number; // minutes
   logo?: string;
-  
+
   // Contact methods
   website?: string;
   phone?: string;
   email?: string;
   chatUrl?: string;
-  
+
   // Manual instructions
   steps: string[];
   tips: string[];
   warnings: string[];
-  
+
   // Metadata
   requiresLogin: boolean;
   hasRetentionOffers: boolean;
@@ -49,17 +49,17 @@ const PROVIDER_REGISTRY: Record<string, ProviderTemplate> = {
       'Select "Account" from the dropdown menu',
       'Under "Membership & Billing", click "Cancel Membership"',
       'Follow the cancellation prompts',
-      'Confirm cancellation and note the effective date'
+      'Confirm cancellation and note the effective date',
     ],
     tips: [
       'You can continue watching until your current billing period ends',
       'Netflix allows you to reactivate your account at any time',
-      'Your viewing history and preferences will be saved for 10 months'
+      'Your viewing history and preferences will be saved for 10 months',
     ],
     warnings: [
       'Cancel before your next billing date to avoid charges',
-      'Downloaded content will expire when your subscription ends'
-    ]
+      'Downloaded content will expire when your subscription ends',
+    ],
   },
   spotify: {
     id: 'spotify',
@@ -78,17 +78,17 @@ const PROVIDER_REGISTRY: Record<string, ProviderTemplate> = {
       'Scroll down and click "Cancel Premium"',
       'Choose a reason for canceling (optional)',
       'Click "Continue" to confirm cancellation',
-      'Save the confirmation email'
+      'Save the confirmation email',
     ],
     tips: [
       'Premium features continue until the end of your billing period',
       'You can reactivate Premium at any time',
-      'Your playlists and saved music remain intact'
+      'Your playlists and saved music remain intact',
     ],
     warnings: [
       'You may be offered a discount to stay - consider your options',
-      'Offline downloads will become unavailable immediately after cancellation'
-    ]
+      'Offline downloads will become unavailable immediately after cancellation',
+    ],
   },
   'adobe-creative-cloud': {
     id: 'adobe-creative-cloud',
@@ -111,19 +111,20 @@ const PROVIDER_REGISTRY: Record<string, ProviderTemplate> = {
       'Select "Cancel Plan" from the options',
       'Choose a cancellation reason',
       'Review any retention offers if presented',
-      'Confirm cancellation and note any fees'
+      'Confirm cancellation and note any fees',
     ],
     tips: [
       'Annual plans may have early termination fees',
       'Consider downgrading to Photography plan if you only need Photoshop/Lightroom',
-      'Student discounts available if eligible'
+      'Student discounts available if eligible',
     ],
     warnings: [
       'Early cancellation of annual plan may incur 50% fee of remaining payments',
       'Creative Cloud files may become inaccessible',
-      'Consider downloading your work before cancellation'
+      'Consider downloading your work before cancellation',
     ],
-    notes: 'Adobe often offers retention discounts. Chat support may waive early termination fees in some cases.'
+    notes:
+      'Adobe often offers retention discounts. Chat support may waive early termination fees in some cases.',
   },
   'amazon-prime': {
     id: 'amazon-prime',
@@ -144,17 +145,17 @@ const PROVIDER_REGISTRY: Record<string, ProviderTemplate> = {
       'Click "Update, cancel and more" on the left side',
       'Select "End Membership" from the options',
       'Choose to end now or at the next renewal date',
-      'Confirm your cancellation choice'
+      'Confirm your cancellation choice',
     ],
     tips: [
       'You can get a refund for unused portion if you cancel early',
       'Prime benefits continue until the end of your billing period',
-      'Amazon may offer a partial refund based on usage'
+      'Amazon may offer a partial refund based on usage',
     ],
     warnings: [
-      'You\'ll lose free shipping, Prime Video, and other benefits',
-      'Some purchases may become ineligible for return'
-    ]
+      "You'll lose free shipping, Prime Video, and other benefits",
+      'Some purchases may become ineligible for return',
+    ],
   },
   'apple-icloud': {
     id: 'apple-icloud',
@@ -174,18 +175,18 @@ const PROVIDER_REGISTRY: Record<string, ProviderTemplate> = {
       'Tap "Subscriptions"',
       'Find iCloud+ and tap on it',
       'Tap "Cancel Subscription"',
-      'Confirm cancellation'
+      'Confirm cancellation',
     ],
     tips: [
       'You can also manage via App Store > Apple ID > Subscriptions',
       'Storage plan downgrades at the end of billing period',
-      'Free 5GB storage remains available'
+      'Free 5GB storage remains available',
     ],
     warnings: [
       'Data exceeding free 5GB limit may be deleted after 30 days',
       'Backup and sync features may stop working',
-      'Consider downloading important data first'
-    ]
+      'Consider downloading important data first',
+    ],
   },
   default: {
     id: 'default',
@@ -202,19 +203,19 @@ const PROVIDER_REGISTRY: Record<string, ProviderTemplate> = {
       'Find the cancellation or subscription management option',
       'Follow the prompts to cancel your subscription',
       'Save any confirmation emails or reference numbers',
-      'Verify the effective cancellation date'
+      'Verify the effective cancellation date',
     ],
     tips: [
       'Check for cancellation deadlines relative to billing dates',
       'Look for customer service contact information if needed',
-      'Consider taking screenshots of confirmation pages'
+      'Consider taking screenshots of confirmation pages',
     ],
     warnings: [
       'Some services require advance notice before billing date',
       'Read terms for any early termination fees',
-      'Ensure you have access to important data before canceling'
-    ]
-  }
+      'Ensure you have access to important data before canceling',
+    ],
+  },
 };
 
 // Input validation
@@ -310,7 +311,7 @@ export class LightweightCancellationService {
 
     // Find provider template
     const provider = this.findProviderTemplate(subscription.name);
-    
+
     // Create a simple cancellation request record
     const request = await this.db.cancellationRequest.create({
       data: {
@@ -331,8 +332,12 @@ export class LightweightCancellationService {
     });
 
     // Log the activity
-    await this.logActivity(request.id, 'instructions_generated', 'success', 
-      `Generated cancellation instructions for ${provider.name}`);
+    await this.logActivity(
+      request.id,
+      'instructions_generated',
+      'success',
+      `Generated cancellation instructions for ${provider.name}`
+    );
 
     const instructions = this.generateInstructions(provider, subscription.name);
 
@@ -404,11 +409,19 @@ export class LightweightCancellationService {
         },
       });
 
-      await this.logActivity(requestId, 'confirmed_successful', 'success',
-        `User confirmed successful cancellation. Code: ${validatedConfirmation.confirmationCode}`);
+      await this.logActivity(
+        requestId,
+        'confirmed_successful',
+        'success',
+        `User confirmed successful cancellation. Code: ${validatedConfirmation.confirmationCode}`
+      );
     } else {
-      await this.logActivity(requestId, 'confirmed_failed', 'failure',
-        `User reported cancellation failure: ${validatedConfirmation.notes}`);
+      await this.logActivity(
+        requestId,
+        'confirmed_failed',
+        'failure',
+        `User reported cancellation failure: ${validatedConfirmation.notes}`
+      );
     }
 
     return {
@@ -422,7 +435,10 @@ export class LightweightCancellationService {
   /**
    * Get simple cancellation status
    */
-  async getCancellationStatus(userId: string, requestId: string): Promise<{
+  async getCancellationStatus(
+    userId: string,
+    requestId: string
+  ): Promise<{
     request: any;
     instructions?: CancellationInstructions;
   }> {
@@ -450,10 +466,17 @@ export class LightweightCancellationService {
     }
 
     let instructions: CancellationInstructions | undefined;
-    
-    if (request.manualInstructions && typeof request.manualInstructions === 'object' && 'providerId' in request.manualInstructions) {
+
+    if (
+      request.manualInstructions &&
+      typeof request.manualInstructions === 'object' &&
+      'providerId' in request.manualInstructions
+    ) {
       const provider = this.findProviderTemplate(request.subscription.name);
-      instructions = this.generateInstructions(provider, request.subscription.name);
+      instructions = this.generateInstructions(
+        provider,
+        request.subscription.name
+      );
     }
 
     return {
@@ -520,13 +543,16 @@ export class LightweightCancellationService {
     hasChat: boolean;
     supportsRefunds: boolean;
   }> {
-    let providers = Object.values(PROVIDER_REGISTRY).filter(p => p.id !== 'default');
+    let providers = Object.values(PROVIDER_REGISTRY).filter(
+      p => p.id !== 'default'
+    );
 
     if (search) {
       const searchTerm = search.toLowerCase();
-      providers = providers.filter(p => 
-        p.name.toLowerCase().includes(searchTerm) ||
-        p.category.toLowerCase().includes(searchTerm)
+      providers = providers.filter(
+        p =>
+          p.name.toLowerCase().includes(searchTerm) ||
+          p.category.toLowerCase().includes(searchTerm)
       );
     }
 
@@ -548,7 +574,8 @@ export class LightweightCancellationService {
    * Find provider template for a subscription
    */
   private findProviderTemplate(subscriptionName: string): ProviderTemplate {
-    const normalizedName = subscriptionName.toLowerCase()
+    const normalizedName = subscriptionName
+      .toLowerCase()
       .replace(/[^a-z0-9]/g, '')
       .replace(/plus$|premium$|pro$/, ''); // Remove common suffixes
 
@@ -559,7 +586,7 @@ export class LightweightCancellationService {
     // Partial matches
     for (const [key, provider] of Object.entries(PROVIDER_REGISTRY)) {
       if (key === 'default') continue;
-      
+
       if (normalizedName.includes(key) || key.includes(normalizedName)) {
         return provider;
       }
@@ -587,12 +614,13 @@ export class LightweightCancellationService {
    * Generate cancellation instructions
    */
   private generateInstructions(
-    provider: ProviderTemplate, 
+    provider: ProviderTemplate,
     subscriptionName: string
   ): CancellationInstructions {
-    const overview = provider.id === 'default' 
-      ? `To cancel your ${subscriptionName} subscription, you'll typically need to access your account settings and look for subscription management options.`
-      : `To cancel your ${provider.name} subscription, follow these verified steps. The process is rated as ${provider.difficulty} difficulty and typically takes ${provider.estimatedTime} minutes.`;
+    const overview =
+      provider.id === 'default'
+        ? `To cancel your ${subscriptionName} subscription, you'll typically need to access your account settings and look for subscription management options.`
+        : `To cancel your ${provider.name} subscription, follow these verified steps. The process is rated as ${provider.difficulty} difficulty and typically takes ${provider.estimatedTime} minutes.`;
 
     return {
       provider,

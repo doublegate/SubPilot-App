@@ -13,28 +13,40 @@ import { formatDistanceToNow } from 'date-fns';
 
 export function LightweightCancellationDashboard() {
   const [selectedRequestId, setSelectedRequestId] = useState<string>('');
-  const [selectedSubscriptionName, setSelectedSubscriptionName] = useState<string>('');
+  const [selectedSubscriptionName, setSelectedSubscriptionName] =
+    useState<string>('');
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showInstructionsModal, setShowInstructionsModal] = useState(false);
 
-  const { data: history, isLoading, refetch } = api.lightweightCancellation.getHistory.useQuery({
+  const {
+    data: history,
+    isLoading,
+    refetch,
+  } = api.lightweightCancellation.getHistory.useQuery({
     limit: 20,
   });
 
   const { data: stats } = api.lightweightCancellation.getStats.useQuery();
 
-  const { data: instructionsData } = api.lightweightCancellation.getStatus.useQuery(
-    { requestId: selectedRequestId },
-    { enabled: Boolean(selectedRequestId) && showInstructionsModal }
-  );
+  const { data: instructionsData } =
+    api.lightweightCancellation.getStatus.useQuery(
+      { requestId: selectedRequestId },
+      { enabled: Boolean(selectedRequestId) && showInstructionsModal }
+    );
 
-  const handleViewInstructions = (requestId: string, subscriptionName: string) => {
+  const handleViewInstructions = (
+    requestId: string,
+    subscriptionName: string
+  ) => {
     setSelectedRequestId(requestId);
     setSelectedSubscriptionName(subscriptionName);
     setShowInstructionsModal(true);
   };
 
-  const handleConfirmCancellation = (requestId: string, subscriptionName: string) => {
+  const handleConfirmCancellation = (
+    requestId: string,
+    subscriptionName: string
+  ) => {
     setSelectedRequestId(requestId);
     setSelectedSubscriptionName(subscriptionName);
     setShowConfirmationModal(true);
@@ -88,7 +100,7 @@ export function LightweightCancellationDashboard() {
     <div className="space-y-6">
       {/* Statistics */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold">{stats.totalRequests}</div>
@@ -97,13 +109,17 @@ export function LightweightCancellationDashboard() {
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-600">{stats.completedRequests}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.completedRequests}
+              </div>
               <p className="text-sm text-muted-foreground">Completed</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <div className="text-2xl font-bold text-yellow-600">{stats.pendingRequests}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.pendingRequests}
+              </div>
               <p className="text-sm text-muted-foreground">Pending</p>
             </CardContent>
           </Card>
@@ -129,36 +145,56 @@ export function LightweightCancellationDashboard() {
             <Alert>
               <Icons.info className="h-4 w-4" />
               <AlertDescription>
-                No cancellation requests found. When you start a cancellation process, it will appear here.
+                No cancellation requests found. When you start a cancellation
+                process, it will appear here.
               </AlertDescription>
             </Alert>
           ) : (
             <div className="space-y-4">
-              {history.map((request) => (
+              {history.map(request => (
                 <div
                   key={request.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  className="rounded-lg border p-4 transition-colors hover:bg-gray-50"
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{request.subscription.name}</h3>
-                        <Badge variant="outline" className={getStatusColor(request.status)}>
+                        <h3 className="font-medium">
+                          {request.subscription.name}
+                        </h3>
+                        <Badge
+                          variant="outline"
+                          className={getStatusColor(request.status)}
+                        >
                           {getStatusIcon(request.status)}
-                          <span className="ml-1 capitalize">{request.status}</span>
+                          <span className="ml-1 capitalize">
+                            {request.status}
+                          </span>
                         </Badge>
                       </div>
-                      
+
                       <div className="text-sm text-muted-foreground">
-                        <p>Requested {formatDistanceToNow(new Date(request.createdAt))} ago</p>
+                        <p>
+                          Requested{' '}
+                          {formatDistanceToNow(new Date(request.createdAt))} ago
+                        </p>
                         {request.completedAt && (
-                          <p>Completed {formatDistanceToNow(new Date(request.completedAt))} ago</p>
+                          <p>
+                            Completed{' '}
+                            {formatDistanceToNow(new Date(request.completedAt))}{' '}
+                            ago
+                          </p>
                         )}
                         {request.confirmationCode && (
                           <p>Confirmation: {request.confirmationCode}</p>
                         )}
                         {request.effectiveDate && (
-                          <p>Effective: {new Date(request.effectiveDate).toLocaleDateString()}</p>
+                          <p>
+                            Effective:{' '}
+                            {new Date(
+                              request.effectiveDate
+                            ).toLocaleDateString()}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -169,7 +205,12 @@ export function LightweightCancellationDashboard() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleViewInstructions(request.id, request.subscription.name)}
+                            onClick={() =>
+                              handleViewInstructions(
+                                request.id,
+                                request.subscription.name
+                              )
+                            }
                           >
                             <Icons.eye className="mr-1 h-3 w-3" />
                             View Instructions
@@ -177,19 +218,29 @@ export function LightweightCancellationDashboard() {
                           <Button
                             variant="default"
                             size="sm"
-                            onClick={() => handleConfirmCancellation(request.id, request.subscription.name)}
+                            onClick={() =>
+                              handleConfirmCancellation(
+                                request.id,
+                                request.subscription.name
+                              )
+                            }
                           >
                             <Icons.checkCircle className="mr-1 h-3 w-3" />
                             Confirm
                           </Button>
                         </>
                       )}
-                      
+
                       {request.status === 'completed' && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleViewInstructions(request.id, request.subscription.name)}
+                          onClick={() =>
+                            handleViewInstructions(
+                              request.id,
+                              request.subscription.name
+                            )
+                          }
                         >
                           <Icons.eye className="mr-1 h-3 w-3" />
                           View Details

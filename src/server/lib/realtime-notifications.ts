@@ -2,7 +2,7 @@ import { emitCancellationEvent } from './event-bus';
 
 /**
  * Real-time Notification System for Cancellation Updates
- * 
+ *
  * Provides real-time notifications to users about cancellation progress,
  * status changes, and important events.
  */
@@ -44,7 +44,10 @@ export function sendRealtimeNotification(
 
   // Log for debugging in development
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[RealtimeNotifications] Sent to ${userId}:`, timestampedNotification);
+    console.log(
+      `[RealtimeNotifications] Sent to ${userId}:`,
+      timestampedNotification
+    );
   }
 }
 
@@ -198,7 +201,7 @@ class NotificationQueue {
     retries: number;
     timestamp: Date;
   }> = [];
-  
+
   private processing = false;
   private maxRetries = 3;
   private retryDelay = 1000; // 1 second
@@ -241,7 +244,10 @@ class NotificationQueue {
             this.queue.unshift(item);
           }, this.retryDelay * item.retries);
         } else {
-          console.error(`[NotificationQueue] Failed to deliver notification after ${this.maxRetries} retries:`, error);
+          console.error(
+            `[NotificationQueue] Failed to deliver notification after ${this.maxRetries} retries:`,
+            error
+          );
         }
       }
     }
@@ -330,7 +336,8 @@ export const NotificationTypes = {
   SYSTEM_MAINTENANCE: 'system.maintenance',
 } as const;
 
-export type NotificationType = typeof NotificationTypes[keyof typeof NotificationTypes];
+export type NotificationType =
+  (typeof NotificationTypes)[keyof typeof NotificationTypes];
 
 /**
  * SSE Stream Management for real-time notifications
@@ -351,7 +358,7 @@ class SSEManager {
   public createStream(userId: string): ReadableStream {
     // Create readable stream with proper controller
     const stream = new ReadableStream({
-      start: (controller) => {
+      start: controller => {
         // Store connection
         const connection: SSEConnection = {
           userId,
@@ -364,14 +371,14 @@ class SSEManager {
         // Send initial connection event
         this.sendSSEMessage(controller, {
           type: 'connection',
-          data: { status: 'connected', timestamp: new Date().toISOString() }
+          data: { status: 'connected', timestamp: new Date().toISOString() },
         });
 
         // Setup ping interval
         const pingInterval = setInterval(() => {
           this.sendSSEMessage(controller, {
             type: 'ping',
-            data: { timestamp: new Date().toISOString() }
+            data: { timestamp: new Date().toISOString() },
           });
         }, 30000); // 30 seconds
 
@@ -380,7 +387,7 @@ class SSEManager {
           clearInterval(pingInterval);
           this.connections.delete(userId);
         };
-      }
+      },
     });
 
     return stream;
@@ -389,10 +396,13 @@ class SSEManager {
   /**
    * Send SSE message to controller
    */
-  private sendSSEMessage(controller: ReadableStreamDefaultController, message: {
-    type: string;
-    data: any;
-  }): void {
+  private sendSSEMessage(
+    controller: ReadableStreamDefaultController,
+    message: {
+      type: string;
+      data: any;
+    }
+  ): void {
     try {
       const sseData = `event: ${message.type}\ndata: ${JSON.stringify(message.data)}\n\n`;
       controller.enqueue(new TextEncoder().encode(sseData));
@@ -404,7 +414,10 @@ class SSEManager {
   /**
    * Send notification to specific user via SSE
    */
-  public sendToUser(userId: string, notification: RealtimeNotification): boolean {
+  public sendToUser(
+    userId: string,
+    notification: RealtimeNotification
+  ): boolean {
     const connection = this.connections.get(userId);
     if (!connection) {
       return false;
@@ -413,7 +426,7 @@ class SSEManager {
     try {
       this.sendSSEMessage(connection.controller, {
         type: 'notification',
-        data: notification
+        data: notification,
       });
       return true;
     } catch (error) {
@@ -462,7 +475,7 @@ export function createSSEStream(userId: string): ReadableStream {
  */
 export function getRealtimeNotificationManager() {
   return {
-    sendToUser: (userId: string, notification: RealtimeNotification) => 
+    sendToUser: (userId: string, notification: RealtimeNotification) =>
       sseManager.sendToUser(userId, notification),
     getActiveConnections: () => sseManager.getActiveConnections(),
     closeConnection: (userId: string) => sseManager.closeConnection(userId),

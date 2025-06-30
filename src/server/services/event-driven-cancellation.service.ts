@@ -1,7 +1,10 @@
 import type { PrismaClient } from '@prisma/client';
 import { getJobQueue } from '@/server/lib/job-queue';
 import { getWorkflowEngine } from '@/server/lib/workflow-engine';
-import { emitCancellationEvent, onCancellationEvent } from '@/server/lib/event-bus';
+import {
+  emitCancellationEvent,
+  onCancellationEvent,
+} from '@/server/lib/event-bus';
 import { sendRealtimeNotification } from '@/server/lib/realtime-notifications';
 import { AuditLogger } from '@/server/lib/audit-logger';
 import { z } from 'zod';
@@ -13,14 +16,18 @@ export const EventDrivenCancellationRequestInput = z.object({
   notes: z.string().optional(),
   preferredMethod: z.enum(['api', 'webhook', 'manual']).optional(),
   scheduleFor: z.date().optional(), // For delayed cancellations
-  notificationPreferences: z.object({
-    realtime: z.boolean().optional().default(true),
-    email: z.boolean().optional().default(true),
-    sms: z.boolean().optional().default(false),
-  }).optional(),
+  notificationPreferences: z
+    .object({
+      realtime: z.boolean().optional().default(true),
+      email: z.boolean().optional().default(true),
+      sms: z.boolean().optional().default(false),
+    })
+    .optional(),
 });
 
-export type EventDrivenCancellationRequest = z.infer<typeof EventDrivenCancellationRequestInput>;
+export type EventDrivenCancellationRequest = z.infer<
+  typeof EventDrivenCancellationRequestInput
+>;
 
 /**
  * Event-driven cancellation service that uses background jobs and workflows
@@ -113,8 +120,11 @@ export class EventDrivenCancellationService {
 
     if (validatedInput.scheduleFor) {
       // Schedule the cancellation for later
-      await this.scheduleDelayedCancellation(request.id, validatedInput.scheduleFor);
-      
+      await this.scheduleDelayedCancellation(
+        request.id,
+        validatedInput.scheduleFor
+      );
+
       // Send real-time notification about scheduling
       sendRealtimeNotification(userId, {
         type: 'cancellation.status',
@@ -129,8 +139,12 @@ export class EventDrivenCancellationService {
       });
     } else {
       // Start the cancellation workflow immediately
-      workflowId = await this.startCancellationWorkflow(request.id, userId, validatedInput);
-      
+      workflowId = await this.startCancellationWorkflow(
+        request.id,
+        userId,
+        validatedInput
+      );
+
       // Emit the cancellation requested event
       emitCancellationEvent('cancellation.requested', {
         requestId: request.id,
@@ -227,7 +241,9 @@ export class EventDrivenCancellationService {
       }
     );
 
-    console.log(`[EventDrivenCancellation] Scheduled cancellation ${requestId} for ${scheduleFor}`);
+    console.log(
+      `[EventDrivenCancellation] Scheduled cancellation ${requestId} for ${scheduleFor}`
+    );
   }
 
   /**
@@ -380,21 +396,24 @@ export class EventDrivenCancellationService {
    */
   private setupEventListeners(): void {
     // Listen for workflow progress updates
-    onCancellationEvent('analytics.track', (data) => {
+    onCancellationEvent('analytics.track', data => {
       if (data.event === 'workflow.completed' && data.properties.workflowId) {
         this.handleWorkflowCompletion(data.userId, data.properties);
       }
     });
 
     // Listen for job completion to provide progress updates
-    onCancellationEvent('analytics.track', (data) => {
-      if (data.event === 'job.completed' && data.properties.jobType?.startsWith('cancellation.')) {
+    onCancellationEvent('analytics.track', data => {
+      if (
+        data.event === 'job.completed' &&
+        data.properties.jobType?.startsWith('cancellation.')
+      ) {
         this.handleJobCompletion(data.userId, data.properties);
       }
     });
 
     // Enhanced failure handling with automatic retry logic
-    onCancellationEvent('cancellation.failed', async (data) => {
+    onCancellationEvent('cancellation.failed', async data => {
       if (data.willRetry) {
         await this.handleAutomaticRetry(data);
       } else {
@@ -402,13 +421,18 @@ export class EventDrivenCancellationService {
       }
     });
 
-    console.log('[EventDrivenCancellationService] Event listeners setup complete');
+    console.log(
+      '[EventDrivenCancellationService] Event listeners setup complete'
+    );
   }
 
   /**
    * Handle workflow completion events
    */
-  private async handleWorkflowCompletion(userId: string, properties: any): Promise<void> {
+  private async handleWorkflowCompletion(
+    userId: string,
+    properties: any
+  ): Promise<void> {
     try {
       // Send completion notification with workflow summary
       sendRealtimeNotification(userId, {
@@ -424,14 +448,20 @@ export class EventDrivenCancellationService {
         },
       });
     } catch (error) {
-      console.error('[EventDrivenCancellationService] Error handling workflow completion:', error);
+      console.error(
+        '[EventDrivenCancellationService] Error handling workflow completion:',
+        error
+      );
     }
   }
 
   /**
    * Handle job completion for progress updates
    */
-  private async handleJobCompletion(userId: string, properties: any): Promise<void> {
+  private async handleJobCompletion(
+    userId: string,
+    properties: any
+  ): Promise<void> {
     try {
       const jobTypeMap: Record<string, string> = {
         'cancellation.validate': 'Validation Complete',
@@ -456,7 +486,10 @@ export class EventDrivenCancellationService {
         },
       });
     } catch (error) {
-      console.error('[EventDrivenCancellationService] Error handling job completion:', error);
+      console.error(
+        '[EventDrivenCancellationService] Error handling job completion:',
+        error
+      );
     }
   }
 
@@ -493,7 +526,10 @@ export class EventDrivenCancellationService {
         },
       });
     } catch (error) {
-      console.error('[EventDrivenCancellationService] Error handling automatic retry:', error);
+      console.error(
+        '[EventDrivenCancellationService] Error handling automatic retry:',
+        error
+      );
     }
   }
 
@@ -506,7 +542,8 @@ export class EventDrivenCancellationService {
       sendRealtimeNotification(data.userId, {
         type: 'cancellation.status',
         title: 'Cancellation Assistance Needed',
-        message: 'We encountered an issue with automatic cancellation. Manual options are available.',
+        message:
+          'We encountered an issue with automatic cancellation. Manual options are available.',
         priority: 'high',
         data: {
           requestId: data.requestId,
@@ -543,17 +580,17 @@ export class EventDrivenCancellationService {
         },
       });
     } catch (error) {
-      console.error('[EventDrivenCancellationService] Error handling final failure:', error);
+      console.error(
+        '[EventDrivenCancellationService] Error handling final failure:',
+        error
+      );
     }
   }
 
   /**
    * Calculate estimated completion time based on method and priority
    */
-  private calculateEstimatedCompletion(
-    priority: string,
-    method: string
-  ): Date {
+  private calculateEstimatedCompletion(priority: string, method: string): Date {
     const now = new Date();
     let estimatedMinutes = 15; // Default 15 minutes
 
@@ -604,7 +641,9 @@ export class EventDrivenCancellationService {
       case 'completed':
         nextSteps.push('Cancellation completed successfully');
         if (request.effectiveDate && request.effectiveDate > new Date()) {
-          nextSteps.push(`Effective on: ${request.effectiveDate.toLocaleDateString()}`);
+          nextSteps.push(
+            `Effective on: ${request.effectiveDate.toLocaleDateString()}`
+          );
         }
         break;
       case 'failed':
@@ -614,7 +653,9 @@ export class EventDrivenCancellationService {
       case 'scheduled':
         const scheduleFor = request.metadata?.scheduleFor;
         if (scheduleFor) {
-          nextSteps.push(`Scheduled for: ${new Date(scheduleFor).toLocaleString()}`);
+          nextSteps.push(
+            `Scheduled for: ${new Date(scheduleFor).toLocaleString()}`
+          );
         }
         nextSteps.push('Can be cancelled before execution');
         break;
@@ -657,13 +698,25 @@ export class EventDrivenCancellationService {
         where: { userId, createdAt: { gte: startDate, lte: endDate } },
       }),
       this.db.cancellationRequest.count({
-        where: { userId, status: 'completed', createdAt: { gte: startDate, lte: endDate } },
+        where: {
+          userId,
+          status: 'completed',
+          createdAt: { gte: startDate, lte: endDate },
+        },
       }),
       this.db.cancellationRequest.count({
-        where: { userId, status: 'failed', createdAt: { gte: startDate, lte: endDate } },
+        where: {
+          userId,
+          status: 'failed',
+          createdAt: { gte: startDate, lte: endDate },
+        },
       }),
       this.db.cancellationRequest.count({
-        where: { userId, status: { in: ['pending', 'processing'] }, createdAt: { gte: startDate, lte: endDate } },
+        where: {
+          userId,
+          status: { in: ['pending', 'processing'] },
+          createdAt: { gte: startDate, lte: endDate },
+        },
       }),
     ]);
 
@@ -721,9 +774,8 @@ export class EventDrivenCancellationService {
     // Calculate success rates
     for (const method in methodData) {
       const data = methodData[method];
-      data.successRate = data.total > 0 
-        ? Math.round((data.completed / data.total) * 100) 
-        : 0;
+      data.successRate =
+        data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
     }
 
     return methodData;

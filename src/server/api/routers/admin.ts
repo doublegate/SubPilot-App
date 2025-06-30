@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
+import { type Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 // Admin check middleware
@@ -11,14 +11,14 @@ const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
     where: { id: ctx.session.user.id },
     select: { isAdmin: true },
   });
-  
+
   if (!user?.isAdmin) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'You do not have permission to access this resource',
     });
   }
-  
+
   return next({ ctx });
 });
 
@@ -46,7 +46,7 @@ export const adminRouter = createTRPCRouter({
         amount: true,
       },
     });
-    
+
     return result._sum.amount?.toNumber() || 0;
   }),
 
@@ -56,7 +56,7 @@ export const adminRouter = createTRPCRouter({
       ctx.db.$queryRaw`SELECT 1`.then(() => true).catch(() => false),
       // Add more health checks here
     ]);
-    
+
     const healthScore = (checks.filter(Boolean).length / checks.length) * 100;
     return Math.round(healthScore);
   }),
@@ -86,7 +86,7 @@ export const adminRouter = createTRPCRouter({
 
   getSystemAlerts: adminProcedure.query(async ({ ctx }) => {
     const alerts = [];
-    
+
     // Check for failed payments
     const failedPayments = await ctx.db.billingEvent.count({
       where: {
@@ -96,14 +96,14 @@ export const adminRouter = createTRPCRouter({
         },
       },
     });
-    
+
     if (failedPayments > 0) {
       alerts.push({
         title: 'Failed Payments',
         message: `${failedPayments} payment failures in the last 24 hours`,
       });
     }
-    
+
     // Check for locked accounts
     const lockedAccounts = await ctx.db.user.count({
       where: {
@@ -112,29 +112,33 @@ export const adminRouter = createTRPCRouter({
         },
       },
     });
-    
+
     if (lockedAccounts > 0) {
       alerts.push({
         title: 'Locked Accounts',
         message: `${lockedAccounts} accounts are currently locked`,
       });
     }
-    
+
     return alerts;
   }),
 
   // User management
   getUsers: adminProcedure
-    .input(z.object({
-      limit: z.number().min(1).max(100).default(50),
-      offset: z.number().default(0),
-      search: z.string().optional(),
-      status: z.enum(['all', 'active', 'inactive', 'locked', 'premium']).optional(),
-      plan: z.enum(['all', 'free', 'pro', 'team']).optional(),
-    }))
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().default(0),
+        search: z.string().optional(),
+        status: z
+          .enum(['all', 'active', 'inactive', 'locked', 'premium'])
+          .optional(),
+        plan: z.enum(['all', 'free', 'pro', 'team']).optional(),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const where: Prisma.UserWhereInput = {};
-      
+
       if (input.search) {
         where.OR = [
           { email: { contains: input.search, mode: 'insensitive' } },
@@ -142,7 +146,7 @@ export const adminRouter = createTRPCRouter({
           { id: input.search },
         ];
       }
-      
+
       if (input.status && input.status !== 'all') {
         switch (input.status) {
           case 'locked':
@@ -158,7 +162,7 @@ export const adminRouter = createTRPCRouter({
           // Add more status filters
         }
       }
-      
+
       const users = await ctx.db.user.findMany({
         where,
         take: input.limit,
@@ -178,7 +182,7 @@ export const adminRouter = createTRPCRouter({
         },
         orderBy: { createdAt: 'desc' },
       });
-      
+
       return users.map(user => ({
         id: user.id,
         email: user.email,
@@ -194,28 +198,30 @@ export const adminRouter = createTRPCRouter({
     }),
 
   createUser: adminProcedure
-    .input(z.object({
-      email: z.string().email(),
-      name: z.string().optional(),
-      password: z.string().min(8),
-      sendWelcomeEmail: z.boolean().default(true),
-    }))
+    .input(
+      z.object({
+        email: z.string().email(),
+        name: z.string().optional(),
+        password: z.string().min(8),
+        sendWelcomeEmail: z.boolean().default(true),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       // Check if user already exists
       const existing = await ctx.db.user.findUnique({
         where: { email: input.email },
       });
-      
+
       if (existing) {
         throw new TRPCError({
           code: 'CONFLICT',
           message: 'User with this email already exists',
         });
       }
-      
+
       // Hash password
       const hashedPassword = await bcrypt.hash(input.password, 10);
-      
+
       // Create user
       const user = await ctx.db.user.create({
         data: {
@@ -225,28 +231,30 @@ export const adminRouter = createTRPCRouter({
           emailVerified: new Date(), // Mark as verified since admin created
         },
       });
-      
+
       // TODO: Send welcome email if requested
-      
+
       return user;
     }),
 
   lockUser: adminProcedure
-    .input(z.object({
-      userId: z.string(),
-      reason: z.string(),
-      duration: z.number().optional(), // Hours
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+        reason: z.string(),
+        duration: z.number().optional(), // Hours
+      })
+    )
     .mutation(async ({ ctx, input }) => {
-      const lockedUntil = input.duration 
+      const lockedUntil = input.duration
         ? new Date(Date.now() + input.duration * 60 * 60 * 1000)
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days default
-      
+
       const user = await ctx.db.user.update({
         where: { id: input.userId },
         data: { lockedUntil },
       });
-      
+
       // Log the action
       await ctx.db.auditLog.create({
         data: {
@@ -257,23 +265,25 @@ export const adminRouter = createTRPCRouter({
           metadata: { reason: input.reason, duration: input.duration },
         },
       });
-      
+
       return user;
     }),
 
   unlockUser: adminProcedure
-    .input(z.object({
-      userId: z.string(),
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.db.user.update({
         where: { id: input.userId },
-        data: { 
+        data: {
           lockedUntil: null,
           failedLoginAttempts: 0,
         },
       });
-      
+
       // Log the action
       await ctx.db.auditLog.create({
         data: {
@@ -283,7 +293,7 @@ export const adminRouter = createTRPCRouter({
           result: 'success',
         },
       });
-      
+
       return user;
     }),
 
@@ -301,7 +311,7 @@ export const adminRouter = createTRPCRouter({
         where: { type: 'payment_succeeded' },
         _sum: { amount: true },
       }),
-      
+
       // Monthly revenue
       ctx.db.billingEvent.aggregate({
         where: {
@@ -312,14 +322,14 @@ export const adminRouter = createTRPCRouter({
         },
         _sum: { amount: true },
       }),
-      
+
       // Active subscriptions by plan
       ctx.db.userSubscription.groupBy({
         by: ['planId'],
         where: { status: 'active' },
         _count: true,
       }),
-      
+
       // Calculate churn rate
       ctx.db.userSubscription.count({
         where: {
@@ -329,7 +339,7 @@ export const adminRouter = createTRPCRouter({
           },
         },
       }),
-      
+
       // Recent transactions
       ctx.db.billingEvent.findMany({
         where: { type: 'payment_succeeded' },
@@ -349,7 +359,7 @@ export const adminRouter = createTRPCRouter({
         },
       }),
     ]);
-    
+
     return {
       totalRevenue: totalRevenue._sum.amount?.toNumber() || 0,
       monthlyRevenue: monthlyRevenue._sum.amount?.toNumber() || 0,
@@ -373,7 +383,7 @@ export const adminRouter = createTRPCRouter({
       // Count active webhooks - this is a placeholder
       Promise.resolve(0),
     ]);
-    
+
     return {
       environment: process.env.PLAID_ENV || 'sandbox',
       isConnected: !!process.env.PLAID_CLIENT_ID && !!process.env.PLAID_SECRET,
@@ -394,7 +404,7 @@ export const adminRouter = createTRPCRouter({
       },
       take: 12,
     });
-    
+
     return institutions.map(inst => ({
       id: inst.institutionId,
       name: inst.institutionName,

@@ -9,20 +9,17 @@ async function main() {
   // Create admin user if it doesn't exist
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@subpilot.app';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456';
-  
+
   const existingAdmin = await prisma.user.findFirst({
     where: {
-      OR: [
-        { email: adminEmail },
-        { isAdmin: true },
-      ],
+      OR: [{ email: adminEmail }, { isAdmin: true }],
     },
   });
 
   if (!existingAdmin) {
     console.log('🔑 Creating admin user...');
     const hashedAdminPassword = await hash(adminPassword, 12);
-    
+
     const adminUser = await prisma.user.create({
       data: {
         email: adminEmail,
@@ -32,7 +29,7 @@ async function main() {
         isAdmin: true,
       },
     });
-    
+
     console.log('✅ Created admin user:');
     console.log('   Email:', adminEmail);
     console.log('   Password:', adminPassword);
@@ -87,7 +84,7 @@ async function main() {
   });
 
   console.log('✅ Sample data created!');
-  
+
   // Run other seed files
   console.log('\n🏷️ Seeding pricing plans...');
   try {
@@ -96,15 +93,17 @@ async function main() {
   } catch (error) {
     console.log('⚠️ Could not seed pricing plans:', error);
   }
-  
+
   console.log('\n🔌 Seeding cancellation providers...');
   try {
-    const { seedCancellationProviders } = await import('./seed-cancellation-providers');
+    const { seedCancellationProviders } = await import(
+      './seed-cancellation-providers'
+    );
     await seedCancellationProviders();
   } catch (error) {
     console.log('⚠️ Could not seed cancellation providers:', error);
   }
-  
+
   console.log('\n📁 Seeding categories...');
   try {
     const { seedCategories } = await import('../scripts/seed-categories');
@@ -112,7 +111,7 @@ async function main() {
   } catch (error) {
     console.log('⚠️ Could not seed categories:', error);
   }
-  
+
   console.log('\n🎉 Database seeded successfully!');
   console.log('\n📝 Login credentials:');
   console.log('   Admin User:');

@@ -132,11 +132,11 @@ export default function AdvancedAnalyticsPage() {
         label: 'View Details',
         onClick: () => {
           // Navigate to subscriptions with filter based on optimization type
-          if (opt.type === 'duplicate_services') {
+          if (opt.type === 'duplicate') {
             router.push('/subscriptions?filter=duplicates');
-          } else if (opt.type === 'unused_services') {
+          } else if (opt.type === 'unused') {
             router.push('/subscriptions?filter=unused');
-          } else if (opt.type === 'expensive_services') {
+          } else if (opt.type === 'downgrade') {
             router.push('/subscriptions?filter=expensive');
           } else {
             router.push('/subscriptions');

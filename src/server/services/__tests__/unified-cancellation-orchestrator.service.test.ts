@@ -23,7 +23,7 @@ const mockDb = mockDeep<PrismaClient>();
 
 describe('UnifiedCancellationOrchestratorService', () => {
   let service: UnifiedCancellationOrchestratorService;
-  
+
   const mockUser = {
     id: 'user123',
     email: 'test@example.com',
@@ -72,8 +72,10 @@ describe('UnifiedCancellationOrchestratorService', () => {
       // Setup mocks
       mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
       mockDb.cancellationRequest.findFirst.mockResolvedValue(null);
-      mockDb.cancellationProvider.findFirst.mockResolvedValue(mockProvider as any);
-      
+      mockDb.cancellationProvider.findFirst.mockResolvedValue(
+        mockProvider as any
+      );
+
       const mockRequest = {
         id: 'req123',
         userId: 'user123',
@@ -82,7 +84,7 @@ describe('UnifiedCancellationOrchestratorService', () => {
         status: 'pending',
         createdAt: new Date(),
       };
-      
+
       mockDb.cancellationRequest.create.mockResolvedValue(mockRequest as any);
 
       // Mock the API service response
@@ -100,7 +102,7 @@ describe('UnifiedCancellationOrchestratorService', () => {
       const mockApiService = {
         initiateCancellation: vi.fn().mockResolvedValue(mockApiResult),
       };
-      
+
       (service as any).apiService = mockApiService;
 
       const input = {
@@ -140,8 +142,10 @@ describe('UnifiedCancellationOrchestratorService', () => {
         ...mockSubscription,
         status: 'cancelled',
       };
-      
-      mockDb.subscription.findFirst.mockResolvedValue(cancelledSubscription as any);
+
+      mockDb.subscription.findFirst.mockResolvedValue(
+        cancelledSubscription as any
+      );
 
       const input = {
         subscriptionId: 'sub123',
@@ -195,7 +199,9 @@ describe('UnifiedCancellationOrchestratorService', () => {
       };
 
       const mockLightweightService = {
-        provideCancellationInstructions: vi.fn().mockResolvedValue(mockLightweightResult),
+        provideCancellationInstructions: vi
+          .fn()
+          .mockResolvedValue(mockLightweightResult),
       };
 
       (service as any).lightweightService = mockLightweightService;
@@ -209,13 +215,17 @@ describe('UnifiedCancellationOrchestratorService', () => {
       const result = await service.initiateCancellation('user123', input);
 
       expect(result.method).toBe('lightweight');
-      expect(mockLightweightService.provideCancellationInstructions).toHaveBeenCalled();
+      expect(
+        mockLightweightService.provideCancellationInstructions
+      ).toHaveBeenCalled();
     });
 
     it('should respect user preferred method', async () => {
       mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
       mockDb.cancellationRequest.findFirst.mockResolvedValue(null);
-      mockDb.cancellationProvider.findFirst.mockResolvedValue(mockProvider as any);
+      mockDb.cancellationProvider.findFirst.mockResolvedValue(
+        mockProvider as any
+      );
 
       const mockEventDrivenResult = {
         requestId: 'req123',
@@ -278,7 +288,9 @@ describe('UnifiedCancellationOrchestratorService', () => {
         },
       };
 
-      mockDb.cancellationRequest.findFirst.mockResolvedValue(mockRequest as any);
+      mockDb.cancellationRequest.findFirst.mockResolvedValue(
+        mockRequest as any
+      );
 
       const mockApiStatus = {
         requestId: 'req123',
@@ -326,19 +338,23 @@ describe('UnifiedCancellationOrchestratorService', () => {
         subscription: mockSubscription,
       };
 
-      mockDb.cancellationRequest.findFirst.mockResolvedValue(mockFailedRequest as any);
+      mockDb.cancellationRequest.findFirst.mockResolvedValue(
+        mockFailedRequest as any
+      );
 
       // Mock the initiateCancellation method
-      const initiateSpy = vi.spyOn(service, 'initiateCancellation').mockResolvedValue({
-        requestId: 'req124',
-        orchestrationId: 'orch124',
-        status: 'pending',
-        method: 'event_driven',
-        currentStep: 'Starting retry',
-        totalSteps: 4,
-        completedSteps: 0,
-        fallbackAvailable: true,
-      } as any);
+      const initiateSpy = vi
+        .spyOn(service, 'initiateCancellation')
+        .mockResolvedValue({
+          requestId: 'req124',
+          orchestrationId: 'orch124',
+          status: 'pending',
+          method: 'event_driven',
+          currentStep: 'Starting retry',
+          totalSteps: 4,
+          completedSteps: 0,
+          fallbackAvailable: true,
+        } as any);
 
       const result = await service.retryCancellation('user123', 'req123', {
         escalate: true,
@@ -374,7 +390,9 @@ describe('UnifiedCancellationOrchestratorService', () => {
         method: 'api',
       };
 
-      mockDb.cancellationRequest.findFirst.mockResolvedValue(mockActiveRequest as any);
+      mockDb.cancellationRequest.findFirst.mockResolvedValue(
+        mockActiveRequest as any
+      );
       mockDb.cancellationRequest.update.mockResolvedValue({
         ...mockActiveRequest,
         status: 'cancelled',
@@ -387,7 +405,11 @@ describe('UnifiedCancellationOrchestratorService', () => {
 
       (service as any).apiService = mockApiService;
 
-      await service.cancelCancellationRequest('user123', 'req123', 'User changed mind');
+      await service.cancelCancellationRequest(
+        'user123',
+        'req123',
+        'User changed mind'
+      );
 
       expect(mockDb.cancellationRequest.update).toHaveBeenCalledWith({
         where: { id: 'req123' },
@@ -430,7 +452,9 @@ describe('UnifiedCancellationOrchestratorService', () => {
         },
       ];
 
-      mockDb.cancellationRequest.findMany.mockResolvedValue(mockRequests as any);
+      mockDb.cancellationRequest.findMany.mockResolvedValue(
+        mockRequests as any
+      );
 
       const result = await service.getUnifiedAnalytics('user123', 'month');
 
@@ -536,9 +560,9 @@ describe('UnifiedCancellationOrchestratorService', () => {
           difficulty: 'easy',
           requiresInteraction: false,
         },
-        { 
+        {
           priority: 'normal',
-          scheduleFor: new Date(Date.now() + 86400000) // Tomorrow
+          scheduleFor: new Date(Date.now() + 86400000), // Tomorrow
         }
       );
 
@@ -550,11 +574,15 @@ describe('UnifiedCancellationOrchestratorService', () => {
     it('should execute fallback when primary method fails', async () => {
       mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
       mockDb.cancellationRequest.findFirst.mockResolvedValue(null);
-      mockDb.cancellationProvider.findFirst.mockResolvedValue(mockProvider as any);
+      mockDb.cancellationProvider.findFirst.mockResolvedValue(
+        mockProvider as any
+      );
 
       // Mock API service to fail
       const mockApiService = {
-        initiateCancellation: vi.fn().mockRejectedValue(new Error('API service down')),
+        initiateCancellation: vi
+          .fn()
+          .mockRejectedValue(new Error('API service down')),
       };
 
       // Mock lightweight service to succeed
@@ -590,21 +618,29 @@ describe('UnifiedCancellationOrchestratorService', () => {
 
       expect(result.method).toBe('lightweight');
       expect(mockApiService.initiateCancellation).toHaveBeenCalled();
-      expect(mockLightweightService.provideCancellationInstructions).toHaveBeenCalled();
+      expect(
+        mockLightweightService.provideCancellationInstructions
+      ).toHaveBeenCalled();
     });
 
     it('should throw error when both primary and fallback fail', async () => {
       mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
       mockDb.cancellationRequest.findFirst.mockResolvedValue(null);
-      mockDb.cancellationProvider.findFirst.mockResolvedValue(mockProvider as any);
+      mockDb.cancellationProvider.findFirst.mockResolvedValue(
+        mockProvider as any
+      );
 
       // Mock both services to fail
       const mockApiService = {
-        initiateCancellation: vi.fn().mockRejectedValue(new Error('API service down')),
+        initiateCancellation: vi
+          .fn()
+          .mockRejectedValue(new Error('API service down')),
       };
 
       const mockLightweightService = {
-        provideCancellationInstructions: vi.fn().mockRejectedValue(new Error('Lightweight also failed')),
+        provideCancellationInstructions: vi
+          .fn()
+          .mockRejectedValue(new Error('Lightweight also failed')),
       };
 
       (service as any).apiService = mockApiService;

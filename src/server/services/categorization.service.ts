@@ -4,7 +4,10 @@ import {
   SUBSCRIPTION_CATEGORIES,
 } from '@/server/lib/openai-client';
 import { cacheService } from './cache.service';
-import { getCategoryDisplayName, normalizeCategoryKey } from '@/lib/category-utils';
+import {
+  getCategoryDisplayName,
+  normalizeCategoryKey,
+} from '@/lib/category-utils';
 
 /**
  * Service for categorizing subscriptions and transactions
@@ -367,7 +370,7 @@ export class CategorizationService {
       // Update subscription with normalized name and category
       const normalizedCategory = normalizeCategoryKey(result.category);
       const displayCategory = getCategoryDisplayName(normalizedCategory);
-      
+
       const updateData: any = {
         aiCategory: normalizedCategory,
         aiCategoryConfidence: result.confidence,
@@ -377,7 +380,9 @@ export class CategorizationService {
       // If AI provided a normalized merchant name, update it
       if (result.merchantName && result.merchantName !== subscription.name) {
         updateData.name = result.merchantName;
-        console.log(`Updated subscription name: "${subscription.name}" -> "${result.merchantName}"`);
+        console.log(
+          `Updated subscription name: "${subscription.name}" -> "${result.merchantName}"`
+        );
       }
 
       await this.db.subscription.update({
@@ -405,7 +410,7 @@ export class CategorizationService {
   ): Promise<void> {
     const normalizedCategory = normalizeCategoryKey(category);
     const displayCategory = getCategoryDisplayName(normalizedCategory);
-    
+
     await this.db.subscription.update({
       where: {
         id: subscriptionId,

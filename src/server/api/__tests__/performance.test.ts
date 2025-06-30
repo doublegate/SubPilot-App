@@ -598,6 +598,7 @@ describe('API Performance Benchmarks', () => {
         notificationPreferences: {},
         failedLoginAttempts: 0,
         lockedUntil: null,
+        isAdmin: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

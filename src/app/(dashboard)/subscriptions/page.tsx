@@ -50,7 +50,7 @@ interface Subscription {
 
 export default function SubscriptionsPage() {
   const router = useRouter();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -97,7 +97,7 @@ export default function SubscriptionsPage() {
         } else {
           toast.info('No new subscriptions detected');
         }
-        
+
         // Refresh the data and then refresh the page to ensure all components update
         void refetch().then(() => {
           // Small delay to allow the toast to be seen before refresh

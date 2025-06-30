@@ -47,7 +47,7 @@ export function StripeConfigCard() {
           <Input
             id="publishableKey"
             value={config.publishableKey}
-            onChange={(e) =>
+            onChange={e =>
               setConfig({ ...config, publishableKey: e.target.value })
             }
             placeholder="pk_test_..."
@@ -61,7 +61,7 @@ export function StripeConfigCard() {
               id="secretKey"
               type={showSecret ? 'text' : 'password'}
               value={config.secretKey}
-              onChange={(e) =>
+              onChange={e =>
                 setConfig({ ...config, secretKey: e.target.value })
               }
               placeholder="sk_test_..."
@@ -89,7 +89,7 @@ export function StripeConfigCard() {
             id="webhookSecret"
             type="password"
             value={config.webhookSecret}
-            onChange={(e) =>
+            onChange={e =>
               setConfig({ ...config, webhookSecret: e.target.value })
             }
             placeholder="whsec_..."

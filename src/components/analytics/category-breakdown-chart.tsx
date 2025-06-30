@@ -119,7 +119,9 @@ export function CategoryBreakdownChart({
         <p className="text-sm text-blue-600">
           Amount: {formatCurrency(data.amount)}/mo
         </p>
-        <p className="text-sm text-gray-600">{data.percentage.toFixed(2)}% of total</p>
+        <p className="text-sm text-gray-600">
+          {data.percentage.toFixed(2)}% of total
+        </p>
       </div>
     );
   };
@@ -190,7 +192,8 @@ export function CategoryBreakdownChart({
             </div>
             <div className="text-lg font-bold">{topCategory.category}</div>
             <div className="text-sm text-muted-foreground">
-              {formatCurrency(topCategory.amount)} ({topCategory.percentage.toFixed(2)}%)
+              {formatCurrency(topCategory.amount)} (
+              {topCategory.percentage.toFixed(2)}%)
             </div>
           </Card>
         )}
@@ -276,7 +279,9 @@ export function CategoryBreakdownChart({
                   }}
                 />
                 <span className="font-medium">{category.category}</span>
-                <Badge variant="secondary">{category.percentage.toFixed(2)}%</Badge>
+                <Badge variant="secondary">
+                  {category.percentage.toFixed(2)}%
+                </Badge>
               </div>
               <div className="text-right">
                 <div className="font-bold">

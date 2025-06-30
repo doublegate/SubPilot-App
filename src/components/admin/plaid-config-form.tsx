@@ -64,9 +64,7 @@ export function PlaidConfigForm() {
           <Input
             id="clientId"
             value={config.clientId}
-            onChange={(e) =>
-              setConfig({ ...config, clientId: e.target.value })
-            }
+            onChange={e => setConfig({ ...config, clientId: e.target.value })}
             placeholder="Your Plaid Client ID"
           />
         </div>
@@ -77,9 +75,7 @@ export function PlaidConfigForm() {
             id="secret"
             type="password"
             value={config.secret}
-            onChange={(e) =>
-              setConfig({ ...config, secret: e.target.value })
-            }
+            onChange={e => setConfig({ ...config, secret: e.target.value })}
             placeholder="Your Plaid Secret"
           />
         </div>
@@ -88,7 +84,7 @@ export function PlaidConfigForm() {
           <Label htmlFor="environment">Environment</Label>
           <Select
             value={config.environment}
-            onValueChange={(value) =>
+            onValueChange={value =>
               setConfig({ ...config, environment: value })
             }
           >
@@ -106,12 +102,12 @@ export function PlaidConfigForm() {
         <div className="space-y-2">
           <Label>Products</Label>
           <div className="space-y-2">
-            {products.map((product) => (
+            {products.map(product => (
               <div key={product.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={product.id}
                   checked={config.products.includes(product.id)}
-                  onCheckedChange={(checked) => {
+                  onCheckedChange={checked => {
                     if (checked) {
                       setConfig({
                         ...config,
@@ -120,16 +116,14 @@ export function PlaidConfigForm() {
                     } else {
                       setConfig({
                         ...config,
-                        products: config.products.filter(
-                          (p) => p !== product.id
-                        ),
+                        products: config.products.filter(p => p !== product.id),
                       });
                     }
                   }}
                 />
                 <Label
                   htmlFor={product.id}
-                  className="text-sm font-normal cursor-pointer"
+                  className="cursor-pointer text-sm font-normal"
                 >
                   {product.label}
                 </Label>

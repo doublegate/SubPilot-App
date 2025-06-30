@@ -6,9 +6,9 @@ import { AuditLogger } from '@/server/lib/audit-logger';
 
 export interface NotificationJobData {
   userId: string;
-  notificationType: 
-    | 'cancellation_success' 
-    | 'cancellation_manual' 
+  notificationType:
+    | 'cancellation_success'
+    | 'cancellation_manual'
     | 'cancellation_error'
     | 'cancellation_retry'
     | 'webhook_received'
@@ -69,7 +69,10 @@ export class NotificationJobProcessor {
 
       // Parse notification preferences
       const preferences = user.notificationPreferences as any;
-      const userChannels = this.filterChannelsByPreferences(channels, preferences);
+      const userChannels = this.filterChannelsByPreferences(
+        channels,
+        preferences
+      );
 
       if (userChannels.length === 0) {
         return {
@@ -169,8 +172,11 @@ export class NotificationJobProcessor {
         retry: hasError ? { delay: 30000 } : false,
       };
     } catch (error) {
-      console.error('[NotificationProcessor] Error sending notification:', error);
-      
+      console.error(
+        '[NotificationProcessor] Error sending notification:',
+        error
+      );
+
       await AuditLogger.log({
         userId: job.data.userId,
         action: 'notification.error',
@@ -182,7 +188,10 @@ export class NotificationJobProcessor {
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Notification processing failed',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Notification processing failed',
         retry: { delay: 60000 }, // 1 minute
       };
     }
@@ -324,7 +333,7 @@ export class NotificationJobProcessor {
     };
 
     const template = templates[type as keyof typeof templates];
-    
+
     if (!template) {
       return {
         title: 'SubPilot Notification',
@@ -403,11 +412,14 @@ export class NotificationJobProcessor {
     data: any
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     // TODO: Implement push notification service
-    console.log('[NotificationProcessor] Push notification (not implemented):', {
-      user: user.id,
-      title: content.title,
-      message: content.message,
-    });
+    console.log(
+      '[NotificationProcessor] Push notification (not implemented):',
+      {
+        user: user.id,
+        title: content.title,
+        message: content.message,
+      }
+    );
 
     return {
       success: true,
@@ -496,10 +508,10 @@ export class NotificationJobProcessor {
 
       // Process in batches to avoid overwhelming the system
       const batchSize = 50;
-      
+
       for (let i = 0; i < userIds.length; i += batchSize) {
         const batch = userIds.slice(i, i + batchSize);
-        
+
         const batchPromises = batch.map(async (userId: string) => {
           try {
             // Create individual notification job
@@ -516,7 +528,7 @@ export class NotificationJobProcessor {
             };
 
             const result = await this.processNotificationSend(individualJob);
-            
+
             if (result.success) {
               successCount++;
             } else {
@@ -543,7 +555,9 @@ export class NotificationJobProcessor {
         }
       }
 
-      console.log(`[NotificationProcessor] Bulk notification completed: ${successCount} success, ${errorCount} errors`);
+      console.log(
+        `[NotificationProcessor] Bulk notification completed: ${successCount} success, ${errorCount} errors`
+      );
 
       return {
         success: errorCount === 0,
@@ -553,14 +567,16 @@ export class NotificationJobProcessor {
           errorCount,
           results,
         },
-        error: errorCount > 0 ? `${errorCount} notifications failed` : undefined,
+        error:
+          errorCount > 0 ? `${errorCount} notifications failed` : undefined,
       };
     } catch (error) {
       console.error('[NotificationProcessor] Bulk notification error:', error);
-      
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Bulk notification failed',
+        error:
+          error instanceof Error ? error.message : 'Bulk notification failed',
         retry: { delay: 120000 }, // 2 minutes
       };
     }

@@ -78,12 +78,13 @@ export function AdminSidebar() {
         <h2 className="text-lg font-semibold">Admin Panel</h2>
         <p className="text-sm text-muted-foreground">Site Management</p>
       </div>
-      
+
       <nav className="flex-1 space-y-1 px-3 pb-4">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href || 
-                          (item.href !== '/admin' && pathname.startsWith(item.href));
-          
+        {navigation.map(item => {
+          const isActive =
+            pathname === item.href ||
+            (item.href !== '/admin' && pathname.startsWith(item.href));
+
           return (
             <Link
               key={item.href}
@@ -91,7 +92,7 @@ export function AdminSidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'text-primary-foreground bg-primary'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >
@@ -101,7 +102,7 @@ export function AdminSidebar() {
           );
         })}
       </nav>
-      
+
       <div className="border-t p-4">
         <Link
           href="/dashboard"

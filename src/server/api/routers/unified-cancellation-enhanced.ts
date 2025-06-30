@@ -1,18 +1,18 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-import { 
+import {
   UnifiedCancellationOrchestratorEnhancedService,
-  UnifiedCancellationRequestInput 
+  UnifiedCancellationRequestInput,
 } from '@/server/services/unified-cancellation-orchestrator-enhanced.service';
 
 /**
  * Enhanced Unified Cancellation Router
- * 
+ *
  * This is the single, unified entry point for all cancellation operations.
  * It intelligently routes requests through the most appropriate method,
  * provides real-time updates, and handles comprehensive fallback scenarios.
- * 
+ *
  * Key Features:
  * - Single API for all cancellation methods
  * - Intelligent method selection with fallback
@@ -28,23 +28,35 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
   initiate: protectedProcedure
     .input(UnifiedCancellationRequestInput)
     .mutation(async ({ ctx, input }) => {
-      const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
-      
+      const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(
+        ctx.db
+      );
+
       try {
-        const result = await orchestrator.initiateCancellation(ctx.session.user.id, input);
-        
+        const result = await orchestrator.initiateCancellation(
+          ctx.session.user.id,
+          input
+        );
+
         // Log successful initiation
-        console.log(`[UnifiedCancellation] Initiated for user ${ctx.session.user.id}, subscription ${input.subscriptionId}`);
-        
+        console.log(
+          `[UnifiedCancellation] Initiated for user ${ctx.session.user.id}, subscription ${input.subscriptionId}`
+        );
+
         return result;
       } catch (error) {
         // Enhanced error handling with context
-        const errorMessage = error instanceof Error ? error.message : 'Unknown cancellation error';
-        
-        console.error(`[UnifiedCancellation] Failed to initiate for user ${ctx.session.user.id}:`, error);
-        
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown cancellation error';
+
+        console.error(
+          `[UnifiedCancellation] Failed to initiate for user ${ctx.session.user.id}:`,
+          error
+        );
+
         throw new TRPCError({
-          code: error instanceof TRPCError ? error.code : 'INTERNAL_SERVER_ERROR',
+          code:
+            error instanceof TRPCError ? error.code : 'INTERNAL_SERVER_ERROR',
           message: errorMessage,
           cause: error,
         });
@@ -71,13 +83,17 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         });
       }
 
-      const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
+      const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(
+        ctx.db
+      );
 
       try {
         // If we have an orchestration ID, get orchestration-level status
         if (input.orchestrationId) {
-          const orchestrationStatus = await orchestrator.getOrchestrationStatus(input.orchestrationId);
-          
+          const orchestrationStatus = await orchestrator.getOrchestrationStatus(
+            input.orchestrationId
+          );
+
           if (!orchestrationStatus) {
             throw new TRPCError({
               code: 'NOT_FOUND',
@@ -114,10 +130,12 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
                 type: true,
               },
             },
-            logs: input.includeLogs ? {
-              orderBy: { createdAt: 'asc' },
-              take: 50,
-            } : false,
+            logs: input.includeLogs
+              ? {
+                  orderBy: { createdAt: 'asc' },
+                  take: 50,
+                }
+              : false,
           },
         });
 
@@ -147,7 +165,9 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
             nextRetryAt: request.nextRetryAt,
             confirmationCode: request.confirmationCode,
             effectiveDate: request.effectiveDate,
-            refundAmount: request.refundAmount ? parseFloat(request.refundAmount.toString()) : null,
+            refundAmount: request.refundAmount
+              ? parseFloat(request.refundAmount.toString())
+              : null,
             errorCode: request.errorCode,
             errorMessage: request.errorMessage,
             userNotes: request.userNotes,
@@ -155,27 +175,32 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
             provider: request.provider,
             metadata: (request as any).metadata,
           },
-          logs: input.includeLogs ? request.logs?.map(log => ({
-            id: log.id,
-            timestamp: log.createdAt,
-            action: log.action,
-            status: log.status,
-            message: log.message,
-            metadata: log.metadata,
-            duration: log.duration,
-          })) : undefined,
+          logs: input.includeLogs
+            ? request.logs?.map(log => ({
+                id: log.id,
+                timestamp: log.createdAt,
+                action: log.action,
+                status: log.status,
+                message: log.message,
+                metadata: log.metadata,
+                duration: log.duration,
+              }))
+            : undefined,
           orchestrationId,
           realTimeEnabled: Boolean(orchestrationId),
-          sseEndpoint: orchestrationId ? `/api/sse/cancellation/${orchestrationId}` : undefined,
+          sseEndpoint: orchestrationId
+            ? `/api/sse/cancellation/${orchestrationId}`
+            : undefined,
         };
-
       } catch (error) {
         console.error('[UnifiedCancellation] Error getting status:', error);
-        throw error instanceof TRPCError ? error : new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to get cancellation status',
-          cause: error,
-        });
+        throw error instanceof TRPCError
+          ? error
+          : new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to get cancellation status',
+              cause: error,
+            });
       }
     }),
 
@@ -193,7 +218,9 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
+      const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(
+        ctx.db
+      );
 
       try {
         // Verify ownership of the request
@@ -233,7 +260,10 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           },
         };
 
-        const result = await orchestrator.initiateCancellation(ctx.session.user.id, retryInput as any);
+        const result = await orchestrator.initiateCancellation(
+          ctx.session.user.id,
+          retryInput as any
+        );
 
         // Update original request to reference the retry
         await ctx.db.cancellationRequest.update({
@@ -262,14 +292,15 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           isRetry: true,
           originalRequestId: input.requestId,
         };
-
       } catch (error) {
         console.error('[UnifiedCancellation] Error retrying:', error);
-        throw error instanceof TRPCError ? error : new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to retry cancellation',
-          cause: error,
-        });
+        throw error instanceof TRPCError
+          ? error
+          : new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to retry cancellation',
+              cause: error,
+            });
       }
     }),
 
@@ -350,14 +381,15 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           message: 'Cancellation request has been cancelled',
           cancelledAt: new Date(),
         };
-
       } catch (error) {
         console.error('[UnifiedCancellation] Error cancelling request:', error);
-        throw error instanceof TRPCError ? error : new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to cancel request',
-          cause: error,
-        });
+        throw error instanceof TRPCError
+          ? error
+          : new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to cancel request',
+              cause: error,
+            });
       }
     }),
 
@@ -373,11 +405,15 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         refundAmount: z.number().min(0).optional(),
         notes: z.string().optional(),
         wasSuccessful: z.boolean(),
-        attachments: z.array(z.object({
-          type: z.enum(['screenshot', 'email', 'confirmation']),
-          url: z.string(),
-          description: z.string().optional(),
-        })).optional(),
+        attachments: z
+          .array(
+            z.object({
+              type: z.enum(['screenshot', 'email', 'confirmation']),
+              url: z.string(),
+              description: z.string().optional(),
+            })
+          )
+          .optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -398,7 +434,8 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         if (!request) {
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: 'Manual cancellation request not found or not eligible for confirmation',
+            message:
+              'Manual cancellation request not found or not eligible for confirmation',
           });
         }
 
@@ -442,9 +479,11 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         await ctx.db.cancellationLog.create({
           data: {
             requestId: input.requestId,
-            action: input.wasSuccessful ? 'manual_confirmation_success' : 'manual_confirmation_failed',
+            action: input.wasSuccessful
+              ? 'manual_confirmation_success'
+              : 'manual_confirmation_failed',
             status: input.wasSuccessful ? 'success' : 'failure',
-            message: input.wasSuccessful 
+            message: input.wasSuccessful
               ? `Manual cancellation confirmed successfully. Code: ${input.confirmationCode}`
               : `Manual cancellation failed: ${input.notes}`,
             metadata: {
@@ -467,20 +506,26 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           subscription: {
             id: request.subscription.id,
             name: request.subscription.name,
-            status: input.wasSuccessful ? 'cancelled' : request.subscription.status,
+            status: input.wasSuccessful
+              ? 'cancelled'
+              : request.subscription.status,
           },
-          message: input.wasSuccessful 
+          message: input.wasSuccessful
             ? 'Manual cancellation confirmed successfully'
             : 'Manual cancellation failure recorded',
         };
-
       } catch (error) {
-        console.error('[UnifiedCancellation] Error confirming manual cancellation:', error);
-        throw error instanceof TRPCError ? error : new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to confirm manual cancellation',
-          cause: error,
-        });
+        console.error(
+          '[UnifiedCancellation] Error confirming manual cancellation:',
+          error
+        );
+        throw error instanceof TRPCError
+          ? error
+          : new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to confirm manual cancellation',
+              cause: error,
+            });
       }
     }),
 
@@ -511,10 +556,14 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           });
         }
 
-        const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
-        
+        const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(
+          ctx.db
+        );
+
         // Get provider capabilities (this method would need to be made public)
-        const capabilities = await (orchestrator as any).assessProviderCapabilities(subscription.name);
+        const capabilities = await (
+          orchestrator as any
+        ).assessProviderCapabilities(subscription.name);
 
         // Build method availability and recommendations
         const methods = [
@@ -525,14 +574,17 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
             available: true,
             estimatedTime: Math.min(
               capabilities.supportsApi ? capabilities.apiEstimatedTime : 999,
-              capabilities.supportsAutomation ? capabilities.automationEstimatedTime : 999,
+              capabilities.supportsAutomation
+                ? capabilities.automationEstimatedTime
+                : 999,
               capabilities.manualEstimatedTime
             ),
-            successRate: Math.max(
-              capabilities.apiSuccessRate,
-              capabilities.automationSuccessRate,
-              capabilities.manualSuccessRate
-            ) * 100,
+            successRate:
+              Math.max(
+                capabilities.apiSuccessRate,
+                capabilities.automationSuccessRate,
+                capabilities.manualSuccessRate
+              ) * 100,
             isRecommended: true,
             requiresInteraction: false,
           },
@@ -543,7 +595,8 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
             available: capabilities.supportsApi,
             estimatedTime: capabilities.apiEstimatedTime,
             successRate: capabilities.apiSuccessRate * 100,
-            isRecommended: capabilities.supportsApi && capabilities.apiSuccessRate > 0.85,
+            isRecommended:
+              capabilities.supportsApi && capabilities.apiSuccessRate > 0.85,
             requiresInteraction: false,
           },
           {
@@ -553,7 +606,8 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
             available: capabilities.supportsAutomation,
             estimatedTime: capabilities.automationEstimatedTime,
             successRate: capabilities.automationSuccessRate * 100,
-            isRecommended: capabilities.requires2FA || capabilities.difficulty === 'hard',
+            isRecommended:
+              capabilities.requires2FA || capabilities.difficulty === 'hard',
             requiresInteraction: capabilities.requires2FA,
           },
           {
@@ -568,23 +622,31 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           },
         ].filter(method => method.available);
 
-        const recommendations = input.includeRecommendations ? {
-          primaryMethod: methods.find(m => m.isRecommended)?.id || 'auto',
-          reasoning: (this as any).generateRecommendationReasoning ? (this as any).generateRecommendationReasoning(capabilities) : [],
-          considerations: (this as any).generateConsiderations ? (this as any).generateConsiderations(capabilities) : [],
-        } : undefined;
+        const recommendations = input.includeRecommendations
+          ? {
+              primaryMethod: methods.find(m => m.isRecommended)?.id || 'auto',
+              reasoning: (this as any).generateRecommendationReasoning
+                ? (this as any).generateRecommendationReasoning(capabilities)
+                : [],
+              considerations: (this as any).generateConsiderations
+                ? (this as any).generateConsiderations(capabilities)
+                : [],
+            }
+          : undefined;
 
         return {
           subscription: {
             id: subscription.id,
             name: subscription.name,
           },
-          provider: capabilities.providerId ? {
-            id: capabilities.providerId,
-            name: capabilities.providerName,
-            dataSource: capabilities.dataSource,
-            lastAssessed: capabilities.lastAssessed,
-          } : null,
+          provider: capabilities.providerId
+            ? {
+                id: capabilities.providerId,
+                name: capabilities.providerName,
+                dataSource: capabilities.dataSource,
+                lastAssessed: capabilities.lastAssessed,
+              }
+            : null,
           capabilities: {
             difficulty: capabilities.difficulty,
             requires2FA: capabilities.requires2FA,
@@ -594,14 +656,18 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           methods,
           recommendations,
         };
-
       } catch (error) {
-        console.error('[UnifiedCancellation] Error getting provider capabilities:', error);
-        throw error instanceof TRPCError ? error : new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to get provider capabilities',
-          cause: error,
-        });
+        console.error(
+          '[UnifiedCancellation] Error getting provider capabilities:',
+          error
+        );
+        throw error instanceof TRPCError
+          ? error
+          : new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to get provider capabilities',
+              cause: error,
+            });
       }
     }),
 
@@ -623,7 +689,8 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           return {
             canCancel: false,
             reason: 'not_found',
-            message: 'Subscription not found or you do not have permission to cancel it',
+            message:
+              'Subscription not found or you do not have permission to cancel it',
           };
         }
 
@@ -633,7 +700,8 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
             canCancel: false,
             reason: 'already_cancelled',
             message: 'This subscription is already cancelled',
-            effectiveDate: (subscription.cancellationInfo as any)?.effectiveDate,
+            effectiveDate: (subscription.cancellationInfo as any)
+              ?.effectiveDate,
           };
         }
 
@@ -661,7 +729,9 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         // Get provider information for enhanced response
         const provider = await ctx.db.cancellationProvider.findFirst({
           where: {
-            normalizedName: subscription.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+            normalizedName: subscription.name
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, ''),
             isActive: true,
           },
         });
@@ -669,14 +739,16 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         return {
           canCancel: true,
           message: 'Subscription can be cancelled',
-          provider: provider ? {
-            id: provider.id,
-            name: provider.name,
-            type: provider.type,
-            difficulty: provider.difficulty,
-            estimatedTime: provider.averageTime,
-            successRate: parseFloat(provider.successRate.toString()),
-          } : null,
+          provider: provider
+            ? {
+                id: provider.id,
+                name: provider.name,
+                type: provider.type,
+                difficulty: provider.difficulty,
+                estimatedTime: provider.averageTime,
+                successRate: parseFloat(provider.successRate.toString()),
+              }
+            : null,
           subscription: {
             id: subscription.id,
             name: subscription.name,
@@ -685,9 +757,11 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
             nextBilling: subscription.nextBilling,
           },
         };
-
       } catch (error) {
-        console.error('[UnifiedCancellation] Error checking cancellation eligibility:', error);
+        console.error(
+          '[UnifiedCancellation] Error checking cancellation eligibility:',
+          error
+        );
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to check cancellation eligibility',
@@ -704,8 +778,14 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
       z.object({
         limit: z.number().min(1).max(100).optional().default(20),
         offset: z.number().min(0).optional().default(0),
-        status: z.enum(['all', 'completed', 'failed', 'pending', 'cancelled']).optional().default('all'),
-        method: z.enum(['all', 'api', 'automation', 'manual']).optional().default('all'),
+        status: z
+          .enum(['all', 'completed', 'failed', 'pending', 'cancelled'])
+          .optional()
+          .default('all'),
+        method: z
+          .enum(['all', 'api', 'automation', 'manual'])
+          .optional()
+          .default('all'),
         subscriptionId: z.string().optional(),
         includeMetadata: z.boolean().optional().default(false),
       })
@@ -727,8 +807,12 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
 
         // Apply method filter
         if (input.method !== 'all') {
-          const method = input.method === 'automation' ? 'web_automation' : 
-                       input.method === 'manual' ? 'manual' : input.method;
+          const method =
+            input.method === 'automation'
+              ? 'web_automation'
+              : input.method === 'manual'
+                ? 'manual'
+                : input.method;
           where.method = method;
         }
 
@@ -775,14 +859,20 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           },
           provider: request.provider,
           status: request.status,
-          method: request.method === 'web_automation' ? 'automation' : 
-                  request.method === 'manual' ? 'manual' : request.method,
+          method:
+            request.method === 'web_automation'
+              ? 'automation'
+              : request.method === 'manual'
+                ? 'manual'
+                : request.method,
           priority: request.priority,
           attempts: request.attempts,
           maxAttempts: request.maxAttempts,
           confirmationCode: request.confirmationCode,
           effectiveDate: request.effectiveDate,
-          refundAmount: request.refundAmount ? parseFloat(request.refundAmount.toString()) : null,
+          refundAmount: request.refundAmount
+            ? parseFloat(request.refundAmount.toString())
+            : null,
           errorCode: request.errorCode,
           errorMessage: request.errorMessage,
           userNotes: request.userNotes,
@@ -792,7 +882,9 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           completedAt: request.completedAt,
           lastAttemptAt: request.lastAttemptAt,
           nextRetryAt: request.nextRetryAt,
-          metadata: input.includeMetadata ? (request as any).metadata : undefined,
+          metadata: input.includeMetadata
+            ? (request as any).metadata
+            : undefined,
         }));
 
         return {
@@ -805,11 +897,20 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           },
           summary: {
             totalRequests: total,
-            byStatus: (this as any).getStatusBreakdown ? await (this as any).getStatusBreakdown(ctx.db, ctx.session.user.id) : {},
-            byMethod: (this as any).getMethodBreakdown ? await (this as any).getMethodBreakdown(ctx.db, ctx.session.user.id) : {},
+            byStatus: (this as any).getStatusBreakdown
+              ? await (this as any).getStatusBreakdown(
+                  ctx.db,
+                  ctx.session.user.id
+                )
+              : {},
+            byMethod: (this as any).getMethodBreakdown
+              ? await (this as any).getMethodBreakdown(
+                  ctx.db,
+                  ctx.session.user.id
+                )
+              : {},
           },
         };
-
       } catch (error) {
         console.error('[UnifiedCancellation] Error getting history:', error);
         throw new TRPCError({
@@ -826,18 +927,28 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
   getAnalytics: protectedProcedure
     .input(
       z.object({
-        timeframe: z.enum(['day', 'week', 'month', 'quarter', 'year']).optional().default('month'),
+        timeframe: z
+          .enum(['day', 'week', 'month', 'quarter', 'year'])
+          .optional()
+          .default('month'),
         includeProviderBreakdown: z.boolean().optional().default(true),
         includeTrends: z.boolean().optional().default(true),
       })
     )
     .query(async ({ ctx, input }) => {
       try {
-        const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(ctx.db);
-        const analytics = await orchestrator.getUnifiedAnalytics(ctx.session.user.id, input.timeframe as any);
+        const orchestrator = new UnifiedCancellationOrchestratorEnhancedService(
+          ctx.db
+        );
+        const analytics = await orchestrator.getUnifiedAnalytics(
+          ctx.session.user.id,
+          input.timeframe as any
+        );
 
         // Add additional insights
-        const insights = (this as any).generateAnalyticsInsights ? (this as any).generateAnalyticsInsights(analytics) : {};
+        const insights = (this as any).generateAnalyticsInsights
+          ? (this as any).generateAnalyticsInsights(analytics)
+          : {};
 
         return {
           ...analytics,
@@ -845,7 +956,6 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           timeframe: input.timeframe,
           generatedAt: new Date(),
         };
-
       } catch (error) {
         console.error('[UnifiedCancellation] Error getting analytics:', error);
         throw new TRPCError({
@@ -875,7 +985,12 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         const [recentRequests, recentFailures, systemLoad] = await Promise.all([
           ctx.db.cancellationRequest.findMany({
             where: { createdAt: { gte: oneHourAgo } },
-            select: { method: true, status: true, createdAt: true, completedAt: true },
+            select: {
+              method: true,
+              status: true,
+              createdAt: true,
+              completedAt: true,
+            },
           }),
           ctx.db.cancellationRequest.findMany({
             where: {
@@ -890,26 +1005,46 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
 
         // Calculate method health
         const methodHealth: Record<string, any> = {
-          api: { available: true, successRate: 0, recentRequests: 0, avgResponseTime: 0 },
-          automation: { available: true, successRate: 0, recentRequests: 0, avgResponseTime: 0 },
-          manual: { available: true, successRate: 100, recentRequests: 0, avgResponseTime: 0 },
+          api: {
+            available: true,
+            successRate: 0,
+            recentRequests: 0,
+            avgResponseTime: 0,
+          },
+          automation: {
+            available: true,
+            successRate: 0,
+            recentRequests: 0,
+            avgResponseTime: 0,
+          },
+          manual: {
+            available: true,
+            successRate: 100,
+            recentRequests: 0,
+            avgResponseTime: 0,
+          },
         };
 
         let totalResponseTime = 0;
         let completedRequests = 0;
 
         for (const request of recentRequests) {
-          const method = request.method === 'web_automation' ? 'automation' : 
-                        request.method === 'manual' ? 'manual' : 'api';
-          
+          const method =
+            request.method === 'web_automation'
+              ? 'automation'
+              : request.method === 'manual'
+                ? 'manual'
+                : 'api';
+
           if (methodHealth[method]) {
             methodHealth[method].recentRequests++;
-            
+
             if (request.status === 'completed') {
               methodHealth[method].successRate++;
-              
+
               if (request.completedAt) {
-                const responseTime = request.completedAt.getTime() - request.createdAt.getTime();
+                const responseTime =
+                  request.completedAt.getTime() - request.createdAt.getTime();
                 totalResponseTime += responseTime;
                 completedRequests++;
               }
@@ -921,25 +1056,37 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         for (const method in methodHealth) {
           if (methodHealth[method].recentRequests > 0) {
             methodHealth[method].successRate = Math.round(
-              (methodHealth[method].successRate / methodHealth[method].recentRequests) * 100
+              (methodHealth[method].successRate /
+                methodHealth[method].recentRequests) *
+                100
             );
           }
         }
 
-        const avgResponseTime = completedRequests > 0 ? totalResponseTime / completedRequests : 0;
+        const avgResponseTime =
+          completedRequests > 0 ? totalResponseTime / completedRequests : 0;
 
         // Calculate overall system status
-        const overallSuccessRate = recentRequests.length > 0 
-          ? (recentRequests.filter(r => r.status === 'completed').length / recentRequests.length) * 100
-          : 100;
+        const overallSuccessRate =
+          recentRequests.length > 0
+            ? (recentRequests.filter(r => r.status === 'completed').length /
+                recentRequests.length) *
+              100
+            : 100;
 
-        const systemStatus = overallSuccessRate > 90 ? 'healthy' : 
-                           overallSuccessRate > 70 ? 'degraded' : 'unhealthy';
+        const systemStatus =
+          overallSuccessRate > 90
+            ? 'healthy'
+            : overallSuccessRate > 70
+              ? 'degraded'
+              : 'unhealthy';
 
         // Generate recommendations based on health
         const recommendations = [];
         if (overallSuccessRate < 80) {
-          recommendations.push('Consider using manual method for higher reliability');
+          recommendations.push(
+            'Consider using manual method for higher reliability'
+          );
         }
         if (recentFailures.length > 10) {
           recommendations.push('High error rate detected - check system logs');
@@ -965,11 +1112,19 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         if (input.includeDetailedMetrics) {
           // Add detailed metrics for monitoring dashboards
           (health as any).detailed = {
-            errorBreakdown: (this as any).analyzeErrorBreakdown ? (this as any).analyzeErrorBreakdown(recentFailures) : {},
+            errorBreakdown: (this as any).analyzeErrorBreakdown
+              ? (this as any).analyzeErrorBreakdown(recentFailures)
+              : {},
             performanceMetrics: {
-              p50ResponseTime: (this as any).calculatePercentile ? (this as any).calculatePercentile(recentRequests, 50) : 0,
-              p95ResponseTime: (this as any).calculatePercentile ? (this as any).calculatePercentile(recentRequests, 95) : 0,
-              p99ResponseTime: (this as any).calculatePercentile ? (this as any).calculatePercentile(recentRequests, 99) : 0,
+              p50ResponseTime: (this as any).calculatePercentile
+                ? (this as any).calculatePercentile(recentRequests, 50)
+                : 0,
+              p95ResponseTime: (this as any).calculatePercentile
+                ? (this as any).calculatePercentile(recentRequests, 95)
+                : 0,
+              p99ResponseTime: (this as any).calculatePercentile
+                ? (this as any).calculatePercentile(recentRequests, 99)
+                : 0,
             },
             uptimeMetrics: {
               // Mock uptime data
@@ -981,9 +1136,11 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         }
 
         return health;
-
       } catch (error) {
-        console.error('[UnifiedCancellation] Error getting system health:', error);
+        console.error(
+          '[UnifiedCancellation] Error getting system health:',
+          error
+        );
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to get system health',
@@ -991,101 +1148,111 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         });
       }
     }),
-
 });
 
 // Helper methods for analytics and health checks
 function generateRecommendationReasoning(capabilities: any) {
-    if (capabilities.supportsApi && capabilities.apiSuccessRate > 0.85) {
-      return 'High API success rate makes automatic cancellation the best option';
-    }
-    if (capabilities.requires2FA || capabilities.difficulty === 'hard') {
-      return 'Complex cancellation process requires smart automation';
-    }
-    return 'Manual instructions provide the most reliable cancellation method';
+  if (capabilities.supportsApi && capabilities.apiSuccessRate > 0.85) {
+    return 'High API success rate makes automatic cancellation the best option';
+  }
+  if (capabilities.requires2FA || capabilities.difficulty === 'hard') {
+    return 'Complex cancellation process requires smart automation';
+  }
+  return 'Manual instructions provide the most reliable cancellation method';
 }
 
 function generateConsiderations(capabilities: any) {
-    const considerations = [];
-    if (capabilities.hasRetentionOffers) {
-      considerations.push('This provider may offer retention discounts during cancellation');
-    }
-    if (capabilities.requires2FA) {
-      considerations.push('Two-factor authentication will be required');
-    }
-    if (capabilities.difficulty === 'hard') {
-      considerations.push('This cancellation may be complex and time-consuming');
-    }
-    return considerations;
+  const considerations = [];
+  if (capabilities.hasRetentionOffers) {
+    considerations.push(
+      'This provider may offer retention discounts during cancellation'
+    );
+  }
+  if (capabilities.requires2FA) {
+    considerations.push('Two-factor authentication will be required');
+  }
+  if (capabilities.difficulty === 'hard') {
+    considerations.push('This cancellation may be complex and time-consuming');
+  }
+  return considerations;
 }
 
 function generateAnalyticsInsights(analytics: any) {
-    const insights = [];
-    
-    if (analytics.summary.successRate < 70) {
-      insights.push({
-        type: 'warning',
-        title: 'Low Success Rate',
-        message: 'Your cancellation success rate is below average. Consider using manual method for better results.',
-      });
-    }
-    
-    if (analytics.methodBreakdown.manual > analytics.methodBreakdown.api + analytics.methodBreakdown.automation) {
-      insights.push({
-        type: 'info',
-        title: 'Manual Method Usage',
-        message: 'You\'re primarily using manual cancellations. Automated methods might save time.',
-      });
-    }
-    
-    return insights;
+  const insights = [];
+
+  if (analytics.summary.successRate < 70) {
+    insights.push({
+      type: 'warning',
+      title: 'Low Success Rate',
+      message:
+        'Your cancellation success rate is below average. Consider using manual method for better results.',
+    });
+  }
+
+  if (
+    analytics.methodBreakdown.manual >
+    analytics.methodBreakdown.api + analytics.methodBreakdown.automation
+  ) {
+    insights.push({
+      type: 'info',
+      title: 'Manual Method Usage',
+      message:
+        "You're primarily using manual cancellations. Automated methods might save time.",
+    });
+  }
+
+  return insights;
 }
 
 async function getStatusBreakdown(db: any, userId: string) {
-    const results = await db.cancellationRequest.groupBy({
-      by: ['status'],
-      where: { userId },
-      _count: { status: true },
-    });
-    
-    return results.reduce((acc: any, result: any) => {
-      acc[result.status] = result._count.status;
-      return acc;
-    }, {});
+  const results = await db.cancellationRequest.groupBy({
+    by: ['status'],
+    where: { userId },
+    _count: { status: true },
+  });
+
+  return results.reduce((acc: any, result: any) => {
+    acc[result.status] = result._count.status;
+    return acc;
+  }, {});
 }
 
 async function getMethodBreakdown(db: any, userId: string) {
-    const results = await db.cancellationRequest.groupBy({
-      by: ['method'],
-      where: { userId },
-      _count: { method: true },
-    });
-    
-    return results.reduce((acc: any, result: any) => {
-      const method = result.method === 'web_automation' ? 'automation' : 
-                    result.method === 'manual' ? 'manual' : 'api';
-      acc[method] = (acc[method] || 0) + result._count.method;
-      return acc;
-    }, {});
+  const results = await db.cancellationRequest.groupBy({
+    by: ['method'],
+    where: { userId },
+    _count: { method: true },
+  });
+
+  return results.reduce((acc: any, result: any) => {
+    const method =
+      result.method === 'web_automation'
+        ? 'automation'
+        : result.method === 'manual'
+          ? 'manual'
+          : 'api';
+    acc[method] = (acc[method] || 0) + result._count.method;
+    return acc;
+  }, {});
 }
 
 function analyzeErrorBreakdown(failures: any[]) {
-    const breakdown: Record<string, number> = {};
-    failures.forEach(failure => {
-      const code = failure.errorCode || 'unknown';
-      breakdown[code] = (breakdown[code] || 0) + 1;
-    });
-    return breakdown;
+  const breakdown: Record<string, number> = {};
+  failures.forEach(failure => {
+    const code = failure.errorCode || 'unknown';
+    breakdown[code] = (breakdown[code] || 0) + 1;
+  });
+  return breakdown;
 }
 
 function calculatePercentile(requests: any[], percentile: number) {
-    const completedRequests = requests
-      .filter(r => r.completedAt)
-      .map(r => r.completedAt.getTime() - r.createdAt.getTime())
-      .sort((a, b) => a - b);
-    
-    if (completedRequests.length === 0) return 0;
-    
-    const index = Math.ceil((percentile / 100) * completedRequests.length) - 1;
-    return completedRequests[index] || 0;
+  const completedRequests = requests
+    .filter(r => r.completedAt)
+    .map(r => r.completedAt.getTime() - r.createdAt.getTime())
+    .sort((a, b) => a - b);
+
+  if (completedRequests.length === 0) return 0;
+
+  const index = Math.ceil((percentile / 100) * completedRequests.length) - 1;
+  return completedRequests[index] || 0;
 }

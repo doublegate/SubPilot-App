@@ -7,25 +7,27 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Activity, 
-  TrendingUp, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Activity,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  XCircle,
   AlertTriangle,
   Zap,
   Brain,
   FileText,
   BarChart3,
   RefreshCw,
-  Settings
+  Settings,
 } from 'lucide-react';
 import { api } from '@/trpc/react';
 import { UnifiedCancellationModal } from './unified-cancellation-modal';
 
 export function UnifiedCancellationDashboard() {
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'day' | 'week' | 'month'>('month');
+  const [selectedTimeframe, setSelectedTimeframe] = useState<
+    'day' | 'week' | 'month'
+  >('month');
   const [selectedSubscription, setSelectedSubscription] = useState<{
     id: string;
     name: string;
@@ -40,7 +42,9 @@ export function UnifiedCancellationDashboard() {
     limit: 20,
   });
 
-  const systemHealthQuery = (api.unifiedCancellation.getSystemHealth as any).useQuery(
+  const systemHealthQuery = (
+    api.unifiedCancellation.getSystemHealth as any
+  ).useQuery(
     undefined,
     { refetchInterval: 30000 } // Refresh every 30 seconds
   );
@@ -96,7 +100,9 @@ export function UnifiedCancellationDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Unified Cancellation Dashboard</h2>
-          <p className="text-gray-600">Monitor and manage subscription cancellations</p>
+          <p className="text-gray-600">
+            Monitor and manage subscription cancellations
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -108,7 +114,7 @@ export function UnifiedCancellationDashboard() {
               systemHealthQuery.refetch();
             }}
           >
-            <RefreshCw className="h-4 w-4 mr-1" />
+            <RefreshCw className="mr-1 h-4 w-4" />
             Refresh
           </Button>
         </div>
@@ -127,25 +133,34 @@ export function UnifiedCancellationDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              {Object.entries(systemHealthQuery.data.methods).map(([method, health]: [string, any]) => (
-                <div key={method} className="text-center p-3 border rounded-lg">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    {getMethodIcon(method)}
-                    <span className="font-medium capitalize">{method.replace('_', ' ')}</span>
-                  </div>
-                  <div className="text-2xl font-bold mb-1">{health.successRate}%</div>
-                  <div className="text-sm text-gray-600">
-                    {health.recentRequests} recent requests
-                  </div>
-                  <Badge 
-                    variant={health.available ? 'default' : 'destructive'}
-                    className="mt-2"
+            <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+              {Object.entries(systemHealthQuery.data.methods).map(
+                ([method, health]: [string, any]) => (
+                  <div
+                    key={method}
+                    className="rounded-lg border p-3 text-center"
                   >
-                    {health.available ? 'Available' : 'Unavailable'}
-                  </Badge>
-                </div>
-              ))}
+                    <div className="mb-2 flex items-center justify-center gap-2">
+                      {getMethodIcon(method)}
+                      <span className="font-medium capitalize">
+                        {method.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="mb-1 text-2xl font-bold">
+                      {health.successRate}%
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {health.recentRequests} recent requests
+                    </div>
+                    <Badge
+                      variant={health.available ? 'default' : 'destructive'}
+                      className="mt-2"
+                    >
+                      {health.available ? 'Available' : 'Unavailable'}
+                    </Badge>
+                  </div>
+                )
+              )}
             </div>
 
             {systemHealthQuery.data.recommendations.length > 0 && (
@@ -153,9 +168,11 @@ export function UnifiedCancellationDashboard() {
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   <div className="space-y-1">
-                    {systemHealthQuery.data.recommendations.map((rec: string, index: number) => (
-                      <div key={index}>• {rec}</div>
-                    ))}
+                    {systemHealthQuery.data.recommendations.map(
+                      (rec: string, index: number) => (
+                        <div key={index}>• {rec}</div>
+                      )
+                    )}
                   </div>
                 </AlertDescription>
               </Alert>
@@ -166,29 +183,33 @@ export function UnifiedCancellationDashboard() {
 
       {/* Analytics Overview */}
       {analyticsQuery.data && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Requests
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsQuery.data.summary.total}</div>
-              <p className="text-xs text-gray-600">
-                Last {selectedTimeframe}
-              </p>
+              <div className="text-2xl font-bold">
+                {analyticsQuery.data.summary.total}
+              </div>
+              <p className="text-xs text-gray-600">Last {selectedTimeframe}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Success Rate
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
                 {analyticsQuery.data.summary.successRate}%
               </div>
               <div className="flex items-center text-xs text-gray-600">
-                <TrendingUp className="h-3 w-3 mr-1" />
+                <TrendingUp className="mr-1 h-3 w-3" />
                 {analyticsQuery.data.summary.completed} completed
               </div>
             </CardContent>
@@ -203,7 +224,7 @@ export function UnifiedCancellationDashboard() {
                 {analyticsQuery.data.summary.averageTime}m
               </div>
               <div className="flex items-center text-xs text-gray-600">
-                <Clock className="h-3 w-3 mr-1" />
+                <Clock className="mr-1 h-3 w-3" />
                 Average completion
               </div>
             </CardContent>
@@ -217,9 +238,7 @@ export function UnifiedCancellationDashboard() {
               <div className="text-2xl font-bold text-blue-600">
                 {analyticsQuery.data.summary.pending}
               </div>
-              <p className="text-xs text-gray-600">
-                In progress
-              </p>
+              <p className="text-xs text-gray-600">In progress</p>
             </CardContent>
           </Card>
         </div>
@@ -240,31 +259,48 @@ export function UnifiedCancellationDashboard() {
             </CardHeader>
             <CardContent>
               {historyQuery.data?.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="py-8 text-center text-gray-500">
                   No cancellation requests yet
                 </div>
               ) : (
                 <div className="space-y-3">
                   {historyQuery.data?.map((request: any) => (
-                    <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
                       <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${getStatusColor(request.status)}`} />
+                        <div
+                          className={`h-3 w-3 rounded-full ${getStatusColor(request.status)}`}
+                        />
                         <div>
-                          <p className="font-medium">{request.subscription.name}</p>
+                          <p className="font-medium">
+                            {request.subscription.name}
+                          </p>
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             {getMethodIcon(request.method)}
-                            <span className="capitalize">{request.method.replace('_', ' ')}</span>
+                            <span className="capitalize">
+                              {request.method.replace('_', ' ')}
+                            </span>
                             <span>•</span>
-                            <span>{new Date(request.createdAt).toLocaleDateString()}</span>
+                            <span>
+                              {new Date(request.createdAt).toLocaleDateString()}
+                            </span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <Badge variant={request.status === 'completed' ? 'default' : 'secondary'}>
+                        <Badge
+                          variant={
+                            request.status === 'completed'
+                              ? 'default'
+                              : 'secondary'
+                          }
+                        >
                           {request.status}
                         </Badge>
                         {request.confirmationCode && (
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="mt-1 text-xs text-gray-600">
                             Code: {request.confirmationCode}
                           </p>
                         )}
@@ -278,11 +314,13 @@ export function UnifiedCancellationDashboard() {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <div className="flex gap-2 mb-4">
-            {(['day', 'week', 'month'] as const).map((timeframe) => (
+          <div className="mb-4 flex gap-2">
+            {(['day', 'week', 'month'] as const).map(timeframe => (
               <Button
                 key={timeframe}
-                variant={selectedTimeframe === timeframe ? 'default' : 'outline'}
+                variant={
+                  selectedTimeframe === timeframe ? 'default' : 'outline'
+                }
                 size="sm"
                 onClick={() => setSelectedTimeframe(timeframe)}
               >
@@ -292,7 +330,7 @@ export function UnifiedCancellationDashboard() {
           </div>
 
           {analyticsQuery.data && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -306,21 +344,27 @@ export function UnifiedCancellationDashboard() {
                       <CheckCircle className="h-4 w-4 text-green-500" />
                       Completed
                     </span>
-                    <span className="font-medium">{analyticsQuery.data.summary.completed}</span>
+                    <span className="font-medium">
+                      {analyticsQuery.data.summary.completed}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <XCircle className="h-4 w-4 text-red-500" />
                       Failed
                     </span>
-                    <span className="font-medium">{analyticsQuery.data.summary.failed}</span>
+                    <span className="font-medium">
+                      {analyticsQuery.data.summary.failed}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-yellow-500" />
                       Pending
                     </span>
-                    <span className="font-medium">{analyticsQuery.data.summary.pending}</span>
+                    <span className="font-medium">
+                      {analyticsQuery.data.summary.pending}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -331,12 +375,17 @@ export function UnifiedCancellationDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {analyticsQuery.data.recommendations.map((rec: string, index: number) => (
-                      <div key={index} className="flex items-start gap-2 text-sm">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
-                        <span>{rec}</span>
-                      </div>
-                    ))}
+                    {analyticsQuery.data.recommendations.map(
+                      (rec: string, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-2 text-sm"
+                        >
+                          <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
+                          <span>{rec}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -346,52 +395,57 @@ export function UnifiedCancellationDashboard() {
 
         <TabsContent value="methods" className="space-y-4">
           {analyticsQuery.data && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.entries(analyticsQuery.data.methodComparison).map(([method, stats]: [string, any]) => (
-                <Card key={method}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      {getMethodIcon(method)}
-                      {method.charAt(0).toUpperCase() + method.slice(1).replace('_', ' ')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Success Rate</span>
-                        <span className="font-medium">{stats.successRate}%</span>
-                      </div>
-                      <Progress value={stats.successRate} className="h-2" />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {Object.entries(analyticsQuery.data.methodComparison).map(
+                ([method, stats]: [string, any]) => (
+                  <Card key={method}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        {getMethodIcon(method)}
+                        {method.charAt(0).toUpperCase() +
+                          method.slice(1).replace('_', ' ')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
                       <div>
-                        <p className="text-gray-600">Total</p>
-                        <p className="font-medium">{stats.total}</p>
+                        <div className="mb-1 flex justify-between text-sm">
+                          <span>Success Rate</span>
+                          <span className="font-medium">
+                            {stats.successRate}%
+                          </span>
+                        </div>
+                        <Progress value={stats.successRate} className="h-2" />
                       </div>
-                      <div>
-                        <p className="text-gray-600">Avg. Time</p>
-                        <p className="font-medium">{stats.averageTime}m</p>
-                      </div>
-                    </div>
 
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-green-600">Completed</span>
-                        <span>{stats.completed}</span>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-gray-600">Total</p>
+                          <p className="font-medium">{stats.total}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Avg. Time</p>
+                          <p className="font-medium">{stats.averageTime}m</p>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-red-600">Failed</span>
-                        <span>{stats.failed}</span>
+
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-green-600">Completed</span>
+                          <span>{stats.completed}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-red-600">Failed</span>
+                          <span>{stats.failed}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-yellow-600">Pending</span>
+                          <span>{stats.pending}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-yellow-600">Pending</span>
-                        <span>{stats.pending}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                )
+              )}
             </div>
           )}
         </TabsContent>
@@ -406,40 +460,45 @@ export function UnifiedCancellationDashboard() {
             </CardHeader>
             <CardContent>
               {subscriptionsQuery.data?.subscriptions?.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="py-8 text-center text-gray-500">
                   No active subscriptions found
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {subscriptionsQuery.data?.subscriptions
                     ?.filter((sub: any) => sub.status === 'active')
                     .map((subscription: any) => (
-                    <div
-                      key={subscription.id}
-                      className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => setSelectedSubscription({
-                        id: subscription.id,
-                        name: subscription.name,
-                      })}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{subscription.name}</p>
-                          <p className="text-sm text-gray-600">
-                            ${subscription.amount} / {subscription.frequency}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant="outline">Active</Badge>
-                          {subscription.nextBilling && (
-                            <p className="text-xs text-gray-600 mt-1">
-                              Next: {new Date(subscription.nextBilling).toLocaleDateString()}
+                      <div
+                        key={subscription.id}
+                        className="cursor-pointer rounded-lg border p-3 transition-colors hover:bg-gray-50"
+                        onClick={() =>
+                          setSelectedSubscription({
+                            id: subscription.id,
+                            name: subscription.name,
+                          })
+                        }
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{subscription.name}</p>
+                            <p className="text-sm text-gray-600">
+                              ${subscription.amount} / {subscription.frequency}
                             </p>
-                          )}
+                          </div>
+                          <div className="text-right">
+                            <Badge variant="outline">Active</Badge>
+                            {subscription.nextBilling && (
+                              <p className="mt-1 text-xs text-gray-600">
+                                Next:{' '}
+                                {new Date(
+                                  subscription.nextBilling
+                                ).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </CardContent>

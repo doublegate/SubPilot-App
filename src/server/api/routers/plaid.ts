@@ -400,8 +400,8 @@ export const plaidRouter = createTRPCRouter({
       institutionName: item.institutionName,
       institutionId: item.institutionId,
       accounts: item.bankAccounts,
-      lastSyncedAt: item.lastSyncedAt,
-      consentExpirationTime: item.consentExpirationTime,
+      lastWebhook: item.lastWebhook,
+      status: item.status,
     }));
   }),
 
@@ -412,6 +412,7 @@ export const plaidRouter = createTRPCRouter({
     .input(
       z.object({
         accountId: z.string().optional(),
+        itemId: z.string().optional(),
         force: z.boolean().optional().default(false),
       })
     )
@@ -436,6 +437,7 @@ export const plaidRouter = createTRPCRouter({
         where: {
           userId: ctx.session.user.id,
           status: 'good',
+          ...(input.itemId && { id: input.itemId }),
         },
         include: {
           bankAccounts: {
@@ -819,7 +821,7 @@ export const plaidRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // Use the existing disconnectAccount logic with plaidItemId
-      return ctx.db.$transaction(async (db) => {
+      return ctx.db.$transaction(async db => {
         // Verify ownership
         const plaidItem = await db.plaidItem.findFirst({
           where: {

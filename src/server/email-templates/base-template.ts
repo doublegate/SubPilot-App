@@ -112,9 +112,8 @@ export function baseEmailTemplate({
     sanitizeHtml(content, {
       allowedTags: [],
       allowedAttributes: {},
-      textFilter: (text) => text.replace(/\s+/g, ' ').trim()
-    }) +
-    `\n\n© ${currentYear} SubPilot. All rights reserved.`;
+      textFilter: text => text.replace(/\s+/g, ' ').trim(),
+    }) + `\n\n© ${currentYear} SubPilot. All rights reserved.`;
 
   return { html, text };
 }

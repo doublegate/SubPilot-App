@@ -107,7 +107,7 @@ export class CancellationService {
     const provider = await this.findCancellationProvider(subscription.name);
 
     // Determine cancellation method based on provider
-    const method = provider 
+    const method = provider
       ? this.determineCancellationMethod(provider)
       : 'manual';
 
@@ -126,8 +126,12 @@ export class CancellationService {
     });
 
     // Log the cancellation request
-    await this.logCancellationActivity(request.id, 'initiated', 'info', 
-      `Cancellation request created with method: ${method}`);
+    await this.logCancellationActivity(
+      request.id,
+      'initiated',
+      'info',
+      `Cancellation request created with method: ${method}`
+    );
 
     // Audit log
     await AuditLogger.log({
@@ -178,8 +182,12 @@ export class CancellationService {
         },
       });
 
-      await this.logCancellationActivity(requestId, 'processing_started', 'info',
-        `Starting cancellation process using method: ${request.method}`);
+      await this.logCancellationActivity(
+        requestId,
+        'processing_started',
+        'info',
+        `Starting cancellation process using method: ${request.method}`
+      );
 
       let result: CancellationResult;
 
@@ -203,7 +211,9 @@ export class CancellationService {
           status: result.status,
           confirmationCode: result.confirmationCode,
           effectiveDate: result.effectiveDate,
-          refundAmount: result.refundAmount ? new Prisma.Decimal(result.refundAmount) : null,
+          refundAmount: result.refundAmount
+            ? new Prisma.Decimal(result.refundAmount)
+            : null,
           manualInstructions: result.manualInstructions || {},
           completedAt: result.status === 'completed' ? new Date() : null,
           errorCode: result.error ? 'PROCESSING_ERROR' : null,
@@ -227,15 +237,25 @@ export class CancellationService {
           },
         });
 
-        await this.logCancellationActivity(requestId, 'completed', 'success',
-          `Cancellation completed successfully. Confirmation: ${result.confirmationCode}`);
+        await this.logCancellationActivity(
+          requestId,
+          'completed',
+          'success',
+          `Cancellation completed successfully. Confirmation: ${result.confirmationCode}`
+        );
       } else if (result.error) {
-        await this.logCancellationActivity(requestId, 'error', 'failure', result.error);
+        await this.logCancellationActivity(
+          requestId,
+          'error',
+          'failure',
+          result.error
+        );
       }
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred';
 
       await this.db.cancellationRequest.update({
         where: { id: requestId },
@@ -247,7 +267,12 @@ export class CancellationService {
         },
       });
 
-      await this.logCancellationActivity(requestId, 'error', 'failure', errorMessage);
+      await this.logCancellationActivity(
+        requestId,
+        'error',
+        'failure',
+        errorMessage
+      );
 
       return {
         requestId,
@@ -264,12 +289,18 @@ export class CancellationService {
   /**
    * Process API-based cancellation
    */
-  private async processApiCancellation(request: any): Promise<CancellationResult> {
+  private async processApiCancellation(
+    request: any
+  ): Promise<CancellationResult> {
     // For now, this will simulate API cancellation
     // In a real implementation, this would call the provider's cancellation API
-    
-    await this.logCancellationActivity(request.id, 'api_call_started', 'info',
-      `Attempting API cancellation for provider: ${request.provider?.name}`);
+
+    await this.logCancellationActivity(
+      request.id,
+      'api_call_started',
+      'info',
+      `Attempting API cancellation for provider: ${request.provider?.name}`
+    );
 
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -282,8 +313,12 @@ export class CancellationService {
       const effectiveDate = new Date();
       effectiveDate.setDate(effectiveDate.getDate() + 1); // Effective tomorrow
 
-      await this.logCancellationActivity(request.id, 'api_success', 'success',
-        `API cancellation successful. Confirmation: ${confirmationCode}`);
+      await this.logCancellationActivity(
+        request.id,
+        'api_success',
+        'success',
+        `API cancellation successful. Confirmation: ${confirmationCode}`
+      );
 
       return {
         requestId: request.id,
@@ -296,8 +331,12 @@ export class CancellationService {
       };
     } else {
       // API failed, fall back to manual
-      await this.logCancellationActivity(request.id, 'api_failed', 'failure',
-        'API cancellation failed, falling back to manual instructions');
+      await this.logCancellationActivity(
+        request.id,
+        'api_failed',
+        'failure',
+        'API cancellation failed, falling back to manual instructions'
+      );
 
       return this.processManualCancellation(request);
     }
@@ -306,14 +345,20 @@ export class CancellationService {
   /**
    * Process webhook-based cancellation
    */
-  private async processWebhookCancellation(request: any): Promise<CancellationResult> {
+  private async processWebhookCancellation(
+    request: any
+  ): Promise<CancellationResult> {
     // For webhook-based cancellations, we would typically:
     // 1. Send a cancellation request to the provider
     // 2. Set status to processing
     // 3. Wait for webhook confirmation
-    
-    await this.logCancellationActivity(request.id, 'webhook_initiated', 'info',
-      'Webhook cancellation initiated, waiting for confirmation');
+
+    await this.logCancellationActivity(
+      request.id,
+      'webhook_initiated',
+      'info',
+      'Webhook cancellation initiated, waiting for confirmation'
+    );
 
     return {
       requestId: request.id,
@@ -329,14 +374,23 @@ export class CancellationService {
   /**
    * Process manual cancellation (generates instructions for user)
    */
-  private async processManualCancellation(request: any): Promise<CancellationResult> {
+  private async processManualCancellation(
+    request: any
+  ): Promise<CancellationResult> {
     const provider = request.provider;
     const subscription = request.subscription;
 
-    const instructions = this.generateManualInstructions(subscription, provider);
+    const instructions = this.generateManualInstructions(
+      subscription,
+      provider
+    );
 
-    await this.logCancellationActivity(request.id, 'manual_instructions_generated', 'info',
-      'Manual cancellation instructions generated for user');
+    await this.logCancellationActivity(
+      request.id,
+      'manual_instructions_generated',
+      'info',
+      'Manual cancellation instructions generated for user'
+    );
 
     return {
       requestId: request.id,
@@ -372,12 +426,16 @@ export class CancellationService {
     if (provider) {
       return {
         ...baseInstructions,
-        website: provider.loginUrl || `https://${subscription.name.toLowerCase()}.com/account`,
+        website:
+          provider.loginUrl ||
+          `https://${subscription.name.toLowerCase()}.com/account`,
         phone: provider.phoneNumber,
         email: provider.email,
         chatUrl: provider.chatUrl,
         difficulty: provider.difficulty,
-        estimatedTime: provider.averageTime ? `${provider.averageTime} minutes` : '5-15 minutes',
+        estimatedTime: provider.averageTime
+          ? `${provider.averageTime} minutes`
+          : '5-15 minutes',
         specificSteps: provider.instructions || [],
       };
     }
@@ -420,7 +478,9 @@ export class CancellationService {
         status: 'completed',
         confirmationCode: validatedData.confirmationCode,
         effectiveDate: validatedData.effectiveDate || new Date(),
-        refundAmount: validatedData.refundAmount ? new Prisma.Decimal(validatedData.refundAmount) : null,
+        refundAmount: validatedData.refundAmount
+          ? new Prisma.Decimal(validatedData.refundAmount)
+          : null,
         userConfirmed: true,
         userNotes: validatedData.notes,
         completedAt: new Date(),
@@ -442,8 +502,12 @@ export class CancellationService {
       },
     });
 
-    await this.logCancellationActivity(requestId, 'manual_confirmed', 'success',
-      `User confirmed manual cancellation. Code: ${validatedData.confirmationCode}`);
+    await this.logCancellationActivity(
+      requestId,
+      'manual_confirmed',
+      'success',
+      `User confirmed manual cancellation. Code: ${validatedData.confirmationCode}`
+    );
 
     // Audit log
     await AuditLogger.log({
@@ -471,7 +535,10 @@ export class CancellationService {
   /**
    * Get cancellation status
    */
-  async getCancellationStatus(userId: string, requestId: string): Promise<CancellationResult> {
+  async getCancellationStatus(
+    userId: string,
+    requestId: string
+  ): Promise<CancellationResult> {
     const request = await this.db.cancellationRequest.findFirst({
       where: {
         id: requestId,
@@ -491,7 +558,9 @@ export class CancellationService {
       status: request.status as any,
       confirmationCode: request.confirmationCode,
       effectiveDate: request.effectiveDate,
-      refundAmount: request.refundAmount ? parseFloat(request.refundAmount.toString()) : null,
+      refundAmount: request.refundAmount
+        ? parseFloat(request.refundAmount.toString())
+        : null,
       manualInstructions: request.manualInstructions,
       error: request.errorMessage,
     };
@@ -500,7 +569,10 @@ export class CancellationService {
   /**
    * Retry a failed cancellation
    */
-  async retryCancellation(userId: string, requestId: string): Promise<CancellationResult> {
+  async retryCancellation(
+    userId: string,
+    requestId: string
+  ): Promise<CancellationResult> {
     const request = await this.db.cancellationRequest.findFirst({
       where: {
         id: requestId,
@@ -528,8 +600,12 @@ export class CancellationService {
       },
     });
 
-    await this.logCancellationActivity(requestId, 'retry_initiated', 'info',
-      'Cancellation retry initiated by user');
+    await this.logCancellationActivity(
+      requestId,
+      'retry_initiated',
+      'info',
+      'Cancellation retry initiated by user'
+    );
 
     // Process the cancellation again
     return this.processCancellation(requestId);
@@ -538,7 +614,10 @@ export class CancellationService {
   /**
    * Get cancellation history for a user
    */
-  async getCancellationHistory(userId: string, limit = 10): Promise<CancellationHistoryItem[]> {
+  async getCancellationHistory(
+    userId: string,
+    limit = 10
+  ): Promise<CancellationHistoryItem[]> {
     const requests = await this.db.cancellationRequest.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -583,7 +662,9 @@ export class CancellationService {
    * Find the best cancellation provider for a subscription
    */
   private async findCancellationProvider(subscriptionName: string) {
-    const normalizedName = subscriptionName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalizedName = subscriptionName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
 
     return await this.db.cancellationProvider.findFirst({
       where: {

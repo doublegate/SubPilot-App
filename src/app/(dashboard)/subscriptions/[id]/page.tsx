@@ -46,8 +46,12 @@ interface CancellationInfoData {
 export default function SubscriptionDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  
-  const { data: subscription, isLoading, error } = api.subscriptions.getById.useQuery({ id });
+
+  const {
+    data: subscription,
+    isLoading,
+    error,
+  } = api.subscriptions.getById.useQuery({ id });
 
   if (isLoading) {
     return (

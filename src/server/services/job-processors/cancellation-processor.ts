@@ -129,8 +129,8 @@ export class CancellationJobProcessor {
             status: 'completed',
             confirmationCode: apiResult.confirmationCode,
             effectiveDate: apiResult.effectiveDate,
-            refundAmount: apiResult.refundAmount 
-              ? new Prisma.Decimal(apiResult.refundAmount) 
+            refundAmount: apiResult.refundAmount
+              ? new Prisma.Decimal(apiResult.refundAmount)
               : null,
             completedAt: new Date(),
           },
@@ -177,7 +177,11 @@ export class CancellationJobProcessor {
         };
       } else {
         // API failed, but might be retryable
-        await this.logError(requestId, 'api_cancellation_failed', new Error(apiResult.error));
+        await this.logError(
+          requestId,
+          'api_cancellation_failed',
+          new Error(apiResult.error)
+        );
 
         return {
           success: false,
@@ -189,7 +193,8 @@ export class CancellationJobProcessor {
       await this.logError(requestId, 'api_cancellation_error', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'API cancellation failed',
+        error:
+          error instanceof Error ? error.message : 'API cancellation failed',
         retry: { delay: 15000 },
       };
     }
@@ -262,7 +267,10 @@ export class CancellationJobProcessor {
       await this.logError(requestId, 'webhook_cancellation_error', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Webhook cancellation failed',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Webhook cancellation failed',
         retry: { delay: 20000 },
       };
     }
@@ -336,7 +344,10 @@ export class CancellationJobProcessor {
       await this.logError(requestId, 'manual_instructions_error', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to generate instructions',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to generate instructions',
         retry: { delay: 5000 },
       };
     }
@@ -517,7 +528,9 @@ export class CancellationJobProcessor {
     retryable?: boolean;
   }> {
     // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 3000));
+    await new Promise(resolve =>
+      setTimeout(resolve, 2000 + Math.random() * 3000)
+    );
 
     // Simulate success/failure based on provider type
     const successRate = request.provider?.type === 'api' ? 0.8 : 0.6;
@@ -529,9 +542,10 @@ export class CancellationJobProcessor {
       effectiveDate.setDate(effectiveDate.getDate() + 1); // Effective tomorrow
 
       // Sometimes include refund
-      const refundAmount = Math.random() < 0.3 
-        ? parseFloat(request.subscription.amount.toString()) 
-        : undefined;
+      const refundAmount =
+        Math.random() < 0.3
+          ? parseFloat(request.subscription.amount.toString())
+          : undefined;
 
       return {
         success: true,
@@ -549,7 +563,8 @@ export class CancellationJobProcessor {
       ];
 
       const error = errors[Math.floor(Math.random() * errors.length)]!;
-      const retryable = !error.includes('not allowed') && !error.includes('not found');
+      const retryable =
+        !error.includes('not allowed') && !error.includes('not found');
 
       return {
         success: false,
@@ -570,7 +585,9 @@ export class CancellationJobProcessor {
     retryable?: boolean;
   }> {
     // Simulate webhook initiation delay
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+    await new Promise(resolve =>
+      setTimeout(resolve, 1000 + Math.random() * 2000)
+    );
 
     const success = Math.random() < 0.7; // 70% success rate
 
@@ -593,7 +610,8 @@ export class CancellationJobProcessor {
       ];
 
       const error = errors[Math.floor(Math.random() * errors.length)]!;
-      const retryable = !error.includes('not configured') && !error.includes('Invalid');
+      const retryable =
+        !error.includes('not configured') && !error.includes('Invalid');
 
       return {
         success: false,
@@ -634,13 +652,14 @@ export class CancellationJobProcessor {
         ...baseInstructions,
         providerId: provider.id,
         providerName: provider.name,
-        website: provider.loginUrl || `https://${subscription.name.toLowerCase()}.com`,
+        website:
+          provider.loginUrl || `https://${subscription.name.toLowerCase()}.com`,
         phone: provider.phoneNumber,
         email: provider.email,
         chatUrl: provider.chatUrl,
         difficulty: provider.difficulty,
-        estimatedTime: provider.averageTime 
-          ? `${provider.averageTime} minutes` 
+        estimatedTime: provider.averageTime
+          ? `${provider.averageTime} minutes`
           : baseInstructions.estimatedTime,
         specificSteps: provider.instructions || [],
         requiresPhone: provider.phoneNumber && provider.difficulty === 'hard',
@@ -655,9 +674,14 @@ export class CancellationJobProcessor {
   /**
    * Log error with context
    */
-  private async logError(requestId: string, action: string, error: any): Promise<void> {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
+  private async logError(
+    requestId: string,
+    action: string,
+    error: any
+  ): Promise<void> {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+
     await this.db.cancellationLog.create({
       data: {
         requestId,

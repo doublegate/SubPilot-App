@@ -39,7 +39,7 @@ export const columns: ColumnDef<User>[] = [
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.image || ''} />
             <AvatarFallback>
-              {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+              {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
             </AvatarFallback>
           </Avatar>
           <div>
@@ -55,9 +55,10 @@ export const columns: ColumnDef<User>[] = [
     header: 'Status',
     cell: ({ row }) => {
       const user = row.original;
-      const isLocked = user.lockedUntil && new Date(user.lockedUntil) > new Date();
+      const isLocked =
+        user.lockedUntil && new Date(user.lockedUntil) > new Date();
       const isVerified = user.emailVerified !== null;
-      
+
       if (isLocked) {
         return <Badge variant="destructive">Locked</Badge>;
       }
@@ -72,7 +73,8 @@ export const columns: ColumnDef<User>[] = [
     header: 'Plan',
     cell: ({ row }) => {
       const plan = row.getValue('subscriptionPlan') as string;
-      const variant = plan === 'pro' || plan === 'team' ? 'default' : 'secondary';
+      const variant =
+        plan === 'pro' || plan === 'team' ? 'default' : 'secondary';
       return <Badge variant={variant}>{plan}</Badge>;
     },
   },
@@ -84,7 +86,9 @@ export const columns: ColumnDef<User>[] = [
       return (
         <div className="text-sm">
           <p>{user.bankAccounts} banks</p>
-          <p className="text-muted-foreground">{user.subscriptions} subscriptions</p>
+          <p className="text-muted-foreground">
+            {user.subscriptions} subscriptions
+          </p>
         </div>
       );
     },
@@ -106,7 +110,8 @@ export const columns: ColumnDef<User>[] = [
     id: 'actions',
     cell: ({ row }) => {
       const user = row.original;
-      const isLocked = user.lockedUntil && new Date(user.lockedUntil) > new Date();
+      const isLocked =
+        user.lockedUntil && new Date(user.lockedUntil) > new Date();
 
       return (
         <DropdownMenu>

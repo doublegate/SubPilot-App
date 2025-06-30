@@ -53,14 +53,14 @@ export function CancellationModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const initiateCancellation = api.cancellation.initiate.useMutation({
-    onSuccess: (result) => {
+    onSuccess: result => {
       toast({
         title: 'Cancellation Started',
         description: getSuccessMessage(result.status),
       });
       onCancellationStarted();
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: 'Failed to Start Cancellation',
         description: error.message,
@@ -72,7 +72,7 @@ export function CancellationModal({
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    
+
     try {
       await initiateCancellation.mutateAsync({
         subscriptionId,
@@ -89,7 +89,7 @@ export function CancellationModal({
       case 'completed':
         return 'Your subscription has been cancelled successfully!';
       case 'processing':
-        return 'Cancellation is being processed. You\'ll be notified when complete.';
+        return "Cancellation is being processed. You'll be notified when complete.";
       case 'pending':
         return 'Manual cancellation instructions have been generated.';
       default:
@@ -130,22 +130,22 @@ export function CancellationModal({
             Cancel {subscriptionName}
           </DialogTitle>
           <DialogDescription>
-            This will start the cancellation process for your subscription.
-            You can track the progress and receive updates along the way.
+            This will start the cancellation process for your subscription. You
+            can track the progress and receive updates along the way.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Provider Information */}
           {provider && (
-            <div className="border rounded-lg p-4 space-y-3">
+            <div className="space-y-3 rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium">Cancellation Method</h4>
                 <Badge className={getDifficultyColor(provider.difficulty)}>
                   {provider.difficulty} difficulty
                 </Badge>
               </div>
-              
+
               <p className="text-sm text-muted-foreground">
                 {getMethodDescription(provider.type)}
               </p>
@@ -181,7 +181,10 @@ export function CancellationModal({
           {/* Priority Selection */}
           <div className="space-y-3">
             <Label>Priority Level</Label>
-            <RadioGroup value={priority} onValueChange={(value) => setPriority(value as Priority)}>
+            <RadioGroup
+              value={priority}
+              onValueChange={value => setPriority(value as Priority)}
+            >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="low" id="low" />
                 <Label htmlFor="low" className="font-normal">
@@ -210,7 +213,7 @@ export function CancellationModal({
               id="notes"
               placeholder="Any specific reasons or requirements for cancellation..."
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={e => setNotes(e.target.value)}
               rows={3}
             />
           </div>
@@ -219,8 +222,8 @@ export function CancellationModal({
           <Alert>
             <Icons.alertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Once started, the cancellation process cannot be undone. 
-              Make sure you want to cancel this subscription before proceeding.
+              Once started, the cancellation process cannot be undone. Make sure
+              you want to cancel this subscription before proceeding.
             </AlertDescription>
           </Alert>
         </div>
@@ -229,10 +232,10 @@ export function CancellationModal({
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 text-white hover:bg-red-700"
           >
             {isSubmitting ? (
               <>

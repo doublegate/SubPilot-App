@@ -81,8 +81,24 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['FiraCode Nerd Font Mono', 'Fira Code', 'Fira Mono', 'Consolas', 'Monaco', 'Courier New', 'monospace'],
-        mono: ['FiraCode Nerd Font Mono', 'Fira Code', 'Fira Mono', 'Consolas', 'Monaco', 'Courier New', 'monospace'],
+        sans: [
+          'FiraCode Nerd Font Mono',
+          'Fira Code',
+          'Fira Mono',
+          'Consolas',
+          'Monaco',
+          'Courier New',
+          'monospace',
+        ],
+        mono: [
+          'FiraCode Nerd Font Mono',
+          'Fira Code',
+          'Fira Mono',
+          'Consolas',
+          'Monaco',
+          'Courier New',
+          'monospace',
+        ],
       },
       fontSize: {
         xs: ['0.875rem', { lineHeight: '1.25rem' }],

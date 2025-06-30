@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-import { 
-  CancellationService, 
-  CancellationRequestInput, 
-  ManualConfirmationInput 
+import {
+  CancellationService,
+  CancellationRequestInput,
+  ManualConfirmationInput,
 } from '@/server/services/cancellation.service';
 
 export const cancellationRouter = createTRPCRouter({
@@ -25,7 +25,10 @@ export const cancellationRouter = createTRPCRouter({
     .input(z.object({ requestId: z.string() }))
     .query(async ({ ctx, input }) => {
       const service = new CancellationService(ctx.db);
-      return await service.getCancellationStatus(ctx.session.user.id, input.requestId);
+      return await service.getCancellationStatus(
+        ctx.session.user.id,
+        input.requestId
+      );
     }),
 
   /**
@@ -54,7 +57,10 @@ export const cancellationRouter = createTRPCRouter({
     .input(z.object({ requestId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const service = new CancellationService(ctx.db);
-      return await service.retryCancellation(ctx.session.user.id, input.requestId);
+      return await service.retryCancellation(
+        ctx.session.user.id,
+        input.requestId
+      );
     }),
 
   /**
@@ -68,7 +74,10 @@ export const cancellationRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const service = new CancellationService(ctx.db);
-      return await service.getCancellationHistory(ctx.session.user.id, input.limit);
+      return await service.getCancellationHistory(
+        ctx.session.user.id,
+        input.limit
+      );
     }),
 
   /**
@@ -108,10 +117,7 @@ export const cancellationRouter = createTRPCRouter({
 
       const providers = await ctx.db.cancellationProvider.findMany({
         where,
-        orderBy: [
-          { successRate: 'desc' },
-          { name: 'asc' },
-        ],
+        orderBy: [{ successRate: 'desc' }, { name: 'asc' }],
         select: {
           id: true,
           name: true,
@@ -190,34 +196,35 @@ export const cancellationRouter = createTRPCRouter({
    * Get cancellation statistics
    */
   getStats: protectedProcedure.query(async ({ ctx }) => {
-    const [totalRequests, completedRequests, failedRequests, pendingRequests] = 
+    const [totalRequests, completedRequests, failedRequests, pendingRequests] =
       await Promise.all([
         ctx.db.cancellationRequest.count({
           where: { userId: ctx.session.user.id },
         }),
         ctx.db.cancellationRequest.count({
-          where: { 
+          where: {
             userId: ctx.session.user.id,
             status: 'completed',
           },
         }),
         ctx.db.cancellationRequest.count({
-          where: { 
+          where: {
             userId: ctx.session.user.id,
             status: 'failed',
           },
         }),
         ctx.db.cancellationRequest.count({
-          where: { 
+          where: {
             userId: ctx.session.user.id,
             status: { in: ['pending', 'processing'] },
           },
         }),
       ]);
 
-    const successRate = totalRequests > 0 
-      ? Math.round((completedRequests / totalRequests) * 100) 
-      : 0;
+    const successRate =
+      totalRequests > 0
+        ? Math.round((completedRequests / totalRequests) * 100)
+        : 0;
 
     return {
       totalRequests,
@@ -276,22 +283,26 @@ export const cancellationRouter = createTRPCRouter({
       // Find provider info
       const provider = await ctx.db.cancellationProvider.findFirst({
         where: {
-          normalizedName: subscription.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          normalizedName: subscription.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, ''),
           isActive: true,
         },
       });
 
       return {
         canCancel: true,
-        provider: provider ? {
-          id: provider.id,
-          name: provider.name,
-          type: provider.type,
-          difficulty: provider.difficulty,
-          averageTime: provider.averageTime,
-          successRate: parseFloat(provider.successRate.toString()),
-          supportsRefunds: provider.supportsRefunds,
-        } : null,
+        provider: provider
+          ? {
+              id: provider.id,
+              name: provider.name,
+              type: provider.type,
+              difficulty: provider.difficulty,
+              averageTime: provider.averageTime,
+              successRate: parseFloat(provider.successRate.toString()),
+              supportsRefunds: provider.supportsRefunds,
+            }
+          : null,
       };
     }),
 

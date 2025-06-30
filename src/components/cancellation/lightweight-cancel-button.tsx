@@ -11,7 +11,13 @@ import { toast } from '@/components/ui/use-toast';
 interface LightweightCancelButtonProps {
   subscriptionId: string;
   subscriptionName: string;
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  variant?:
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
   onCancellationCompleted?: () => void;
@@ -30,30 +36,32 @@ export function LightweightCancelButton({
   const [activeRequestId, setActiveRequestId] = useState<string>('');
 
   // Check if cancellation is possible
-  const { data: canCancel, isLoading: checkingCancel } = api.lightweightCancellation.canCancel.useQuery(
-    { subscriptionId },
-    { 
-      enabled: Boolean(subscriptionId),
-      retry: false,
-    }
-  );
+  const { data: canCancel, isLoading: checkingCancel } =
+    api.lightweightCancellation.canCancel.useQuery(
+      { subscriptionId },
+      {
+        enabled: Boolean(subscriptionId),
+        retry: false,
+      }
+    );
 
   const handleCancelClick = () => {
     if (!canCancel?.canCancel) {
       let message = 'Cannot cancel this subscription at this time.';
-      
+
       switch (canCancel?.reason) {
         case 'already_cancelled':
           message = 'This subscription has already been cancelled.';
           break;
         case 'cancellation_in_progress':
-          message = 'A cancellation is already in progress for this subscription.';
+          message =
+            'A cancellation is already in progress for this subscription.';
           break;
         case 'not_found':
           message = 'Subscription not found.';
           break;
       }
-      
+
       toast({
         title: 'Cannot Cancel',
         description: message,

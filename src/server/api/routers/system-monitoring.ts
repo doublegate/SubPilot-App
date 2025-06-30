@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure, publicProcedure } from '@/server/api/trpc';
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from '@/server/api/trpc';
 import { getJobQueue, checkJobQueueHealth } from '@/server/lib/job-queue';
 import { getWorkflowEngine } from '@/server/lib/workflow-engine';
 import { getRealtimeNotificationManager } from '@/server/lib/realtime-notifications';
@@ -43,7 +47,8 @@ export const systemMonitoringRouter = createTRPCRouter({
       checkRealtimeHealth(),
     ]);
 
-    const [database, jobQueue, jobProcessors, workflowEngine, realtime] = checks;
+    const [database, jobQueue, jobProcessors, workflowEngine, realtime] =
+      checks;
 
     const systemStatus = {
       overall: 'healthy' as 'healthy' | 'degraded' | 'unhealthy',
@@ -82,7 +87,9 @@ export const systemMonitoringRouter = createTRPCRouter({
     try {
       const jobQueue = getJobQueue();
       const stats = await jobQueue.getStats();
-      const failedJobs = (jobQueue as any).getFailedJobs ? await (jobQueue as any).getFailedJobs(5) : [];
+      const failedJobs = (jobQueue as any).getFailedJobs
+        ? await (jobQueue as any).getFailedJobs(5)
+        : [];
 
       return {
         stats,
@@ -126,7 +133,9 @@ export const systemMonitoringRouter = createTRPCRouter({
   realtimeStats: protectedProcedure.query(async () => {
     try {
       const realtimeManager = getRealtimeNotificationManager();
-      const stats = (realtimeManager as any).getStats ? (realtimeManager as any).getStats() : { activeConnections: realtimeManager.getActiveConnections() };
+      const stats = (realtimeManager as any).getStats
+        ? (realtimeManager as any).getStats()
+        : { activeConnections: realtimeManager.getActiveConnections() };
 
       return stats;
     } catch (error) {
@@ -143,7 +152,9 @@ export const systemMonitoringRouter = createTRPCRouter({
   userConnections: protectedProcedure.query(async ({ ctx }) => {
     try {
       const realtimeManager = getRealtimeNotificationManager();
-      const connections = (realtimeManager as any).getUserConnections ? (realtimeManager as any).getUserConnections(ctx.session.user.id) : [];
+      const connections = (realtimeManager as any).getUserConnections
+        ? (realtimeManager as any).getUserConnections(ctx.session.user.id)
+        : [];
 
       return {
         connections: connections.map((conn: any) => ({
@@ -152,7 +163,10 @@ export const systemMonitoringRouter = createTRPCRouter({
           connectedAt: conn.connectedAt,
           lastActivity: conn.lastActivity,
         })),
-        unreadNotifications: (realtimeManager as any).getUnreadNotifications ? (realtimeManager as any).getUnreadNotifications(ctx.session.user.id).length : 0,
+        unreadNotifications: (realtimeManager as any).getUnreadNotifications
+          ? (realtimeManager as any).getUnreadNotifications(ctx.session.user.id)
+              .length
+          : 0,
       };
     } catch (error) {
       throw new TRPCError({
@@ -168,7 +182,10 @@ export const systemMonitoringRouter = createTRPCRouter({
   systemMetrics: protectedProcedure
     .input(
       z.object({
-        timeframe: z.enum(['hour', 'day', 'week', 'month']).optional().default('day'),
+        timeframe: z
+          .enum(['hour', 'day', 'week', 'month'])
+          .optional()
+          .default('day'),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -194,34 +211,35 @@ export const systemMonitoringRouter = createTRPCRouter({
         }
 
         // Get cancellation metrics
-        const [totalRequests, completedRequests, failedRequests] = await Promise.all([
-          ctx.db.cancellationRequest.count({
-            where: {
-              createdAt: {
-                gte: startTime,
-                lte: endTime,
+        const [totalRequests, completedRequests, failedRequests] =
+          await Promise.all([
+            ctx.db.cancellationRequest.count({
+              where: {
+                createdAt: {
+                  gte: startTime,
+                  lte: endTime,
+                },
               },
-            },
-          }),
-          ctx.db.cancellationRequest.count({
-            where: {
-              createdAt: {
-                gte: startTime,
-                lte: endTime,
+            }),
+            ctx.db.cancellationRequest.count({
+              where: {
+                createdAt: {
+                  gte: startTime,
+                  lte: endTime,
+                },
+                status: 'completed',
               },
-              status: 'completed',
-            },
-          }),
-          ctx.db.cancellationRequest.count({
-            where: {
-              createdAt: {
-                gte: startTime,
-                lte: endTime,
+            }),
+            ctx.db.cancellationRequest.count({
+              where: {
+                createdAt: {
+                  gte: startTime,
+                  lte: endTime,
+                },
+                status: 'failed',
               },
-              status: 'failed',
-            },
-          }),
-        ]);
+            }),
+          ]);
 
         // Get error rate from audit logs
         const [totalOperations, failedOperations] = await Promise.all([
@@ -244,13 +262,15 @@ export const systemMonitoringRouter = createTRPCRouter({
           }),
         ]);
 
-        const successRate = totalRequests > 0 
-          ? Math.round((completedRequests / totalRequests) * 100) 
-          : 0;
+        const successRate =
+          totalRequests > 0
+            ? Math.round((completedRequests / totalRequests) * 100)
+            : 0;
 
-        const errorRate = totalOperations > 0 
-          ? Math.round((failedOperations / totalOperations) * 100) 
-          : 0;
+        const errorRate =
+          totalOperations > 0
+            ? Math.round((failedOperations / totalOperations) * 100)
+            : 0;
 
         return {
           timeframe,
@@ -287,7 +307,9 @@ export const systemMonitoringRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const jobQueue = getJobQueue();
-        const success = (jobQueue as any).retryFailedJob ? await (jobQueue as any).retryFailedJob(input.jobId) : false;
+        const success = (jobQueue as any).retryFailedJob
+          ? await (jobQueue as any).retryFailedJob(input.jobId)
+          : false;
 
         if (!success) {
           throw new TRPCError({
@@ -327,12 +349,14 @@ export const systemMonitoringRouter = createTRPCRouter({
    */
   clearFailedJobs: protectedProcedure.mutation(async ({ ctx }) => {
     // Note: In a real app, you'd check for admin permissions here
-    
+
     try {
       const jobQueue = getJobQueue();
-      
+
       // Get failed jobs count before clearing
-      const failedJobs = (jobQueue as any).getFailedJobs ? await (jobQueue as any).getFailedJobs(1000) : [];
+      const failedJobs = (jobQueue as any).getFailedJobs
+        ? await (jobQueue as any).getFailedJobs(1000)
+        : [];
       const clearedCount = failedJobs.length;
 
       // In the current implementation, there's no direct clear method
@@ -415,9 +439,10 @@ async function checkDatabaseHealth(db: any) {
     await db.$queryRaw`SELECT 1`;
     return { healthy: true };
   } catch (error) {
-    return { 
-      healthy: false, 
-      error: error instanceof Error ? error.message : 'Database connection failed' 
+    return {
+      healthy: false,
+      error:
+        error instanceof Error ? error.message : 'Database connection failed',
     };
   }
 }
@@ -426,7 +451,7 @@ async function checkWorkflowEngineHealth() {
   try {
     const workflowEngine = getWorkflowEngine();
     const stats = workflowEngine.getStats();
-    
+
     return {
       healthy: true,
       stats,
@@ -442,8 +467,10 @@ async function checkWorkflowEngineHealth() {
 async function checkRealtimeHealth() {
   try {
     const realtimeManager = getRealtimeNotificationManager();
-    const stats = (realtimeManager as any).getStats ? (realtimeManager as any).getStats() : { activeConnections: realtimeManager.getActiveConnections() };
-    
+    const stats = (realtimeManager as any).getStats
+      ? (realtimeManager as any).getStats()
+      : { activeConnections: realtimeManager.getActiveConnections() };
+
     return {
       healthy: true,
       stats,
@@ -467,9 +494,10 @@ function getCheckResult(settledResult: PromiseSettledResult<any>) {
   } else {
     return {
       status: 'unhealthy' as const,
-      error: settledResult.reason instanceof Error 
-        ? settledResult.reason.message 
-        : 'Unknown error',
+      error:
+        settledResult.reason instanceof Error
+          ? settledResult.reason.message
+          : 'Unknown error',
       data: null,
     };
   }

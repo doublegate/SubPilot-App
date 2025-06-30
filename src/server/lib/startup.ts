@@ -1,5 +1,8 @@
 import type { PrismaClient } from '@prisma/client';
-import { initializeJobProcessors, shutdownJobProcessors } from '@/server/services/job-processors';
+import {
+  initializeJobProcessors,
+  shutdownJobProcessors,
+} from '@/server/services/job-processors';
 import { getWorkflowEngine } from './workflow-engine';
 import { getRealtimeNotificationManager } from './realtime-notifications';
 import { AuditLogger } from './audit-logger';
@@ -33,7 +36,9 @@ export class StartupService {
       return;
     }
 
-    console.log('[StartupService] Initializing event-driven cancellation system...');
+    console.log(
+      '[StartupService] Initializing event-driven cancellation system...'
+    );
 
     try {
       // 1. Initialize job processors (this starts the job queue)
@@ -69,12 +74,15 @@ export class StartupService {
           timestamp: new Date(),
           jobProcessors: jobProcessorRegistry.getStats(),
           workflowEngine: workflowEngine.getStats(),
-          realtimeManager: (realtimeManager as any).getStats ? (realtimeManager as any).getStats() : { activeConnections: realtimeManager.getActiveConnections() },
+          realtimeManager: (realtimeManager as any).getStats
+            ? (realtimeManager as any).getStats()
+            : { activeConnections: realtimeManager.getActiveConnections() },
         },
       });
 
-      console.log('[StartupService] ✅ Event-driven cancellation system initialized successfully');
-
+      console.log(
+        '[StartupService] ✅ Event-driven cancellation system initialized successfully'
+      );
     } catch (error) {
       console.error('[StartupService] ❌ Failed to initialize system:', error);
 
@@ -105,7 +113,9 @@ export class StartupService {
       return;
     }
 
-    console.log('[StartupService] Shutting down event-driven cancellation system...');
+    console.log(
+      '[StartupService] Shutting down event-driven cancellation system...'
+    );
 
     try {
       // Run shutdown handlers in reverse order
@@ -127,7 +137,6 @@ export class StartupService {
       });
 
       console.log('[StartupService] ✅ System shutdown completed');
-
     } catch (error) {
       console.error('[StartupService] ❌ Error during shutdown:', error);
 
@@ -154,22 +163,27 @@ export class StartupService {
 
     for (const signal of signals) {
       process.on(signal, async () => {
-        console.log(`[StartupService] Received ${signal}, starting graceful shutdown...`);
-        
+        console.log(
+          `[StartupService] Received ${signal}, starting graceful shutdown...`
+        );
+
         try {
           await this.shutdown();
           process.exit(0);
         } catch (error) {
-          console.error('[StartupService] Error during graceful shutdown:', error);
+          console.error(
+            '[StartupService] Error during graceful shutdown:',
+            error
+          );
           process.exit(1);
         }
       });
     }
 
     // Handle uncaught exceptions
-    process.on('uncaughtException', async (error) => {
+    process.on('uncaughtException', async error => {
       console.error('[StartupService] Uncaught exception:', error);
-      
+
       await AuditLogger.log({
         userId: 'system',
         action: 'delete' as any,
@@ -185,7 +199,10 @@ export class StartupService {
       try {
         await this.shutdown();
       } catch (shutdownError) {
-        console.error('[StartupService] Error during emergency shutdown:', shutdownError);
+        console.error(
+          '[StartupService] Error during emergency shutdown:',
+          shutdownError
+        );
       }
 
       process.exit(1);
@@ -194,7 +211,7 @@ export class StartupService {
     // Handle unhandled promise rejections
     process.on('unhandledRejection', async (reason, promise) => {
       console.error('[StartupService] Unhandled promise rejection:', reason);
-      
+
       await AuditLogger.log({
         userId: 'system',
         action: 'delete' as any,
@@ -225,7 +242,7 @@ export class StartupService {
     ];
 
     const results = await Promise.allSettled(checks);
-    
+
     let failedChecks = 0;
     results.forEach((result, index) => {
       const checkNames = ['Database', 'Job Queue', 'Event Bus'];
@@ -234,7 +251,10 @@ export class StartupService {
       if (result.status === 'fulfilled') {
         console.log(`[StartupService] ✅ ${checkName} health check passed`);
       } else {
-        console.error(`[StartupService] ❌ ${checkName} health check failed:`, result.reason);
+        console.error(
+          `[StartupService] ❌ ${checkName} health check failed:`,
+          result.reason
+        );
         failedChecks++;
       }
     });
@@ -253,7 +273,9 @@ export class StartupService {
     try {
       await this.db.$queryRaw`SELECT 1`;
     } catch (error) {
-      throw new Error(`Database connectivity check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Database connectivity check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -264,12 +286,14 @@ export class StartupService {
     try {
       const { checkJobQueueHealth } = await import('./job-queue');
       const health = await checkJobQueueHealth();
-      
+
       if (health.status === 'degraded') {
         throw new Error(`Job queue health check failed: degraded status`);
       }
     } catch (error) {
-      throw new Error(`Job queue health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Job queue health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -279,10 +303,10 @@ export class StartupService {
   private async checkEventBusHealth(): Promise<void> {
     try {
       const { cancellationEventBus } = await import('./event-bus');
-      
+
       // Simple check to ensure event bus is responsive
       let testPassed = false;
-      
+
       const testListener = () => {
         testPassed = true;
       };
@@ -297,7 +321,9 @@ export class StartupService {
         throw new Error('Event bus not responsive');
       }
     } catch (error) {
-      throw new Error(`Event bus health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Event bus health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -344,17 +370,17 @@ export class StartupService {
    */
   async restart(): Promise<void> {
     console.log('[StartupService] Restarting system...');
-    
+
     if (this.isInitialized) {
       await this.shutdown();
     }
-    
+
     // Clear instance to allow fresh initialization
     StartupService.instance = null;
-    
+
     // Wait a moment before restarting
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     await this.initialize();
   }
 }
@@ -363,7 +389,9 @@ export class StartupService {
  * Initialize the event-driven cancellation system
  * Call this in your application startup
  */
-export const initializeEventDrivenSystem = async (db: PrismaClient): Promise<StartupService> => {
+export const initializeEventDrivenSystem = async (
+  db: PrismaClient
+): Promise<StartupService> => {
   const startup = StartupService.getInstance(db);
   await startup.initialize();
   return startup;

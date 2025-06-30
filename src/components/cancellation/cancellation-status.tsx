@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -18,7 +24,11 @@ interface CancellationStatusProps {
 export function CancellationStatus({ requestId }: CancellationStatusProps) {
   const [showInstructions, setShowInstructions] = useState(false);
 
-  const { data: status, isLoading, refetch } = api.cancellation.getStatus.useQuery({
+  const {
+    data: status,
+    isLoading,
+    refetch,
+  } = api.cancellation.getStatus.useQuery({
     requestId,
   });
 
@@ -113,7 +123,7 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
       case 'pending':
         return 'Your cancellation request is queued for processing.';
       case 'processing':
-        return 'We\'re actively working on cancelling your subscription.';
+        return "We're actively working on cancelling your subscription.";
       case 'completed':
         return 'Your subscription has been successfully cancelled.';
       case 'failed':
@@ -131,9 +141,7 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
             {getStatusIcon(status.status)}
             Cancellation Status
           </CardTitle>
-          <CardDescription>
-            Request ID: {requestId}
-          </CardDescription>
+          <CardDescription>Request ID: {requestId}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Status Badge and Progress */}
@@ -143,7 +151,7 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
                 {status.status.charAt(0).toUpperCase() + status.status.slice(1)}
               </Badge>
             </div>
-            
+
             <div className="space-y-2">
               <Progress value={getProgress(status.status)} className="h-2" />
               <p className="text-sm text-muted-foreground">
@@ -160,10 +168,18 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
                 <div className="space-y-1">
                   <div className="font-medium">Cancellation Confirmed</div>
                   {status.confirmationCode && (
-                    <div>Confirmation Code: <code className="bg-muted px-1 rounded">{status.confirmationCode}</code></div>
+                    <div>
+                      Confirmation Code:{' '}
+                      <code className="rounded bg-muted px-1">
+                        {status.confirmationCode}
+                      </code>
+                    </div>
                   )}
                   {status.effectiveDate && (
-                    <div>Effective Date: {new Date(status.effectiveDate).toLocaleDateString()}</div>
+                    <div>
+                      Effective Date:{' '}
+                      {new Date(status.effectiveDate).toLocaleDateString()}
+                    </div>
                   )}
                   {status.refundAmount && (
                     <div>Refund Amount: ${status.refundAmount.toFixed(2)}</div>
@@ -209,8 +225,13 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
               <Icons.book className="h-4 w-4" />
               <AlertDescription>
                 <div className="space-y-2">
-                  <div className="font-medium">Manual Cancellation Required</div>
-                  <div>We've prepared step-by-step instructions to help you cancel this subscription.</div>
+                  <div className="font-medium">
+                    Manual Cancellation Required
+                  </div>
+                  <div>
+                    We've prepared step-by-step instructions to help you cancel
+                    this subscription.
+                  </div>
                   <Button
                     size="sm"
                     variant="outline"
@@ -228,16 +249,23 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
           {logs && logs.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Activity Log</h4>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {logs.map((log) => (
+              <div className="max-h-40 space-y-2 overflow-y-auto">
+                {logs.map(log => (
                   <div key={log.id} className="flex items-start gap-2 text-xs">
-                    <div className={`w-2 h-2 rounded-full mt-1 ${
-                      log.status === 'success' ? 'bg-green-500' :
-                      log.status === 'failure' ? 'bg-red-500' : 'bg-blue-500'
-                    }`} />
-                    <div className="flex-1 min-w-0">
+                    <div
+                      className={`mt-1 h-2 w-2 rounded-full ${
+                        log.status === 'success'
+                          ? 'bg-green-500'
+                          : log.status === 'failure'
+                            ? 'bg-red-500'
+                            : 'bg-blue-500'
+                      }`}
+                    />
+                    <div className="min-w-0 flex-1">
                       <div className="text-muted-foreground">
-                        {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(log.createdAt), {
+                          addSuffix: true,
+                        })}
                       </div>
                       <div>{log.message}</div>
                     </div>
@@ -256,7 +284,7 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
           onClose={() => setShowInstructions(false)}
           instructions={status.manualInstructions}
           requestId={requestId}
-          onConfirmation={(confirmationData) => {
+          onConfirmation={confirmationData => {
             confirmManualMutation.mutate({
               requestId,
               confirmation: confirmationData,

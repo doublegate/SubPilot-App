@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-import { 
+import {
   UnifiedCancellationOrchestratorService,
-  UnifiedCancellationRequest 
+  UnifiedCancellationRequest,
 } from '@/server/services/unified-cancellation-orchestrator.service';
 
 // Create input schema that matches UnifiedCancellationRequest
@@ -12,20 +12,24 @@ const UnifiedCancellationRequestInput = z.object({
   reason: z.string().optional(),
   method: z.enum(['auto', 'api', 'automation', 'manual']).optional(),
   priority: z.enum(['low', 'normal', 'high']).optional(),
-  userPreference: z.object({
-    preferredMethod: z.enum(['api', 'automation', 'manual']).optional(),
-    allowFallback: z.boolean().optional(),
-    notificationPreferences: z.object({
-      realTime: z.boolean().optional(),
-      email: z.boolean().optional(),
-      sms: z.boolean().optional(),
-    }).optional(),
-  }).optional(),
+  userPreference: z
+    .object({
+      preferredMethod: z.enum(['api', 'automation', 'manual']).optional(),
+      allowFallback: z.boolean().optional(),
+      notificationPreferences: z
+        .object({
+          realTime: z.boolean().optional(),
+          email: z.boolean().optional(),
+          sms: z.boolean().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 /**
  * Unified Cancellation Router
- * 
+ *
  * Single entry point for all cancellation operations that intelligently
  * routes requests through the most appropriate cancellation method.
  */
@@ -38,7 +42,10 @@ export const unifiedCancellationRouter = createTRPCRouter({
     .input(UnifiedCancellationRequestInput)
     .mutation(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-      return await orchestrator.initiateCancellation(ctx.session.user.id, input);
+      return await orchestrator.initiateCancellation(
+        ctx.session.user.id,
+        input
+      );
     }),
 
   /**
@@ -147,7 +154,9 @@ export const unifiedCancellationRouter = createTRPCRouter({
       // Look for configured provider
       const provider = await ctx.db.cancellationProvider.findFirst({
         where: {
-          normalizedName: subscription.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          normalizedName: subscription.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, ''),
           isActive: true,
         },
       });
@@ -184,13 +193,17 @@ export const unifiedCancellationRouter = createTRPCRouter({
       // Determine available methods
       const availableMethods: string[] = ['lightweight']; // Always available
       if (capabilities.supportsApi) availableMethods.push('api');
-      if (capabilities.supportsAutomation) availableMethods.push('event_driven');
+      if (capabilities.supportsAutomation)
+        availableMethods.push('event_driven');
 
       // Recommend best method
       let recommendedMethod = 'lightweight';
       if (capabilities.supportsApi && capabilities.estimatedSuccessRate > 0.8) {
         recommendedMethod = 'api';
-      } else if (capabilities.requiresInteraction || capabilities.difficulty === 'hard') {
+      } else if (
+        capabilities.requiresInteraction ||
+        capabilities.difficulty === 'hard'
+      ) {
         recommendedMethod = 'event_driven';
       }
 
@@ -288,7 +301,9 @@ export const unifiedCancellationRouter = createTRPCRouter({
       // Find provider configuration
       const provider = await ctx.db.cancellationProvider.findFirst({
         where: {
-          normalizedName: subscription.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          normalizedName: subscription.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, ''),
           isActive: true,
         },
       });
@@ -299,7 +314,9 @@ export const unifiedCancellationRouter = createTRPCRouter({
           name: 'Automatic (Recommended)',
           description: 'Let us choose the best method for you',
           estimatedTime: '5-15 minutes',
-          successRate: provider ? Math.max(80, parseFloat(provider.successRate.toString())) : 80,
+          successRate: provider
+            ? Math.max(80, parseFloat(provider.successRate.toString()))
+            : 80,
           requiresInteraction: false,
           isRecommended: true,
         },
@@ -333,7 +350,10 @@ export const unifiedCancellationRouter = createTRPCRouter({
             name: 'Smart Automation',
             description: 'Advanced automation with real-time monitoring',
             estimatedTime: `${provider.averageTime || 15} minutes`,
-            successRate: Math.min(90, parseFloat(provider.successRate.toString()) + 10),
+            successRate: Math.min(
+              90,
+              parseFloat(provider.successRate.toString()) + 10
+            ),
             requiresInteraction: provider.requires2FA,
             isRecommended: provider.difficulty === 'hard',
           });
@@ -346,11 +366,13 @@ export const unifiedCancellationRouter = createTRPCRouter({
           name: subscription.name,
         },
         methods,
-        provider: provider ? {
-          name: provider.name,
-          type: provider.type,
-          difficulty: provider.difficulty,
-        } : null,
+        provider: provider
+          ? {
+              name: provider.name,
+              type: provider.type,
+              difficulty: provider.difficulty,
+            }
+          : null,
       };
     }),
 
@@ -361,7 +383,10 @@ export const unifiedCancellationRouter = createTRPCRouter({
     .input(
       z.object({
         limit: z.number().min(1).max(50).optional().default(10),
-        status: z.enum(['all', 'completed', 'failed', 'pending']).optional().default('all'),
+        status: z
+          .enum(['all', 'completed', 'failed', 'pending'])
+          .optional()
+          .default('all'),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -401,10 +426,13 @@ export const unifiedCancellationRouter = createTRPCRouter({
 
       return requests.map(request => {
         const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-        const method = request.method === 'manual' ? 'lightweight' : 
-                      request.method === 'web_automation' ? 'event_driven' : 
-                      request.method;
-        
+        const method =
+          request.method === 'manual'
+            ? 'lightweight'
+            : request.method === 'web_automation'
+              ? 'event_driven'
+              : request.method;
+
         return {
           id: request.id,
           subscription: {
@@ -494,7 +522,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-      
+
       // First, verify this is a manual/lightweight cancellation
       const request = await ctx.db.cancellationRequest.findFirst({
         where: {
@@ -513,7 +541,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
 
       // Use the lightweight service for confirmation
       const lightweightService = (orchestrator as any).lightweightService;
-      
+
       return await lightweightService.confirmCancellation(
         ctx.session.user.id,
         input.requestId,
@@ -553,10 +581,13 @@ export const unifiedCancellationRouter = createTRPCRouter({
 
     // Calculate health metrics
     for (const request of recentRequests) {
-      const method = request.method === 'manual' ? 'lightweight' : 
-                    request.method === 'web_automation' ? 'event_driven' : 
-                    request.method;
-      
+      const method =
+        request.method === 'manual'
+          ? 'lightweight'
+          : request.method === 'web_automation'
+            ? 'event_driven'
+            : request.method;
+
       if (methodHealth[method]) {
         methodHealth[method].recentRequests++;
         if (request.status === 'completed') {
@@ -569,18 +600,26 @@ export const unifiedCancellationRouter = createTRPCRouter({
     for (const method in methodHealth) {
       if (methodHealth[method].recentRequests > 0) {
         methodHealth[method].successRate = Math.round(
-          (methodHealth[method].successRate / methodHealth[method].recentRequests) * 100
+          (methodHealth[method].successRate /
+            methodHealth[method].recentRequests) *
+            100
         );
       }
     }
 
     // Determine overall system health
-    const avgSuccessRate = Object.values(methodHealth).reduce(
-      (sum: number, health: any) => sum + health.successRate, 0
-    ) / Object.keys(methodHealth).length;
+    const avgSuccessRate =
+      Object.values(methodHealth).reduce(
+        (sum: number, health: any) => sum + health.successRate,
+        0
+      ) / Object.keys(methodHealth).length;
 
-    const systemStatus = avgSuccessRate > 80 ? 'healthy' : 
-                        avgSuccessRate > 60 ? 'degraded' : 'unhealthy';
+    const systemStatus =
+      avgSuccessRate > 80
+        ? 'healthy'
+        : avgSuccessRate > 60
+          ? 'degraded'
+          : 'unhealthy';
 
     return {
       status: systemStatus,
@@ -590,10 +629,13 @@ export const unifiedCancellationRouter = createTRPCRouter({
         averageSuccessRate: Math.round(avgSuccessRate),
         totalRecentRequests: recentRequests.length,
       },
-      recommendations: avgSuccessRate < 70 ? [
-        'Consider using manual method for higher reliability',
-        'Check with support if issues persist'
-      ] : [],
+      recommendations:
+        avgSuccessRate < 70
+          ? [
+              'Consider using manual method for higher reliability',
+              'Check with support if issues persist',
+            ]
+          : [],
     };
   }),
 });

@@ -48,7 +48,10 @@ export function RevenueChart() {
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip
-                formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+                formatter={(value: number) => [
+                  `$${value.toLocaleString()}`,
+                  'Revenue',
+                ]}
               />
               <Line
                 type="monotone"

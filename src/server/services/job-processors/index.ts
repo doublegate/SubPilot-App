@@ -27,38 +27,52 @@ export class JobProcessorRegistry {
     const analyticsProcessor = new AnalyticsJobProcessor(this.db);
 
     // Register cancellation processors
-    this.register('cancellation.validate', 
-      (job) => cancellationProcessor.processCancellationValidation(job));
-    this.register('cancellation.api', 
-      (job) => cancellationProcessor.processApiCancellation(job));
-    this.register('cancellation.webhook', 
-      (job) => cancellationProcessor.processWebhookCancellation(job));
-    this.register('cancellation.manual_instructions', 
-      (job) => cancellationProcessor.processManualInstructions(job));
-    this.register('cancellation.confirm', 
-      (job) => cancellationProcessor.processCancellationConfirmation(job));
-    this.register('cancellation.update_status', 
-      (job) => cancellationProcessor.processStatusUpdate(job));
+    this.register('cancellation.validate', job =>
+      cancellationProcessor.processCancellationValidation(job)
+    );
+    this.register('cancellation.api', job =>
+      cancellationProcessor.processApiCancellation(job)
+    );
+    this.register('cancellation.webhook', job =>
+      cancellationProcessor.processWebhookCancellation(job)
+    );
+    this.register('cancellation.manual_instructions', job =>
+      cancellationProcessor.processManualInstructions(job)
+    );
+    this.register('cancellation.confirm', job =>
+      cancellationProcessor.processCancellationConfirmation(job)
+    );
+    this.register('cancellation.update_status', job =>
+      cancellationProcessor.processStatusUpdate(job)
+    );
 
     // Register notification processors
-    this.register('notification.send', 
-      (job) => notificationProcessor.processNotificationSend(job));
-    this.register('notification.bulk_send', 
-      (job) => notificationProcessor.processBulkNotification(job));
+    this.register('notification.send', job =>
+      notificationProcessor.processNotificationSend(job)
+    );
+    this.register('notification.bulk_send', job =>
+      notificationProcessor.processBulkNotification(job)
+    );
 
     // Register webhook processors
-    this.register('webhook.validate', 
-      (job) => webhookProcessor.processWebhookValidation(job));
-    this.register('webhook.process_data', 
-      (job) => webhookProcessor.processWebhookData(job));
+    this.register('webhook.validate', job =>
+      webhookProcessor.processWebhookValidation(job)
+    );
+    this.register('webhook.process_data', job =>
+      webhookProcessor.processWebhookData(job)
+    );
 
     // Register analytics processors
-    this.register('analytics.track', 
-      (job) => analyticsProcessor.processAnalyticsTracking(job));
-    this.register('analytics.aggregate', 
-      (job) => analyticsProcessor.processAnalyticsAggregation(job));
+    this.register('analytics.track', job =>
+      analyticsProcessor.processAnalyticsTracking(job)
+    );
+    this.register('analytics.aggregate', job =>
+      analyticsProcessor.processAnalyticsAggregation(job)
+    );
 
-    console.log(`[JobProcessorRegistry] Registered ${this.processors.size} job processors`);
+    console.log(
+      `[JobProcessorRegistry] Registered ${this.processors.size} job processors`
+    );
   }
 
   /**
@@ -84,10 +98,12 @@ export class JobProcessorRegistry {
     for (const [jobType, processor] of this.processors.entries()) {
       jobQueue.registerProcessor(jobType, async (job: Job) => {
         const startTime = Date.now();
-        
+
         try {
-          console.log(`[JobProcessorRegistry] Processing job ${job.id} of type ${jobType}`);
-          
+          console.log(
+            `[JobProcessorRegistry] Processing job ${job.id} of type ${jobType}`
+          );
+
           const result = await processor(job);
           const processingTime = Date.now() - startTime;
 
@@ -106,14 +122,20 @@ export class JobProcessorRegistry {
             },
           });
 
-          console.log(`[JobProcessorRegistry] Job ${job.id} ${result.success ? 'completed' : 'failed'} in ${processingTime}ms`);
+          console.log(
+            `[JobProcessorRegistry] Job ${job.id} ${result.success ? 'completed' : 'failed'} in ${processingTime}ms`
+          );
 
           return result;
         } catch (error) {
           const processingTime = Date.now() - startTime;
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
 
-          console.error(`[JobProcessorRegistry] Error processing job ${job.id}:`, error);
+          console.error(
+            `[JobProcessorRegistry] Error processing job ${job.id}:`,
+            error
+          );
 
           // Log processing error
           await AuditLogger.log({
@@ -133,8 +155,8 @@ export class JobProcessorRegistry {
           return {
             success: false,
             error: errorMessage,
-            retry: { 
-              delay: Math.min(1000 * Math.pow(2, job.attempts), 300000) // Exponential backoff, max 5 minutes
+            retry: {
+              delay: Math.min(1000 * Math.pow(2, job.attempts), 300000), // Exponential backoff, max 5 minutes
             },
           };
         }
@@ -217,7 +239,9 @@ export class JobProcessorRegistry {
 // Create singleton instance
 let registryInstance: JobProcessorRegistry | null = null;
 
-export const getJobProcessorRegistry = (db: PrismaClient): JobProcessorRegistry => {
+export const getJobProcessorRegistry = (
+  db: PrismaClient
+): JobProcessorRegistry => {
   if (!registryInstance) {
     registryInstance = new JobProcessorRegistry(db);
   }
@@ -227,7 +251,9 @@ export const getJobProcessorRegistry = (db: PrismaClient): JobProcessorRegistry 
 /**
  * Initialize and start all job processors
  */
-export const initializeJobProcessors = async (db: PrismaClient): Promise<JobProcessorRegistry> => {
+export const initializeJobProcessors = async (
+  db: PrismaClient
+): Promise<JobProcessorRegistry> => {
   const registry = getJobProcessorRegistry(db);
   await registry.start();
   return registry;

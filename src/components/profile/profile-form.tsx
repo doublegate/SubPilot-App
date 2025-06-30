@@ -47,13 +47,15 @@ export function ProfileForm() {
           </Avatar>
         </div>
         <div className="flex-1">
-          <Label className="text-sm font-medium block mb-2">Profile Picture</Label>
+          <Label className="mb-2 block text-sm font-medium">
+            Profile Picture
+          </Label>
           <input
             type="file"
             id="avatar-upload"
             className="hidden"
             accept="image/*"
-            onChange={async (e) => {
+            onChange={async e => {
               const file = e.target.files?.[0];
               if (file) {
                 // TODO: Implement avatar upload

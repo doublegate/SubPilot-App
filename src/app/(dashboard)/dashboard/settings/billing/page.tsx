@@ -77,7 +77,7 @@ export default function BillingPage() {
             <CardContent className="p-0 sm:p-6">
               <Suspense
                 fallback={
-                  <div className="grid gap-8 lg:grid-cols-3 p-6">
+                  <div className="grid gap-8 p-6 lg:grid-cols-3">
                     <Skeleton className="h-96" />
                     <Skeleton className="h-96" />
                     <Skeleton className="h-96" />

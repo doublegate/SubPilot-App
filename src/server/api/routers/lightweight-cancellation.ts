@@ -15,7 +15,10 @@ export const lightweightCancellationRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const service = new LightweightCancellationService(ctx.db);
-      return await service.provideCancellationInstructions(ctx.session.user.id, input);
+      return await service.provideCancellationInstructions(
+        ctx.session.user.id,
+        input
+      );
     }),
 
   /**
@@ -34,7 +37,11 @@ export const lightweightCancellationRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const service = new LightweightCancellationService(ctx.db);
       const { requestId, ...confirmation } = input;
-      return await service.confirmCancellation(ctx.session.user.id, requestId, confirmation);
+      return await service.confirmCancellation(
+        ctx.session.user.id,
+        requestId,
+        confirmation
+      );
     }),
 
   /**
@@ -44,7 +51,10 @@ export const lightweightCancellationRouter = createTRPCRouter({
     .input(z.object({ requestId: z.string() }))
     .query(async ({ ctx, input }) => {
       const service = new LightweightCancellationService(ctx.db);
-      return await service.getCancellationStatus(ctx.session.user.id, input.requestId);
+      return await service.getCancellationStatus(
+        ctx.session.user.id,
+        input.requestId
+      );
     }),
 
   /**
@@ -58,7 +68,10 @@ export const lightweightCancellationRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const service = new LightweightCancellationService(ctx.db);
-      return await service.getCancellationHistory(ctx.session.user.id, input.limit);
+      return await service.getCancellationHistory(
+        ctx.session.user.id,
+        input.limit
+      );
     }),
 
   /**
@@ -122,9 +135,10 @@ export const lightweightCancellationRouter = createTRPCRouter({
       // Check if we have provider info
       const service = new LightweightCancellationService(ctx.db);
       const providers = service.getAvailableProviders();
-      const hasProviderInfo = providers.some(p => 
-        subscription.name.toLowerCase().includes(p.name.toLowerCase()) ||
-        p.name.toLowerCase().includes(subscription.name.toLowerCase())
+      const hasProviderInfo = providers.some(
+        p =>
+          subscription.name.toLowerCase().includes(p.name.toLowerCase()) ||
+          p.name.toLowerCase().includes(subscription.name.toLowerCase())
       );
 
       return {
@@ -152,10 +166,15 @@ export const lightweightCancellationRouter = createTRPCRouter({
       }
 
       const service = new LightweightCancellationService(ctx.db);
-      
+
       // Create a temporary service instance to find provider and generate instructions
-      const providerTemplate = (service as any).findProviderTemplate(subscription.name);
-      const instructions = (service as any).generateInstructions(providerTemplate, subscription.name);
+      const providerTemplate = (service as any).findProviderTemplate(
+        subscription.name
+      );
+      const instructions = (service as any).generateInstructions(
+        providerTemplate,
+        subscription.name
+      );
 
       return {
         subscription: {
@@ -171,32 +190,34 @@ export const lightweightCancellationRouter = createTRPCRouter({
    * Get simple statistics
    */
   getStats: protectedProcedure.query(async ({ ctx }) => {
-    const [totalRequests, completedRequests, pendingRequests] = await Promise.all([
-      ctx.db.cancellationRequest.count({
-        where: { 
-          userId: ctx.session.user.id,
-          method: 'manual',
-        },
-      }),
-      ctx.db.cancellationRequest.count({
-        where: { 
-          userId: ctx.session.user.id,
-          method: 'manual',
-          status: 'completed',
-        },
-      }),
-      ctx.db.cancellationRequest.count({
-        where: { 
-          userId: ctx.session.user.id,
-          method: 'manual',
-          status: 'pending',
-        },
-      }),
-    ]);
+    const [totalRequests, completedRequests, pendingRequests] =
+      await Promise.all([
+        ctx.db.cancellationRequest.count({
+          where: {
+            userId: ctx.session.user.id,
+            method: 'manual',
+          },
+        }),
+        ctx.db.cancellationRequest.count({
+          where: {
+            userId: ctx.session.user.id,
+            method: 'manual',
+            status: 'completed',
+          },
+        }),
+        ctx.db.cancellationRequest.count({
+          where: {
+            userId: ctx.session.user.id,
+            method: 'manual',
+            status: 'pending',
+          },
+        }),
+      ]);
 
-    const successRate = totalRequests > 0 
-      ? Math.round((completedRequests / totalRequests) * 100) 
-      : 0;
+    const successRate =
+      totalRequests > 0
+        ? Math.round((completedRequests / totalRequests) * 100)
+        : 0;
 
     return {
       totalRequests,

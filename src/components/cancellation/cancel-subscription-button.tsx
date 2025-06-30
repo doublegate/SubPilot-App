@@ -13,17 +13,18 @@ interface CancelSubscriptionButtonProps {
   onCancellationStarted?: () => void;
 }
 
-export function CancelSubscriptionButton({ 
-  subscriptionId, 
+export function CancelSubscriptionButton({
+  subscriptionId,
   subscriptionName,
-  onCancellationStarted 
+  onCancellationStarted,
 }: CancelSubscriptionButtonProps) {
   const [showModal, setShowModal] = useState(false);
 
   // Check if cancellation is possible
-  const { data: canCancelData, isLoading } = api.cancellation.canCancel.useQuery({
-    subscriptionId,
-  });
+  const { data: canCancelData, isLoading } =
+    api.cancellation.canCancel.useQuery({
+      subscriptionId,
+    });
 
   const handleCancellationStarted = () => {
     setShowModal(false);
@@ -64,7 +65,7 @@ export function CancelSubscriptionButton({
       <Button
         variant="outline"
         onClick={() => setShowModal(true)}
-        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+        className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
       >
         <Icons.x className="mr-2 h-4 w-4" />
         Cancel Subscription

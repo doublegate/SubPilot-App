@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { AuditLogger } from '@/server/lib/audit-logger';
 import { headers } from 'next/headers';
@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
     const payload: CancellationWebhookPayload = JSON.parse(body);
 
     // Verify webhook signature (if provider supports it)
-    const signature = request.headers.get('x-signature') || request.headers.get('signature');
+    const signature =
+      request.headers.get('x-signature') || request.headers.get('signature');
     const providerId = request.headers.get('x-provider-id');
 
     if (!providerId) {
@@ -41,15 +42,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (!provider) {
-      return NextResponse.json(
-        { error: 'Unknown provider' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Unknown provider' }, { status: 404 });
     }
 
     // Verify webhook signature if configured
     if (signature && provider.authType === 'webhook_signature') {
-      const expectedSignature = generateWebhookSignature(body, process.env.WEBHOOK_SECRET!);
+      const expectedSignature = generateWebhookSignature(
+        body,
+        process.env.WEBHOOK_SECRET!
+      );
       if (signature !== expectedSignature) {
         await AuditLogger.log({
           action: 'webhook.signature_verification_failed',
@@ -114,7 +115,9 @@ export async function POST(request: NextRequest) {
 
     // Process the webhook payload
     const status = payload.status === 'completed' ? 'completed' : 'failed';
-    const effectiveDate = payload.effectiveDate ? new Date(payload.effectiveDate) : new Date();
+    const effectiveDate = payload.effectiveDate
+      ? new Date(payload.effectiveDate)
+      : new Date();
 
     // Update the cancellation request
     const updatedRequest = await db.cancellationRequest.update({
@@ -215,7 +218,6 @@ export async function POST(request: NextRequest) {
       requestId: cancellationRequest.id,
       status: updatedRequest.status,
     });
-
   } catch (error) {
     console.error('Cancellation webhook error:', error);
 
@@ -245,7 +247,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ challenge });
   }
 
-  return NextResponse.json({ 
+  return NextResponse.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
   });
@@ -255,10 +257,7 @@ export async function GET(request: NextRequest) {
  * Generate webhook signature for verification
  */
 function generateWebhookSignature(payload: string, secret: string): string {
-  return crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
+  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
 }
 
 /**

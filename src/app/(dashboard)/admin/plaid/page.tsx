@@ -10,10 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlaidConfigForm } from '@/components/admin/plaid-config-form';
 import { PlaidWebhookConfig } from '@/components/admin/plaid-webhook-config';
-import { 
-  Building, 
-  AlertCircle, 
-  CheckCircle, 
+import {
+  Building,
+  AlertCircle,
+  CheckCircle,
   ExternalLink,
   RefreshCw,
   Activity,
@@ -21,7 +21,7 @@ import {
 
 async function PlaidStatus() {
   const status = await api.admin.getPlaidStatus();
-  
+
   return (
     <div className="grid gap-6 md:grid-cols-3">
       <Card>
@@ -30,9 +30,11 @@ async function PlaidStatus() {
           <Building className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold capitalize">{status.environment}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {status.environment === 'sandbox' 
+          <div className="text-2xl font-bold capitalize">
+            {status.environment}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {status.environment === 'sandbox'
               ? 'Test environment - no real data'
               : 'Production environment - live data'}
           </p>
@@ -52,7 +54,7 @@ async function PlaidStatus() {
           <div className="text-2xl font-bold">
             {status.isConnected ? 'Connected' : 'Disconnected'}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="mt-1 text-xs text-muted-foreground">
             Last checked: {new Date(status.lastChecked).toLocaleString()}
           </p>
         </CardContent>
@@ -65,7 +67,7 @@ async function PlaidStatus() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{status.connectedItems}</div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="mt-1 text-xs text-muted-foreground">
             {status.activeWebhooks} active webhooks
           </p>
         </CardContent>
@@ -76,7 +78,7 @@ async function PlaidStatus() {
 
 async function SupportedInstitutions() {
   const institutions = await api.admin.getTopInstitutions();
-  
+
   return (
     <Card>
       <CardHeader>
@@ -87,11 +89,11 @@ async function SupportedInstitutions() {
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {institutions.map((inst) => (
+          {institutions.map(inst => (
             <div key={inst.id} className="flex items-center gap-3">
               {inst.logo && (
-                <img 
-                  src={inst.logo} 
+                <img
+                  src={inst.logo}
                   alt={inst.name}
                   className="h-8 w-8 rounded"
                 />
@@ -142,7 +144,7 @@ export default async function PlaidPage() {
               href="https://dashboard.plaid.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted transition-colors"
+              className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted"
             >
               <div className="flex items-center gap-3">
                 <Building className="h-5 w-5 text-muted-foreground" />
@@ -155,12 +157,12 @@ export default async function PlaidPage() {
               </div>
               <ExternalLink className="h-4 w-4 text-muted-foreground" />
             </a>
-            
+
             <a
               href="https://plaid.com/docs/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted transition-colors"
+              className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted"
             >
               <div className="flex items-center gap-3">
                 <ExternalLink className="h-5 w-5 text-muted-foreground" />
@@ -173,10 +175,8 @@ export default async function PlaidPage() {
               </div>
               <ExternalLink className="h-4 w-4 text-muted-foreground" />
             </a>
-            
-            <button
-              className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted transition-colors w-full text-left"
-            >
+
+            <button className="flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors hover:bg-muted">
               <div className="flex items-center gap-3">
                 <RefreshCw className="h-5 w-5 text-muted-foreground" />
                 <div>

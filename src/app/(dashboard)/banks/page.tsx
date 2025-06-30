@@ -47,7 +47,7 @@ export default async function BanksPage() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {plaidItems.map((item) => (
+          {plaidItems.map(item => (
             <BankAccountCard key={item.id} item={item} />
           ))}
         </div>

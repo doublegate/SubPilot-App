@@ -117,7 +117,7 @@ export function PlanManagement() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {plans.map((plan) => (
+            {plans.map(plan => (
               <div
                 key={plan.id}
                 className="flex items-start justify-between rounded-lg border p-4"
@@ -164,7 +164,7 @@ export function PlanManagement() {
               Update plan pricing and features
             </DialogDescription>
           </DialogHeader>
-          
+
           {editingPlan && (
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
@@ -173,7 +173,7 @@ export function PlanManagement() {
                   <Input
                     id="displayName"
                     value={editingPlan.displayName}
-                    onChange={(e) =>
+                    onChange={e =>
                       setEditingPlan({
                         ...editingPlan,
                         displayName: e.target.value,
@@ -181,7 +181,7 @@ export function PlanManagement() {
                     }
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="price">Monthly Price</Label>
                   <Input
@@ -189,7 +189,7 @@ export function PlanManagement() {
                     type="number"
                     step="0.01"
                     value={editingPlan.price}
-                    onChange={(e) =>
+                    onChange={e =>
                       setEditingPlan({
                         ...editingPlan,
                         price: parseFloat(e.target.value),
@@ -198,14 +198,14 @@ export function PlanManagement() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="stripePriceId">Stripe Price ID</Label>
                 <Input
                   id="stripePriceId"
                   value={editingPlan.stripePriceId || ''}
                   placeholder="price_..."
-                  onChange={(e) =>
+                  onChange={e =>
                     setEditingPlan({
                       ...editingPlan,
                       stripePriceId: e.target.value,
@@ -213,7 +213,7 @@ export function PlanManagement() {
                   }
                 />
               </div>
-              
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="maxBankAccounts">Max Bank Accounts</Label>
@@ -221,7 +221,7 @@ export function PlanManagement() {
                     id="maxBankAccounts"
                     type="number"
                     value={editingPlan.maxBankAccounts}
-                    onChange={(e) =>
+                    onChange={e =>
                       setEditingPlan({
                         ...editingPlan,
                         maxBankAccounts: parseInt(e.target.value),
@@ -232,14 +232,14 @@ export function PlanManagement() {
                     Use -1 for unlimited
                   </p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="maxTeamMembers">Max Team Members</Label>
                   <Input
                     id="maxTeamMembers"
                     type="number"
                     value={editingPlan.maxTeamMembers}
-                    onChange={(e) =>
+                    onChange={e =>
                       setEditingPlan({
                         ...editingPlan,
                         maxTeamMembers: parseInt(e.target.value),
@@ -248,12 +248,12 @@ export function PlanManagement() {
                   />
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <Switch
                   id="isActive"
                   checked={editingPlan.isActive}
-                  onCheckedChange={(checked) =>
+                  onCheckedChange={checked =>
                     setEditingPlan({ ...editingPlan, isActive: checked })
                   }
                 />
@@ -261,7 +261,7 @@ export function PlanManagement() {
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
             <Button
               variant="outline"

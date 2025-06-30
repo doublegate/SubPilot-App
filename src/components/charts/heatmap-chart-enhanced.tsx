@@ -156,16 +156,16 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
   const renderMiniMonth = (month: number) => {
     const monthData = monthsData[month] || [];
     const summary = getMonthSummary(month);
-    
+
     // Create a simple visualization - just show intensity
     const intensity = summary.total / maxValue;
-    
+
     return (
       <TooltipProvider key={month}>
         <Tooltip>
           <TooltipTrigger asChild>
             <Card
-              className="cursor-pointer transition-all hover:shadow-md hover:scale-105"
+              className="cursor-pointer transition-all hover:scale-105 hover:shadow-md"
               onClick={() => setSelectedMonth(month)}
             >
               <CardHeader className="p-3">
@@ -175,7 +175,7 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
               </CardHeader>
               <CardContent className="p-3 pt-0">
                 <div
-                  className="h-16 rounded-md flex items-center justify-center text-white font-bold"
+                  className="flex h-16 items-center justify-center rounded-md font-bold text-white"
                   style={{
                     backgroundColor: getColor(summary.total / 30), // Normalize by days
                     opacity: Math.max(0.3, intensity),
@@ -183,7 +183,7 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
                 >
                   {formatCurrency(summary.total)}
                 </div>
-                <div className="mt-2 text-xs text-muted-foreground text-center">
+                <div className="mt-2 text-center text-xs text-muted-foreground">
                   {summary.nonZeroDays} active days
                 </div>
               </CardContent>
@@ -191,10 +191,14 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
           </TooltipTrigger>
           <TooltipContent>
             <div className="text-sm">
-              <p className="font-medium">{monthNames[month]} {selectedYear}</p>
+              <p className="font-medium">
+                {monthNames[month]} {selectedYear}
+              </p>
               <p>Total: {formatCurrency(summary.total)}</p>
               <p>Average/day: {formatCurrency(summary.average)}</p>
-              <p>Active days: {summary.nonZeroDays}/{summary.days}</p>
+              <p>
+                Active days: {summary.nonZeroDays}/{summary.days}
+              </p>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -206,7 +210,7 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
   const renderFullMonth = (month: number) => {
     const monthData = monthsData[month] || [];
     const summary = getMonthSummary(month);
-    
+
     // Create a 6x7 grid for the month
     const grid: (HeatmapData | null)[][] = Array(6)
       .fill(null)
@@ -229,15 +233,15 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
     return (
       <div className="space-y-4">
         {/* Month Header with Summary */}
-        <div className="flex justify-between items-start">
+        <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-semibold">
               {monthNames[month]} {selectedYear}
             </h3>
-            <div className="text-sm text-muted-foreground mt-1">
-              Total: {formatCurrency(summary.total)} • 
-              Average: {formatCurrency(summary.average)}/day • 
-              Active days: {summary.nonZeroDays}
+            <div className="mt-1 text-sm text-muted-foreground">
+              Total: {formatCurrency(summary.total)} • Average:{' '}
+              {formatCurrency(summary.average)}/day • Active days:{' '}
+              {summary.nonZeroDays}
             </div>
           </div>
           <Button
@@ -265,19 +269,19 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div
-                        className={`
-                          aspect-square rounded-md flex items-center justify-center text-sm
-                          transition-all cursor-pointer
-                          ${day && day.value > 0 
-                            ? 'hover:ring-2 hover:ring-primary hover:ring-offset-2 hover:scale-110' 
+                        className={`flex aspect-square cursor-pointer items-center justify-center rounded-md text-sm transition-all ${
+                          day && day.value > 0
+                            ? 'hover:scale-110 hover:ring-2 hover:ring-primary hover:ring-offset-2'
                             : ''
-                          }
-                        `}
+                        } `}
                         style={{
                           backgroundColor: day
                             ? getColor(day.value)
                             : 'transparent',
-                          color: day && day.value > maxValue * 0.5 ? 'white' : 'inherit',
+                          color:
+                            day && day.value > maxValue * 0.5
+                              ? 'white'
+                              : 'inherit',
                         }}
                         onClick={() => {
                           if (day && day.value > 0) {
@@ -295,11 +299,13 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
                             {monthNames[month]} {day.day}, {selectedYear}
                           </p>
                           <p>{formatCurrency(day.value)}</p>
-                          {day.subscriptions && day.subscriptions.length > 0 && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {day.subscriptions.length} subscription{day.subscriptions.length > 1 ? 's' : ''}
-                            </p>
-                          )}
+                          {day.subscriptions &&
+                            day.subscriptions.length > 0 && (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {day.subscriptions.length} subscription
+                                {day.subscriptions.length > 1 ? 's' : ''}
+                              </p>
+                            )}
                         </div>
                       </TooltipContent>
                     )}
@@ -330,7 +336,7 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm font-medium px-2">{selectedYear}</span>
+              <span className="px-2 text-sm font-medium">{selectedYear}</span>
               <Button
                 variant="outline"
                 size="sm"
@@ -372,31 +378,44 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
                 {/* Year Summary */}
                 <Card className="bg-muted/50">
                   <CardContent className="pt-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-4">
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Spending</p>
+                        <p className="text-sm text-muted-foreground">
+                          Total Spending
+                        </p>
                         <p className="text-xl font-bold">
-                          {formatCurrency(data.reduce((sum, d) => sum + d.value, 0))}
+                          {formatCurrency(
+                            data.reduce((sum, d) => sum + d.value, 0)
+                          )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Daily Average</p>
+                        <p className="text-sm text-muted-foreground">
+                          Daily Average
+                        </p>
                         <p className="text-xl font-bold">
                           {formatCurrency(
-                            data.length > 0 
-                              ? data.reduce((sum, d) => sum + d.value, 0) / data.length 
+                            data.length > 0
+                              ? data.reduce((sum, d) => sum + d.value, 0) /
+                                  data.length
                               : 0
                           )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Most Expensive Day</p>
+                        <p className="text-sm text-muted-foreground">
+                          Most Expensive Day
+                        </p>
                         <p className="text-xl font-bold">
-                          {formatCurrency(Math.max(...data.map(d => d.value), 0))}
+                          {formatCurrency(
+                            Math.max(...data.map(d => d.value), 0)
+                          )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Active Days</p>
+                        <p className="text-sm text-muted-foreground">
+                          Active Days
+                        </p>
                         <p className="text-xl font-bold">
                           {data.filter(d => d.value > 0).length}
                         </p>
@@ -414,9 +433,9 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
       </Card>
 
       {/* Day Detail Dialog */}
-      <Dialog 
-        open={selectedDay !== null} 
-        onOpenChange={(open) => !open && setSelectedDay(null)}
+      <Dialog
+        open={selectedDay !== null}
+        onOpenChange={open => !open && setSelectedDay(null)}
       >
         <DialogContent>
           <DialogHeader>
@@ -425,7 +444,8 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
                 <Calendar className="h-5 w-5" />
                 {selectedDay && (
                   <>
-                    {monthNames[selectedDay.month]} {selectedDay.day}, {selectedYear}
+                    {monthNames[selectedDay.month]} {selectedDay.day},{' '}
+                    {selectedYear}
                   </>
                 )}
               </div>
@@ -436,21 +456,22 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
           </DialogHeader>
           {selectedDay?.data && (
             <div className="space-y-4">
-              <div className="text-2xl font-bold text-center py-4">
+              <div className="py-4 text-center text-2xl font-bold">
                 {formatCurrency(selectedDay.data.value)}
               </div>
-              {selectedDay.data.subscriptions && selectedDay.data.subscriptions.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium">Subscriptions charged:</h4>
-                  <ul className="space-y-1">
-                    {selectedDay.data.subscriptions.map((sub, idx) => (
-                      <li key={idx} className="text-sm text-muted-foreground">
-                        • {sub}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {selectedDay.data.subscriptions &&
+                selectedDay.data.subscriptions.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Subscriptions charged:</h4>
+                    <ul className="space-y-1">
+                      {selectedDay.data.subscriptions.map((sub, idx) => (
+                        <li key={idx} className="text-sm text-muted-foreground">
+                          • {sub}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
             </div>
           )}
         </DialogContent>

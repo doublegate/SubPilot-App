@@ -18,13 +18,16 @@ function capitalizeFirst(str: string): string {
  */
 export function getCategoryDisplayName(categoryKey: string): string {
   if (!categoryKey) return 'Other';
-  
+
   // First check if we have a proper category definition
-  const categoryDef = SUBSCRIPTION_CATEGORIES[categoryKey as keyof typeof SUBSCRIPTION_CATEGORIES];
+  const categoryDef =
+    SUBSCRIPTION_CATEGORIES[
+      categoryKey as keyof typeof SUBSCRIPTION_CATEGORIES
+    ];
   if (categoryDef) {
     return categoryDef.name; // Already properly capitalized
   }
-  
+
   // Fallback: capitalize the input
   return capitalizeFirst(categoryKey);
 }
@@ -33,7 +36,10 @@ export function getCategoryDisplayName(categoryKey: string): string {
  * Get category icon
  */
 export function getCategoryIcon(categoryKey: string): string {
-  const categoryDef = SUBSCRIPTION_CATEGORIES[categoryKey as keyof typeof SUBSCRIPTION_CATEGORIES];
+  const categoryDef =
+    SUBSCRIPTION_CATEGORIES[
+      categoryKey as keyof typeof SUBSCRIPTION_CATEGORIES
+    ];
   return categoryDef?.icon || '📁';
 }
 
@@ -41,7 +47,10 @@ export function getCategoryIcon(categoryKey: string): string {
  * Get category description
  */
 export function getCategoryDescription(categoryKey: string): string {
-  const categoryDef = SUBSCRIPTION_CATEGORIES[categoryKey as keyof typeof SUBSCRIPTION_CATEGORIES];
+  const categoryDef =
+    SUBSCRIPTION_CATEGORIES[
+      categoryKey as keyof typeof SUBSCRIPTION_CATEGORIES
+    ];
   return categoryDef?.description || 'Other subscription category';
 }
 

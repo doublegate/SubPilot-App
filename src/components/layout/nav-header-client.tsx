@@ -127,7 +127,10 @@ export function NavHeaderClient() {
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/admin" className="text-cyan-600 dark:text-cyan-400">
+                    <Link
+                      href="/admin"
+                      className="text-cyan-600 dark:text-cyan-400"
+                    >
                       Admin Panel
                     </Link>
                   </DropdownMenuItem>

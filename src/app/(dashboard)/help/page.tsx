@@ -78,19 +78,19 @@ const faqs = [
     icon: Shield,
     questions: [
       {
-        question: 'What\'s included in the free plan?',
+        question: "What's included in the free plan?",
         answer:
           'The free plan includes 2 bank account connections, basic subscription tracking, manual cancellation assistance, and email notifications.',
       },
       {
         question: 'Can I change my plan anytime?',
         answer:
-          'Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we\'ll prorate any charges.',
+          "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any charges.",
       },
       {
         question: 'How do I cancel my SubPilot subscription?',
         answer:
-          'You can cancel anytime from your billing settings. We\'ll keep your data for 30 days in case you change your mind.',
+          "You can cancel anytime from your billing settings. We'll keep your data for 30 days in case you change your mind.",
       },
     ],
   },
@@ -106,10 +106,10 @@ const faqs = [
       {
         question: 'Some subscriptions are missing',
         answer:
-          'Make sure all your bank accounts are connected. Some subscriptions might be paid from accounts you haven\'t connected yet. You can also manually add missing subscriptions.',
+          "Make sure all your bank accounts are connected. Some subscriptions might be paid from accounts you haven't connected yet. You can also manually add missing subscriptions.",
       },
       {
-        question: 'I\'m seeing duplicate subscriptions',
+        question: "I'm seeing duplicate subscriptions",
         answer:
           'This can happen if you have multiple payment methods for the same service. You can merge duplicates by clicking on the subscription and selecting "Merge with another."',
       },
@@ -148,19 +148,23 @@ export default function HelpPage() {
       <div>
         <h1 className="text-3xl font-bold">Help & Support</h1>
         <p className="mt-2 text-muted-foreground">
-          Get answers to your questions and learn how to make the most of SubPilot
+          Get answers to your questions and learn how to make the most of
+          SubPilot
         </p>
       </div>
 
       {/* Quick Links */}
       <div className="grid gap-4 md:grid-cols-3">
-        {quickLinks.map((link) => (
-          <Card key={link.title} className="group hover:shadow-md transition-shadow">
+        {quickLinks.map(link => (
+          <Card
+            key={link.title}
+            className="group transition-shadow hover:shadow-md"
+          >
             <CardHeader>
               <div className="flex items-start justify-between">
                 <link.icon className="h-5 w-5 text-muted-foreground" />
                 {link.external && (
-                  <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 )}
               </div>
               <CardTitle className="text-lg">{link.title}</CardTitle>
@@ -183,15 +187,18 @@ export default function HelpPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {faqs.map((category) => (
+            {faqs.map(category => (
               <div key={category.category}>
-                <div className="flex items-center gap-2 mb-3">
+                <div className="mb-3 flex items-center gap-2">
                   <category.icon className="h-4 w-4 text-muted-foreground" />
                   <h3 className="font-semibold">{category.category}</h3>
                 </div>
                 <Accordion type="single" collapsible className="space-y-2">
                   {category.questions.map((faq, index) => (
-                    <AccordionItem key={index} value={`${category.category}-${index}`}>
+                    <AccordionItem
+                      key={index}
+                      value={`${category.category}-${index}`}
+                    >
                       <AccordionTrigger className="text-left">
                         {faq.question}
                       </AccordionTrigger>
@@ -215,7 +222,8 @@ export default function HelpPage() {
             Contact Support
           </CardTitle>
           <CardDescription>
-            Can't find what you're looking for? Send us a message and we'll help you out.
+            Can't find what you're looking for? Send us a message and we'll help
+            you out.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -261,7 +269,7 @@ export default function HelpPage() {
         <CardContent className="space-y-4">
           <Link
             href="/assistant"
-            className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted/50 transition-colors"
+            className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
           >
             <div className="flex items-center gap-3">
               <MessageSquare className="h-5 w-5 text-muted-foreground" />
@@ -274,7 +282,7 @@ export default function HelpPage() {
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </Link>
-          
+
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-muted-foreground" />

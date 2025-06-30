@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
 import { auth } from '@/server/auth.config';
 import { createSSEStream } from '@/server/lib/realtime-notifications';
 import { db } from '@/server/db';
@@ -15,7 +15,7 @@ export async function GET(
   try {
     // Verify authentication
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return new Response('Unauthorized', { status: 401 });
     }
@@ -40,16 +40,18 @@ export async function GET(
     const stream = new ReadableStream({
       start(controller) {
         // Send initial cancellation status
-        const initialMessage = `event: cancellation.status\ndata: ${JSON.stringify({
-          type: 'cancellation.status',
-          requestId,
-          orchestrationId,
-          status: cancellationRequest.status,
-          method: cancellationRequest.method,
-          createdAt: cancellationRequest.createdAt,
-          updatedAt: cancellationRequest.updatedAt,
-        })}\n\n`;
-        
+        const initialMessage = `event: cancellation.status\ndata: ${JSON.stringify(
+          {
+            type: 'cancellation.status',
+            requestId,
+            orchestrationId,
+            status: cancellationRequest.status,
+            method: cancellationRequest.method,
+            createdAt: cancellationRequest.createdAt,
+            updatedAt: cancellationRequest.updatedAt,
+          }
+        )}\n\n`;
+
         controller.enqueue(new TextEncoder().encode(initialMessage));
 
         // Setup periodic status updates
@@ -67,19 +69,25 @@ export async function GET(
             });
 
             if (updatedRequest) {
-              const updateMessage = `event: cancellation.update\ndata: ${JSON.stringify({
-                type: 'cancellation.update',
-                requestId,
-                orchestrationId,
-                status: updatedRequest.status,
-                lastLog: updatedRequest.logs[0],
-                updatedAt: updatedRequest.updatedAt,
-              })}\n\n`;
-              
+              const updateMessage = `event: cancellation.update\ndata: ${JSON.stringify(
+                {
+                  type: 'cancellation.update',
+                  requestId,
+                  orchestrationId,
+                  status: updatedRequest.status,
+                  lastLog: updatedRequest.logs[0],
+                  updatedAt: updatedRequest.updatedAt,
+                }
+              )}\n\n`;
+
               controller.enqueue(new TextEncoder().encode(updateMessage));
 
               // Close stream if cancellation is complete
-              if (['completed', 'failed', 'cancelled'].includes(updatedRequest.status)) {
+              if (
+                ['completed', 'failed', 'cancelled'].includes(
+                  updatedRequest.status
+                )
+              ) {
                 clearInterval(updateInterval);
                 controller.close();
               }
@@ -93,12 +101,14 @@ export async function GET(
         return () => {
           clearInterval(updateInterval);
         };
-      }
+      },
     });
 
     // Set up cleanup on disconnect
     request.signal.addEventListener('abort', () => {
-      console.log(`[SSE] Client disconnected from cancellation stream: ${requestId}`);
+      console.log(
+        `[SSE] Client disconnected from cancellation stream: ${requestId}`
+      );
       close();
     });
 
@@ -106,12 +116,11 @@ export async function GET(
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Cache-Control',
       },
     });
-
   } catch (error) {
     console.error('[SSE] Error setting up cancellation stream:', error);
     return new Response('Internal Server Error', { status: 500 });

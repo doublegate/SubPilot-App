@@ -51,7 +51,10 @@ export interface WorkflowStepExecution {
 class SimpleWorkflowEngine extends EventEmitter {
   private definitions = new Map<string, WorkflowDefinition>();
   private instances = new Map<string, WorkflowInstance>();
-  private stepProcessors = new Map<string, (step: WorkflowStep, instance: WorkflowInstance) => Promise<any>>();
+  private stepProcessors = new Map<
+    string,
+    (step: WorkflowStep, instance: WorkflowInstance) => Promise<any>
+  >();
   private jobQueue = getJobQueue();
 
   constructor() {
@@ -77,13 +80,13 @@ class SimpleWorkflowEngine extends EventEmitter {
     variables: Record<string, any> = {}
   ): Promise<string> {
     const definition = this.definitions.get(definitionId);
-    
+
     if (!definition) {
       throw new Error(`Workflow definition not found: ${definitionId}`);
     }
 
     const instanceId = `workflow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const instance: WorkflowInstance = {
       id: instanceId,
       definitionId,
@@ -119,7 +122,7 @@ class SimpleWorkflowEngine extends EventEmitter {
    */
   async cancelWorkflow(instanceId: string): Promise<boolean> {
     const instance = this.instances.get(instanceId);
-    
+
     if (!instance || instance.status !== 'running') {
       return false;
     }
@@ -139,13 +142,13 @@ class SimpleWorkflowEngine extends EventEmitter {
    */
   private async executeWorkflow(instanceId: string): Promise<void> {
     const instance = this.instances.get(instanceId);
-    
+
     if (!instance || instance.status !== 'running') {
       return;
     }
 
     const definition = this.definitions.get(instance.definitionId);
-    
+
     if (!definition) {
       this.failWorkflow(instance, 'Workflow definition not found');
       return;
@@ -154,9 +157,12 @@ class SimpleWorkflowEngine extends EventEmitter {
     try {
       while (instance.status === 'running' && instance.currentStep) {
         const step = definition.steps.find(s => s.id === instance.currentStep);
-        
+
         if (!step) {
-          this.failWorkflow(instance, `Step not found: ${instance.currentStep}`);
+          this.failWorkflow(
+            instance,
+            `Step not found: ${instance.currentStep}`
+          );
           return;
         }
 
@@ -167,7 +173,10 @@ class SimpleWorkflowEngine extends EventEmitter {
           // Handle step failure
           const nextSteps = step.onFailure || [];
           if (nextSteps.length === 0) {
-            this.failWorkflow(instance, `Step failed: ${step.id} - ${stepExecution.error}`);
+            this.failWorkflow(
+              instance,
+              `Step failed: ${step.id} - ${stepExecution.error}`
+            );
             return;
           }
           instance.currentStep = nextSteps[0]; // Take first failure path
@@ -194,7 +203,8 @@ class SimpleWorkflowEngine extends EventEmitter {
         });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown workflow error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown workflow error';
       this.failWorkflow(instance, errorMessage);
     }
   }
@@ -213,11 +223,13 @@ class SimpleWorkflowEngine extends EventEmitter {
       retryCount: 0,
     };
 
-    console.log(`[WorkflowEngine] Executing step: ${step.id} in workflow ${instance.id}`);
+    console.log(
+      `[WorkflowEngine] Executing step: ${step.id} in workflow ${instance.id}`
+    );
 
     try {
       const processor = this.stepProcessors.get(step.type);
-      
+
       if (!processor) {
         throw new Error(`No processor found for step type: ${step.type}`);
       }
@@ -227,9 +239,12 @@ class SimpleWorkflowEngine extends EventEmitter {
       if (step.timeout) {
         result = await Promise.race([
           processor(step, instance),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error(`Step timed out after ${step.timeout}ms`)), step.timeout)
-          )
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error(`Step timed out after ${step.timeout}ms`)),
+              step.timeout
+            )
+          ),
         ]);
       } else {
         result = await processor(step, instance);
@@ -240,10 +255,10 @@ class SimpleWorkflowEngine extends EventEmitter {
       execution.completedAt = new Date();
 
       console.log(`[WorkflowEngine] Step ${step.id} completed successfully`);
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown step error';
-      
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown step error';
+
       execution.status = 'failed';
       execution.error = errorMessage;
       execution.completedAt = new Date();
@@ -281,7 +296,9 @@ class SimpleWorkflowEngine extends EventEmitter {
     instance.completedAt = new Date();
     instance.currentStep = undefined;
 
-    console.error(`[WorkflowEngine] Workflow failed: ${instance.id} - ${error}`);
+    console.error(
+      `[WorkflowEngine] Workflow failed: ${instance.id} - ${error}`
+    );
 
     this.emit('workflow.failed', {
       instanceId: instance.id,
@@ -309,7 +326,7 @@ class SimpleWorkflowEngine extends EventEmitter {
     // Task step processor
     this.registerStepProcessor('task', async (step, instance) => {
       const { jobType, jobData } = step.config;
-      
+
       if (!jobType) {
         throw new Error('Task step requires jobType in config');
       }
@@ -326,7 +343,7 @@ class SimpleWorkflowEngine extends EventEmitter {
       return new Promise((resolve, reject) => {
         const checkJob = () => {
           const job = this.jobQueue.getJob(jobId);
-          
+
           if (!job) {
             reject(new Error('Job not found'));
             return;
@@ -349,10 +366,10 @@ class SimpleWorkflowEngine extends EventEmitter {
     // Condition step processor
     this.registerStepProcessor('condition', async (step, instance) => {
       const { expression, trueStep, falseStep } = step.config;
-      
+
       // Simple expression evaluation (in production, use a proper expression engine)
       const result = this.evaluateCondition(expression, instance.variables);
-      
+
       return {
         conditionResult: result,
         nextStep: result ? trueStep : falseStep,
@@ -362,18 +379,18 @@ class SimpleWorkflowEngine extends EventEmitter {
     // Wait step processor
     this.registerStepProcessor('wait', async (step, instance) => {
       const { duration } = step.config;
-      
+
       if (typeof duration === 'number' && duration > 0) {
         await new Promise(resolve => setTimeout(resolve, duration));
       }
-      
+
       return { waited: duration };
     });
 
     // Parallel step processor (simplified)
     this.registerStepProcessor('parallel', async (step, instance) => {
       const { parallelSteps } = step.config;
-      
+
       if (!Array.isArray(parallelSteps)) {
         throw new Error('Parallel step requires parallelSteps array in config');
       }
@@ -383,7 +400,7 @@ class SimpleWorkflowEngine extends EventEmitter {
         parallelSteps.map(async (stepId: string) => {
           const definition = this.definitions.get(instance.definitionId);
           const parallelStep = definition?.steps.find(s => s.id === stepId);
-          
+
           if (!parallelStep) {
             throw new Error(`Parallel step not found: ${stepId}`);
           }
@@ -406,16 +423,22 @@ class SimpleWorkflowEngine extends EventEmitter {
   /**
    * Simple condition evaluation
    */
-  private evaluateCondition(expression: string, variables: Record<string, any>): boolean {
+  private evaluateCondition(
+    expression: string,
+    variables: Record<string, any>
+  ): boolean {
     try {
       // Very basic expression evaluation - in production, use a proper library
       // This is just for demonstration purposes
-      
+
       // Replace variable references with actual values
       let evaluatedExpression = expression;
       for (const [key, value] of Object.entries(variables)) {
         const regex = new RegExp(`\\b${key}\\b`, 'g');
-        evaluatedExpression = evaluatedExpression.replace(regex, JSON.stringify(value));
+        evaluatedExpression = evaluatedExpression.replace(
+          regex,
+          JSON.stringify(value)
+        );
       }
 
       // Basic safety check - only allow simple comparisons
@@ -444,7 +467,7 @@ class SimpleWorkflowEngine extends EventEmitter {
     cancelled: number;
   } {
     const instances = Array.from(this.instances.values());
-    
+
     return {
       totalWorkflows: instances.length,
       running: instances.filter(i => i.status === 'running').length,
@@ -457,7 +480,8 @@ class SimpleWorkflowEngine extends EventEmitter {
   /**
    * Cleanup old workflow instances
    */
-  cleanupOldInstances(maxAge: number = 7 * 24 * 60 * 60 * 1000): number { // Default 7 days
+  cleanupOldInstances(maxAge: number = 7 * 24 * 60 * 60 * 1000): number {
+    // Default 7 days
     const cutoffTime = Date.now() - maxAge;
     let cleanedCount = 0;
 
@@ -473,7 +497,9 @@ class SimpleWorkflowEngine extends EventEmitter {
     }
 
     if (cleanedCount > 0) {
-      console.log(`[WorkflowEngine] Cleaned up ${cleanedCount} old workflow instances`);
+      console.log(
+        `[WorkflowEngine] Cleaned up ${cleanedCount} old workflow instances`
+      );
     }
 
     return cleanedCount;
@@ -491,15 +517,19 @@ export function getWorkflowEngine(): SimpleWorkflowEngine {
 }
 
 // Setup automatic cleanup every 24 hours
-setInterval(() => {
-  globalWorkflowEngine.cleanupOldInstances();
-}, 24 * 60 * 60 * 1000); // 24 hours
+setInterval(
+  () => {
+    globalWorkflowEngine.cleanupOldInstances();
+  },
+  24 * 60 * 60 * 1000
+); // 24 hours
 
 // Register default cancellation workflow
 globalWorkflowEngine.registerWorkflow({
   id: 'cancellation.full_process',
   name: 'Full Cancellation Process',
-  description: 'Complete cancellation workflow with validation, attempt, and confirmation',
+  description:
+    'Complete cancellation workflow with validation, attempt, and confirmation',
   version: '1.0.0',
   startStep: 'validate',
   steps: [

@@ -22,17 +22,13 @@ import Link from 'next/link';
 
 async function AdminStats() {
   // Get various stats
-  const [
-    userCount,
-    activeSubscriptions,
-    totalRevenue,
-    systemHealth,
-  ] = await Promise.all([
-    api.admin.getUserCount(),
-    api.admin.getActiveSubscriptionCount(),
-    api.admin.getTotalRevenue(),
-    api.admin.getSystemHealth(),
-  ]);
+  const [userCount, activeSubscriptions, totalRevenue, systemHealth] =
+    await Promise.all([
+      api.admin.getUserCount(),
+      api.admin.getActiveSubscriptionCount(),
+      api.admin.getTotalRevenue(),
+      api.admin.getSystemHealth(),
+    ]);
 
   const stats = [
     {
@@ -71,9 +67,9 @@ async function AdminStats() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => (
+      {stats.map(stat => (
         <Link key={stat.title} href={stat.href}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className="cursor-pointer transition-shadow hover:shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 {stat.title}
@@ -82,12 +78,12 @@ async function AdminStats() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center justify-between mt-1">
+              <div className="mt-1 flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">
                   {stat.description}
                 </p>
-                <span className="text-xs text-green-600 flex items-center">
-                  <TrendingUp className="h-3 w-3 mr-1" />
+                <span className="flex items-center text-xs text-green-600">
+                  <TrendingUp className="mr-1 h-3 w-3" />
                   {stat.trend}
                 </span>
               </div>
@@ -110,7 +106,7 @@ async function RecentActivity() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {recentEvents.map((event) => (
+          {recentEvents.map(event => (
             <div key={event.id} className="flex items-start space-x-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                 {event.type === 'user' && <Users className="h-4 w-4" />}
@@ -119,7 +115,9 @@ async function RecentActivity() {
               </div>
               <div className="flex-1 space-y-1">
                 <p className="text-sm font-medium">{event.title}</p>
-                <p className="text-sm text-muted-foreground">{event.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {event.description}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {new Date(event.timestamp).toLocaleString()}
                 </p>
@@ -205,7 +203,7 @@ export default function AdminDashboard() {
               <div className="grid gap-3">
                 <Link
                   href="/admin/users/new"
-                  className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted"
                 >
                   <Users className="h-5 w-5 text-muted-foreground" />
                   <div>
@@ -215,10 +213,10 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 </Link>
-                
+
                 <Link
                   href="/admin/billing/plans"
-                  className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted"
                 >
                   <CreditCard className="h-5 w-5 text-muted-foreground" />
                   <div>
@@ -228,10 +226,10 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 </Link>
-                
+
                 <Link
                   href="/admin/plaid"
-                  className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted"
                 >
                   <Building className="h-5 w-5 text-muted-foreground" />
                   <div>

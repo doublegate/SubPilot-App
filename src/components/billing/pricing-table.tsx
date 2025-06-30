@@ -142,11 +142,11 @@ export function PricingTable() {
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid gap-6 md:gap-8 lg:grid-cols-3 max-w-7xl mx-auto">
+      <div className="mx-auto grid max-w-7xl gap-6 md:gap-8 lg:grid-cols-3">
         {PLANS.map(plan => (
           <Card
             key={plan.name}
-            className={`flex flex-col h-full ${plan.popular ? 'relative border-primary shadow-lg scale-105' : ''}`}
+            className={`flex h-full flex-col ${plan.popular ? 'relative scale-105 border-primary shadow-lg' : ''}`}
           >
             {plan.popular && (
               <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -159,19 +159,19 @@ export function PricingTable() {
               <CardDescription>{plan.description}</CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-6 flex-1">
+            <CardContent className="flex-1 space-y-6">
               {/* Price */}
               <div>
                 <div className="flex items-baseline">
-                  <span className="text-2xl sm:text-3xl font-bold">
+                  <span className="text-2xl font-bold sm:text-3xl">
                     ${plan.price[billingPeriod]}
                   </span>
-                  <span className="ml-1 text-sm sm:text-base text-muted-foreground">
+                  <span className="ml-1 text-sm text-muted-foreground sm:text-base">
                     /{billingPeriod === 'monthly' ? 'month' : 'year'}
                   </span>
                 </div>
                 {billingPeriod === 'yearly' && plan.price.monthly > 0 && (
-                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
                     ${plan.price.monthly}/month billed annually
                   </p>
                 )}

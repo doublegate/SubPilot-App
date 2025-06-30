@@ -46,19 +46,19 @@ export function ManualInstructionsDialog({
 
   const handleConfirmCancellation = () => {
     const data: any = {};
-    
+
     if (confirmationCode.trim()) {
       data.confirmationCode = confirmationCode.trim();
     }
-    
+
     if (effectiveDate) {
       data.effectiveDate = new Date(effectiveDate);
     }
-    
+
     if (notes.trim()) {
       data.notes = notes.trim();
     }
-    
+
     if (refundAmount) {
       const amount = parseFloat(refundAmount);
       if (!isNaN(amount) && amount > 0) {
@@ -85,14 +85,14 @@ export function ManualInstructionsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icons.book className="h-5 w-5" />
             Cancellation Instructions
           </DialogTitle>
           <DialogDescription>
-            Follow these steps to cancel your subscription. Once complete, 
+            Follow these steps to cancel your subscription. Once complete,
             confirm the cancellation below to update your account.
           </DialogDescription>
         </DialogHeader>
@@ -109,18 +109,25 @@ export function ManualInstructionsDialog({
           </div>
 
           {/* Contact Information */}
-          {(instructions.website || instructions.phone || instructions.email || instructions.chatUrl) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
-              <h4 className="font-medium text-sm col-span-full">Contact Information</h4>
-              
+          {(instructions.website ||
+            instructions.phone ||
+            instructions.email ||
+            instructions.chatUrl) && (
+            <div className="grid grid-cols-1 gap-4 rounded-lg bg-muted p-4 md:grid-cols-2">
+              <h4 className="col-span-full text-sm font-medium">
+                Contact Information
+              </h4>
+
               {instructions.website && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Website</Label>
-                  <a 
-                    href={instructions.website} 
-                    target="_blank" 
+                  <Label className="text-xs text-muted-foreground">
+                    Website
+                  </Label>
+                  <a
+                    href={instructions.website}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
                   >
                     <Icons.externalLink className="h-3 w-3" />
                     Login & Cancel
@@ -131,9 +138,9 @@ export function ManualInstructionsDialog({
               {instructions.phone && (
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Phone</Label>
-                  <a 
+                  <a
                     href={`tel:${instructions.phone}`}
-                    className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
                   >
                     <Icons.phone className="h-3 w-3" />
                     {instructions.phone}
@@ -144,9 +151,9 @@ export function ManualInstructionsDialog({
               {instructions.email && (
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Email</Label>
-                  <a 
+                  <a
                     href={`mailto:${instructions.email}`}
-                    className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
                   >
                     <Icons.mail className="h-3 w-3" />
                     {instructions.email}
@@ -156,12 +163,14 @@ export function ManualInstructionsDialog({
 
               {instructions.chatUrl && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Live Chat</Label>
-                  <a 
-                    href={instructions.chatUrl} 
-                    target="_blank" 
+                  <Label className="text-xs text-muted-foreground">
+                    Live Chat
+                  </Label>
+                  <a
+                    href={instructions.chatUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
                   >
                     <Icons.messageCircle className="h-3 w-3" />
                     Start Chat
@@ -171,7 +180,9 @@ export function ManualInstructionsDialog({
 
               {instructions.estimatedTime && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Estimated Time</Label>
+                  <Label className="text-xs text-muted-foreground">
+                    Estimated Time
+                  </Label>
                   <div className="text-sm">{instructions.estimatedTime}</div>
                 </div>
               )}
@@ -182,14 +193,16 @@ export function ManualInstructionsDialog({
           <div className="space-y-3">
             <h4 className="font-medium">Cancellation Steps</h4>
             <div className="space-y-2">
-              {(instructions.specificSteps || instructions.steps)?.map((step: string, index: number) => (
-                <div key={index} className="flex gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-medium">
-                    {index + 1}
+              {(instructions.specificSteps || instructions.steps)?.map(
+                (step: string, index: number) => (
+                  <div key={index} className="flex gap-3">
+                    <div className="text-primary-foreground flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium">
+                      {index + 1}
+                    </div>
+                    <div className="text-sm">{step}</div>
                   </div>
-                  <div className="text-sm">{step}</div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           </div>
 
@@ -200,7 +213,7 @@ export function ManualInstructionsDialog({
               <div className="space-y-2">
                 {instructions.tips.map((tip: string, index: number) => (
                   <div key={index} className="flex gap-2 text-sm">
-                    <Icons.lightbulb className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <Icons.lightbulb className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-600" />
                     <span>{tip}</span>
                   </div>
                 ))}
@@ -221,17 +234,19 @@ export function ManualInstructionsDialog({
           ) : (
             <div className="space-y-4">
               <h4 className="font-medium">Confirm Cancellation Details</h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="confirmationCode">
                     Confirmation Code
-                    <span className="text-xs text-muted-foreground ml-1">(if provided)</span>
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      (if provided)
+                    </span>
                   </Label>
                   <Input
                     id="confirmationCode"
                     value={confirmationCode}
-                    onChange={(e) => setConfirmationCode(e.target.value)}
+                    onChange={e => setConfirmationCode(e.target.value)}
                     placeholder="e.g., CANC123456"
                   />
                 </div>
@@ -239,27 +254,31 @@ export function ManualInstructionsDialog({
                 <div className="space-y-2">
                   <Label htmlFor="effectiveDate">
                     Effective Date
-                    <span className="text-xs text-muted-foreground ml-1">(optional)</span>
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      (optional)
+                    </span>
                   </Label>
                   <Input
                     id="effectiveDate"
                     type="date"
                     value={effectiveDate}
-                    onChange={(e) => setEffectiveDate(e.target.value)}
+                    onChange={e => setEffectiveDate(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="refundAmount">
                     Refund Amount
-                    <span className="text-xs text-muted-foreground ml-1">(if applicable)</span>
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      (if applicable)
+                    </span>
                   </Label>
                   <Input
                     id="refundAmount"
                     type="number"
                     step="0.01"
                     value={refundAmount}
-                    onChange={(e) => setRefundAmount(e.target.value)}
+                    onChange={e => setRefundAmount(e.target.value)}
                     placeholder="0.00"
                   />
                 </div>
@@ -268,12 +287,14 @@ export function ManualInstructionsDialog({
               <div className="space-y-2">
                 <Label htmlFor="notes">
                   Additional Notes
-                  <span className="text-xs text-muted-foreground ml-1">(optional)</span>
+                  <span className="ml-1 text-xs text-muted-foreground">
+                    (optional)
+                  </span>
                 </Label>
                 <Textarea
                   id="notes"
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={e => setNotes(e.target.value)}
                   placeholder="Any additional details about the cancellation process..."
                   rows={3}
                 />
@@ -282,8 +303,8 @@ export function ManualInstructionsDialog({
               <Alert>
                 <Icons.info className="h-4 w-4" />
                 <AlertDescription>
-                  This information helps us track your cancellation and improve our service. 
-                  Only provide details you're comfortable sharing.
+                  This information helps us track your cancellation and improve
+                  our service. Only provide details you're comfortable sharing.
                 </AlertDescription>
               </Alert>
             </div>

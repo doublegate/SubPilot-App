@@ -1,7 +1,12 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -11,12 +16,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { 
-  CheckCircle2, 
-  AlertCircle, 
-  Clock, 
-  Zap, 
-  Settings, 
+import {
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Zap,
+  Settings,
   FileText,
   Loader2,
   Wifi,
@@ -33,7 +38,7 @@ import {
   TrendingUp,
   Users,
   Timer,
-  X
+  X,
 } from 'lucide-react';
 import { api } from '@/trpc/react';
 import { toast } from 'sonner';
@@ -82,7 +87,14 @@ export function UnifiedCancellationEnhancedModal({
   onSuccess,
 }: UnifiedCancellationEnhancedModalProps) {
   // State management
-  const [currentStep, setCurrentStep] = useState<'eligibility' | 'method-selection' | 'confirmation' | 'processing' | 'manual-instructions' | 'completed'>('eligibility');
+  const [currentStep, setCurrentStep] = useState<
+    | 'eligibility'
+    | 'method-selection'
+    | 'confirmation'
+    | 'processing'
+    | 'manual-instructions'
+    | 'completed'
+  >('eligibility');
   const [selectedMethod, setSelectedMethod] = useState<string>('auto');
   const [cancellationReason, setCancellationReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -91,7 +103,9 @@ export function UnifiedCancellationEnhancedModal({
   const [realTimeUpdates, setRealTimeUpdates] = useState<RealTimeUpdate[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [currentProgress, setCurrentProgress] = useState(0);
-  const [estimatedCompletion, setEstimatedCompletion] = useState<Date | null>(null);
+  const [estimatedCompletion, setEstimatedCompletion] = useState<Date | null>(
+    null
+  );
   const [result, setResult] = useState<any>(null);
   const [manualInstructions, setManualInstructions] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -101,23 +115,28 @@ export function UnifiedCancellationEnhancedModal({
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // API queries and mutations
-  const { data: eligibility, isLoading: checkingEligibility } = (api.unifiedCancellationEnhanced.canCancel as any).useQuery(
-    { subscriptionId: subscription.id },
-    { enabled: isOpen }
-  );
+  const { data: eligibility, isLoading: checkingEligibility } = (
+    api.unifiedCancellationEnhanced.canCancel as any
+  ).useQuery({ subscriptionId: subscription.id }, { enabled: isOpen });
 
-  const { data: capabilities, isLoading: loadingCapabilities } = (api.unifiedCancellationEnhanced.getProviderCapabilities as any).useQuery(
+  const { data: capabilities, isLoading: loadingCapabilities } = (
+    api.unifiedCancellationEnhanced.getProviderCapabilities as any
+  ).useQuery(
     { subscriptionId: subscription.id },
     { enabled: isOpen && currentStep === 'method-selection' }
   );
 
-  const initiateCancellation = (api.unifiedCancellationEnhanced.initiate as any).useMutation({
+  const initiateCancellation = (
+    api.unifiedCancellationEnhanced.initiate as any
+  ).useMutation({
     onSuccess: (data: any) => {
       setResult(data);
       setOrchestrationId(data.orchestrationId);
       setRequestId(data.requestId);
-      setEstimatedCompletion(data.estimatedCompletion ? new Date(data.estimatedCompletion) : null);
-      
+      setEstimatedCompletion(
+        data.estimatedCompletion ? new Date(data.estimatedCompletion) : null
+      );
+
       if (data.status === 'requires_manual') {
         setManualInstructions(data.manualInstructions);
         setCurrentStep('manual-instructions');
@@ -128,7 +147,7 @@ export function UnifiedCancellationEnhancedModal({
         // Start real-time updates
         connectToRealTimeUpdates(data.orchestrationId);
       }
-      
+
       setIsProcessing(false);
       toast.success('Cancellation initiated successfully');
     },
@@ -139,7 +158,9 @@ export function UnifiedCancellationEnhancedModal({
     },
   });
 
-  const confirmManual = (api.unifiedCancellationEnhanced.confirmManual as any).useMutation({
+  const confirmManual = (
+    api.unifiedCancellationEnhanced.confirmManual as any
+  ).useMutation({
     onSuccess: (data: any) => {
       setResult(data);
       setCurrentStep('completed');
@@ -165,7 +186,7 @@ export function UnifiedCancellationEnhancedModal({
       console.log('[SSE] Connected to real-time updates');
     };
 
-    eventSource.onmessage = (event) => {
+    eventSource.onmessage = event => {
       try {
         const update: RealTimeUpdate = JSON.parse(event.data);
         handleRealTimeUpdate(update);
@@ -174,10 +195,10 @@ export function UnifiedCancellationEnhancedModal({
       }
     };
 
-    eventSource.onerror = (error) => {
+    eventSource.onerror = error => {
       console.error('[SSE] Connection error:', error);
       setIsConnected(false);
-      
+
       // Attempt to reconnect after 5 seconds
       setTimeout(() => {
         if (orchestrationId && currentStep === 'processing') {
@@ -195,7 +216,7 @@ export function UnifiedCancellationEnhancedModal({
       case 'connection_established':
         setIsConnected(true);
         break;
-        
+
       case 'status_update':
         if (update.status === 'completed') {
           setCurrentStep('completed');
@@ -204,19 +225,21 @@ export function UnifiedCancellationEnhancedModal({
           setError(update.message || 'Cancellation failed');
         }
         break;
-        
+
       case 'method_attempt':
         toast.info(`Attempting ${update.method} cancellation...`);
         setCurrentProgress(25);
         break;
-        
+
       case 'method_failed':
-        toast.warning(`${update.method} method failed${(update as any).willRetry ? ', trying alternative...' : ''}`);
+        toast.warning(
+          `${update.method} method failed${(update as any).willRetry ? ', trying alternative...' : ''}`
+        );
         if ((update as any).willRetry) {
           setCurrentProgress(50);
         }
         break;
-        
+
       case 'orchestration_final':
         if ((update as any).finalStatus === 'completed') {
           setCurrentStep('completed');
@@ -227,7 +250,7 @@ export function UnifiedCancellationEnhancedModal({
         }
         disconnectRealTimeUpdates();
         break;
-        
+
       case 'heartbeat':
         // Update connection status
         setIsConnected(true);
@@ -258,7 +281,7 @@ export function UnifiedCancellationEnhancedModal({
   const handleInitiateCancellation = () => {
     setIsProcessing(true);
     setError(null);
-    
+
     initiateCancellation.mutate({
       subscriptionId: subscription.id,
       reason: cancellationReason,
@@ -284,12 +307,16 @@ export function UnifiedCancellationEnhancedModal({
 
   const handleManualConfirmation = (wasSuccessful: boolean) => {
     if (!requestId) return;
-    
+
     confirmManual.mutate({
       requestId,
       confirmationCode: manualConfirmation.confirmationCode || undefined,
-      effectiveDate: manualConfirmation.effectiveDate ? new Date(manualConfirmation.effectiveDate) : undefined,
-      refundAmount: manualConfirmation.refundAmount ? parseFloat(manualConfirmation.refundAmount) : undefined,
+      effectiveDate: manualConfirmation.effectiveDate
+        ? new Date(manualConfirmation.effectiveDate)
+        : undefined,
+      refundAmount: manualConfirmation.refundAmount
+        ? parseFloat(manualConfirmation.refundAmount)
+        : undefined,
       notes: manualConfirmation.notes || undefined,
       wasSuccessful,
     });
@@ -309,13 +336,15 @@ export function UnifiedCancellationEnhancedModal({
   const handleClose = () => {
     if (currentStep === 'processing' && isConnected) {
       // Warn user about closing during processing
-      const shouldClose = confirm('Cancellation is in progress. Are you sure you want to close this window? You can check the status later in your cancellation history.');
+      const shouldClose = confirm(
+        'Cancellation is in progress. Are you sure you want to close this window? You can check the status later in your cancellation history.'
+      );
       if (!shouldClose) return;
     }
-    
+
     disconnectRealTimeUpdates();
     onClose();
-    
+
     // Reset state for next time
     setTimeout(() => {
       setCurrentStep('eligibility');
@@ -344,28 +373,43 @@ export function UnifiedCancellationEnhancedModal({
   // Render method icons
   const getMethodIcon = (methodId: string) => {
     switch (methodId) {
-      case 'auto': return <Zap className="w-4 h-4" />;
-      case 'api': return <Zap className="w-4 h-4" />;
-      case 'automation': return <Settings className="w-4 h-4" />;
-      case 'manual': return <FileText className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
+      case 'auto':
+        return <Zap className="h-4 w-4" />;
+      case 'api':
+        return <Zap className="h-4 w-4" />;
+      case 'automation':
+        return <Settings className="h-4 w-4" />;
+      case 'manual':
+        return <FileText className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
     }
   };
 
   // Render success rate badge
   const getSuccessRateBadge = (rate: number) => {
-    if (rate >= 90) return <Badge variant="default" className="bg-green-500">Excellent</Badge>;
-    if (rate >= 80) return <Badge variant="default" className="bg-blue-500">Good</Badge>;
+    if (rate >= 90)
+      return (
+        <Badge variant="default" className="bg-green-500">
+          Excellent
+        </Badge>
+      );
+    if (rate >= 80)
+      return (
+        <Badge variant="default" className="bg-blue-500">
+          Good
+        </Badge>
+      );
     if (rate >= 70) return <Badge variant="secondary">Fair</Badge>;
     return <Badge variant="destructive">Limited</Badge>;
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
             Cancel {subscription.name}
           </DialogTitle>
         </DialogHeader>
@@ -375,21 +419,26 @@ export function UnifiedCancellationEnhancedModal({
           <div className="space-y-6">
             {checkingEligibility ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin" />
-                <span className="ml-2">Checking cancellation eligibility...</span>
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">
+                  Checking cancellation eligibility...
+                </span>
               </div>
             ) : eligibility?.canCancel ? (
               <div className="space-y-4">
                 <Alert>
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="h-4 w-4" />
                   <AlertDescription>
-                    This subscription can be cancelled. We'll help you through the process.
+                    This subscription can be cancelled. We'll help you through
+                    the process.
                   </AlertDescription>
                 </Alert>
-                
+
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Subscription Details</CardTitle>
+                    <CardTitle className="text-lg">
+                      Subscription Details
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex justify-between">
@@ -398,12 +447,16 @@ export function UnifiedCancellationEnhancedModal({
                     </div>
                     <div className="flex justify-between">
                       <span>Amount:</span>
-                      <span className="font-medium">${subscription.amount}/{subscription.frequency}</span>
+                      <span className="font-medium">
+                        ${subscription.amount}/{subscription.frequency}
+                      </span>
                     </div>
                     {subscription.nextBilling && (
                       <div className="flex justify-between">
                         <span>Next Billing:</span>
-                        <span className="font-medium">{subscription.nextBilling.toLocaleDateString()}</span>
+                        <span className="font-medium">
+                          {subscription.nextBilling.toLocaleDateString()}
+                        </span>
                       </div>
                     )}
                   </CardContent>
@@ -412,19 +465,30 @@ export function UnifiedCancellationEnhancedModal({
                 {eligibility.provider && (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Provider Information</CardTitle>
+                      <CardTitle className="text-lg">
+                        Provider Information
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="flex justify-between">
                         <span>Difficulty:</span>
-                        <Badge variant={eligibility.provider.difficulty === 'easy' ? 'default' : 
-                                      eligibility.provider.difficulty === 'medium' ? 'secondary' : 'destructive'}>
+                        <Badge
+                          variant={
+                            eligibility.provider.difficulty === 'easy'
+                              ? 'default'
+                              : eligibility.provider.difficulty === 'medium'
+                                ? 'secondary'
+                                : 'destructive'
+                          }
+                        >
                           {eligibility.provider.difficulty}
                         </Badge>
                       </div>
                       <div className="flex justify-between">
                         <span>Est. Time:</span>
-                        <span>{eligibility.provider.estimatedTime} minutes</span>
+                        <span>
+                          {eligibility.provider.estimatedTime} minutes
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Success Rate:</span>
@@ -436,12 +500,15 @@ export function UnifiedCancellationEnhancedModal({
               </div>
             ) : (
               <Alert variant="destructive">
-                <AlertCircle className="w-4 h-4" />
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {eligibility?.message || 'This subscription cannot be cancelled at this time.'}
+                  {eligibility?.message ||
+                    'This subscription cannot be cancelled at this time.'}
                   {eligibility?.existingRequestId && (
                     <div className="mt-2">
-                      <span>Existing request: {eligibility.existingRequestId}</span>
+                      <span>
+                        Existing request: {eligibility.existingRequestId}
+                      </span>
                     </div>
                   )}
                 </AlertDescription>
@@ -453,9 +520,7 @@ export function UnifiedCancellationEnhancedModal({
                 <Button variant="outline" onClick={handleClose}>
                   Cancel
                 </Button>
-                <Button onClick={handleProceed}>
-                  Continue
-                </Button>
+                <Button onClick={handleProceed}>Continue</Button>
               </div>
             )}
           </div>
@@ -465,65 +530,90 @@ export function UnifiedCancellationEnhancedModal({
         {currentStep === 'method-selection' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Choose Cancellation Method</h3>
+              <h3 className="mb-2 text-lg font-semibold">
+                Choose Cancellation Method
+              </h3>
               <p className="text-muted-foreground">
-                Select how you'd like to cancel your subscription. We recommend the automatic option for best results.
+                Select how you'd like to cancel your subscription. We recommend
+                the automatic option for best results.
               </p>
             </div>
 
             {loadingCapabilities ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin" />
                 <span className="ml-2">Analyzing cancellation options...</span>
               </div>
-            ) : capabilities?.methods && (
-              <RadioGroup value={selectedMethod} onValueChange={setSelectedMethod}>
-                <div className="space-y-3">
-                  {capabilities.methods.map((method: CancellationMethod) => (
-                    <div key={method.id} className="flex items-start space-x-3">
-                      <RadioGroupItem value={method.id} id={method.id} className="mt-1" />
-                      <Label htmlFor={method.id} className="flex-1 cursor-pointer">
-                        <Card className={`${method.isRecommended ? 'ring-2 ring-blue-500' : ''}`}>
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="space-y-2 flex-1">
-                                <div className="flex items-center gap-2">
-                                  {getMethodIcon(method.id)}
-                                  <span className="font-medium">{method.name}</span>
-                                  {method.isRecommended && (
-                                    <Badge variant="default" className="bg-blue-500">
-                                      Recommended
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                  {method.description}
-                                </p>
-                                <div className="flex items-center gap-4 text-sm">
-                                  <span className="flex items-center gap-1">
-                                    <Timer className="w-3 h-3" />
-                                    {method.estimatedTime} min
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <TrendingUp className="w-3 h-3" />
-                                    {method.successRate}% success
-                                  </span>
-                                  {method.requiresInteraction && (
-                                    <span className="flex items-center gap-1">
-                                      <Users className="w-3 h-3" />
-                                      Requires interaction
+            ) : (
+              capabilities?.methods && (
+                <RadioGroup
+                  value={selectedMethod}
+                  onValueChange={setSelectedMethod}
+                >
+                  <div className="space-y-3">
+                    {capabilities.methods.map((method: CancellationMethod) => (
+                      <div
+                        key={method.id}
+                        className="flex items-start space-x-3"
+                      >
+                        <RadioGroupItem
+                          value={method.id}
+                          id={method.id}
+                          className="mt-1"
+                        />
+                        <Label
+                          htmlFor={method.id}
+                          className="flex-1 cursor-pointer"
+                        >
+                          <Card
+                            className={`${method.isRecommended ? 'ring-2 ring-blue-500' : ''}`}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    {getMethodIcon(method.id)}
+                                    <span className="font-medium">
+                                      {method.name}
                                     </span>
-                                  )}
+                                    {method.isRecommended && (
+                                      <Badge
+                                        variant="default"
+                                        className="bg-blue-500"
+                                      >
+                                        Recommended
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    {method.description}
+                                  </p>
+                                  <div className="flex items-center gap-4 text-sm">
+                                    <span className="flex items-center gap-1">
+                                      <Timer className="h-3 w-3" />
+                                      {method.estimatedTime} min
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <TrendingUp className="h-3 w-3" />
+                                      {method.successRate}% success
+                                    </span>
+                                    {method.requiresInteraction && (
+                                      <span className="flex items-center gap-1">
+                                        <Users className="h-3 w-3" />
+                                        Requires interaction
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </RadioGroup>
+                            </CardContent>
+                          </Card>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </RadioGroup>
+              )
             )}
 
             {capabilities?.recommendations && (
@@ -532,17 +622,23 @@ export function UnifiedCancellationEnhancedModal({
                   <CardTitle className="text-lg">💡 Recommendation</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm">{capabilities.recommendations.reasoning}</p>
+                  <p className="text-sm">
+                    {capabilities.recommendations.reasoning}
+                  </p>
                   {capabilities.recommendations.considerations.length > 0 && (
                     <div className="mt-3">
-                      <p className="text-sm font-medium mb-2">Things to know:</p>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        {capabilities.recommendations.considerations.map((consideration: string, index: number) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <span className="text-orange-500 mt-0.5">•</span>
-                            {consideration}
-                          </li>
-                        ))}
+                      <p className="mb-2 text-sm font-medium">
+                        Things to know:
+                      </p>
+                      <ul className="space-y-1 text-sm text-muted-foreground">
+                        {capabilities.recommendations.considerations.map(
+                          (consideration: string, index: number) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <span className="mt-0.5 text-orange-500">•</span>
+                              {consideration}
+                            </li>
+                          )
+                        )}
                       </ul>
                     </div>
                   )}
@@ -551,12 +647,13 @@ export function UnifiedCancellationEnhancedModal({
             )}
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentStep('eligibility')}>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep('eligibility')}
+              >
                 Back
               </Button>
-              <Button onClick={handleProceed}>
-                Continue
-              </Button>
+              <Button onClick={handleProceed}>Continue</Button>
             </div>
           </div>
         )}
@@ -565,7 +662,9 @@ export function UnifiedCancellationEnhancedModal({
         {currentStep === 'confirmation' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Confirm Cancellation</h3>
+              <h3 className="mb-2 text-lg font-semibold">
+                Confirm Cancellation
+              </h3>
               <p className="text-muted-foreground">
                 Review your cancellation request before proceeding.
               </p>
@@ -583,13 +682,22 @@ export function UnifiedCancellationEnhancedModal({
                 <div className="flex justify-between">
                   <span>Method:</span>
                   <span className="font-medium">
-                    {capabilities?.methods?.find((m: CancellationMethod) => m.id === selectedMethod)?.name}
+                    {
+                      capabilities?.methods?.find(
+                        (m: CancellationMethod) => m.id === selectedMethod
+                      )?.name
+                    }
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Estimated Time:</span>
                   <span className="font-medium">
-                    {capabilities?.methods?.find((m: CancellationMethod) => m.id === selectedMethod)?.estimatedTime} minutes
+                    {
+                      capabilities?.methods?.find(
+                        (m: CancellationMethod) => m.id === selectedMethod
+                      )?.estimatedTime
+                    }{' '}
+                    minutes
                   </span>
                 </div>
               </CardContent>
@@ -601,26 +709,30 @@ export function UnifiedCancellationEnhancedModal({
                 id="reason"
                 placeholder="Tell us why you're cancelling..."
                 value={cancellationReason}
-                onChange={(e) => setCancellationReason(e.target.value)}
+                onChange={e => setCancellationReason(e.target.value)}
                 className="mt-1"
               />
             </div>
 
             <Alert>
-              <AlertCircle className="w-4 h-4" />
+              <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Once started, the cancellation process will begin immediately. You'll receive real-time updates on the progress.
+                Once started, the cancellation process will begin immediately.
+                You'll receive real-time updates on the progress.
               </AlertDescription>
             </Alert>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentStep('method-selection')}>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep('method-selection')}
+              >
                 Back
               </Button>
               <Button onClick={handleProceed} disabled={isProcessing}>
                 {isProcessing ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Starting...
                   </>
                 ) : (
@@ -635,7 +747,9 @@ export function UnifiedCancellationEnhancedModal({
         {currentStep === 'processing' && (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">Cancelling Subscription</h3>
+              <h3 className="mb-2 text-lg font-semibold">
+                Cancelling Subscription
+              </h3>
               <p className="text-muted-foreground">
                 Please wait while we process your cancellation request...
               </p>
@@ -654,13 +768,17 @@ export function UnifiedCancellationEnhancedModal({
             <div className="flex items-center justify-center gap-2 text-sm">
               {isConnected ? (
                 <>
-                  <Wifi className="w-4 h-4 text-green-500" />
-                  <span className="text-green-600">Connected to real-time updates</span>
+                  <Wifi className="h-4 w-4 text-green-500" />
+                  <span className="text-green-600">
+                    Connected to real-time updates
+                  </span>
                 </>
               ) : (
                 <>
-                  <WifiOff className="w-4 h-4 text-orange-500" />
-                  <span className="text-orange-600">Connecting to updates...</span>
+                  <WifiOff className="h-4 w-4 text-orange-500" />
+                  <span className="text-orange-600">
+                    Connecting to updates...
+                  </span>
                 </>
               )}
             </div>
@@ -679,13 +797,18 @@ export function UnifiedCancellationEnhancedModal({
                   <CardTitle className="text-lg">Live Updates</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                  <div className="max-h-40 space-y-2 overflow-y-auto">
                     {realTimeUpdates.slice(-5).map((update, index) => (
-                      <div key={index} className="flex items-start gap-2 text-sm">
-                        <span className="text-muted-foreground text-xs mt-0.5">
+                      <div
+                        key={index}
+                        className="flex items-start gap-2 text-sm"
+                      >
+                        <span className="mt-0.5 text-xs text-muted-foreground">
                           {new Date(update.timestamp).toLocaleTimeString()}
                         </span>
-                        <span className="flex-1">{update.message || update.type}</span>
+                        <span className="flex-1">
+                          {update.message || update.type}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -696,7 +819,7 @@ export function UnifiedCancellationEnhancedModal({
             {/* Error Display */}
             {error && (
               <Alert variant="destructive">
-                <AlertCircle className="w-4 h-4" />
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -713,9 +836,12 @@ export function UnifiedCancellationEnhancedModal({
         {currentStep === 'manual-instructions' && manualInstructions && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Manual Cancellation Instructions</h3>
+              <h3 className="mb-2 text-lg font-semibold">
+                Manual Cancellation Instructions
+              </h3>
               <p className="text-muted-foreground">
-                Follow these steps to cancel your {subscription.name} subscription manually.
+                Follow these steps to cancel your {subscription.name}{' '}
+                subscription manually.
               </p>
             </div>
 
@@ -727,14 +853,19 @@ export function UnifiedCancellationEnhancedModal({
                     <img
                       src={manualInstructions.provider.logo}
                       alt={manualInstructions.provider.name}
-                      className="w-6 h-6"
+                      className="h-6 w-6"
                     />
                   )}
                   {manualInstructions.provider.name}
-                  <Badge variant={
-                    manualInstructions.provider.difficulty === 'easy' ? 'default' :
-                    manualInstructions.provider.difficulty === 'medium' ? 'secondary' : 'destructive'
-                  }>
+                  <Badge
+                    variant={
+                      manualInstructions.provider.difficulty === 'easy'
+                        ? 'default'
+                        : manualInstructions.provider.difficulty === 'medium'
+                          ? 'secondary'
+                          : 'destructive'
+                    }
+                  >
                     {manualInstructions.provider.difficulty}
                   </Badge>
                 </CardTitle>
@@ -742,17 +873,17 @@ export function UnifiedCancellationEnhancedModal({
               <CardContent>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Timer className="w-3 h-3" />
-                    ~{manualInstructions.provider.estimatedTime} minutes
+                    <Timer className="h-3 w-3" />~
+                    {manualInstructions.provider.estimatedTime} minutes
                   </span>
                 </div>
               </CardContent>
             </Card>
 
             {/* Contact Information */}
-            {(manualInstructions.contactInfo.website || 
-              manualInstructions.contactInfo.phone || 
-              manualInstructions.contactInfo.email || 
+            {(manualInstructions.contactInfo.website ||
+              manualInstructions.contactInfo.phone ||
+              manualInstructions.contactInfo.email ||
               manualInstructions.contactInfo.chat) && (
               <Card>
                 <CardHeader>
@@ -761,7 +892,7 @@ export function UnifiedCancellationEnhancedModal({
                 <CardContent className="space-y-2">
                   {manualInstructions.contactInfo.website && (
                     <div className="flex items-center gap-2">
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="h-4 w-4" />
                       <a
                         href={manualInstructions.contactInfo.website}
                         target="_blank"
@@ -774,23 +905,29 @@ export function UnifiedCancellationEnhancedModal({
                   )}
                   {manualInstructions.contactInfo.phone && (
                     <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      <a href={`tel:${manualInstructions.contactInfo.phone}`} className="text-blue-600 hover:underline">
+                      <Phone className="h-4 w-4" />
+                      <a
+                        href={`tel:${manualInstructions.contactInfo.phone}`}
+                        className="text-blue-600 hover:underline"
+                      >
                         {manualInstructions.contactInfo.phone}
                       </a>
                     </div>
                   )}
                   {manualInstructions.contactInfo.email && (
                     <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      <a href={`mailto:${manualInstructions.contactInfo.email}`} className="text-blue-600 hover:underline">
+                      <Mail className="h-4 w-4" />
+                      <a
+                        href={`mailto:${manualInstructions.contactInfo.email}`}
+                        className="text-blue-600 hover:underline"
+                      >
                         {manualInstructions.contactInfo.email}
                       </a>
                     </div>
                   )}
                   {manualInstructions.contactInfo.chat && (
                     <div className="flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4" />
+                      <MessageCircle className="h-4 w-4" />
                       <a
                         href={manualInstructions.contactInfo.chat}
                         target="_blank"
@@ -812,14 +949,16 @@ export function UnifiedCancellationEnhancedModal({
               </CardHeader>
               <CardContent>
                 <ol className="space-y-3">
-                  {manualInstructions.steps.map((step: string, index: number) => (
-                    <li key={index} className="flex gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                        {index + 1}
-                      </span>
-                      <span className="flex-1">{step}</span>
-                    </li>
-                  ))}
+                  {manualInstructions.steps.map(
+                    (step: string, index: number) => (
+                      <li key={index} className="flex gap-3">
+                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
+                          {index + 1}
+                        </span>
+                        <span className="flex-1">{step}</span>
+                      </li>
+                    )
+                  )}
                 </ol>
               </CardContent>
             </Card>
@@ -829,18 +968,20 @@ export function UnifiedCancellationEnhancedModal({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
                     Helpful Tips
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {manualInstructions.tips.map((tip: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-green-500 mt-0.5">•</span>
-                        <span className="text-sm">{tip}</span>
-                      </li>
-                    ))}
+                    {manualInstructions.tips.map(
+                      (tip: string, index: number) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="mt-0.5 text-green-500">•</span>
+                          <span className="text-sm">{tip}</span>
+                        </li>
+                      )
+                    )}
                   </ul>
                 </CardContent>
               </Card>
@@ -851,18 +992,20 @@ export function UnifiedCancellationEnhancedModal({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-orange-500" />
+                    <AlertCircle className="h-5 w-5 text-orange-500" />
                     Important Warnings
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {manualInstructions.warnings.map((warning: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-orange-500 mt-0.5">•</span>
-                        <span className="text-sm">{warning}</span>
-                      </li>
-                    ))}
+                    {manualInstructions.warnings.map(
+                      (warning: string, index: number) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <span className="mt-0.5 text-orange-500">•</span>
+                          <span className="text-sm">{warning}</span>
+                        </li>
+                      )
+                    )}
                   </ul>
                 </CardContent>
               </Card>
@@ -877,19 +1020,27 @@ export function UnifiedCancellationEnhancedModal({
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  After completing the cancellation process, please confirm the result below:
+                  After completing the cancellation process, please confirm the
+                  result below:
                 </p>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="confirmationCode">Confirmation Code (if any)</Label>
+                    <Label htmlFor="confirmationCode">
+                      Confirmation Code (if any)
+                    </Label>
                     <input
                       id="confirmationCode"
                       type="text"
-                      className="w-full mt-1 px-3 py-2 border rounded-md"
+                      className="mt-1 w-full rounded-md border px-3 py-2"
                       placeholder="ABC123..."
                       value={manualConfirmation.confirmationCode}
-                      onChange={(e) => setManualConfirmation(prev => ({ ...prev, confirmationCode: e.target.value }))}
+                      onChange={e =>
+                        setManualConfirmation(prev => ({
+                          ...prev,
+                          confirmationCode: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div>
@@ -897,23 +1048,35 @@ export function UnifiedCancellationEnhancedModal({
                     <input
                       id="effectiveDate"
                       type="date"
-                      className="w-full mt-1 px-3 py-2 border rounded-md"
+                      className="mt-1 w-full rounded-md border px-3 py-2"
                       value={manualConfirmation.effectiveDate}
-                      onChange={(e) => setManualConfirmation(prev => ({ ...prev, effectiveDate: e.target.value }))}
+                      onChange={e =>
+                        setManualConfirmation(prev => ({
+                          ...prev,
+                          effectiveDate: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="refundAmount">Refund Amount (if applicable)</Label>
+                  <Label htmlFor="refundAmount">
+                    Refund Amount (if applicable)
+                  </Label>
                   <input
                     id="refundAmount"
                     type="number"
                     step="0.01"
-                    className="w-full mt-1 px-3 py-2 border rounded-md"
+                    className="mt-1 w-full rounded-md border px-3 py-2"
                     placeholder="0.00"
                     value={manualConfirmation.refundAmount}
-                    onChange={(e) => setManualConfirmation(prev => ({ ...prev, refundAmount: e.target.value }))}
+                    onChange={e =>
+                      setManualConfirmation(prev => ({
+                        ...prev,
+                        refundAmount: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -923,7 +1086,12 @@ export function UnifiedCancellationEnhancedModal({
                     id="notes"
                     placeholder="Any additional details about the cancellation..."
                     value={manualConfirmation.notes}
-                    onChange={(e) => setManualConfirmation(prev => ({ ...prev, notes: e.target.value }))}
+                    onChange={e =>
+                      setManualConfirmation(prev => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
+                    }
                     className="mt-1"
                   />
                 </div>
@@ -935,9 +1103,9 @@ export function UnifiedCancellationEnhancedModal({
                     className="flex-1"
                   >
                     {confirmManual.isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
                     )}
                     Cancellation Successful
                   </Button>
@@ -947,7 +1115,7 @@ export function UnifiedCancellationEnhancedModal({
                     disabled={confirmManual.isLoading}
                     className="flex-1"
                   >
-                    <X className="w-4 h-4 mr-2" />
+                    <X className="mr-2 h-4 w-4" />
                     Cancellation Failed
                   </Button>
                 </div>
@@ -960,17 +1128,19 @@ export function UnifiedCancellationEnhancedModal({
         {currentStep === 'completed' && result && (
           <div className="space-y-6 text-center">
             <div className="flex justify-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-green-600" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                <CheckCircle2 className="h-8 w-8 text-green-600" />
               </div>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold text-green-600 mb-2">
-                Cancellation {result.status === 'completed' ? 'Completed' : 'Initiated'}!
+              <h3 className="mb-2 text-xl font-semibold text-green-600">
+                Cancellation{' '}
+                {result.status === 'completed' ? 'Completed' : 'Initiated'}!
               </h3>
               <p className="text-muted-foreground">
-                {result.message || 'Your subscription has been successfully cancelled.'}
+                {result.message ||
+                  'Your subscription has been successfully cancelled.'}
               </p>
             </div>
 
@@ -989,13 +1159,17 @@ export function UnifiedCancellationEnhancedModal({
                 {result.effectiveDate && (
                   <div className="flex justify-between">
                     <span>Effective Date:</span>
-                    <span>{new Date(result.effectiveDate).toLocaleDateString()}</span>
+                    <span>
+                      {new Date(result.effectiveDate).toLocaleDateString()}
+                    </span>
                   </div>
                 )}
                 {result.refundAmount && (
                   <div className="flex justify-between">
                     <span>Refund Amount:</span>
-                    <span className="font-medium text-green-600">${result.refundAmount}</span>
+                    <span className="font-medium text-green-600">
+                      ${result.refundAmount}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between">
@@ -1006,9 +1180,7 @@ export function UnifiedCancellationEnhancedModal({
             </Card>
 
             <div className="flex justify-center gap-3">
-              <Button onClick={handleClose}>
-                Close
-              </Button>
+              <Button onClick={handleClose}>Close</Button>
               <Button
                 variant="outline"
                 onClick={() => {
