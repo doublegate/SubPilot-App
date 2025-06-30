@@ -6,10 +6,10 @@
   <h3>Your command center for recurring finances</h3>
   <p>A modern web platform for monitoring, managing, and canceling subscriptions</p>
   
-  <p><strong>🎉 Phase 3 Complete: v1.4.0 - All Automation Features Implemented!</strong></p>
-  <p><strong>Current Version:</strong> v1.4.0 | <strong>Live Demo:</strong> <a href="https://subpilot-test.vercel.app">subpilot-test.vercel.app</a></p>
+  <p><strong>🎉 Phase 3 Complete: v1.5.0 - Major UI/UX Enhancements + Complete Admin Panel!</strong></p>
+  <p><strong>Current Version:</strong> v1.5.0 | <strong>Live Demo:</strong> <a href="https://subpilot-test.vercel.app">subpilot-test.vercel.app</a></p>
   <p><strong>Status:</strong> Phase 3 Complete ✅ | Ready for Phase 4 - Launch & Marketing</p>
-  <p><strong>Latest:</strong> Unified Cancellation System + TypeScript Excellence ✅ All Features Implemented</p>
+  <p><strong>Latest:</strong> Complete Admin Panel + Banks Management + Help System + Enhanced Analytics ✅</p>
 </div>
 
 ## 🚀 Quick Start
@@ -174,15 +174,19 @@ This project is licensed under the MIT License - see the [LICENSE](../LICENSE) f
 
 ---
 
-## Recent Updates (2025-06-26)
+## Recent Updates (2025-06-29)
 
-- **Theme System Fixes**: Fixed text input fields not following dark/light theme on Profile and Settings pages
-- **UI Improvements**: Removed redundant "Settings" from Profile page title
-- **Analytics Calendar**: Fixed overflow issues and added hover tooltips for dates with many subscriptions
+### v1.5.0 - Major UI/UX Enhancements
+- **Complete Admin Panel**: Full admin dashboard with user management, billing, and system monitoring
+- **Banks Management Page**: Dedicated interface for managing connected bank accounts
+- **Help & Support System**: Comprehensive help center with FAQ accordion and quick actions
+- **Enhanced Analytics**: Interactive 3x4 month heatmap with click-through navigation
+- **TypeScript Excellence**: Zero compilation errors across entire codebase
+- **CI/CD Fixes**: Fixed dynamic import issues in seed scripts
 
 ---
 
 ## Made with ❤️ by the SubPilot Team
 
-*Last Updated: 2025-06-29 20:53 EDT*
+*Last Updated: 2025-06-29 22:53 EDT*
 <!-- markdownlint-enable MD033 -->

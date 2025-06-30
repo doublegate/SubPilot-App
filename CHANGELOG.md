@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.0] - 2025-06-29 21:30 - Major UI/UX Enhancements + Complete Admin Panel
 
-### 🎯 Major Features
+### 🎯 Major Features - (v1.5.0)
 
 #### Complete Admin Panel Implementation
+
 - **Full Admin Dashboard** - Comprehensive metrics, user management, and system monitoring
 - **User Management System** - View, edit, and manage all users with role-based permissions
 - **Billing Management** - Complete Stripe integration monitoring and plan management
@@ -17,26 +18,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **System Monitoring** - Real-time health checks, performance metrics, and logs
 
 #### Banks Page & Navigation
+
 - **New Banks Management Page** - Dedicated interface for managing bank connections
 - **Bank Account Cards** - Visual representation of connected accounts with sync status
 - **Navigation Enhancement** - Added Banks link to main navigation menu
 - **Account Synchronization** - One-click sync with real-time status updates
 
 #### Help & Support System
+
 - **Comprehensive Help Center** - FAQ section with expandable accordion interface
 - **Quick Actions** - Direct links to common support tasks
 - **Contact Information** - Email and documentation links
 - **Responsive Design** - Mobile-optimized help interface
 
 #### Analytics Enhancements
+
 - **Interactive Heatmap** - Redesigned 3x4 month grid with better visual hierarchy
 - **Month Navigation** - Click-through to detailed monthly views
 - **Improved Tooltips** - Rich hover information on subscription renewals
 - **Mobile Responsiveness** - Touch-friendly calendar interface
 
-### Added
+### Added - (v1.5.0)
 
 #### UI/UX Improvements
+
 - **Profile Avatar Upload** - Complete avatar management system with image upload
 - **Billing Settings Page** - Dedicated billing management interface for users
 - **Improved Form Layouts** - Consistent spacing and visual hierarchy across all forms
@@ -46,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Error Boundaries** - Graceful error handling with recovery options
 
 #### Component Additions
+
 - **Accordion Component** (`@radix-ui/react-accordion`) - For collapsible content sections
 - **Admin Sidebar** - Persistent navigation for admin panel
 - **Revenue Charts** - Visual representation of subscription revenue
@@ -54,15 +60,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Webhook Configuration** - UI for managing Plaid webhooks
 
 #### Technical Infrastructure
+
 - **Admin Router** - Complete tRPC router with 15+ endpoints for admin operations
 - **System Monitoring Router** - Health checks and performance metrics
 - **Enhanced Cancellation System** - Improved modal flows and status tracking
 - **Real-time Notifications** - Server-sent events for live updates
 - **Audit Logging** - Comprehensive activity tracking for compliance
 
-### Fixed
+### Fixed - (v1.5.0)
 
 #### Critical Bug Fixes
+
 - **Navigation Routing** - Fixed broken Dashboard/Subscriptions navigation links
 - **Decimal Formatting** - Corrected decimal places in Analytics Categories tab
 - **View Details Buttons** - Fixed non-functional buttons in Analytics Insights
@@ -72,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Component Interfaces** - Aligned all component props with API responses
 
 #### UI/UX Fixes
+
 - **Avatar Upload Spacing** - Fixed layout issues in profile avatar section
 - **Billing Table Styling** - Corrected responsive layout and overflow handling
 - **Modal Z-Index** - Fixed layering issues with overlapping modals
@@ -79,9 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Form Validation** - Enhanced error messaging and field validation
 - **Mobile Responsiveness** - Fixed various mobile layout issues
 
-### Changed
+### Changed - (v1.5.0)
 
 #### Architecture Improvements
+
 - **Component Organization** - Restructured admin components into dedicated directory
 - **Router Organization** - Separated admin routes from user-facing routes
 - **Type Safety** - Enhanced TypeScript types across all new components
@@ -89,23 +99,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Performance** - Optimized data fetching with proper caching strategies
 
 #### Database Schema Updates
+
 - **User Model** - Added `isAdmin` field for role-based access control
 - **Audit Log Enhancement** - Extended metadata fields for better tracking
 - **Subscription Detection** - Improved detection algorithms and confidence scoring
 
-### Technical Details
+### Technical Details - (v1.5.0)
 
 #### Dependencies Added
+
 - `@tanstack/react-table@^8.21.3` - Advanced data table functionality
 - `@radix-ui/react-accordion@^1.2.2` - Accessible accordion component
 
 #### Code Quality Metrics
+
 - **Test Coverage**: Maintained at 99.5% (391 tests passing)
 - **TypeScript**: 100% type coverage with zero compilation errors
 - **Performance**: Lighthouse score maintained at 95/100
 - **Bundle Size**: Optimized with proper code splitting
 
 #### Development Experience
+
 - **Hot Module Replacement**: Improved for admin panel development
 - **Type Generation**: Enhanced Prisma and tRPC type generation
 - **Development Tools**: Added admin-specific development commands
@@ -113,7 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.1] - 2025-06-29 21:14 - Critical TypeScript Compilation Fixes
 
-### Fixed
+### Fixed - (v1.4.1)
 
 - **Missing @tanstack/react-table Dependency** - 2025-06-29 21:00
   - Installed missing `@tanstack/react-table@^8.21.3` package
@@ -140,7 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Changed from lastSyncedAt/consentExpirationTime to lastWebhook/status
   - Fixed property access errors in analytics and admin components
 
-### Changed
+### Changed - (v1.4.1)
 
 - **Type Safety Improvements** - 2025-06-29 21:12
   - Updated analytics page type comparisons to match actual enum values

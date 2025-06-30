@@ -4,13 +4,14 @@
 
 SubPilot is a modern subscription management platform built with the T3 Stack. It helps users monitor, manage, and cancel recurring subscriptions by automatically detecting them from bank transactions.
 
-**Current Status**: Phase 3 Complete ✅ (Automation) - v1.4.1 with Full Phase 3 Features + TypeScript Excellence
-- **Released**: v1.4.1 on 2025-06-29 21:14 EDT (Critical TypeScript Compilation Fixes)
+**Current Status**: Phase 3 Complete ✅ (Automation) - v1.5.0 with Major UI/UX Enhancements + Complete Admin Panel
+- **Released**: v1.5.0 on 2025-06-29 (Major UI/UX Enhancements + Complete Admin Panel)
+- **Previous Release**: v1.4.1 on 2025-06-29 21:14 EDT (Critical TypeScript Compilation Fixes)
 - **Phase 3 Started**: 2025-06-28 06:24 AM EDT (Parallel Agent Development)
 - **Phase 3 Completed**: 2025-06-28 06:24 AM EDT (All automation features implemented)
 - **Unified Cancellation System**: 2025-06-28 12:14 PM EDT (Complete rewrite with three-agent architecture)
 - **TypeScript Fix Session**: 2025-06-29 21:14 EDT (Zero compilation errors achieved)
-- **Last Updated**: 2025-06-29 21:14 EDT
+- **Last Updated**: 2025-06-29 22:53 EDT
 - Phase 2 complete (AI categorization, PWA, predictive analytics)
 - Phase 3 Agent 1: Cancellation System - COMPLETE ✅
 - Phase 3 Agent 2: AI Assistant - COMPLETE ✅
@@ -20,7 +21,7 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 - All TypeScript compilation errors resolved ✅ (8 → 0 errors in v1.4.1)
 - Performance: 95/100 Lighthouse score
 - Live at: https://subpilot-test.vercel.app
-- GitHub Release: https://github.com/doublegate/SubPilot-App/releases/tag/v1.4.1 (pending)
+- GitHub Release: https://github.com/doublegate/SubPilot-App/releases/tag/v1.5.0
 
 ## 🏗️ Architecture Overview
 
