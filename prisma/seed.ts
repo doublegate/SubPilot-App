@@ -88,6 +88,8 @@ async function main() {
   // Run other seed files
   console.log('\n🏷️ Seeding pricing plans...');
   try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - seed files are TypeScript files that will be compiled to JS
     const { seedPricingPlans } = await import('./seed-pricing-plans.js');
     await seedPricingPlans();
   } catch (error) {
@@ -96,6 +98,8 @@ async function main() {
 
   console.log('\n🔌 Seeding cancellation providers...');
   try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - seed files are TypeScript files that will be compiled to JS
     const { seedCancellationProviders } = await import(
       './seed-cancellation-providers.js'
     );
@@ -106,6 +110,8 @@ async function main() {
 
   console.log('\n📁 Seeding categories...');
   try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - seed files are TypeScript files that will be compiled to JS
     const { seedCategories } = await import('../scripts/seed-categories.js');
     await seedCategories();
   } catch (error) {
