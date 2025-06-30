@@ -88,7 +88,7 @@ async function main() {
   // Run other seed files
   console.log('\n🏷️ Seeding pricing plans...');
   try {
-    const { seedPricingPlans } = await import('./seed-pricing-plans');
+    const { seedPricingPlans } = await import('./seed-pricing-plans.js');
     await seedPricingPlans();
   } catch (error) {
     console.log('⚠️ Could not seed pricing plans:', error);
@@ -97,7 +97,7 @@ async function main() {
   console.log('\n🔌 Seeding cancellation providers...');
   try {
     const { seedCancellationProviders } = await import(
-      './seed-cancellation-providers'
+      './seed-cancellation-providers.js'
     );
     await seedCancellationProviders();
   } catch (error) {
@@ -106,7 +106,7 @@ async function main() {
 
   console.log('\n📁 Seeding categories...');
   try {
-    const { seedCategories } = await import('../scripts/seed-categories');
+    const { seedCategories } = await import('../scripts/seed-categories.js');
     await seedCategories();
   } catch (error) {
     console.log('⚠️ Could not seed categories:', error);
