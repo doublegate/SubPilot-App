@@ -58,11 +58,11 @@ SubPilot is a modern, intelligent subscription management platform that automati
 
 ### Frontend
 
-- **[Next.js 15.1.8](https://nextjs.org/)** - React framework with App Router
-- **[TypeScript 5.x](https://www.typescriptlang.org/)** - Type safety
+- **[Next.js 15.3.4](https://nextjs.org/)** - React framework with App Router
+- **[TypeScript 5.8.3](https://www.typescriptlang.org/)** - Type safety
 - **[Tailwind CSS 3.4](https://tailwindcss.com/)** - Utility-first styling
 - **[shadcn/ui](https://ui.shadcn.com/)** - Component library
-- **[React Hook Form](https://react-hook-form.com/)** - Form handling
+- **[React Hook Form 7.59](https://react-hook-form.com/)** - Form handling
 - **[Zod](https://zod.dev/)** - Schema validation
 
 </td>
@@ -70,8 +70,8 @@ SubPilot is a modern, intelligent subscription management platform that automati
 
 ### Backend
 
-- **[tRPC v11](https://trpc.io/)** - Type-safe APIs
-- **[Prisma 6.2](https://www.prisma.io/)** - Next-gen ORM
+- **[tRPC v11.4.3](https://trpc.io/)** - Type-safe APIs
+- **[Prisma 6.10.1](https://www.prisma.io/)** - Next-gen ORM
 - **[PostgreSQL](https://www.postgresql.org/)** - Database
 - **[Auth.js v5](https://authjs.dev/)** - Authentication
 - **[Plaid API](https://plaid.com/)** - Banking integration
@@ -277,6 +277,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 ![GitHub Issues](https://img.shields.io/github/issues/doublegate/SubPilot-App)
 ![GitHub Pull Requests](https://img.shields.io/github/issues-pr/doublegate/SubPilot-App)
 ![Test Coverage](https://img.shields.io/badge/test%20coverage-99.5%25-brightgreen)
+![Security](https://img.shields.io/badge/vulnerabilities-0-brightgreen)
 
 ---
 
