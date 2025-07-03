@@ -6,10 +6,10 @@
   <h3>Your command center for recurring finances</h3>
   <p>A modern web platform for monitoring, managing, and canceling subscriptions</p>
   
-  <p><strong>🎉 Phase 3 Complete: v1.5.0 - Major UI/UX Enhancements + Complete Admin Panel!</strong></p>
-  <p><strong>Current Version:</strong> v1.5.0 | <strong>Live Demo:</strong> <a href="https://subpilot-test.vercel.app">subpilot-test.vercel.app</a></p>
-  <p><strong>Status:</strong> Phase 3 Complete ✅ | Ready for Phase 4 - Launch & Marketing</p>
-  <p><strong>Latest:</strong> Complete Admin Panel + Banks Management + Help System + Enhanced Analytics ✅</p>
+  <p><strong>🔐 v1.6.0: Enterprise Security & Compliance Release - July 3, 2025!</strong></p>
+  <p><strong>Current Version:</strong> v1.6.0 | <strong>Live Demo:</strong> <a href="https://subpilot-test.vercel.app">subpilot-test.vercel.app</a></p>
+  <p><strong>Status:</strong> Phase 3 Complete ✅ | Security Hardened ✅ | Ready for Phase 4 - Launch & Marketing</p>
+  <p><strong>Latest:</strong> Security Audit Complete + 4 Critical Issues Fixed + 123 Security Tests ✅</p>
 </div>
 
 ## 🚀 Quick Start
