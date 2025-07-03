@@ -8,10 +8,11 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 - **Released**: v1.5.0 on 2025-06-29 (Major UI/UX Enhancements + Complete Admin Panel)
 - **Previous Release**: v1.4.1 on 2025-06-29 21:14 EDT (Critical TypeScript Compilation Fixes)
 - **Phase 3 Started**: 2025-06-28 06:24 AM EDT (Parallel Agent Development)
-- **Phase 3 Completed**: 2025-06-28 06:24 AM EDT (All automation features implemented)
+- **Phase 3 Completed**: 2025-06-28 08:01 AM EDT (All automation features implemented)
 - **Unified Cancellation System**: 2025-06-28 12:14 PM EDT (Complete rewrite with three-agent architecture)
 - **TypeScript Fix Session**: 2025-06-29 21:14 EDT (Zero compilation errors achieved)
-- **Last Updated**: 2025-06-29 22:53 EDT
+- **Dependency Updates**: 2025-06-29 23:35 EDT (Minor version updates, 0 vulnerabilities)
+- **Last Updated**: 2025-06-29 23:35 EDT
 - Phase 2 complete (AI categorization, PWA, predictive analytics)
 - Phase 3 Agent 1: Cancellation System - COMPLETE ✅
 - Phase 3 Agent 2: AI Assistant - COMPLETE ✅
@@ -27,11 +28,13 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 
 ### Tech Stack (T3 Stack)
 
-- **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind CSS + shadcn/ui
-- **Backend**: tRPC for type-safe APIs
-- **Database**: PostgreSQL + Prisma ORM
+- **Frontend**: Next.js 15.3.4 (App Router) + TypeScript 5.8.3 + Tailwind CSS 3.4 + shadcn/ui
+- **Backend**: tRPC v11.4.3 for type-safe APIs
+- **Database**: PostgreSQL + Prisma ORM 6.10.1
 - **Authentication**: Auth.js (NextAuth v5) with OAuth + Magic Links
-- **Bank Integration**: Plaid API for transaction data
+- **Bank Integration**: Plaid API 36.0.0 for transaction data
+- **AI Integration**: OpenAI GPT-4 for assistant features
+- **Payments**: Stripe 18.2.1 for subscription billing
 - **Deployment**: Vercel (app) + Neon PostgreSQL (database)
 
 ### Key Design Principles
@@ -56,7 +59,7 @@ subpilot-app/
 │   ├── app/               # Next.js App Router (fully implemented)
 │   ├── components/        # React components (20+ components)
 │   ├── server/           # Backend code
-│   │   ├── api/          # tRPC routers (6 routers with 35+ endpoints)
+│   │   ├── api/          # tRPC routers (8 routers with 50+ endpoints)
 │   │   ├── auth.ts       # Auth.js configuration
 │   │   └── db.ts         # Prisma client
 │   └── env.js            # Environment validation
@@ -153,7 +156,8 @@ Key relationships:
 ### ✅ Phase 1 & 2 Complete - Production Ready
 - **Phase 1 MVP**: 100% Complete (v1.0.0)
 - **Phase 2 Advanced Features**: 100% Complete (v1.1.0+)
-- **Current Focus**: Ready for Phase 3 (Automation)
+- **Phase 3 Automation**: 100% Complete (v1.5.0)
+- **Current Focus**: Ready for Phase 4 (Launch & Marketing)
 
 ## 🎨 Design System
 
@@ -257,7 +261,7 @@ Using shadcn/ui component library with custom Tailwind theme. Components should 
 - **GitHub URL**: <https://github.com/doublegate/SubPilot-App>
 - **Visibility**: Public repository
 - **License**: MIT License
-- **Current Version**: v1.3.0 (Phase 2 Complete + Docker Excellence)
+- **Current Version**: v1.5.0 (Phase 3 Complete + Major UI/UX Enhancements)
 
 ## 🛠️ Common Development Tasks
 
@@ -414,10 +418,11 @@ This pattern eliminates the need for non-null assertions and improves test maint
 - **Auth.js v5 Structure**: sessionToken not available client-side
 - **Nullish Coalescing**: ??= and ?? preferred over || for assignments
 - **JSON Field Access**: Type guards for database fields
-- **Component Dependencies**: Install all required UI library components
+- **Component Dependencies**: Install all required UI library components (@tanstack/react-table)
 - **Edge Runtime**: Separate auth utilities for middleware compatibility
 - **Middleware Restrictions**: No Node.js APIs, no dynamic imports, no Prisma client
 - **ESLint Overrides**: Test files need flexible typing rules for mocking
+- **Dynamic Imports**: Use @ts-ignore for .js extensions in TypeScript builds
 
 ## 🚀 CI/CD Patterns
 

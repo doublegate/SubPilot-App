@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { AuditLogger } from '@/server/lib/audit-logger';
-import { headers } from 'next/headers';
-import crypto from 'crypto';
+import { WebhookSecurity } from '@/server/lib/webhook-security';
+import { env } from '@/env.js';
 
 // Webhook payload interface
 interface CancellationWebhookPayload {
@@ -47,16 +47,40 @@ export async function POST(request: NextRequest) {
 
     // Verify webhook signature if configured
     if (signature && provider.authType === 'webhook_signature') {
-      const expectedSignature = generateWebhookSignature(
+      // Get webhook secret from environment
+      const webhookSecret = env.WEBHOOK_SECRET ?? env.API_SECRET;
+      if (!webhookSecret) {
+        console.error('❌ WEBHOOK_SECRET not configured');
+        await AuditLogger.log({
+          action: 'webhook.configuration_error',
+          resource: providerId,
+          result: 'failure',
+          metadata: { error: 'webhook_secret_not_configured', provider: provider.name },
+        });
+
+        return NextResponse.json(
+          { error: 'Webhook configuration error' },
+          { status: 500 }
+        );
+      }
+
+      // Use WebhookSecurity for verification with timing-safe comparison
+      const isValid = WebhookSecurity.verifyWebhook(
         body,
-        process.env.WEBHOOK_SECRET!
+        signature,
+        webhookSecret
       );
-      if (signature !== expectedSignature) {
+
+      if (!isValid) {
         await AuditLogger.log({
           action: 'webhook.signature_verification_failed',
           resource: providerId,
           result: 'failure',
-          metadata: { signature, provider: provider.name },
+          metadata: { 
+            signature: signature.substring(0, 10) + '...', // Log only partial signature for security
+            provider: provider.name,
+            ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+          },
         });
 
         return NextResponse.json(
@@ -64,6 +88,8 @@ export async function POST(request: NextRequest) {
           { status: 401 }
         );
       }
+
+      console.log(`✅ Internal webhook signature verified for provider: ${provider.name}`);
     }
 
     // Find the cancellation request
@@ -253,12 +279,6 @@ export async function GET(request: NextRequest) {
   });
 }
 
-/**
- * Generate webhook signature for verification
- */
-function generateWebhookSignature(payload: string, secret: string): string {
-  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
-}
 
 /**
  * Rate limiting for webhook endpoints

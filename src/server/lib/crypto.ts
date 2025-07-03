@@ -17,9 +17,13 @@ const getEncryptionKey = async (): Promise<Buffer> => {
   if (process.env.ENCRYPTION_KEY) {
     secret = process.env.ENCRYPTION_KEY;
   } else if (env.NODE_ENV === 'development' && env.NEXTAUTH_SECRET) {
-    console.warn(
-      '⚠️  Using NEXTAUTH_SECRET for encryption in development. Set ENCRYPTION_KEY for production.'
-    );
+    // Log warning without exposing sensitive information
+    if (!global.__encryptionWarningShown) {
+      console.warn(
+        '⚠️  Development mode: Using fallback encryption configuration. Set ENCRYPTION_KEY for production.'
+      );
+      global.__encryptionWarningShown = true; // Only show warning once
+    }
     secret = env.NEXTAUTH_SECRET;
   } else {
     throw new Error(
@@ -32,7 +36,9 @@ const getEncryptionKey = async (): Promise<Buffer> => {
     throw new Error('ENCRYPTION_KEY must be at least 32 characters long');
   }
 
-  const salt = 'subpilot-encryption-salt-v1'; // Versioned salt for future key rotation
+  // Use a deterministic salt based on the key for consistency
+  // This ensures the same key always produces the same derived key
+  const salt = Buffer.from('subpilot-encryption-v1').toString('hex') + secret.slice(0, 8);
   const key = (await scryptAsync(secret, salt, 32)) as Buffer;
   return key;
 };

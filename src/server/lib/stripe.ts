@@ -62,15 +62,41 @@ export async function verifyWebhookSignature(
   payload: string | Buffer,
   signature: string
 ): Promise<Stripe.Event> {
+  // Ensure webhook secret is configured
+  const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error('❌ STRIPE_WEBHOOK_SECRET not configured');
+    throw new Error('Webhook secret not configured');
+  }
+
+  // Validate signature format
+  if (!signature || !signature.includes('=')) {
+    console.error('❌ Invalid Stripe signature format');
+    throw new Error('Invalid signature format');
+  }
+
   try {
+    // Use Stripe's built-in verification which includes timestamp validation
     const event = getStripe().webhooks.constructEvent(
       payload,
       signature,
-      env.STRIPE_WEBHOOK_SECRET ?? ''
+      webhookSecret
     );
+    
+    console.log(`✅ Stripe webhook verified: ${event.type}`);
     return event;
   } catch (err) {
     const error = err as Error;
+    
+    // Log specific error types for debugging
+    if (error.message.includes('timestamp')) {
+      console.error('❌ Stripe webhook timestamp validation failed - possible replay attack');
+    } else if (error.message.includes('signature')) {
+      console.error('❌ Stripe webhook signature validation failed - possible tampering');
+    } else {
+      console.error('❌ Stripe webhook verification failed:', error.message);
+    }
+    
     throw new Error(`Webhook signature verification failed: ${error.message}`);
   }
 }

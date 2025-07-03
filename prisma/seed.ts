@@ -7,8 +7,24 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // Create admin user if it doesn't exist
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@subpilot.app';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456';
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  // Validate admin credentials are properly set
+  if (!adminEmail || !adminPassword) {
+    throw new Error(
+      'ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be set. ' +
+      'Please set these in your .env file before running seed.'
+    );
+  }
+
+  // Prevent use of default or weak passwords
+  if (adminPassword === 'admin123456' || adminPassword.length < 12) {
+    throw new Error(
+      'ADMIN_PASSWORD must be at least 12 characters and cannot be a default value. ' +
+      'Please use a strong, unique password.'
+    );
+  }
 
   const existingAdmin = await prisma.user.findFirst({
     where: {
@@ -32,15 +48,25 @@ async function main() {
 
     console.log('✅ Created admin user:');
     console.log('   Email:', adminEmail);
-    console.log('   Password:', adminPassword);
     console.log('   User ID:', adminUser.id);
+    console.log('   [Password hidden for security]');
   } else {
     console.log('✅ Admin user already exists');
   }
 
-  // Create a test user for development
-  const email = 'test@subpilot.dev';
-  const password = 'testpassword123';
+  // Create a test user for development (only in non-production environments)
+  if (process.env.NODE_ENV === 'production') {
+    console.log('⚠️ Skipping test user creation in production environment');
+    return;
+  }
+
+  const email = process.env.TEST_USER_EMAIL || 'test@subpilot.dev';
+  const password = process.env.TEST_USER_PASSWORD || 'testpassword123';
+
+  // Warn about test user in development
+  if (!process.env.TEST_USER_PASSWORD) {
+    console.log('⚠️ Using default test user password. Set TEST_USER_PASSWORD for custom password.');
+  }
 
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
@@ -66,8 +92,8 @@ async function main() {
 
   console.log('✅ Created test user:');
   console.log('   Email:', email);
-  console.log('   Password:', password);
   console.log('   User ID:', user.id);
+  console.log('   [Password hidden for security]');
 
   // Create some sample data for the user (optional)
   console.log('\n🔔 Creating welcome notification...');
@@ -119,13 +145,16 @@ async function main() {
   }
 
   console.log('\n🎉 Database seeded successfully!');
-  console.log('\n📝 Login credentials:');
+  console.log('\n📝 Login credentials saved in environment variables');
   console.log('   Admin User:');
   console.log('     Email:', adminEmail);
-  console.log('     Password:', adminPassword);
-  console.log('\n   Test User:');
-  console.log('     Email: test@subpilot.dev');
-  console.log('     Password: testpassword123');
+  console.log('     [Password from ADMIN_PASSWORD env var]');
+  
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('\n   Test User:');
+    console.log('     Email:', email);
+    console.log('     [Password from TEST_USER_PASSWORD env var or default in dev]');
+  }
 }
 
 main()

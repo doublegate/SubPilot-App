@@ -104,17 +104,12 @@ export const isPlaidConfigured = () => {
 
 /**
  * Plaid webhook verification
- * Verifies the JWT signature from Plaid webhooks
+ * Verifies the JWT signature from Plaid webhooks using official Plaid SDK
  */
 export const verifyPlaidWebhook = async (
-  _body: string,
-  _headers: Record<string, string | string[] | undefined>
+  body: string,
+  headers: Record<string, string | string[] | undefined>
 ): Promise<boolean> => {
-  // In development/sandbox, allow unverified webhooks for testing
-  if (env.NODE_ENV === 'development' || env.PLAID_ENV === 'sandbox') {
-    return true;
-  }
-
   try {
     const client = plaid();
     if (!client) {
@@ -122,27 +117,61 @@ export const verifyPlaidWebhook = async (
       return false;
     }
 
-    // Get the webhook verification key from Plaid
-    // For now, skip webhook verification since we need to determine the correct API
-    // TODO: Implement proper webhook verification once Plaid API is clarified
-    console.warn(
-      'Webhook verification not implemented - accepting all webhooks'
-    );
-    return true;
+    // Extract the JWT token from the request body
+    // Plaid sends webhooks as raw JWT tokens in the body
+    const jwt = body.trim();
+    
+    // Get the webhook verification key from headers 
+    const keyId = headers['plaid-verification-key-id'];
+    if (!keyId || Array.isArray(keyId)) {
+      // In sandbox environment, verification may be optional
+      if (env.PLAID_ENV === 'sandbox') {
+        console.warn('⚠️  Plaid webhook verification skipped in sandbox mode');
+        return true;
+      }
+      console.error('Missing or invalid Plaid verification key ID');
+      return false;
+    }
 
-    // Original verification code for reference:
-    // const verificationResponse = await plaidWithRetry(
-    //   () => client.webhookVerificationKeyGet({ key_id: 'some-key-id' }),
-    //   'webhookVerificationKeyGet'
-    // );
-    // const { key } = verificationResponse.data;
-    // const jwt = body;
-    // const { verify } = await import('jsonwebtoken');
-    // const payload = verify(jwt, key.pem, {
-    //   algorithms: ['ES256'],
-    // });
+    try {
+      // Get the verification key from Plaid
+      const verificationResponse = await plaidWithRetry(
+        () => client.webhookVerificationKeyGet({ key_id: keyId }),
+        'webhookVerificationKeyGet'
+      );
+      
+      const { key } = verificationResponse.data;
+      
+      // Verify the JWT signature using jsonwebtoken
+      const { verify } = await import('jsonwebtoken');
+      const payload = verify(jwt, key.pem, {
+        algorithms: ['ES256'],
+      });
+      
+      console.log('✅ Plaid webhook verified successfully');
+      return true;
+      
+    } catch (verificationError) {
+      // If verification fails in sandbox, log but allow for development
+      if (env.PLAID_ENV === 'sandbox') {
+        console.warn('⚠️  Plaid webhook verification failed in sandbox - allowing for development:', verificationError);
+        return true;
+      }
+      
+      console.error('Plaid webhook verification failed:', verificationError);
+      return false;
+    }
+    
   } catch (error) {
-    console.error('Webhook verification failed:', error);
+    // General error handling
+    console.error('Error during Plaid webhook verification:', error);
+    
+    // In sandbox mode, be more permissive for development
+    if (env.PLAID_ENV === 'sandbox') {
+      console.warn('⚠️  Allowing unverified webhook in sandbox mode');
+      return true;
+    }
+    
     return false;
   }
 };

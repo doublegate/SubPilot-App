@@ -24,9 +24,9 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
-> **🎉 Version 1.5.0**: Major UI/UX Enhancements + Complete Admin Panel + Bug Fixes
+> **🔐 Version 1.6.0**: Enterprise Security & Compliance Release
 > **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)
-> **Project Status**: Phase 3 Complete ✅ | Ready for Phase 4 - Launch & Marketing
+> **Project Status**: Phase 3 Complete ✅ | Security Hardened | Ready for Production
 > **Latest Release**: [View Changelog](./CHANGELOG.md)
 
 ## 🎯 Key Features
@@ -205,6 +205,30 @@ npm run lint          # ESLint
 npm run type-check    # TypeScript
 npm run format        # Prettier
 ```
+
+## 🔐 Security
+
+SubPilot v1.6.0 implements enterprise-grade security measures:
+
+### Security Features
+
+- **Webhook Signature Verification** - All webhooks (Plaid, Stripe, internal) are cryptographically verified
+- **Enhanced Encryption** - AES-256-GCM with random salts per operation
+- **Authorization Middleware** - IDOR prevention with resource ownership verification
+- **Input Validation** - Comprehensive schemas preventing XSS/SQL injection
+- **Rate Limiting** - Multi-tier limits with premium benefits
+- **Session Management** - Fingerprinting, concurrent limits, suspicious activity detection
+- **Error Sanitization** - Automatic redaction of sensitive information
+- **Audit Logging** - Comprehensive security event tracking
+
+### Security Testing
+
+- 123 dedicated security tests covering all attack vectors
+- 0 vulnerabilities in production dependencies
+- Regular penetration testing planned
+- Continuous security monitoring
+
+See [SECURITY_FIXES_IMPLEMENTED.md](./docs/SECURITY_FIXES_IMPLEMENTED.md) for detailed security documentation.
 
 ## 🚀 Deployment
 

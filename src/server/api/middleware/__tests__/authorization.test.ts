@@ -1,0 +1,326 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { TRPCError } from '@trpc/server';
+import { AuthorizationMiddleware, type ResourceType } from '../authorization';
+import { type PrismaClient } from '@prisma/client';
+
+// Mock AuditLogger
+vi.mock('@/server/lib/audit-logger', () => ({
+  AuditLogger: {
+    log: vi.fn(),
+  },
+}));
+
+// Mock Prisma client
+const mockDb = {
+  user: {
+    findUnique: vi.fn(),
+  },
+  subscription: {
+    findFirst: vi.fn(),
+  },
+  bankAccount: {
+    findFirst: vi.fn(),
+  },
+  transaction: {
+    findFirst: vi.fn(),
+  },
+  notification: {
+    findFirst: vi.fn(),
+  },
+  cancellationRequest: {
+    findFirst: vi.fn(),
+  },
+  conversation: {
+    findFirst: vi.fn(),
+  },
+  userSubscription: {
+    findFirst: vi.fn(),
+  },
+  plaidItem: {
+    findFirst: vi.fn(),
+  },
+} as unknown as PrismaClient;
+
+describe('AuthorizationMiddleware', () => {
+  let authz: AuthorizationMiddleware;
+  const userId = 'user-123';
+  const resourceId = 'resource-456';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authz = new AuthorizationMiddleware(mockDb);
+  });
+
+  describe('requireResourceOwnership', () => {
+    it('should allow access for resource owner', async () => {
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: resourceId });
+
+      await expect(
+        authz.requireResourceOwnership('subscription', resourceId, userId)
+      ).resolves.not.toThrow();
+    });
+
+    it('should deny access for non-owner', async () => {
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(null);
+
+      await expect(
+        authz.requireResourceOwnership('subscription', resourceId, userId)
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it('should allow admin access regardless of ownership', async () => {
+      vi.mocked(mockDb.user.findUnique).mockResolvedValue({ role: 'admin' });
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(null);
+
+      await expect(
+        authz.requireResourceOwnership('subscription', resourceId, userId, {
+          allowedRoles: ['admin'],
+        })
+      ).resolves.not.toThrow();
+    });
+
+    it('should throw NOT_FOUND for unauthorized access', async () => {
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(null);
+
+      try {
+        await authz.requireResourceOwnership('subscription', resourceId, userId);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(TRPCError);
+        expect((error as TRPCError).code).toBe('NOT_FOUND');
+        expect((error as TRPCError).message).toBe('Resource not found or access denied');
+      }
+    });
+
+    it('should handle database errors gracefully', async () => {
+      vi.mocked(mockDb.subscription.findFirst).mockRejectedValue(new Error('DB Error'));
+
+      try {
+        await authz.requireResourceOwnership('subscription', resourceId, userId);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(TRPCError);
+        expect((error as TRPCError).code).toBe('INTERNAL_SERVER_ERROR');
+        expect((error as TRPCError).message).toBe('Authorization check failed');
+      }
+    });
+  });
+
+  describe('Resource type verification', () => {
+    const testCases: Array<{
+      type: ResourceType;
+      mockMethod: keyof typeof mockDb;
+      mockResult: any;
+    }> = [
+      {
+        type: 'subscription',
+        mockMethod: 'subscription',
+        mockResult: { id: resourceId },
+      },
+      {
+        type: 'account',
+        mockMethod: 'bankAccount',
+        mockResult: { id: resourceId },
+      },
+      {
+        type: 'transaction',
+        mockMethod: 'transaction',
+        mockResult: { id: resourceId },
+      },
+      {
+        type: 'notification',
+        mockMethod: 'notification',
+        mockResult: { id: resourceId },
+      },
+      {
+        type: 'cancellation_request',
+        mockMethod: 'cancellationRequest',
+        mockResult: { id: resourceId },
+      },
+      {
+        type: 'conversation',
+        mockMethod: 'conversation',
+        mockResult: { id: resourceId },
+      },
+      {
+        type: 'billing_subscription',
+        mockMethod: 'userSubscription',
+        mockResult: { id: resourceId },
+      },
+      {
+        type: 'plaid_item',
+        mockMethod: 'plaidItem',
+        mockResult: { id: resourceId },
+      },
+    ];
+
+    testCases.forEach(({ type, mockMethod, mockResult }) => {
+      it(`should verify ${type} ownership`, async () => {
+        (mockDb[mockMethod] as any).findFirst.mockResolvedValue(mockResult);
+
+        await expect(
+          authz.requireResourceOwnership(type, resourceId, userId)
+        ).resolves.not.toThrow();
+
+        expect((mockDb[mockMethod] as any).findFirst).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              id: resourceId,
+            }),
+            select: { id: true },
+          })
+        );
+      });
+    });
+  });
+
+  describe('requireActive option', () => {
+    it('should include isActive filter when requireActive is true', async () => {
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: resourceId });
+
+      await authz.requireResourceOwnership('subscription', resourceId, userId, {
+        requireActive: true,
+      });
+
+      expect(mockDb.subscription.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: resourceId,
+            userId,
+            isActive: true,
+          }),
+        })
+      );
+    });
+
+    it('should not include isActive filter when requireActive is false', async () => {
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: resourceId });
+
+      await authz.requireResourceOwnership('subscription', resourceId, userId, {
+        requireActive: false,
+      });
+
+      expect(mockDb.subscription.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.not.objectContaining({
+            isActive: expect.anything(),
+          }),
+        })
+      );
+    });
+  });
+
+  describe('requireAdminRole', () => {
+    it('should allow admin users', async () => {
+      vi.mocked(mockDb.user.findUnique).mockResolvedValue({ role: 'admin' });
+
+      await expect(authz.requireAdminRole(userId)).resolves.not.toThrow();
+    });
+
+    it('should deny non-admin users', async () => {
+      vi.mocked(mockDb.user.findUnique).mockResolvedValue({ role: 'user' });
+
+      try {
+        await authz.requireAdminRole(userId);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(TRPCError);
+        expect((error as TRPCError).code).toBe('FORBIDDEN');
+        expect((error as TRPCError).message).toBe('Administrator access required');
+      }
+    });
+
+    it('should deny users without role', async () => {
+      vi.mocked(mockDb.user.findUnique).mockResolvedValue(null);
+
+      try {
+        await authz.requireAdminRole(userId);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(TRPCError);
+        expect((error as TRPCError).code).toBe('FORBIDDEN');
+      }
+    });
+  });
+
+  describe('requireMultipleResourceOwnership', () => {
+    it('should verify ownership of multiple resources', async () => {
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: 'sub-1' });
+      vi.mocked(mockDb.bankAccount.findFirst).mockResolvedValue({ id: 'acc-1' });
+
+      await expect(
+        authz.requireMultipleResourceOwnership(
+          [
+            { type: 'subscription', id: 'sub-1' },
+            { type: 'account', id: 'acc-1' },
+          ],
+          userId
+        )
+      ).resolves.not.toThrow();
+    });
+
+    it('should fail if any resource is not owned', async () => {
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: 'sub-1' });
+      vi.mocked(mockDb.bankAccount.findFirst).mockResolvedValue(null);
+
+      await expect(
+        authz.requireMultipleResourceOwnership(
+          [
+            { type: 'subscription', id: 'sub-1' },
+            { type: 'account', id: 'acc-1' },
+          ],
+          userId
+        )
+      ).rejects.toThrow(TRPCError);
+    });
+  });
+
+  describe('Transaction ownership verification', () => {
+    it('should verify transaction ownership through account relationship', async () => {
+      vi.mocked(mockDb.transaction.findFirst).mockResolvedValue({ id: resourceId });
+
+      await authz.requireResourceOwnership('transaction', resourceId, userId);
+
+      expect(mockDb.transaction.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            id: resourceId,
+            account: {
+              userId,
+            },
+          },
+          select: { id: true },
+        })
+      );
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should use generic error messages to prevent information disclosure', async () => {
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(null);
+
+      try {
+        await authz.requireResourceOwnership('subscription', resourceId, userId);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(TRPCError);
+        // Should not reveal whether resource exists or user lacks permission
+        expect((error as TRPCError).message).toBe('Resource not found or access denied');
+      }
+    });
+
+    it('should handle unknown resource types gracefully', async () => {
+      try {
+        await authz.requireResourceOwnership(
+          'unknown_type' as ResourceType,
+          resourceId,
+          userId
+        );
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(TRPCError);
+        expect((error as TRPCError).code).toBe('NOT_FOUND');
+      }
+    });
+  });
+});
