@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { getJobQueue } from './job-queue';
+import { Parser } from 'expr-eval';
 
 // Workflow interfaces
 export interface WorkflowStep {
@@ -428,28 +429,14 @@ class SimpleWorkflowEngine extends EventEmitter {
     variables: Record<string, any>
   ): boolean {
     try {
-      // Very basic expression evaluation - in production, use a proper library
-      // This is just for demonstration purposes
-
-      // Replace variable references with actual values
-      let evaluatedExpression = expression;
-      for (const [key, value] of Object.entries(variables)) {
-        const regex = new RegExp(`\\b${key}\\b`, 'g');
-        evaluatedExpression = evaluatedExpression.replace(
-          regex,
-          JSON.stringify(value)
-        );
-      }
-
-      // Basic safety check - only allow simple comparisons
-      const allowedPattern = /^["\w\s\d\.\-\+\*\/\(\)\!\=\<\>\&\|]+$/;
-      if (!allowedPattern.test(evaluatedExpression)) {
-        throw new Error('Invalid expression');
-      }
-
-      // Evaluate the expression (DANGER: eval should never be used in production)
-      // In production, use a proper expression evaluator like expr-eval
-      return Boolean(eval(evaluatedExpression));
+      // Use safe expression parser instead of eval
+      const parser = new Parser();
+      
+      // Parse the expression and evaluate with variables
+      const expr = parser.parse(expression);
+      const result = expr.evaluate(variables);
+      
+      return Boolean(result);
     } catch (error) {
       console.error('[WorkflowEngine] Error evaluating condition:', error);
       return false;

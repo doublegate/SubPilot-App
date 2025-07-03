@@ -96,8 +96,8 @@ async function applyBasicSecurity(
  * Apply security headers to response (Edge Runtime compatible)
  */
 function applySecurityHeaders(response: NextResponse): NextResponse {
-  // Prevent XSS attacks
-  response.headers.set('X-XSS-Protection', '1; mode=block');
+  // X-XSS-Protection is deprecated and can cause vulnerabilities
+  // Modern browsers use CSP instead, so we don't set this header
 
   // Prevent clickjacking
   response.headers.set('X-Frame-Options', 'DENY');
@@ -114,9 +114,13 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
   }
 
   // Content Security Policy
+  // Note: Next.js requires 'unsafe-inline' for styles and limited inline scripts
+  // In production, consider implementing nonce-based CSP for better security
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com",
+    // Remove 'unsafe-eval' - replaced eval usage with expr-eval library
+    // Keep 'unsafe-inline' for now due to Next.js requirements but add TODO
+    "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
@@ -131,8 +135,8 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 
   response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
 
-  // Referrer Policy
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Referrer Policy - Use 'no-referrer' for maximum privacy
+  response.headers.set('Referrer-Policy', 'no-referrer');
 
   // Permissions Policy
   response.headers.set(

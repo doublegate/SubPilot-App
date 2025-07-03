@@ -4,6 +4,7 @@
         "cuid",
         "FOUC",
         "Hmac",
+        "IDOR",
         "Mailhog",
         "NEXTAUTH",
         "nosniff",

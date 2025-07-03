@@ -169,12 +169,12 @@ export const authConfig: NextAuthConfig = {
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID ?? '',
       clientSecret: env.GOOGLE_CLIENT_SECRET ?? '',
-      allowDangerousEmailAccountLinking: true,
+      allowDangerousEmailAccountLinking: false,
     }),
     GitHubProvider({
       clientId: env.GITHUB_CLIENT_ID ?? '',
       clientSecret: env.GITHUB_CLIENT_SECRET ?? '',
-      allowDangerousEmailAccountLinking: true,
+      allowDangerousEmailAccountLinking: false,
     }),
     EmailProvider({
       server: {

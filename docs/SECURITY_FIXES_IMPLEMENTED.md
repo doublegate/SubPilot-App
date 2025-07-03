@@ -1,451 +1,207 @@
-# Security Fixes Implemented
+# Security Fixes Implemented - v1.6.0
 
-**Date**: 2025-07-03  
-**Version**: v1.5.0  
-**Status**: ✅ ALL Security Issues Resolved (100% Complete)
+Generated: 2025-07-03 19:45 EDT
 
-## Summary
+## Overview
 
-This document tracks the security fixes implemented based on the comprehensive security audit conducted on 2025-07-03.
+This document details the security fixes implemented in SubPilot v1.6.0 based on the comprehensive security audit. These fixes address critical vulnerabilities and enhance the application's security posture.
 
-## Critical Security Fixes Completed
+## Critical Security Fixes
 
-### 1. ✅ Removed Hardcoded Default Credentials
+### 1. ✅ OAuth Account Linking Security
 
-**Files Modified**: `prisma/seed.ts`
-
-**Changes Made**:
-- Removed hardcoded admin password (`admin123456`)
-- Added validation to require environment variables
-- Added password strength validation (minimum 12 characters)
-- Prevented test user creation in production environment
-- Made test user credentials configurable via environment variables
+**Issue**: Dangerous email-based account linking allowed automatic OAuth account linking
+**File**: `src/server/auth.config.ts`
+**Lines**: 172, 177
 
 **Before**:
 ```typescript
-const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456';
+GoogleProvider({
+  clientId: env.GOOGLE_CLIENT_ID ?? '',
+  clientSecret: env.GOOGLE_CLIENT_SECRET ?? '',
+  allowDangerousEmailAccountLinking: true,
+}),
 ```
 
 **After**:
 ```typescript
-const adminPassword = process.env.ADMIN_PASSWORD;
-
-if (!adminEmail || !adminPassword) {
-  throw new Error(
-    'ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be set.'
-  );
-}
-
-if (adminPassword === 'admin123456' || adminPassword.length < 12) {
-  throw new Error(
-    'ADMIN_PASSWORD must be at least 12 characters and cannot be a default value.'
-  );
-}
+GoogleProvider({
+  clientId: env.GOOGLE_CLIENT_ID ?? '',
+  clientSecret: env.GOOGLE_CLIENT_SECRET ?? '',
+  allowDangerousEmailAccountLinking: false,
+}),
 ```
 
-### 2. ✅ Fixed Credential Logging
+**Security Impact**: 
+- Prevents account takeover attacks via compromised OAuth accounts
+- Requires explicit user action to link accounts
+- Maintains separate accounts for different OAuth providers
 
-**Files Modified**: 
-- `prisma/seed.ts`
-- `src/server/lib/crypto.ts`
+### 2. ✅ Content Security Policy Improvements
+
+**Issue**: CSP included 'unsafe-inline' and 'unsafe-eval' directives
+**Files**: 
+- `src/middleware.ts` (lines 119-134)
+- `src/server/lib/workflow-engine.ts` (eval replacement)
 
 **Changes Made**:
-- Removed all password logging from seed script
-- Replaced credential logs with security-conscious messages
-- Added one-time warning flag for encryption fallback
-- Removed sensitive information from warning messages
+
+#### A. Removed 'unsafe-eval' from CSP
+```typescript
+// Before
+"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live ..."
+
+// After
+"script-src 'self' 'unsafe-inline' https://vercel.live ..."
+```
+
+#### B. Replaced eval() with safe expression parser
+**File**: `src/server/lib/workflow-engine.ts`
 
 **Before**:
 ```typescript
-console.log('   Password:', adminPassword);
-console.warn('⚠️  Using NEXTAUTH_SECRET for encryption in development. Set ENCRYPTION_KEY for production.');
+// Dangerous eval usage
+return Boolean(eval(evaluatedExpression));
 ```
 
 **After**:
 ```typescript
-console.log('   [Password hidden for security]');
-console.warn('⚠️  Development mode: Using fallback encryption configuration. Set ENCRYPTION_KEY for production.');
+import { Parser } from 'expr-eval';
+
+// Safe expression evaluation
+const parser = new Parser();
+const expr = parser.parse(expression);
+const result = expr.evaluate(variables);
+return Boolean(result);
 ```
 
-### 3. ✅ Enhanced Encryption Implementation
+**Dependencies Added**:
+- `expr-eval@2.0.2` - Safe mathematical expression evaluator
 
-**Files Created**: 
-- `src/server/lib/crypto-v2.ts` - New encryption module with random salts
-- `scripts/migrate-encryption.ts` - Migration script for existing data
+**Note**: 'unsafe-inline' remains due to Next.js requirements but is documented for future nonce-based CSP implementation.
 
-**Improvements**:
-- Random salt generation per encryption operation
-- Enhanced key derivation with 32-byte salts
-- Backward compatibility handling
-- Migration path for existing encrypted data
-- Proper TypeScript typing for global variables
+### 3. ✅ Removed Deprecated Security Headers
 
-**New Encryption Format**:
-```
-salt:iv:authTag:encryptedData
+**Issue**: X-XSS-Protection header is deprecated and can cause vulnerabilities
+**File**: `src/middleware.ts`
+**Line**: 100
+
+**Before**:
+```typescript
+response.headers.set('X-XSS-Protection', '1; mode=block');
 ```
 
-**Key Features**:
-- 32-byte random salt per encryption
-- AES-256-GCM authenticated encryption
-- Automatic format detection for migration
-- Secure key derivation with scrypt
-
-## Environment Variable Requirements
-
-### Required for Production:
-```env
-# Admin credentials (no defaults allowed)
-ADMIN_EMAIL=your-admin@email.com
-ADMIN_PASSWORD=your-strong-password-min-12-chars
-
-# Encryption key (separate from auth secret)
-ENCRYPTION_KEY=your-32-character-or-longer-encryption-key
+**After**:
+```typescript
+// X-XSS-Protection is deprecated and can cause vulnerabilities
+// Modern browsers use CSP instead, so we don't set this header
 ```
 
-### Optional for Development:
-```env
-# Test user credentials (only used in non-production)
-TEST_USER_EMAIL=test@example.com
-TEST_USER_PASSWORD=test-password-for-dev
+### 4. ✅ Enhanced Referrer Policy
+
+**Issue**: Referrer policy could leak sensitive information
+**File**: `src/middleware.ts`
+**Line**: 139
+
+**Before**:
+```typescript
+response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 ```
 
-## Migration Instructions
+**After**:
+```typescript
+response.headers.set('Referrer-Policy', 'no-referrer');
+```
 
-To migrate existing encrypted data to the new format:
+**Security Impact**: Prevents leaking of referrer information to external sites
+
+### 5. ✅ Credential Rotation Support
+
+**Created**: `scripts/rotate-credentials.sh`
+- Generates new secure secrets
+- Provides step-by-step rotation instructions
+- Creates backup of current configuration
+- Ensures proper credential strength
+
+## Additional Security Enhancements
+
+### Environment Variable Security
+- Verified `.env.local` is properly gitignored
+- Created credential rotation script
+- Added security reminders in documentation
+
+### Expression Evaluation Security
+- Removed all eval() usage from codebase
+- Implemented safe expression parsing library
+- Validated no other unsafe code execution patterns
+
+## Security Testing Verification
 
 ```bash
-# Run the migration script
-npm run migrate:encryption
+# Verify eval is no longer used
+grep -r "eval(" src/ | grep -v "evaluation" | grep -v "test"
+# Result: No eval() usage found
 
-# Or directly with tsx
-npx tsx scripts/migrate-encryption.ts
+# Verify OAuth configuration
+grep -r "allowDangerousEmailAccountLinking" src/
+# Result: All set to false
+
+# Verify CSP doesn't include unsafe-eval
+grep -r "unsafe-eval" src/
+# Result: Only in comments explaining removal
 ```
 
-## Security Improvements Summary
+## Remaining Security Tasks
 
-1. **No Default Credentials**: Application will not start without proper credentials
-2. **No Credential Logging**: Passwords never appear in logs
-3. **Enhanced Encryption**: Each encrypted value uses a unique salt
-4. **Production Safety**: Test users cannot be created in production
-5. **Validation**: Strong password requirements enforced
+### High Priority (Immediate)
+1. **Rotate all exposed credentials** using `scripts/rotate-credentials.sh`
+2. **Fix failing security tests** to ensure test coverage
+3. **Implement nonce-based CSP** to remove 'unsafe-inline'
 
-## Additional Security Fixes Completed (2025-07-03 18:00 EDT)
+### Medium Priority (Within 1 Month)
+1. **Implement secure account linking flow** with user verification
+2. **Add 2FA support** for enhanced authentication
+3. **Create security monitoring dashboard**
 
-### 4. ✅ Webhook Signature Verification
-**Files Created/Modified**:
-- `src/server/plaid-client.ts` - Enhanced with JWT verification
-- `src/server/lib/stripe.ts` - Enhanced with HMAC verification
-- `src/app/api/webhooks/cancellation/route.ts` - Added WebhookSecurity class
-- `src/server/lib/__tests__/webhook-security.test.ts` - 23 comprehensive tests
+## Security Posture Improvement
 
-**Implementation**:
-- Plaid: JWT verification with ES256 algorithm and production/sandbox mode handling
-- Stripe: HMAC signature verification with timestamp validation
-- Internal: HMAC with timing-safe comparison and replay protection
+| Metric | Before | After |
+|--------|--------|-------|
+| Critical Vulnerabilities | 4 | 1* |
+| High Risk Issues | 2 | 0 |
+| CSP Security | Weak | Improved |
+| OAuth Security | Vulnerable | Secured |
+| Code Execution | eval() used | Safe parser |
 
-### 5. ✅ Authorization Middleware (IDOR Prevention)
-**Files Created**:
-- `src/server/api/middleware/authorization.ts` - Comprehensive authorization system
-- `src/server/api/middleware/__tests__/authorization.test.ts` - 18 test cases
+*Remaining critical issue is credential exposure which requires manual rotation
 
-**Features**:
-- Resource ownership verification for all types
-- Role-based access control with admin privileges
-- Generic 404 responses preventing information disclosure
-- Batch ownership verification for complex operations
-- Audit logging for all unauthorized attempts
+## Deployment Checklist
 
-### 6. ✅ Input Validation Enhancement
-**Files Created**:
-- `src/server/lib/validation-schemas.ts` - Comprehensive validation schemas
-- `src/server/lib/__tests__/validation-schemas.test.ts` - 35 test cases
+Before deploying v1.6.0:
+- [ ] Rotate all credentials using provided script
+- [ ] Test OAuth login with new configuration
+- [ ] Verify CSP doesn't break functionality
+- [ ] Run full test suite
+- [ ] Monitor for CSP violations
+- [ ] Update OAuth app configurations
 
-**Protection Against**:
-- XSS attacks with regex pattern blocking
-- SQL injection with input sanitization
-- Path traversal with strict validation
-- Large payload attacks with size limits
-- Invalid data types and formats
+## Monitoring Recommendations
 
-### 7. ✅ Error Sanitization Service
-**Files Created**:
-- `src/server/lib/error-sanitizer.ts` - Error sanitization service
-- `src/server/lib/__tests__/error-sanitizer.test.ts` - 15 test cases
-
-**Features**:
-- Automatic redaction of sensitive patterns
-- Database connection string sanitization
-- API key and token removal
-- Stack trace removal in production
-- Security event flagging for monitoring
-
-### 8. ✅ Enhanced Rate Limiting
-**Files Modified**:
-- `src/server/lib/rate-limiter.ts` - Multi-tier rate limiting system
-
-**Enhancements**:
-- Endpoint-specific limits (auth: 5/15min, API: 100/min, AI: 50/hr)
-- Premium tier multipliers (2x-5x limits)
-- Rate limit headers with retry-after
-- Admin monitoring and override capabilities
-- Comprehensive violation logging
-
-### 9. ✅ Session Management System
-**Files Created**:
-- `src/server/lib/session-manager.ts` - Advanced session management
-- Test coverage included in security test suite
-
-**Security Features**:
-- Session fingerprinting with IP and User-Agent
-- Concurrent session limits (max 5 per user)
-- Suspicious activity detection and alerting
-- Configurable timeouts with "remember me"
-- Device trust scoring system
-- Bulk session revocation capabilities
-
-## Security Test Coverage Added
-
-**Total**: 123 dedicated security test cases
-- Webhook verification: 23 tests
-- Authorization/IDOR: 18 tests
-- Input validation: 35 tests
-- Error sanitization: 15 tests
-- Rate limiting: 12 tests
-- Session management: 20 tests
-
-## Remaining Non-Security Tasks
-
-Only code quality issues remain:
-
-1. **Test Suite Fixes** - 58 failing tests (non-security related)
-2. **Linting Issues** - 579 ESLint/Prettier issues
-
-## Testing the Fixes
-
-1. **Test Credential Validation**:
-   ```bash
-   # This should fail
-   ADMIN_PASSWORD=weak npm run db:seed
-   
-   # This should succeed
-   ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=strong-password-12345 npm run db:seed
-   ```
-
-2. **Test Encryption Migration**:
-   ```bash
-   # Check current encrypted data format
-   npm run db:studio
-   # Look at PlaidItem encrypted tokens
-   
-   # Run migration
-   npm run migrate:encryption
-   
-   # Verify new format (4 parts instead of 3)
-   ```
-
-### 4. ✅ Webhook Signature Verification
-
-**Files Created/Modified**: 
-- `src/server/plaid-client.ts` - Enhanced Plaid webhook verification
-- `src/server/lib/stripe.ts` - Enhanced Stripe webhook verification
-- `src/app/api/webhooks/cancellation/route.ts` - Internal webhook HMAC verification
-- `src/server/lib/__tests__/webhook-security.test.ts` - Comprehensive tests
-
-**Improvements**:
-- **Plaid Webhook Security**: Proper JWT verification using Plaid SDK with verification keys
-- **Stripe Webhook Security**: Enhanced signature validation with detailed error logging
-- **Internal Webhook Security**: HMAC verification with timing-safe comparison
-- **Production-Ready**: Sandbox mode handling with appropriate security warnings
-- **Comprehensive Testing**: Full test suite covering all verification scenarios
-
-**Security Features**:
-```typescript
-// Plaid webhook verification with proper key handling
-const verificationResponse = await client.webhookVerificationKeyGet({ key_id: keyId });
-const payload = verify(jwt, key.pem, { algorithms: ['ES256'] });
-
-// Stripe webhook verification with timestamp validation  
-const event = getStripe().webhooks.constructEvent(payload, signature, webhookSecret);
-
-// Internal webhook HMAC verification
-const isValid = WebhookSecurity.verifyWebhook(body, signature, webhookSecret);
-```
-
-### 5. ✅ Authorization Middleware
-
-**Files Created**: 
-- `src/server/api/middleware/authorization.ts` - Comprehensive authorization middleware
-- `src/server/api/middleware/__tests__/authorization.test.ts` - Authorization tests
-
-**Security Improvements**:
-- **Resource Ownership Verification**: Prevents IDOR vulnerabilities across all resources
-- **Generic Error Messages**: Returns 404 for both not found and unauthorized access
-- **Role-Based Access Control**: Admin role support with granular permissions
-- **Audit Logging**: All unauthorized access attempts are logged
-- **Multi-Resource Support**: Batch ownership verification for complex operations
-
-**Key Features**:
-```typescript
-// Verify ownership with audit logging
-await authz.requireResourceOwnership('subscription', subscriptionId, userId, {
-  allowedRoles: ['admin'],
-  requireActive: true,
-  auditAction: 'subscription.access'
-});
-
-// Multi-resource verification
-await authz.requireMultipleResourceOwnership([
-  { type: 'subscription', id: subId },
-  { type: 'account', id: accountId }
-], userId);
-```
-
-### 6. ✅ Comprehensive Input Validation
-
-**Files Created**: 
-- `src/server/lib/validation-schemas.ts` - Complete validation schema library
-- `src/server/lib/__tests__/validation-schemas.test.ts` - Validation tests
-
-**Security Enhancements**:
-- **XSS Protection**: Regex patterns to block dangerous characters
-- **SQL Injection Prevention**: Input sanitization and length limits
-- **Business Logic Validation**: Domain-specific validation rules
-- **File Upload Security**: Size, type, and extension validation
-- **Rate Limit Validation**: Request size limits and validation utilities
-
-**Validation Examples**:
-```typescript
-// Strong password requirements
-const passwordSchema = z.string()
-  .min(12).max(100)
-  .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/);
-
-// XSS-safe text fields
-const textFieldSchema = z.string()
-  .regex(/^[^<>'"&]*$/, 'Invalid characters detected');
-
-// Monetary amount validation
-const amountSchema = z.number()
-  .min(0).max(1000000)
-  .refine(val => !isNaN(val));
-```
-
-### 7. ✅ Error Sanitization Service
-
-**Files Created**: 
-- `src/server/lib/error-sanitizer.ts` - Production-ready error sanitization
-- `src/server/lib/__tests__/error-sanitizer.test.ts` - Error sanitization tests
-
-**Security Features**:
-- **Information Disclosure Prevention**: Removes sensitive data from error messages
-- **Production/Development Modes**: Different error verbosity levels
-- **Pattern Detection**: Automatically redacts database connections, API keys, JWT tokens
-- **Stack Trace Sanitization**: Removes file paths and line numbers
-- **Security Alert Integration**: Flags security-related errors for monitoring
-
-**Sanitization Patterns**:
-```typescript
-// Automatic redaction of sensitive information
-postgresql://user:password@localhost → postgresql://[REDACTED]
-sk_test_1234567890abcdef → [REDACTED]
-eyJhbGciOiJIUzI1NiIs... → [REDACTED]
-/home/user/.env → [REDACTED]
-```
-
-### 8. ✅ Enhanced Rate Limiting
-
-**Files Enhanced**: 
-- `src/server/lib/rate-limiter.ts` - Comprehensive rate limiting system
-
-**New Features**:
-- **Endpoint-Specific Limits**: Different limits for auth, API, AI, export, admin, billing, banking
-- **Premium User Benefits**: Higher rate limits for paid tiers (2x-5x multipliers)
-- **Security Monitoring**: Rate limit violations logged to audit system
-- **Flexible Configuration**: Easy adjustment of limits per endpoint type
-- **Admin Controls**: Rate limit status monitoring and manual clearing
-
-**Rate Limit Configuration**:
-```typescript
-export const RATE_LIMITS = {
-  auth: { window: 15 * 60 * 1000, max: 5 },     // 5 per 15 minutes
-  api: { window: 60 * 1000, max: 100 },         // 100 per minute  
-  ai: { window: 60 * 60 * 1000, max: 50 },      // 50 per hour
-  export: { window: 60 * 60 * 1000, max: 10 },  // 10 per hour
-  admin: { window: 60 * 1000, max: 10 },        // 10 per minute
-};
-```
-
-### 9. ✅ Session Management System
-
-**Files Created**: 
-- `src/server/lib/session-manager.ts` - Advanced session management
-
-**Security Features**:
-- **Session Fingerprinting**: Device and browser fingerprinting for security
-- **Concurrent Session Limits**: Maximum 5 active sessions per user
-- **Suspicious Activity Detection**: Alerts on fingerprint mismatches
-- **Session Timeout Management**: Configurable timeouts with "remember me" support
-- **Device Trust System**: Progressive trust building for known devices
-- **Bulk Session Revocation**: Security incident response capabilities
-
-**Session Security**:
-```typescript
-// Session fingerprinting
-const fingerprint = createHash('sha256')
-  .update(`${ip}:${userAgent}`)
-  .digest('hex');
-
-// Suspicious activity detection
-if (session.fingerprint !== currentFingerprint) {
-  await handleSuspiciousActivity(session, currentContext);
-}
-```
-
-## Security Testing Coverage
-
-### ✅ Comprehensive Test Suites
-- **Webhook Security Tests**: JWT verification, HMAC validation, timing attack resistance
-- **Authorization Tests**: IDOR prevention, role-based access, generic error responses  
-- **Validation Tests**: XSS prevention, SQL injection blocking, input sanitization
-- **Error Sanitization Tests**: Information disclosure prevention, pattern redaction
-- **Rate Limiting Tests**: Premium tiers, endpoint-specific limits, violation logging
-- **Session Management Tests**: Fingerprinting, concurrent limits, suspicious activity
-
-### ✅ Security Audit Integration
-- All security events logged to audit system
-- Rate limit violations tracked and monitored
-- Unauthorized access attempts recorded
-- Session security events logged with full context
-- Error sanitization maintains audit trail
-
-## Production Readiness Status
-
-### ✅ Complete Security Implementations
-- [x] **Webhook signature verification** - All external and internal webhooks secured
-- [x] **Authorization middleware** - IDOR vulnerabilities eliminated  
-- [x] **Input validation** - XSS and injection attacks prevented
-- [x] **Error sanitization** - Information disclosure eliminated
-- [x] **Rate limiting** - DDoS and brute force protection
-- [x] **Session management** - Session hijacking and concurrent access controlled
-
-### ✅ Security Monitoring
-- [x] Comprehensive audit logging for all security events
-- [x] Rate limit violation tracking and alerting
-- [x] Suspicious session activity detection
-- [x] Unauthorized access attempt logging
-- [x] Error pattern analysis for attack detection
+1. **CSP Violations**: Set up monitoring for CSP violations to identify any blocked resources
+2. **Failed OAuth Attempts**: Monitor for increased OAuth failures after disabling dangerous linking
+3. **Security Headers**: Use securityheaders.com to verify header configuration
+4. **Expression Parsing**: Monitor workflow engine for any expression parsing errors
 
 ## Next Steps
 
-1. ✅ **All Critical Security Issues Resolved**
-2. Apply authorization middleware to all API routes
-3. Implement rate limiting middleware in tRPC procedures  
-4. Update environment variables for production secrets
-5. Run comprehensive security test suite
-6. Conduct penetration testing
-7. Set up security monitoring dashboards
+1. Complete credential rotation immediately
+2. Deploy to staging for testing
+3. Monitor for any issues
+4. Plan nonce-based CSP implementation
+5. Schedule external security audit
 
 ---
 
-**Note**: SubPilot now implements production-grade security measures addressing all critical vulnerabilities identified in the security audit. The application is ready for security review and penetration testing.
+**Security Contact**: security@subpilot.com
+**Last Updated**: 2025-07-03 19:45 EDT
+**Version**: 1.6.0
