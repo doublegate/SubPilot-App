@@ -40,7 +40,11 @@ export async function applyRateLimit(
   const endpoint = request.nextUrl.pathname;
 
   try {
-    const rateLimitInfo = await checkRateLimit(clientId, endpoint);
+    const rateLimitInfo = await checkRateLimit(clientId, {
+      type: 'api',
+      endpoint: endpoint,
+      ip: clientId,
+    });
 
     if (!rateLimitInfo.allowed) {
       // Log rate limit violation

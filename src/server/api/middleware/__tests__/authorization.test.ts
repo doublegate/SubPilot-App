@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { AuthorizationMiddleware, type ResourceType } from '../authorization';
-import { type PrismaClient } from '@prisma/client';
+import { type PrismaClient, type Subscription, type User } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 // Mock AuditLogger
 vi.mock('@/server/lib/audit-logger', () => ({
@@ -9,6 +10,83 @@ vi.mock('@/server/lib/audit-logger', () => ({
     log: vi.fn(),
   },
 }));
+
+// Helper to create a mock subscription
+const createMockSubscription = (overrides: Partial<Subscription> = {}): Subscription => ({
+  id: 'sub_123',
+  userId: 'user_123',
+  name: 'Test Subscription',
+  amount: new Decimal(9.99),
+  currency: 'USD',
+  frequency: 'monthly',
+  status: 'active',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  merchantName: 'Test Merchant',
+  color: '#000000',
+  isActive: true,
+  detectedAt: new Date(),
+  lastTransactionId: null,
+  nextBilling: null,
+  lastBilling: null,
+  description: null,
+  category: null,
+  notes: null,
+  aiCategory: null,
+  aiCategoryConfidence: null,
+  categoryOverride: null,
+  confidence: new Decimal(0.95),
+  transactionPattern: null,
+  transactionCount: 1,
+  firstSeen: new Date(),
+  lastSeen: new Date(),
+  paymentMethod: null,
+  cancellationRequested: false,
+  cancellationDate: null,
+  freeTrialEndDate: null,
+  reminderSettings: null,
+  lastNotificationSent: null,
+  customFields: null,
+  ...overrides,
+});
+
+// Helper to create a mock user
+const createMockUser = (overrides: Partial<User> = {}): User => ({
+  id: 'user_123',
+  email: 'test@example.com',
+  emailVerified: null,
+  name: 'Test User',
+  image: null,
+  role: 'user',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  stripeCustomerId: null,
+  isAdmin: false,
+  notificationPreferences: null,
+  ...overrides,
+});
+
+// Helper to create a mock transaction
+const createMockTransaction = (overrides: any = {}): any => ({
+  id: 'txn_123',
+  accountId: 'acc_123',
+  amount: new Decimal(50.00),
+  currency: 'USD',
+  date: new Date(),
+  name: 'Test Transaction',
+  merchantName: 'Test Merchant',
+  transactionId: 'plaid_txn_123',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  category: null,
+  categoryDetailed: null,
+  paymentChannel: null,
+  pending: false,
+  accountOwner: null,
+  isRecurring: false,
+  subscriptionId: null,
+  ...overrides,
+});
 
 // Mock Prisma client
 const mockDb = {
@@ -53,7 +131,9 @@ describe('AuthorizationMiddleware', () => {
 
   describe('requireResourceOwnership', () => {
     it('should allow access for resource owner', async () => {
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: resourceId });
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        createMockSubscription({ id: resourceId, userId })
+      );
 
       await expect(
         authz.requireResourceOwnership('subscription', resourceId, userId)
@@ -69,7 +149,9 @@ describe('AuthorizationMiddleware', () => {
     });
 
     it('should allow admin access regardless of ownership', async () => {
-      vi.mocked(mockDb.user.findUnique).mockResolvedValue({ role: 'admin' });
+      vi.mocked(mockDb.user.findUnique).mockResolvedValue(
+        createMockUser({ id: userId, role: 'admin', isAdmin: true })
+      );
       vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(null);
 
       await expect(
@@ -176,7 +258,9 @@ describe('AuthorizationMiddleware', () => {
 
   describe('requireActive option', () => {
     it('should include isActive filter when requireActive is true', async () => {
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: resourceId });
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        createMockSubscription({ id: resourceId, userId, isActive: true })
+      );
 
       await authz.requireResourceOwnership('subscription', resourceId, userId, {
         requireActive: true,
@@ -194,7 +278,9 @@ describe('AuthorizationMiddleware', () => {
     });
 
     it('should not include isActive filter when requireActive is false', async () => {
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: resourceId });
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        createMockSubscription({ id: resourceId, userId })
+      );
 
       await authz.requireResourceOwnership('subscription', resourceId, userId, {
         requireActive: false,
@@ -277,7 +363,9 @@ describe('AuthorizationMiddleware', () => {
 
   describe('Transaction ownership verification', () => {
     it('should verify transaction ownership through account relationship', async () => {
-      vi.mocked(mockDb.transaction.findFirst).mockResolvedValue({ id: resourceId });
+      vi.mocked(mockDb.transaction.findFirst).mockResolvedValue(
+        createMockTransaction({ id: resourceId })
+      );
 
       await authz.requireResourceOwnership('transaction', resourceId, userId);
 

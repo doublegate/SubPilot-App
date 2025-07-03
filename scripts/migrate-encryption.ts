@@ -14,16 +14,16 @@ async function migrateEncryptedData() {
   console.log('🔐 Starting encryption migration...');
   
   try {
-    // Find all PlaidItems with encrypted access tokens
+    // Find all PlaidItems with access tokens
     const plaidItems = await prisma.plaidItem.findMany({
       where: {
-        encryptedAccessToken: {
+        accessToken: {
           not: null,
         },
       },
       select: {
         id: true,
-        encryptedAccessToken: true,
+        accessToken: true,
       },
     });
 
@@ -34,10 +34,10 @@ async function migrateEncryptedData() {
 
     for (const item of plaidItems) {
       try {
-        if (!item.encryptedAccessToken) continue;
+        if (!item.accessToken) continue;
 
         // Check if already in new format (4 parts)
-        const parts = item.encryptedAccessToken.split(':');
+        const parts = item.accessToken.split(':');
         if (parts.length === 4) {
           console.log(`✅ PlaidItem ${item.id} already migrated`);
           migrated++;
@@ -45,7 +45,7 @@ async function migrateEncryptedData() {
         }
 
         // Decrypt with old method
-        const plainToken = await oldDecrypt(item.encryptedAccessToken);
+        const plainToken = await oldDecrypt(item.accessToken);
         
         // Re-encrypt with new method (includes random salt)
         const newEncryptedToken = await newEncrypt(plainToken);
@@ -53,7 +53,7 @@ async function migrateEncryptedData() {
         // Update in database
         await prisma.plaidItem.update({
           where: { id: item.id },
-          data: { encryptedAccessToken: newEncryptedToken },
+          data: { accessToken: newEncryptedToken },
         });
 
         console.log(`✅ Migrated PlaidItem ${item.id}`);

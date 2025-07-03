@@ -23,6 +23,7 @@ export type SecurityAction =
   | 'webhook.cancellation_request_not_found'
   | 'webhook.cancellation_confirmed'
   | 'webhook.cancellation_error'
+  | 'webhook.configuration_error'
   | 'realtime.sse_connected'
   | 'analytics.cancellation_completed'
   | 'analytics.cancellation_failed'
