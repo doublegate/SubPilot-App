@@ -37,6 +37,7 @@ model User {
   accounts      Account[]      // OAuth accounts for authentication
   bankAccounts  BankAccount[]  // Bank accounts from Plaid
   sessions      Session[]
+  userSessions  UserSession[]  // Enhanced session management
   plaidItems    PlaidItem[]
   subscriptions Subscription[]
   transactions  Transaction[]
@@ -331,6 +332,36 @@ model Session {
   user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
+}
+
+// Enhanced Session Management with Security Features
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  fingerprint  String   @unique
+  ip           String
+  userAgent    String
+  deviceInfo   Json
+  
+  // Activity Tracking
+  lastActivity DateTime @default(now())
+  expiresAt    DateTime
+  
+  // Status
+  isActive     Boolean  @default(true)
+  revokedAt    DateTime?
+  
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([fingerprint])
+  @@index([expiresAt])
+  @@map("user_sessions")
 }
 
 model VerificationToken {

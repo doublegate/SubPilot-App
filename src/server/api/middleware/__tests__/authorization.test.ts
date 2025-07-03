@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { AuthorizationMiddleware, type ResourceType } from '../authorization';
-import { type PrismaClient, type Subscription, type User } from '@prisma/client';
+import { type PrismaClient, type Subscription, type User, type BankAccount } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 // Mock AuditLogger
@@ -22,11 +22,11 @@ const createMockSubscription = (overrides: Partial<Subscription> = {}): Subscrip
   status: 'active',
   createdAt: new Date(),
   updatedAt: new Date(),
-  merchantName: 'Test Merchant',
-  color: '#000000',
+  provider: {},
+  cancellationInfo: {},
   isActive: true,
   detectedAt: new Date(),
-  lastTransactionId: null,
+  detectionConfidence: new Decimal(0.95),
   nextBilling: null,
   lastBilling: null,
   description: null,
@@ -35,18 +35,6 @@ const createMockSubscription = (overrides: Partial<Subscription> = {}): Subscrip
   aiCategory: null,
   aiCategoryConfidence: null,
   categoryOverride: null,
-  confidence: new Decimal(0.95),
-  transactionPattern: null,
-  transactionCount: 1,
-  firstSeen: new Date(),
-  lastSeen: new Date(),
-  paymentMethod: null,
-  cancellationRequested: false,
-  cancellationDate: null,
-  freeTrialEndDate: null,
-  reminderSettings: null,
-  lastNotificationSent: null,
-  customFields: null,
   ...overrides,
 });
 
@@ -57,19 +45,41 @@ const createMockUser = (overrides: Partial<User> = {}): User => ({
   emailVerified: null,
   name: 'Test User',
   image: null,
-  role: 'user',
+  password: null,
   createdAt: new Date(),
   updatedAt: new Date(),
-  stripeCustomerId: null,
   isAdmin: false,
-  notificationPreferences: null,
+  notificationPreferences: {},
+  failedLoginAttempts: 0,
+  lockedUntil: null,
+  ...overrides,
+});
+
+// Helper to create a mock bank account
+const createMockBankAccount = (overrides: Partial<BankAccount> = {}): BankAccount => ({
+  id: 'acc_123',
+  userId: 'user_123',
+  plaidItemId: 'item_123',
+  plaidAccountId: 'plaid_acc_123',
+  name: 'Test Checking',
+  officialName: 'Test Checking Account',
+  type: 'depository',
+  subtype: 'checking',
+  mask: '1234',
+  availableBalance: new Decimal(900.00),
+  currentBalance: new Decimal(1000.00),
+  isoCurrencyCode: 'USD',
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  lastSync: new Date(),
   ...overrides,
 });
 
 // Helper to create a mock transaction
 const createMockTransaction = (overrides: any = {}): any => ({
   id: 'txn_123',
-  accountId: 'acc_123',
+  bankAccountId: 'acc_123',
   amount: new Decimal(50.00),
   currency: 'USD',
   date: new Date(),
@@ -150,7 +160,7 @@ describe('AuthorizationMiddleware', () => {
 
     it('should allow admin access regardless of ownership', async () => {
       vi.mocked(mockDb.user.findUnique).mockResolvedValue(
-        createMockUser({ id: userId, role: 'admin', isAdmin: true })
+        createMockUser({ id: userId, isAdmin: true })
       );
       vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(null);
 
@@ -197,17 +207,17 @@ describe('AuthorizationMiddleware', () => {
       {
         type: 'subscription',
         mockMethod: 'subscription',
-        mockResult: { id: resourceId },
+        mockResult: createMockSubscription({ id: resourceId, userId }),
       },
       {
         type: 'account',
         mockMethod: 'bankAccount',
-        mockResult: { id: resourceId },
+        mockResult: createMockBankAccount({ id: resourceId, userId }),
       },
       {
         type: 'transaction',
         mockMethod: 'transaction',
-        mockResult: { id: resourceId },
+        mockResult: createMockTransaction({ id: resourceId }),
       },
       {
         type: 'notification',
@@ -298,13 +308,17 @@ describe('AuthorizationMiddleware', () => {
 
   describe('requireAdminRole', () => {
     it('should allow admin users', async () => {
-      vi.mocked(mockDb.user.findUnique).mockResolvedValue({ role: 'admin' });
+      vi.mocked(mockDb.user.findUnique).mockResolvedValue(
+        createMockUser({ id: userId, isAdmin: true })
+      );
 
       await expect(authz.requireAdminRole(userId)).resolves.not.toThrow();
     });
 
     it('should deny non-admin users', async () => {
-      vi.mocked(mockDb.user.findUnique).mockResolvedValue({ role: 'user' });
+      vi.mocked(mockDb.user.findUnique).mockResolvedValue(
+        createMockUser({ id: userId, isAdmin: false })
+      );
 
       try {
         await authz.requireAdminRole(userId);
@@ -331,8 +345,12 @@ describe('AuthorizationMiddleware', () => {
 
   describe('requireMultipleResourceOwnership', () => {
     it('should verify ownership of multiple resources', async () => {
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: 'sub-1' });
-      vi.mocked(mockDb.bankAccount.findFirst).mockResolvedValue({ id: 'acc-1' });
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        createMockSubscription({ id: 'sub-1', userId })
+      );
+      vi.mocked(mockDb.bankAccount.findFirst).mockResolvedValue(
+        createMockBankAccount({ id: 'acc-1', userId })
+      );
 
       await expect(
         authz.requireMultipleResourceOwnership(
@@ -346,7 +364,9 @@ describe('AuthorizationMiddleware', () => {
     });
 
     it('should fail if any resource is not owned', async () => {
-      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue({ id: 'sub-1' });
+      vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(
+        createMockSubscription({ id: 'sub-1', userId })
+      );
       vi.mocked(mockDb.bankAccount.findFirst).mockResolvedValue(null);
 
       await expect(

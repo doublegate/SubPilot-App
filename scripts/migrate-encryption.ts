@@ -16,11 +16,6 @@ async function migrateEncryptedData() {
   try {
     // Find all PlaidItems with access tokens
     const plaidItems = await prisma.plaidItem.findMany({
-      where: {
-        accessToken: {
-          not: null,
-        },
-      },
       select: {
         id: true,
         accessToken: true,

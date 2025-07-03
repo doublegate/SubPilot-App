@@ -144,7 +144,7 @@ export const verifyPlaidWebhook = async (
       
       // Verify the JWT signature using jsonwebtoken
       const { verify } = await import('jsonwebtoken');
-      const payload = verify(jwt, key.pem, {
+      const payload = verify(jwt, key as unknown as string, {
         algorithms: ['ES256'],
       });
       

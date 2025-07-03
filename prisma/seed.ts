@@ -151,7 +151,7 @@ async function main() {
   console.log('     [Password from ADMIN_PASSWORD env var]');
   
   const nodeEnv = process.env.NODE_ENV || 'development';
-  if (nodeEnv !== 'production') {
+  if (nodeEnv === 'development' || nodeEnv === 'test') {
     console.log('\n   Test User:');
     console.log('     Email:', email);
     console.log('     [Password from TEST_USER_PASSWORD env var or default in dev]');

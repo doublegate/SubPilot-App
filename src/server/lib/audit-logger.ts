@@ -38,7 +38,31 @@ export type SecurityAction =
   | 'notification.error'
   | 'cancellation.confirmed'
   | 'cancellation.orchestration_failed'
-  | 'create';
+  | 'create'
+  | 'error.server_error'
+  | 'error.client_error'
+  | 'rate_limit.violation'
+  | 'rate_limit.system_error'
+  | 'rate_limit.auth.success'
+  | 'rate_limit.api.success'
+  | 'rate_limit.ai.success'
+  | 'rate_limit.export.success'
+  | 'rate_limit.admin.success'
+  | 'rate_limit.billing.success'
+  | 'rate_limit.banking.success'
+  | 'rate_limit.auth.error'
+  | 'rate_limit.api.error'
+  | 'rate_limit.ai.error'
+  | 'rate_limit.export.error'
+  | 'rate_limit.admin.error'
+  | 'rate_limit.billing.error'
+  | 'rate_limit.banking.error'
+  | 'session.created'
+  | 'session.expired'
+  | 'session.revoked'
+  | 'session.suspicious_activity'
+  | 'session.concurrent_limit'
+  | 'session.bulk_revoke';
 
 export interface SecurityEvent {
   userId?: string;

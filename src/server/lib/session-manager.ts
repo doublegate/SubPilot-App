@@ -67,7 +67,7 @@ export class SessionManager {
     const parsedDeviceInfo = this.parseDeviceInfo(userAgent, deviceInfo);
     
     // Calculate expiration time
-    const timeout = rememberMe ? this.REMEMBER_ME_TIMEOUT : this.SESSION_TIMEOUT;
+    const timeout = rememberMe ? SessionManager.REMEMBER_ME_TIMEOUT : SessionManager.SESSION_TIMEOUT;
     const expiresAt = new Date(Date.now() + timeout);
 
     // Check for concurrent session limit
@@ -81,7 +81,7 @@ export class SessionManager {
         fingerprint,
         ip,
         userAgent,
-        deviceInfo: parsedDeviceInfo,
+        deviceInfo: parsedDeviceInfo as any,
         createdAt: new Date(),
         lastActivity: new Date(),
         expiresAt,
@@ -98,7 +98,7 @@ export class SessionManager {
       userAgent,
       details: {
         rememberMe,
-        deviceInfo: parsedDeviceInfo,
+        deviceInfo: parsedDeviceInfo as any,
         expiresAt,
       },
     });
@@ -272,7 +272,7 @@ export class SessionManager {
           { 
             isActive: true,
             lastActivity: { 
-              lt: new Date(Date.now() - this.SESSION_TIMEOUT * 2) 
+              lt: new Date(Date.now() - SessionManager.SESSION_TIMEOUT * 2) 
             }
           },
         ],
@@ -347,7 +347,7 @@ export class SessionManager {
       },
     });
 
-    if (activeSessions >= this.MAX_CONCURRENT_SESSIONS) {
+    if (activeSessions >= SessionManager.MAX_CONCURRENT_SESSIONS) {
       // Revoke the oldest session
       const oldestSession = await this.db.userSession.findFirst({
         where: {
@@ -368,7 +368,7 @@ export class SessionManager {
           ip: oldestSession.ip,
           userAgent: oldestSession.userAgent,
           details: {
-            maxSessions: this.MAX_CONCURRENT_SESSIONS,
+            maxSessions: SessionManager.MAX_CONCURRENT_SESSIONS,
             activeCount: activeSessions,
           },
         });

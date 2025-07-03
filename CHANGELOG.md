@@ -73,6 +73,7 @@ This release represents a comprehensive security overhaul addressing all critica
 ### 📁 New Security Infrastructure
 
 #### Files Created
+
 - `src/server/api/middleware/authorization.ts` - Comprehensive authorization system
 - `src/server/lib/validation-schemas.ts` - Input validation schemas for all endpoints
 - `src/server/lib/error-sanitizer.ts` - Error message sanitization service
@@ -81,6 +82,7 @@ This release represents a comprehensive security overhaul addressing all critica
 - `scripts/migrate-encryption.ts` - Migration tool for encrypted data
 
 #### Enhanced Files
+
 - `src/server/plaid-client.ts` - JWT webhook verification implementation
 - `src/server/lib/stripe.ts` - HMAC webhook verification implementation
 - `src/server/lib/rate-limiter.ts` - Multi-tier rate limiting system

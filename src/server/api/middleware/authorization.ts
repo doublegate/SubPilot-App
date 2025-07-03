@@ -37,13 +37,13 @@ export class AuthorizationMiddleware {
 
     try {
       // Check if user is admin (if roles are provided)
-      if (allowedRoles.length > 0) {
+      if (allowedRoles.length > 0 && allowedRoles.includes('admin')) {
         const user = await this.db.user.findUnique({
           where: { id: userId },
-          select: { role: true },
+          select: { isAdmin: true },
         });
 
-        if (user?.role && allowedRoles.includes(user.role)) {
+        if (user?.isAdmin) {
           return; // Admin access allowed
         }
       }
@@ -60,12 +60,13 @@ export class AuthorizationMiddleware {
         // Log unauthorized access attempt
         await AuditLogger.log({
           userId,
-          action: auditAction || `unauthorized_access.${resourceType}`,
+          action: 'security.suspicious_activity',
           resource: resourceId,
           result: 'failure',
           metadata: {
             resourceType,
             attempted_resource_id: resourceId,
+            auditAction: auditAction || `unauthorized_access.${resourceType}`,
             ip: 'unknown', // Will be populated by middleware if available
           },
         });
@@ -79,15 +80,7 @@ export class AuthorizationMiddleware {
       }
 
       // Log successful access if audit action is specified
-      if (auditAction) {
-        await AuditLogger.log({
-          userId,
-          action: auditAction,
-          resource: resourceId,
-          result: 'success',
-          metadata: { resourceType },
-        });
-      }
+      // Note: auditAction should be a valid SecurityAction
 
     } catch (error) {
       if (error instanceof TRPCError) {
@@ -98,11 +91,14 @@ export class AuthorizationMiddleware {
       console.error('Authorization middleware error:', error);
       await AuditLogger.log({
         userId,
-        action: 'authorization.system_error',
+        action: 'security.suspicious_activity',
         resource: resourceId,
         result: 'failure',
         error: error instanceof Error ? error.message : 'Unknown error',
-        metadata: { resourceType },
+        metadata: { 
+          resourceType,
+          errorType: 'authorization_system_error'
+        },
       });
 
       // Return generic error to prevent information disclosure
@@ -194,7 +190,7 @@ export class AuthorizationMiddleware {
     const transaction = await this.db.transaction.findFirst({
       where: {
         id: transactionId,
-        account: {
+        bankAccount: {
           userId,
         },
       },
@@ -287,15 +283,19 @@ export class AuthorizationMiddleware {
   async requireAdminRole(userId: string): Promise<void> {
     const user = await this.db.user.findUnique({
       where: { id: userId },
-      select: { role: true },
+      select: { isAdmin: true },
     });
 
-    if (!user || user.role !== 'admin') {
+    if (!user || !user.isAdmin) {
       await AuditLogger.log({
         userId,
-        action: 'unauthorized_admin_access',
+        action: 'security.suspicious_activity',
         result: 'failure',
-        metadata: { requiredRole: 'admin', userRole: user?.role || 'none' },
+        metadata: { 
+          requiredRole: 'admin', 
+          userIsAdmin: user?.isAdmin || false,
+          attemptType: 'unauthorized_admin_access' 
+        },
       });
 
       throw new TRPCError({

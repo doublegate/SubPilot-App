@@ -230,7 +230,7 @@ describe('ErrorSanitizer', () => {
       const sanitized = ErrorSanitizer.sanitizeError(error);
 
       expect(sanitized.message.length).toBeLessThanOrEqual(203); // 200 + '...'
-      expect(sanitized.message).toEndWith('...');
+      expect(sanitized.message.endsWith('...')).toBe(true);
     });
   });
 
