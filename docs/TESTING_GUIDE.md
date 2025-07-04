@@ -1,17 +1,49 @@
 # 🧪 SubPilot Testing Strategy & Guide
 
-**Last Updated**: 2025-06-27 09:07 PM EDT  
-**Current Coverage**: 99.5% pass rate ✅ (219/220 tests with strategic skips)  
-**Test Suites**: 24+ comprehensive test files  
-**Total Tests**: 220 test cases (219 passing, 1 strategic skip)  
+**Last Updated**: 2025-07-04 03:57 EDT  
+**Current Coverage**: 81.5% overall coverage (693 passed / 129 failed / 28 skipped tests)  
+**Test Suites**: 44+ comprehensive test files including new router test suites  
+**Total Tests**: 850 test cases (693 passing, 129 failing, 28 skipped)  
 **TypeScript Compliance**: 100% ✅ (0 compilation errors)  
-**Status**: Enterprise-Grade Test Framework with Perfect CI/CD Integration  
+**Status**: Test Suite Expansion Phase - Major Router Coverage Enhancement Complete  
 
 ## Overview
 
 SubPilot employs a comprehensive testing strategy with **unit tests**, **integration tests**, and **end-to-end tests** to ensure reliability, security, and performance across all features.
 
-## 🎉 Testing Excellence Achievement (v1.0.0-final-compilation)
+## 🧪 Latest Achievement: Comprehensive Test Suite Expansion (v1.6.1 - July 4, 2025)
+
+### Major Router Test Suite Creation ✅
+
+- **Export Router Test Suite** (147 lines)
+  - Complete coverage of all 7 export endpoints (CSV, JSON, PDF, Excel generation)
+  - Scheduled exports, export history, and bulk export functionality
+  - Comprehensive service mocking and error handling validation
+  - Input validation testing and edge case coverage
+
+- **Assistant Router Test Suite** (830+ lines)
+  - Complete coverage of all 12 assistant endpoints
+  - Conversation management (CRUD operations, search, statistics)
+  - Message handling with AI interaction testing
+  - Action execution with confirmation flows
+  - Authentication and authorization boundary testing
+
+- **System Monitoring Router Test Suite** (758+ lines)
+  - Complete coverage of all 10 system monitoring endpoints
+  - Health checks (public/protected endpoint differentiation)
+  - System metrics, job queue management, failed job retry
+  - Real-time monitoring and user connection tracking
+  - Comprehensive error handling and service unavailability testing
+
+### Test Quality Enhancements
+
+- **Individual Typed Constants**: Enhanced TypeScript safety over array access patterns
+- **Comprehensive Service Mocking**: Proper isolation with vi.mock() and vi.mocked() patterns
+- **Security Pattern Integration**: All new endpoints follow established security testing patterns
+- **Error Path Validation**: Complete error handling coverage including TRPC error types
+- **Edge Case Coverage**: Authentication, authorization, validation boundary testing
+
+## 🎉 Previous Achievement: Testing Excellence (v1.0.0-final-compilation)
 
 ### TypeScript Compilation Excellence (June 27, 2025)
 

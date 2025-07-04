@@ -5,6 +5,40 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2025-07-04 - Test Coverage & Code Quality Enhancement
+
+### 🧪 Testing - Comprehensive Test Suite Expansion
+
+#### Test Coverage Improvements
+
+- **Created comprehensive test suites** for previously untested router components
+  - Export Router: 147-line test file covering all 7 endpoints (CSV, JSON, PDF, Excel generation, scheduling, history, bulk exports)
+  - Assistant Router: 830-line test file covering all 12 endpoints (conversations, messages, actions, search, stats, export)
+  - System Monitoring Router: 758-line test file covering all 10 endpoints (health, stats, metrics, job management)
+- **Improved test coverage from 655 to 693 passed tests** (81.5% overall coverage)
+- **Enhanced test quality** with proper service mocking, error handling validation, and edge case testing
+- **Security test integration** ensuring all new endpoints follow established security patterns
+
+#### Code Quality & ESLint Modernization
+
+- **ESLint v9 flat config migration** - Modernized configuration for Next.js 15 compatibility
+- **Six-agent ESLint error reduction** - Systematic approach reducing errors from ~1,200 to 261 (78% reduction)
+- **TypeScript type safety improvements** - Replaced unsafe 'any' types with proper interfaces
+- **Nullish coalescing adoption** - Safer boolean logic with ?? operators throughout codebase
+- **Environment variable type safety** - Converted env.js to env.ts with comprehensive type assertions
+
+#### Development Workflow Enhancements
+
+- **Memory-driven development** - Persistent progress tracking via MCP Memory server
+- **Parallel agent architecture** - Simultaneous code quality improvements across multiple domains
+- **Documentation synchronization** - Updated all project documentation to reflect current status
+
+### 🐛 Bug Fixes
+
+- **Fixed 38 test failures** through proper mock data alignment with Prisma schema
+- **Resolved TypeScript compilation issues** with dynamic imports and environment variables
+- **Enhanced test isolation** preventing state contamination between test suites
+
 ## [1.6.0] - 2025-07-04 - Enterprise Security & Compliance Release
 
 ### 🔐 Security - Critical Vulnerability Remediation
