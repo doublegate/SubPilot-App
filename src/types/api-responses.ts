@@ -334,7 +334,9 @@ export const flattenPaginatedResponse = <T>(
 };
 
 // Advanced Response Composition
-export const composeResponses = <T extends Record<string, ApiResponse<any>>>(
+export const composeResponses = <
+  T extends Record<string, ApiResponse<unknown>>,
+>(
   responses: T
 ): ApiResponse<{ [K in keyof T]: ExtractData<T[K]> }> => {
   const errors: string[] = [];
@@ -352,11 +354,11 @@ export const composeResponses = <T extends Record<string, ApiResponse<any>>>(
     const validationErrors: ValidationError[] = errors.map(error => ({
       field: 'composition',
       message: error,
-      code: 'COMPOSITION_FAILED'
+      code: 'COMPOSITION_FAILED',
     }));
     return createErrorResponse('422', validationErrors, {
       code: 'COMPOSITION_FAILED',
-    });
+    }) as unknown as ApiResponse<{ [K in keyof T]: ExtractData<T[K]> }, string>;
   }
 
   return createSuccessResponse(data as { [K in keyof T]: ExtractData<T[K]> });

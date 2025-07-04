@@ -36,9 +36,9 @@ import { toast } from 'sonner';
 
 // Interface for manual instructions structure
 interface ManualInstructions {
-  instructions?: {
-    steps?: string[];
-    contactInfo?: {
+  instructions: {
+    steps: string[];
+    contactInfo: {
       website?: string;
       phone?: string;
       email?: string;
@@ -75,17 +75,8 @@ interface CancellationMethod {
   estimatedTime: string;
   successRate: number;
   icon?: string;
-}
-
-interface ManualInstructions {
-  instructions: {
-    steps: string[];
-    contactInfo: {
-      website?: string;
-      phone?: string;
-      email?: string;
-    };
-  };
+  isRecommended?: boolean;
+  requiresInteraction?: boolean;
 }
 
 interface CancellationStatus {
@@ -223,8 +214,9 @@ export function UnifiedCancellationModal({
       cleanup();
       onClose();
     },
-    onError: error => {
-      toast.error(`Failed to cancel request: ${error.message}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to cancel request: ${errorMessage}`);
     },
   });
 
@@ -235,13 +227,14 @@ export function UnifiedCancellationModal({
         onSuccess?.({
           success: true,
           requestId: currentRequestId ?? '',
-          method: statusQuery.data?.method ?? 'manual',
+          method: (statusQuery.data as unknown as StatusQueryData)?.status?.method ?? 'manual',
         });
         cleanup();
         onClose();
       },
-      onError: error => {
-        toast.error(`Failed to confirm cancellation: ${error.message}`);
+      onError: (error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        toast.error(`Failed to confirm cancellation: ${errorMessage}`);
       },
     });
 
@@ -316,9 +309,9 @@ export function UnifiedCancellationModal({
       subscriptionId,
       priority,
       reason: notes,
-      method: selectedMethod,
+      method: selectedMethod === 'auto' ? 'api' : selectedMethod,
       userPreference: {
-        preferredMethod: selectedMethod,
+        preferredMethod: selectedMethod === 'auto' ? 'api' : selectedMethod,
         allowFallback: true,
         notificationPreferences: {
           realTime: true,
@@ -411,7 +404,8 @@ export function UnifiedCancellationModal({
 
   const getProgressPercentage = () => {
     if (!statusQuery.data) return 0;
-    const { completedSteps, totalSteps } = statusQuery.data.status;
+    const statusData = statusQuery.data as unknown as StatusQueryData;
+    const { completedSteps, totalSteps } = statusData.status;
     return Math.round((completedSteps / totalSteps) * 100);
   };
 
@@ -454,7 +448,7 @@ export function UnifiedCancellationModal({
 
   // Show status if we have an active request
   if (currentRequestId && statusQuery.data) {
-    const queryData = statusQuery.data as StatusQueryData;
+    const queryData = statusQuery.data as unknown as StatusQueryData;
     const status = queryData.status as {
       status: string;
       method: string;
@@ -509,7 +503,7 @@ export function UnifiedCancellationModal({
               <CardContent className="space-y-4">
                 <div>
                   <div className="mb-2 flex justify-between text-sm">
-                    <span>{status.currentStep}</span>
+                    <span>{status.method} in progress</span>
                     <span>
                       {status.completedSteps} / {status.totalSteps}
                     </span>
@@ -691,24 +685,24 @@ export function UnifiedCancellationModal({
               </TabsContent>
 
               <TabsContent value="next-steps" className="space-y-2">
-                {nextSteps.map((step: string, index: number) => (
+                {nextSteps?.map((step: NextStep, index: number) => (
                   <div
                     key={index}
                     className="flex items-center gap-2 rounded bg-blue-50 p-2"
                   >
                     <Clock className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm">{step}</span>
+                    <span className="text-sm">{step.instructions}</span>
                   </div>
                 ))}
               </TabsContent>
 
               <TabsContent value="alternatives" className="space-y-2">
-                {alternativeOptions.map((option: string, index: number) => (
+                {alternativeOptions?.map((option: AlternativeOption, index: number) => (
                   <div
                     key={index}
                     className="flex items-center gap-2 rounded bg-gray-50 p-2"
                   >
-                    <span className="text-sm">{option}</span>
+                    <span className="text-sm">{option.instructions}</span>
                   </div>
                 ))}
 
@@ -734,17 +728,17 @@ export function UnifiedCancellationModal({
                 className="max-h-60 space-y-2 overflow-y-auto"
               >
                 {realtimeUpdates.map(
-                  (update: RealtimeUpdate, index: number) => (
+                  (update: Record<string, unknown>, index: number) => (
                     <div key={index} className="rounded bg-gray-50 p-2 text-sm">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">
-                          {update.type}
+                          {update.type as string}
                         </Badge>
                         <span className="text-xs text-gray-500">
-                          {new Date(update.timestamp).toLocaleTimeString()}
+                          {new Date(update.timestamp as string | Date).toLocaleTimeString()}
                         </span>
                       </div>
-                      <p className="mt-1">{update.message ?? update.title}</p>
+                      <p className="mt-1">{(update.message as string) ?? (update.title as string)}</p>
                     </div>
                   )
                 )}
@@ -837,7 +831,9 @@ export function UnifiedCancellationModal({
             <CardContent>
               <RadioGroup
                 value={selectedMethod}
-                onValueChange={setSelectedMethod}
+                onValueChange={(value: string) =>
+                  setSelectedMethod(value as 'auto' | 'manual' | 'api' | 'automation')
+                }
               >
                 {availableMethodsQuery.data?.methods.map(
                   (method: CancellationMethod) => (

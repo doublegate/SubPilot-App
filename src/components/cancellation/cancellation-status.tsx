@@ -16,9 +16,9 @@ import { Icons } from '@/components/ui/icons';
 import { api } from '@/trpc/react';
 import { ManualInstructionsDialog } from './manual-instructions-dialog';
 import { formatDistanceToNow } from 'date-fns';
-import { 
-  CancellationInstructions, 
-  ManualConfirmationData 
+import type {
+  CancellationInstructions,
+  ManualConfirmationData,
 } from '@/types/cancellation';
 
 interface CancellationStatusProps {
@@ -51,7 +51,9 @@ function isValidStatus(data: unknown): data is StatusData {
 }
 
 // Type guard for manual instructions
-function getManualInstructions(instructions: unknown): CancellationInstructions | null {
+function getManualInstructions(
+  instructions: unknown
+): CancellationInstructions | null {
   if (typeof instructions === 'string') {
     try {
       return JSON.parse(instructions) as CancellationInstructions;
@@ -86,7 +88,7 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
     },
   });
 
-  const confirmManualMutation = api.cancellation.confirmManual.useMutation({
+  const confirmManualMutation = api.unifiedCancellationEnhanced.confirmManual.useMutation({
     onSuccess: () => {
       void refetch().catch(console.error);
     },
@@ -332,10 +334,19 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
               onClose={() => setShowInstructions(false)}
               instructions={instructions}
               requestId={requestId}
-              onConfirmation={(confirmationData: ManualConfirmationData) => {
+              onConfirmation={(data: {
+                confirmationCode?: string;
+                effectiveDate?: Date;
+                notes?: string;
+                refundAmount?: number;
+              }) => {
                 confirmManualMutation.mutate({
                   requestId,
-                  confirmation: confirmationData,
+                  confirmationCode: data.confirmationCode,
+                  effectiveDate: data.effectiveDate,
+                  notes: data.notes,
+                  refundAmount: data.refundAmount,
+                  wasSuccessful: true,
                 });
                 setShowInstructions(false);
               }}

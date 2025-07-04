@@ -33,7 +33,11 @@ export function PremiumFeatureGate({
 
   const { data: canPerform } = api.billing.canPerformAction.useQuery(
     {
-      action: feature as 'export_data' | 'add_bank_account' | 'invite_team_member' | 'use_ai_assistant',
+      action: feature as
+        | 'export_data'
+        | 'add_bank_account'
+        | 'invite_team_member'
+        | 'use_ai_assistant',
     },
     {
       enabled: hasAccess === false,
@@ -93,7 +97,11 @@ export function useFeatureAccess(feature: string) {
 
   const { data: canPerform } = api.billing.canPerformAction.useQuery(
     {
-      action: feature as 'export_data' | 'add_bank_account' | 'invite_team_member' | 'use_ai_assistant',
+      action: feature as
+        | 'export_data'
+        | 'add_bank_account'
+        | 'invite_team_member'
+        | 'use_ai_assistant',
     },
     {
       enabled: hasAccess === false,

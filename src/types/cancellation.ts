@@ -35,7 +35,7 @@ export interface ManualInstructions {
 }
 
 // Unified cancellation instructions type
-export type CancellationInstructions = 
+export type CancellationInstructions =
   | string
   | ManualInstructions
   | {
@@ -146,6 +146,184 @@ export interface CancellationRequest {
 export interface RetryRequest {
   requestId: string;
   notes?: string;
+}
+
+// Enhanced interfaces for event-driven cancellation service
+export interface AutoRetryData {
+  userId: string;
+  requestId: string;
+  error: string;
+  attempt: number;
+  nextRetryAt: Date;
+}
+
+export interface FinalFailureData {
+  userId: string;
+  requestId: string;
+  error: string;
+  attempt: number;
+  maxAttempts: number;
+}
+
+export interface CancellationRequestWithSubscription {
+  id: string;
+  userId: string;
+  subscriptionId: string;
+  providerId: string | null;
+  status: CancellationStatus;
+  method: CancellationMethod;
+  priority: CancellationPriority;
+  attempts: number;
+  maxAttempts: number;
+  lastAttemptAt: Date | null;
+  nextRetryAt: Date | null;
+  confirmationCode: string | null;
+  refundAmount: number | null;
+  effectiveDate: Date | null;
+  errorCode: string | null;
+  errorMessage: string | null;
+  errorDetails: Record<string, unknown>;
+  screenshots: string[];
+  automationLog: Array<{
+    step: string;
+    timestamp: Date;
+    status: 'success' | 'failed' | 'pending';
+    details?: string;
+  }>;
+  manualInstructions: Record<string, unknown>;
+  userConfirmed: boolean;
+  userNotes: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  sessionId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt: Date | null;
+  subscription: {
+    id: string;
+    name: string;
+    status: string;
+    provider: Record<string, unknown>;
+  };
+}
+
+export interface WorkflowStatus {
+  id: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  currentStep: string;
+  completedSteps: string[];
+  errors: string[];
+  metadata: Record<string, unknown>;
+}
+
+export interface CancellationTimeline {
+  id: string;
+  timestamp: Date;
+  event: string;
+  details: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface CancellationAnalyticsSummary {
+  totalRequests: number;
+  successfulCancellations: number;
+  failedCancellations: number;
+  avgCompletionTimeHours: number;
+  mostCommonFailureReason: string;
+  successRateByMethod: {
+    api: number;
+    web_automation: number;
+    manual: number;
+  };
+}
+
+export interface CancellationTrend {
+  period: string;
+  totalRequests: number;
+  successfulCancellations: number;
+  failedCancellations: number;
+  avgCompletionTime: number;
+}
+
+export interface MethodEffectiveness {
+  method: CancellationMethod;
+  totalAttempts: number;
+  successfulAttempts: number;
+  successRate: number;
+  avgCompletionTime: number;
+}
+
+export interface MethodStatistic {
+  method: CancellationMethod;
+  status: CancellationStatus;
+  _count: {
+    method: number;
+  };
+}
+
+export interface MethodData {
+  total: number;
+  completed: number;
+  failed: number;
+  pending: number;
+  successRate?: number;
+}
+
+export interface CancellationRequestCancelResult {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
+export interface CancellationProgressUpdate {
+  orchestrationId: string;
+  status: CancellationStatus;
+  progress: number;
+  message: string;
+  timestamp: Date;
+  metadata?: Record<string, unknown>;
+}
+
+export interface SubscriptionForCancellation {
+  id: string;
+  userId: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  amount: number;
+  currency: string;
+  frequency: string;
+  nextBilling: Date | null;
+  lastBilling: Date | null;
+  status: string;
+  isActive: boolean;
+  provider: Record<string, unknown>;
+  cancellationInfo: Record<string, unknown>;
+  detectionConfidence: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserCancellationPreferences {
+  preferredMethod?: 'api' | 'automation' | 'manual' | 'auto';
+  allowAutomation?: boolean;
+  requireConfirmation?: boolean;
+  notificationSettings?: {
+    email?: boolean;
+    sms?: boolean;
+    realTime?: boolean;
+  };
+}
+
+export interface ServiceEventData {
+  orchestrationId: string;
+  requestId: string;
+  status: CancellationStatus;
+  message: string;
+  method: CancellationMethod;
+  timestamp: Date;
+  userId: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ConfirmManualRequest {

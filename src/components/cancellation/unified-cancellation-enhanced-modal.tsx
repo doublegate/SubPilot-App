@@ -38,10 +38,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/trpc/react';
 import { toast } from 'sonner';
-import type {
-  CancellationResult,
-  ManualInstructions,
-} from '@/types/cancellation';
+// Local interfaces defined below instead of importing to avoid conflicts
 
 interface Subscription {
   id: string;
@@ -156,7 +153,7 @@ export function UnifiedCancellationEnhancedModal({
     | 'manual-instructions'
     | 'completed'
   >('eligibility');
-  const [selectedMethod, setSelectedMethod] = useState<string>('auto');
+  const [selectedMethod, setSelectedMethod] = useState<'auto' | 'api' | 'automation' | 'lightweight'>('auto');
   const [cancellationReason, setCancellationReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orchestrationId, setOrchestrationId] = useState<string | null>(null);
@@ -191,16 +188,42 @@ export function UnifiedCancellationEnhancedModal({
 
   const initiateCancellation =
     api.unifiedCancellationEnhanced.initiate.useMutation({
-      onSuccess: (data: CancellationResult) => {
-        setResult(data);
+      onSuccess: (data) => {
+        // Convert API response to local CancellationResult format
+        const localResult: CancellationResult = {
+          status: data.status,
+          message: data.message,
+          orchestrationId: data.orchestrationId,
+          requestId: data.requestId,
+          method: data.method,
+          estimatedCompletion: data.estimatedCompletion?.toISOString(),
+          manualInstructions: data.manualInstructions ? {
+            provider: data.manualInstructions.provider,
+            instructions: data.manualInstructions.steps ?? [],
+            contactInfo: data.manualInstructions.contactInfo,
+            estimatedTime: data.manualInstructions.provider.estimatedTime ?? 30,
+            tips: data.manualInstructions.tips,
+            warnings: data.manualInstructions.warnings,
+          } : undefined,
+          metadata: data.metadata,
+          confirmationCode: data.confirmationCode,
+          effectiveDate: data.effectiveDate,
+          refundAmount: data.refundAmount,
+        };
+        setResult(localResult);
         setOrchestrationId(data.orchestrationId ?? null);
         setRequestId(data.requestId ?? null);
-        setEstimatedCompletion(
-          data.estimatedCompletion ? new Date(data.estimatedCompletion) : null
-        );
+        setEstimatedCompletion(data.estimatedCompletion ?? null);
 
         if (data.status === 'requires_manual') {
-          setManualInstructions(data.manualInstructions ?? null);
+          setManualInstructions(data.manualInstructions ? {
+            provider: data.manualInstructions.provider,
+            instructions: data.manualInstructions.steps ?? [],
+            contactInfo: data.manualInstructions.contactInfo,
+            estimatedTime: data.manualInstructions.provider.estimatedTime ?? 30,
+            tips: data.manualInstructions.tips,
+            warnings: data.manualInstructions.warnings,
+          } : null);
           setCurrentStep('manual-instructions');
         } else if (data.status === 'completed') {
           setCurrentStep('completed');
@@ -633,7 +656,7 @@ export function UnifiedCancellationEnhancedModal({
               capabilities?.methods && (
                 <RadioGroup
                   value={selectedMethod}
-                  onValueChange={setSelectedMethod}
+                  onValueChange={(value) => setSelectedMethod(value as 'auto' | 'api' | 'automation' | 'lightweight')}
                 >
                   <div className="space-y-3">
                     {capabilities.methods.map((method: CancellationMethod) => (
@@ -961,27 +984,27 @@ export function UnifiedCancellationEnhancedModal({
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Timer className="h-3 w-3" />~
-                    {manualInstructions.provider.estimatedTime} minutes
+                    {manualInstructions.estimatedTime} minutes
                   </span>
                 </div>
               </CardContent>
             </Card>
 
             {/* Contact Information */}
-            {(manualInstructions.contactInfo.website ??
-              manualInstructions.contactInfo.phone ??
-              manualInstructions.contactInfo.email ??
-              manualInstructions.contactInfo.chat) && (
+            {(manualInstructions.contactInfo?.website ??
+              manualInstructions.contactInfo?.phone ??
+              manualInstructions.contactInfo?.email ??
+              manualInstructions.contactInfo?.chat) && (
               <Card>
                 <CardHeader>
                   <CardTitle>Contact Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {manualInstructions.contactInfo.website && (
+                  {manualInstructions.contactInfo?.website && (
                     <div className="flex items-center gap-2">
                       <ExternalLink className="h-4 w-4" />
                       <a
-                        href={manualInstructions.contactInfo.website}
+                        href={manualInstructions.contactInfo?.website}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"
@@ -990,33 +1013,33 @@ export function UnifiedCancellationEnhancedModal({
                       </a>
                     </div>
                   )}
-                  {manualInstructions.contactInfo.phone && (
+                  {manualInstructions.contactInfo?.phone && (
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
                       <a
-                        href={`tel:${manualInstructions.contactInfo.phone}`}
+                        href={`tel:${manualInstructions.contactInfo?.phone}`}
                         className="text-blue-600 hover:underline"
                       >
-                        {manualInstructions.contactInfo.phone}
+                        {manualInstructions.contactInfo?.phone}
                       </a>
                     </div>
                   )}
-                  {manualInstructions.contactInfo.email && (
+                  {manualInstructions.contactInfo?.email && (
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       <a
-                        href={`mailto:${manualInstructions.contactInfo.email}`}
+                        href={`mailto:${manualInstructions.contactInfo?.email}`}
                         className="text-blue-600 hover:underline"
                       >
-                        {manualInstructions.contactInfo.email}
+                        {manualInstructions.contactInfo?.email}
                       </a>
                     </div>
                   )}
-                  {manualInstructions.contactInfo.chat && (
+                  {manualInstructions.contactInfo?.chat && (
                     <div className="flex items-center gap-2">
                       <MessageCircle className="h-4 w-4" />
                       <a
-                        href={manualInstructions.contactInfo.chat}
+                        href={manualInstructions.contactInfo?.chat}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline"
@@ -1051,7 +1074,7 @@ export function UnifiedCancellationEnhancedModal({
             </Card>
 
             {/* Tips */}
-            {manualInstructions.tips.length > 0 && (
+            {manualInstructions.tips && manualInstructions.tips.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -1061,7 +1084,7 @@ export function UnifiedCancellationEnhancedModal({
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {manualInstructions.tips.map(
+                    {manualInstructions.tips?.map(
                       (tip: string, index: number) => (
                         <li key={index} className="flex items-start gap-2">
                           <span className="mt-0.5 text-green-500">•</span>
@@ -1075,7 +1098,7 @@ export function UnifiedCancellationEnhancedModal({
             )}
 
             {/* Warnings */}
-            {manualInstructions.warnings.length > 0 && (
+            {manualInstructions.warnings && manualInstructions.warnings.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -1085,7 +1108,7 @@ export function UnifiedCancellationEnhancedModal({
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {manualInstructions.warnings.map(
+                    {manualInstructions.warnings?.map(
                       (warning: string, index: number) => (
                         <li key={index} className="flex items-start gap-2">
                           <span className="mt-0.5 text-orange-500">•</span>

@@ -33,6 +33,8 @@ interface TypedPlaidTransaction {
   transaction_type: string | null;
 }
 
+// Removed unused TypedPlaidAccount interface
+
 // Type definitions for Plaid operations (for future use)
 // type PlaidOperation = 'linkTokenCreate' | 'itemPublicTokenExchange' | 'accountsGet' | 'transactionsGet' | 'transactionsSync' | 'itemRemove';
 // type TransactionState = 'added' | 'modified' | 'removed';
@@ -52,16 +54,7 @@ const isTypedPlaidTransaction = (
   );
 };
 
-const isTypedPlaidAccount = (obj: unknown): obj is TypedPlaidAccount => {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'account_id' in obj &&
-    'balances' in obj &&
-    'name' in obj &&
-    'type' in obj
-  );
-};
+// Removed unused _isTypedPlaidAccount type guard
 
 export const plaidRouter = createTRPCRouter({
   /**

@@ -3,12 +3,7 @@
  * Provides type-safe access to environment variables with validation
  */
 
-// Template Literal Types for Environment Variable Keys
-type EnvKey<T extends string> = `${Uppercase<T>}`;
-type DatabaseEnvKey = EnvKey<'database_url'>;
-type AuthEnvKey = EnvKey<'nextauth_secret'> | EnvKey<'nextauth_url'>;
-type PlaidEnvKey = EnvKey<`plaid_${string}`>;
-type StripeEnvKey = EnvKey<`stripe_${string}`>;
+// Template Literal Types for Environment Variable Keys removed - was unused
 
 // Branded Types for Configuration Values
 type Brand<T, B> = T & { readonly __brand: B };
@@ -188,7 +183,7 @@ export const createDatabaseConfig: ConfigFactory<DatabaseConfig> = env => {
         maxConnections: 20,
       },
     };
-  } catch (_error) {
+  } catch {
     return {
       success: false,
       errors: ['Invalid DATABASE_URL format'],
@@ -336,6 +331,8 @@ export const createEnvAccessor = <T extends keyof TypedEnvironment>(
     if (value === undefined) {
       throw new Error(`Required environment variable ${key} is not set`);
     }
-    return assertEnvironmentType(key, value) as NonNullable<TypedEnvironment[K]>;
+    return assertEnvironmentType(key, value) as NonNullable<
+      TypedEnvironment[K]
+    >;
   },
 });

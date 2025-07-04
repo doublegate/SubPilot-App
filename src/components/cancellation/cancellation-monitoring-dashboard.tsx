@@ -579,18 +579,24 @@ export function CancellationMonitoringDashboard() {
           {/* Summary Cards */}
           {analytics &&
             (() => {
-              const analyticsData = analytics as {
-                summary: {
+              // Transform the analytics data to match the expected interface
+              const analyticsData = {
+                summary: analytics.summary,
+                methodBreakdown: analytics.methodBreakdown as Record<string, number>,
+                successRates: analytics.successRates?.byMethod ?? {} as Record<string, number>,
+                providerAnalytics: (analytics.providerAnalytics ?? []).map((provider: {
+                  provider: string;
                   total: number;
                   successful: number;
-                  failed: number;
-                  pending: number;
+                  avgTime: number;
                   successRate: number;
-                };
-                methodBreakdown: Record<string, number>;
-                successRates: Record<string, number>;
-                providerAnalytics: ProviderStats[];
-                insights: AlertData[];
+                }): ProviderStats => ({
+                  provider: provider.provider,
+                  totalAttempts: provider.total,
+                  averageCompletionTime: provider.avgTime,
+                  successRate: provider.successRate,
+                })),
+                insights: (analytics.insights ?? []) as AlertData[],
               };
               return (
                 <>

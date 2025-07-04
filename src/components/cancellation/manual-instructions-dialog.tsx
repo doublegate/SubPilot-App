@@ -17,7 +17,158 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/ui/icons';
-import { CancellationInstructions } from '@/types/cancellation';
+import type { CancellationInstructions } from '@/types/cancellation';
+
+// Type-safe helpers for accessing union type properties
+type InstructionsWithDifficulty = {
+  difficulty?: 'easy' | 'medium' | 'hard';
+};
+
+type InstructionsWithContact = {
+  website?: string;
+  phone?: string;
+  email?: string;
+  chatUrl?: string;
+};
+
+type InstructionsWithSteps = {
+  steps?: Array<{
+    title: string;
+    description: string;
+    url?: string;
+    note?: string;
+  }>;
+  specificSteps?: string[];
+};
+
+type InstructionsWithProvider = {
+  service?: string;
+  provider?: string;
+};
+
+// Type guards
+function hasProperty<T extends string>(
+  obj: unknown,
+  prop: T
+): obj is Record<T, unknown> {
+  return typeof obj === 'object' && obj !== null && prop in obj;
+}
+
+function isDifficultyInstructions(
+  instructions: CancellationInstructions
+): instructions is InstructionsWithDifficulty {
+  return (
+    typeof instructions === 'object' &&
+    instructions !== null &&
+    'difficulty' in instructions
+  );
+}
+
+function isContactInstructions(
+  instructions: CancellationInstructions
+): instructions is InstructionsWithContact {
+  return (
+    typeof instructions === 'object' &&
+    instructions !== null &&
+    ('website' in instructions ||
+      'phone' in instructions ||
+      'email' in instructions ||
+      'chatUrl' in instructions)
+  );
+}
+
+function isStepsInstructions(
+  instructions: CancellationInstructions
+): instructions is InstructionsWithSteps {
+  return (
+    typeof instructions === 'object' &&
+    instructions !== null &&
+    ('steps' in instructions || 'specificSteps' in instructions)
+  );
+}
+
+function isProviderInstructions(
+  instructions: CancellationInstructions
+): instructions is InstructionsWithProvider {
+  return (
+    typeof instructions === 'object' &&
+    instructions !== null &&
+    ('service' in instructions || 'provider' in instructions)
+  );
+}
+
+// Safe property accessors
+function getDifficulty(
+  instructions: CancellationInstructions
+): string | undefined {
+  if (isDifficultyInstructions(instructions)) {
+    return instructions.difficulty;
+  }
+  return undefined;
+}
+
+function getServiceName(instructions: CancellationInstructions): string {
+  if (isProviderInstructions(instructions)) {
+    return instructions.service ?? instructions.provider ?? 'Service';
+  }
+  return 'Service';
+}
+
+function getContactProperty(
+  instructions: CancellationInstructions,
+  property: keyof InstructionsWithContact
+): string | undefined {
+  if (isContactInstructions(instructions)) {
+    return instructions[property];
+  }
+  return undefined;
+}
+
+function getStepsArray(instructions: CancellationInstructions): string[] {
+  if (typeof instructions === 'string') {
+    return [instructions];
+  }
+
+  if (isStepsInstructions(instructions)) {
+    if (instructions.specificSteps) {
+      return instructions.specificSteps;
+    }
+    if (instructions.steps) {
+      return instructions.steps.map(
+        step => `${step.title}: ${step.description}`
+      );
+    }
+  }
+
+  // Handle nested instructions format
+  if (
+    hasProperty(instructions, 'instructions') &&
+    typeof instructions.instructions === 'object' &&
+    instructions.instructions !== null &&
+    hasProperty(instructions.instructions, 'steps') &&
+    Array.isArray(instructions.instructions.steps)
+  ) {
+    return instructions.instructions.steps;
+  }
+
+  return [
+    'Please follow the cancellation instructions provided by the service.',
+  ];
+}
+
+function getEstimatedTime(
+  instructions: CancellationInstructions
+): string | undefined {
+  return hasProperty(instructions, 'estimatedTime')
+    ? instructions.estimatedTime as string | undefined
+    : undefined;
+}
+
+function getTips(instructions: CancellationInstructions): string[] | undefined {
+  return hasProperty(instructions, 'tips') && Array.isArray(instructions.tips)
+    ? instructions.tips
+    : undefined;
+}
 
 // Using CancellationInstructions type from @/types/cancellation
 
@@ -109,36 +260,34 @@ export function ManualInstructionsDialog({
           {/* Service Information */}
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">
-              {typeof instructions === 'object' && instructions !== null && 'service' in instructions 
-                ? instructions.service 
-                : typeof instructions === 'object' && instructions !== null && 'provider' in instructions 
-                  ? instructions.provider 
-                  : 'Service'}
+              {getServiceName(instructions)}
             </h3>
-            {instructions.difficulty && (
-              <Badge className={getDifficultyColor(instructions.difficulty)}>
-                {instructions.difficulty} difficulty
+            {getDifficulty(instructions) && (
+              <Badge
+                className={getDifficultyColor(getDifficulty(instructions)!)}
+              >
+                {getDifficulty(instructions)} difficulty
               </Badge>
             )}
           </div>
 
           {/* Contact Information */}
-          {(instructions.website ??
-            instructions.phone ??
-            instructions.email ??
-            instructions.chatUrl) && (
+          {(getContactProperty(instructions, 'website') ??
+            getContactProperty(instructions, 'phone') ??
+            getContactProperty(instructions, 'email') ??
+            getContactProperty(instructions, 'chatUrl')) && (
             <div className="grid grid-cols-1 gap-4 rounded-lg bg-muted p-4 md:grid-cols-2">
               <h4 className="col-span-full text-sm font-medium">
                 Contact Information
               </h4>
 
-              {instructions.website && (
+              {getContactProperty(instructions, 'website') && (
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
                     Website
                   </Label>
                   <a
-                    href={instructions.website}
+                    href={getContactProperty(instructions, 'website') ?? ''}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
@@ -149,39 +298,39 @@ export function ManualInstructionsDialog({
                 </div>
               )}
 
-              {instructions.phone && (
+              {getContactProperty(instructions, 'phone') && (
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Phone</Label>
                   <a
-                    href={`tel:${instructions.phone}`}
+                    href={`tel:${getContactProperty(instructions, 'phone')!}`}
                     className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
                   >
                     <Icons.phone className="h-3 w-3" />
-                    {instructions.phone}
+                    {getContactProperty(instructions, 'phone')}
                   </a>
                 </div>
               )}
 
-              {instructions.email && (
+              {getContactProperty(instructions, 'email') && (
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Email</Label>
                   <a
-                    href={`mailto:${instructions.email}`}
+                    href={`mailto:${getContactProperty(instructions, 'email')!}`}
                     className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
                   >
                     <Icons.mail className="h-3 w-3" />
-                    {instructions.email}
+                    {getContactProperty(instructions, 'email')}
                   </a>
                 </div>
               )}
 
-              {instructions.chatUrl && (
+              {getContactProperty(instructions, 'chatUrl') && (
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
                     Live Chat
                   </Label>
                   <a
-                    href={instructions.chatUrl}
+                    href={getContactProperty(instructions, 'chatUrl') ?? ''}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
@@ -192,12 +341,14 @@ export function ManualInstructionsDialog({
                 </div>
               )}
 
-              {instructions.estimatedTime && (
+              {getEstimatedTime(instructions) && (
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">
                     Estimated Time
                   </Label>
-                  <div className="text-sm">{instructions.estimatedTime}</div>
+                  <div className="text-sm">
+                    {getEstimatedTime(instructions)}
+                  </div>
                 </div>
               )}
             </div>
@@ -207,15 +358,13 @@ export function ManualInstructionsDialog({
           <div className="space-y-3">
             <h4 className="font-medium">Cancellation Steps</h4>
             <div className="space-y-2">
-              {(instructions.specificSteps ?? instructions.steps)?.map(
-                (step: string | { title: string; description: string; url?: string; note?: string; }, index: number) => (
+              {getStepsArray(instructions).map(
+                (step: string, index: number) => (
                   <div key={index} className="flex gap-3">
                     <div className="text-primary-foreground flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium">
                       {index + 1}
                     </div>
-                    <div className="text-sm">
-                      {typeof step === 'string' ? step : `${step.title}: ${step.description}`}
-                    </div>
+                    <div className="text-sm">{step}</div>
                   </div>
                 )
               )}
@@ -223,11 +372,11 @@ export function ManualInstructionsDialog({
           </div>
 
           {/* Tips */}
-          {instructions.tips && instructions.tips.length > 0 && (
+          {getTips(instructions) && getTips(instructions)!.length > 0 && (
             <div className="space-y-3">
               <h4 className="font-medium">Helpful Tips</h4>
               <div className="space-y-2">
-                {instructions.tips.map((tip: string, index: number) => (
+                {getTips(instructions)!.map((tip: string, index: number) => (
                   <div key={index} className="flex gap-2 text-sm">
                     <Icons.lightbulb className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-600" />
                     <span>{tip}</span>

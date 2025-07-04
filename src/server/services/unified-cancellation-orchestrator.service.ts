@@ -9,6 +9,7 @@ import {
 import { sendRealtimeNotification } from '@/server/lib/realtime-notifications';
 import { getJobQueue } from '@/server/lib/job-queue';
 import { getWorkflowEngine } from '@/server/lib/workflow-engine';
+import type { CancellationRequestCancelResult } from '@/types/cancellation';
 
 // Unified cancellation request interface
 export interface UnifiedCancellationRequest {
@@ -218,9 +219,12 @@ export class UnifiedCancellationOrchestratorService {
       // Determine optimal cancellation method
       const subscriptionForMethod = {
         name: subscription.name,
-        provider: subscription.provider && typeof subscription.provider === 'object' && 'name' in subscription.provider 
-          ? { name: (subscription.provider as { name: string }).name }
-          : undefined
+        provider:
+          subscription.provider &&
+          typeof subscription.provider === 'object' &&
+          'name' in subscription.provider
+            ? { name: (subscription.provider as { name: string }).name }
+            : undefined,
       };
       const optimalMethod = await this.determineOptimalMethod(
         subscriptionForMethod,
@@ -244,9 +248,9 @@ export class UnifiedCancellationOrchestratorService {
 
       // Emit orchestration event
       const methodMapping = {
-        'api': 'api',
-        'event_driven': 'automation',
-        'lightweight': 'manual'
+        api: 'api',
+        event_driven: 'automation',
+        lightweight: 'manual',
       } as const;
       emitCancellationEvent('cancellation.requested', {
         userId,
@@ -367,7 +371,7 @@ export class UnifiedCancellationOrchestratorService {
             return 'lightweight';
           }
         }
-      } catch (error) {
+      } catch {
         // Database query failed, continue with heuristic approach
       }
 
@@ -604,7 +608,14 @@ export class UnifiedCancellationOrchestratorService {
     userId: string,
     subscription: { id: string; name: string; provider?: unknown },
     input: UnifiedCancellationRequest,
-    baseResult: { requestId: string; orchestrationId: string; method: 'api' | 'event_driven' | 'lightweight'; status: string; error?: string; [key: string]: unknown },
+    baseResult: {
+      requestId: string;
+      orchestrationId: string;
+      method: 'api' | 'event_driven' | 'lightweight';
+      status: string;
+      error?: string;
+      [key: string]: unknown;
+    },
     fallbackReason: string
   ): Promise<UnifiedCancellationResult> {
     // Determine fallback hierarchy
@@ -662,7 +673,7 @@ export class UnifiedCancellationOrchestratorService {
         };
 
         return result;
-      } catch (fallbackError) {
+      } catch {
         // Continue to next fallback option
         continue;
       }
@@ -1052,7 +1063,10 @@ export class UnifiedCancellationOrchestratorService {
           stats.successful++;
         }
 
-        if (metadata.completionTime && typeof metadata.completionTime === 'number') {
+        if (
+          metadata.completionTime &&
+          typeof metadata.completionTime === 'number'
+        ) {
           stats.totalTime += metadata.completionTime;
         }
 
@@ -1134,7 +1148,7 @@ export class UnifiedCancellationOrchestratorService {
   async getCancellationStatus(
     userId: string,
     requestId: string,
-    orchestrationId?: string
+    _orchestrationId?: string
   ): Promise<any> {
     try {
       const request = await this.db.cancellationRequest.findUnique({
@@ -1298,8 +1312,8 @@ export class UnifiedCancellationOrchestratorService {
   async cancelCancellationRequest(
     userId: string,
     requestId: string,
-    reason?: string
-  ): Promise<any> {
+    _reason?: string
+  ): Promise<CancellationRequestCancelResult> {
     try {
       const request = await this.db.cancellationRequest.findFirst({
         where: {
@@ -1313,10 +1327,7 @@ export class UnifiedCancellationOrchestratorService {
         return {
           success: false,
           message: 'Cancellation request not found or not cancellable',
-          error: {
-            code: 'REQUEST_NOT_FOUND',
-            message: 'Cancellation request not found or not cancellable',
-          },
+          error: 'REQUEST_NOT_FOUND: Cancellation request not found or not cancellable',
         };
       }
 
@@ -1351,10 +1362,7 @@ export class UnifiedCancellationOrchestratorService {
       return {
         success: false,
         message: 'Error cancelling request',
-        error: {
-          code: 'CANCELLATION_ERROR',
-          message: error instanceof Error ? error.message : 'Unknown error',
-        },
+        error: `CANCELLATION_ERROR: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
     }
   }

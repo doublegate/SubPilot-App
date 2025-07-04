@@ -607,7 +607,7 @@ export class CancellationJobProcessor {
    * Simulate initiating webhook cancellation
    */
   private async initiateWebhookCancellation(
-    request: CancellationRequest
+    _request: CancellationRequest
   ): Promise<
     WebhookCancellationResponse & {
       success: boolean;

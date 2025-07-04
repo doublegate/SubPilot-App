@@ -8,6 +8,72 @@ import {
 import { sendRealtimeNotification } from '@/server/lib/realtime-notifications';
 import { AuditLogger } from '@/server/lib/audit-logger';
 import { z } from 'zod';
+import type {
+  CancellationRequestWithSubscription,
+  WorkflowStatus,
+  CancellationTimeline,
+  AutoRetryData,
+  FinalFailureData,
+  MethodStatistic,
+  MethodData,
+} from '@/types/cancellation';
+import type { CancellationEventData } from '@/server/lib/event-bus';
+
+// Enhanced type definitions for event data
+interface AnalyticsEventData extends CancellationEventData {
+  event: string;
+  properties: {
+    jobType?: string;
+    status?: string;
+    workflowId?: string;
+    instanceId?: string;
+    duration?: number;
+    [key: string]: unknown;
+  };
+}
+
+interface RetryEventData extends CancellationEventData {
+  willRetry: boolean;
+  attempt?: number;
+  nextRetryAt?: string | Date;
+}
+
+// Type guards for event data
+function isAnalyticsEventData(
+  data: CancellationEventData
+): data is AnalyticsEventData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'event' in data &&
+    'properties' in data
+  );
+}
+
+function isRetryEventData(data: CancellationEventData): data is RetryEventData {
+  return typeof data === 'object' && data !== null && 'willRetry' in data;
+}
+
+// Safe property accessors
+function safeStringAccess(obj: unknown, property: string): string | undefined {
+  if (typeof obj === 'object' && obj !== null && property in obj) {
+    const value = (obj as Record<string, unknown>)[property];
+    return typeof value === 'string' ? value : undefined;
+  }
+  return undefined;
+}
+
+function safeDateAccess(obj: unknown, property: string): Date | undefined {
+  if (typeof obj === 'object' && obj !== null && property in obj) {
+    const value = (obj as Record<string, unknown>)[property];
+    if (value instanceof Date) return value;
+    if (typeof value === 'string') {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? undefined : date;
+    }
+  }
+  return undefined;
+}
 
 // Input validation schemas
 export const EventDrivenCancellationRequestInput = z.object({
@@ -242,7 +308,7 @@ export class EventDrivenCancellationService {
     );
 
     console.log(
-      `[EventDrivenCancellation] Scheduled cancellation ${requestId} for ${scheduleFor}`
+      `[EventDrivenCancellation] Scheduled cancellation ${requestId} for ${scheduleFor.toISOString()}`
     );
   }
 
@@ -311,9 +377,9 @@ export class EventDrivenCancellationService {
     userId: string,
     requestId: string
   ): Promise<{
-    request: any;
-    workflow?: any;
-    timeline: any[];
+    request: CancellationRequestWithSubscription;
+    workflow?: WorkflowStatus;
+    timeline: CancellationTimeline[];
     estimatedCompletion?: Date;
     nextSteps: string[];
   }> {
@@ -345,8 +411,13 @@ export class EventDrivenCancellationService {
 
     // Get workflow status if available
     let workflowStatus;
-    const errorDetails = request.errorDetails as Record<string, unknown> | null;
-    const workflowId = errorDetails?.workflowId as string | undefined;
+    const errorDetails = request.errorDetails;
+    const workflowId =
+      errorDetails &&
+      typeof errorDetails === 'object' &&
+      'workflowId' in errorDetails
+        ? (errorDetails.workflowId as string | undefined)
+        : undefined;
     if (workflowId) {
       workflowStatus = this.workflowEngine.getWorkflowStatus(workflowId);
     }
@@ -405,21 +476,26 @@ export class EventDrivenCancellationService {
 
     // Listen for job completion to provide progress updates
     onCancellationEvent('analytics.track', data => {
-      if (
-        data.event === 'job.completed' &&
-        data.properties.jobType?.startsWith('cancellation.')
-      ) {
-        void this.handleJobCompletion(data.userId, data.properties);
+      if (isAnalyticsEventData(data)) {
+        const jobType = safeStringAccess(data.properties, 'jobType');
+        if (
+          data.event === 'job.completed' &&
+          jobType?.startsWith('cancellation.')
+        ) {
+          void this.handleJobCompletion(data.userId, data.properties);
+        }
       }
     });
 
     // Enhanced failure handling with automatic retry logic
     onCancellationEvent('cancellation.failed', data => {
       void (async () => {
-        if (data.willRetry) {
-          await this.handleAutomaticRetry(data);
-        } else {
-          await this.handleFinalFailure(data);
+        if (isRetryEventData(data)) {
+          if (data.willRetry) {
+            await this.handleAutomaticRetry(data);
+          } else {
+            await this.handleFinalFailure(data);
+          }
         }
       })();
     });
@@ -441,7 +517,7 @@ export class EventDrivenCancellationService {
       sendRealtimeNotification(userId, {
         type: 'workflow.update',
         title: 'Cancellation Workflow Complete',
-        message: `Your cancellation workflow has ${properties.status}`,
+        message: `Your cancellation workflow has ${safeStringAccess(properties, 'status') ?? 'completed'}`,
         priority: properties.status === 'completed' ? 'high' : 'normal',
         data: {
           workflowId: properties.workflowId,
@@ -466,20 +542,27 @@ export class EventDrivenCancellationService {
     properties: Record<string, unknown>
   ): Promise<void> {
     try {
-      const jobTypeMap: Record<string, string> = {
-        'cancellation.validate': 'Validation Complete',
-        'cancellation.api': 'API Cancellation Complete',
-        'cancellation.webhook': 'Webhook Cancellation Complete',
-        'cancellation.manual_instructions': 'Instructions Generated',
-        'cancellation.confirm': 'Cancellation Confirmed',
-      };
-
-      const title = jobTypeMap[properties.jobType] ?? 'Processing Complete';
+      const jobType = safeStringAccess(properties, 'jobType');
+      const title = (() => {
+        if (!jobType) return 'Processing Complete';
+        switch (jobType) {
+          case 'cancellation.api':
+            return 'API Cancellation Complete';
+          case 'cancellation.webhook':
+            return 'Webhook Cancellation Complete';
+          case 'cancellation.manual_instructions':
+            return 'Instructions Generated';
+          case 'cancellation.confirm':
+            return 'Cancellation Confirmed';
+          default:
+            return 'Processing Complete';
+        }
+      })();
 
       sendRealtimeNotification(userId, {
         type: 'job.status',
         title,
-        message: `Step completed in ${properties.processingTime}ms`,
+        message: `Step completed in ${safeStringAccess(properties, 'processingTime') ?? 'unknown time'}ms`,
         priority: 'low',
         data: {
           jobId: properties.jobId,
@@ -499,7 +582,7 @@ export class EventDrivenCancellationService {
   /**
    * Handle automatic retry with enhanced notifications
    */
-  private async handleAutomaticRetry(data: any): Promise<void> {
+  private async handleAutomaticRetry(data: AutoRetryData): Promise<void> {
     try {
       // Send retry notification with context
       sendRealtimeNotification(data.userId, {
@@ -539,7 +622,7 @@ export class EventDrivenCancellationService {
   /**
    * Handle final failure with escalation options
    */
-  private async handleFinalFailure(data: any): Promise<void> {
+  private async handleFinalFailure(data: FinalFailureData): Promise<void> {
     try {
       // Send failure notification with options
       sendRealtimeNotification(data.userId, {
@@ -627,7 +710,10 @@ export class EventDrivenCancellationService {
   /**
    * Determine next steps based on current status
    */
-  private determineNextSteps(request: any, workflowStatus?: any): string[] {
+  private determineNextSteps(
+    request: CancellationRequestWithSubscription,
+    workflowStatus?: WorkflowStatus
+  ): string[] {
     const nextSteps: string[] = [];
 
     switch (request.status) {
@@ -654,11 +740,9 @@ export class EventDrivenCancellationService {
         nextSteps.push('Contact support if needed');
         break;
       case 'scheduled': {
-        const scheduleFor = request.metadata?.scheduleFor;
+        const scheduleFor = safeDateAccess(request.metadata, 'scheduleFor');
         if (scheduleFor) {
-          nextSteps.push(
-            `Scheduled for: ${new Date(scheduleFor).toLocaleString()}`
-          );
+          nextSteps.push(`Scheduled for: ${scheduleFor.toLocaleString()}`);
         }
         nextSteps.push('Can be cancelled before execution');
         break;
@@ -677,9 +761,9 @@ export class EventDrivenCancellationService {
     userId: string,
     timeframe: 'day' | 'week' | 'month' = 'month'
   ): Promise<{
-    summary: any;
-    trends: any[];
-    methodEffectiveness: any;
+    summary: CancellationAnalyticsSummary;
+    trends: CancellationTrend[];
+    methodEffectiveness: MethodEffectiveness;
   }> {
     const endDate = new Date();
     const startDate = new Date();
@@ -758,8 +842,10 @@ export class EventDrivenCancellationService {
   /**
    * Process method statistics for analytics
    */
-  private processMethodStats(stats: any[]): Record<string, any> {
-    const methodData: Record<string, any> = {};
+  private processMethodStats(
+    stats: MethodStatistic[]
+  ): Record<string, MethodData> {
+    const methodData: Record<string, MethodData> = {};
 
     for (const stat of stats) {
       methodData[stat.method] ??= {

@@ -146,13 +146,13 @@ export class SubscriptionManagerService {
         used: bankAccountCount,
         limit: limits.bankAccounts,
         canAdd:
-          limits.bankAccounts === -1 ?? bankAccountCount < limits.bankAccounts,
+          limits.bankAccounts === -1 || bankAccountCount < limits.bankAccounts,
       },
       teamMembers: {
         used: teamMemberCount,
         limit: limits.teamMembers,
         canAdd:
-          limits.teamMembers === -1 ?? teamMemberCount < limits.teamMembers,
+          limits.teamMembers === -1 || teamMemberCount < limits.teamMembers,
       },
     };
   }

@@ -101,6 +101,7 @@ export function PullToRefresh({
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threshold, onRefresh]); // Remove state dependencies to avoid recreating handlers
 
   const progress = Math.min(pullDistance / threshold, 1);

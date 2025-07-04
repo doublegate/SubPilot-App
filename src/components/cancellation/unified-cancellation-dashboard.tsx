@@ -127,7 +127,7 @@ export function UnifiedCancellationDashboard() {
     { refetchInterval: 30000 } // Refresh every 30 seconds
   );
 
-  const subscriptionsQuery = api.subscriptions.getAll.useQuery();
+  const subscriptionsQuery = api.subscriptions.getAll.useQuery({});
 
   // Type guard functions
   const isSystemHealthData = (data: unknown): data is SystemHealthData => {

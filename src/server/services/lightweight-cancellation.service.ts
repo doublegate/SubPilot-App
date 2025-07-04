@@ -1,6 +1,10 @@
 import { TRPCError } from '@trpc/server';
 import type { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import type {
+  CancellationRequestWithSubscription,
+  CancellationInstructions,
+} from '@/types/cancellation';
 
 // Interface for manual instructions stored in the database
 interface ManualInstructionsData {
@@ -448,7 +452,7 @@ export class LightweightCancellationService {
     userId: string,
     requestId: string
   ): Promise<{
-    request: any;
+    request: CancellationRequestWithSubscription;
     instructions?: CancellationInstructions;
   }> {
     const request = await this.db.cancellationRequest.findFirst({
@@ -507,7 +511,10 @@ export class LightweightCancellationService {
   /**
    * Get user's cancellation history
    */
-  async getCancellationHistory(userId: string, limit = 10): Promise<any[]> {
+  async getCancellationHistory(
+    userId: string,
+    limit = 10
+  ): Promise<CancellationRequestWithSubscription[]> {
     const requests = await this.db.cancellationRequest.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
