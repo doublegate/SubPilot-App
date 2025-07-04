@@ -2,8 +2,7 @@
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
  */
-// @ts-ignore - TypeScript files will be compiled to JS during build
-await import('./src/env.ts');
+await import('./src/env.js');
 
 // Import Sentry webpack plugin for source maps
 import { withSentryConfig } from '@sentry/nextjs';
