@@ -216,8 +216,14 @@ export class UnifiedCancellationOrchestratorService {
       }
 
       // Determine optimal cancellation method
+      const subscriptionForMethod = {
+        name: subscription.name,
+        provider: subscription.provider && typeof subscription.provider === 'object' && 'name' in subscription.provider 
+          ? { name: (subscription.provider as { name: string }).name }
+          : undefined
+      };
       const optimalMethod = await this.determineOptimalMethod(
-        subscription,
+        subscriptionForMethod,
         input.method ?? input.preferredMethod, // Handle both patterns
         input.userPreference
       );
@@ -237,12 +243,17 @@ export class UnifiedCancellationOrchestratorService {
       });
 
       // Emit orchestration event
+      const methodMapping = {
+        'api': 'api',
+        'event_driven': 'automation',
+        'lightweight': 'manual'
+      } as const;
       emitCancellationEvent('cancellation.requested', {
         userId,
         requestId,
         orchestrationId,
         subscriptionId: input.subscriptionId,
-        method: optimalMethod,
+        method: methodMapping[optimalMethod],
         priority: input.priority,
       });
 
@@ -426,6 +437,7 @@ export class UnifiedCancellationOrchestratorService {
       requestId,
       orchestrationId,
       method,
+      status: 'failed' as const,
     };
 
     try {
@@ -592,7 +604,7 @@ export class UnifiedCancellationOrchestratorService {
     userId: string,
     subscription: { id: string; name: string; provider?: unknown },
     input: UnifiedCancellationRequest,
-    baseResult: { status: string; error?: string; [key: string]: unknown },
+    baseResult: { requestId: string; orchestrationId: string; method: 'api' | 'event_driven' | 'lightweight'; status: string; error?: string; [key: string]: unknown },
     fallbackReason: string
   ): Promise<UnifiedCancellationResult> {
     // Determine fallback hierarchy
@@ -609,7 +621,7 @@ export class UnifiedCancellationOrchestratorService {
 
       try {
         await this.logOrchestrationActivity(
-          baseResult.orchestrationId,
+          baseResult.orchestrationId as string,
           'fallback_attempt',
           'info',
           `Attempting fallback to ${fallbackMethod} method`,
@@ -638,8 +650,8 @@ export class UnifiedCancellationOrchestratorService {
           userId,
           subscription,
           input,
-          baseResult.requestId,
-          baseResult.orchestrationId
+          baseResult.requestId as string,
+          baseResult.orchestrationId as string
         );
 
         // Update result with fallback metadata
@@ -1009,7 +1021,7 @@ export class UnifiedCancellationOrchestratorService {
       }
 
       // Count methods
-      if (metadata.method) {
+      if (metadata.method && typeof metadata.method === 'string') {
         methodCounts[metadata.method] =
           (methodCounts[metadata.method] ?? 0) + 1;
       }
@@ -1028,7 +1040,7 @@ export class UnifiedCancellationOrchestratorService {
       }
 
       // Track provider stats
-      if (metadata.provider) {
+      if (metadata.provider && typeof metadata.provider === 'string') {
         const stats = providerStats.get(metadata.provider) ?? {
           total: 0,
           successful: 0,
@@ -1040,11 +1052,11 @@ export class UnifiedCancellationOrchestratorService {
           stats.successful++;
         }
 
-        if (metadata.completionTime) {
+        if (metadata.completionTime && typeof metadata.completionTime === 'number') {
           stats.totalTime += metadata.completionTime;
         }
 
-        providerStats.set(metadata.provider, stats);
+        providerStats.set(metadata.provider as string, stats);
       }
     }
 

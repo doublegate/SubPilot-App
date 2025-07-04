@@ -289,7 +289,7 @@ export const isErrorResponse = <T, E>(
 
 export const isPaginatedResponse = <T>(
   response: SuccessResponse<T[] | T>
-): response is PaginatedResponse<T extends (infer U)[] ? U : T> => {
+): response is PaginatedResponse<T> => {
   return (
     Array.isArray(response.data) &&
     response.meta?.total !== undefined &&
@@ -349,7 +349,12 @@ export const composeResponses = <T extends Record<string, ApiResponse<any>>>(
   }
 
   if (errors.length > 0) {
-    return createErrorResponse('422', errors as ErrorDetails[], {
+    const validationErrors: ValidationError[] = errors.map(error => ({
+      field: 'composition',
+      message: error,
+      code: 'COMPOSITION_FAILED'
+    }));
+    return createErrorResponse('422', validationErrors, {
       code: 'COMPOSITION_FAILED',
     });
   }

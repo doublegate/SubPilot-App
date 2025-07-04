@@ -17,6 +17,9 @@ function isValidRequest(data: unknown): data is {
   status: string;
   subscription: { name: string };
   createdAt: string;
+  completedAt?: string;
+  confirmationCode?: string;
+  effectiveDate?: string;
 } {
   return (
     typeof data === 'object' &&
@@ -34,6 +37,9 @@ function isValidHistory(data: unknown): data is Array<{
   status: string;
   subscription: { name: string };
   createdAt: string;
+  completedAt?: string;
+  confirmationCode?: string;
+  effectiveDate?: string;
 }> {
   return Array.isArray(data) && data.every(isValidRequest);
 }

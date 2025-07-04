@@ -34,6 +34,43 @@ export interface ManualInstructions {
   tips?: string[];
 }
 
+// Unified cancellation instructions type
+export type CancellationInstructions = 
+  | string
+  | ManualInstructions
+  | {
+      provider?: string;
+      difficulty?: 'easy' | 'medium' | 'hard';
+      estimatedTime?: string;
+      steps?: Array<{
+        title: string;
+        description: string;
+        url?: string;
+        note?: string;
+      }>;
+      specificSteps?: string[];
+      alternativeMethod?: {
+        description: string;
+        contactInfo?: string;
+      };
+      tips?: string[];
+      website?: string;
+      phone?: string;
+      email?: string;
+      chatUrl?: string;
+      service?: string;
+    }
+  | {
+      instructions: {
+        steps: string[];
+        contactInfo: {
+          website?: string;
+          phone?: string;
+          email?: string;
+        };
+      };
+    };
+
 // Alternative format for unified modal
 export interface ManualInstructionsUnified {
   instructions: {
@@ -65,6 +102,18 @@ export interface CancellationResult {
     name: string;
     status: string;
   };
+  completedAt?: string | Date;
+}
+
+// Manual confirmation data interface
+export interface ManualConfirmationData {
+  success: boolean;
+  confirmationCode?: string;
+  effectiveDate?: Date;
+  notes?: string;
+  refundAmount?: number;
+  details?: string;
+  screenshotUrl?: string;
 }
 
 // API response interfaces

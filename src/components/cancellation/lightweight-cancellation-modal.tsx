@@ -82,7 +82,7 @@ export function LightweightCancellationModal({
   const getInstructions =
     api.lightweightCancellation.getInstructions.useMutation({
       onSuccess: result => {
-        setInstructions(result.instructions);
+        setInstructions(result.instructions ?? null);
         setRequestId(result.requestId);
         setStep('instructions');
         setIsLoading(false);

@@ -1226,12 +1226,12 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       orchestrationId,
       requestId: request.id,
       status: 'scheduled',
-      method,
+      method: method === 'manual' ? 'lightweight' : method === 'automation' ? 'event_driven' : 'api',
       message: `Cancellation scheduled for ${scheduleFor.toLocaleString()}`,
       estimatedCompletion: scheduleFor,
       metadata: {
         attemptsUsed: 0,
-        providerInfo: capabilities,
+        providerInfo: capabilities as Record<string, unknown>,
         realTimeUpdatesEnabled:
           input.userPreferences?.notificationPreferences?.realTime ?? true,
       },

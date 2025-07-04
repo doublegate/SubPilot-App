@@ -17,28 +17,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/ui/icons';
+import { CancellationInstructions } from '@/types/cancellation';
 
-interface CancellationInstructions {
-  provider: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  estimatedTime?: string;
-  steps?: Array<{
-    title: string;
-    description: string;
-    url?: string;
-    note?: string;
-  }>;
-  specificSteps?: string[];
-  alternativeMethod?: {
-    description: string;
-    contactInfo?: string;
-  };
-  tips?: string[];
-  website?: string;
-  phone?: string;
-  email?: string;
-  chatUrl?: string;
-}
+// Using CancellationInstructions type from @/types/cancellation
 
 interface ManualInstructionsDialogProps {
   isOpen: boolean;
@@ -127,7 +108,13 @@ export function ManualInstructionsDialog({
         <div className="space-y-6">
           {/* Service Information */}
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">{instructions.service}</h3>
+            <h3 className="text-lg font-medium">
+              {typeof instructions === 'object' && instructions !== null && 'service' in instructions 
+                ? instructions.service 
+                : typeof instructions === 'object' && instructions !== null && 'provider' in instructions 
+                  ? instructions.provider 
+                  : 'Service'}
+            </h3>
             {instructions.difficulty && (
               <Badge className={getDifficultyColor(instructions.difficulty)}>
                 {instructions.difficulty} difficulty
@@ -221,12 +208,14 @@ export function ManualInstructionsDialog({
             <h4 className="font-medium">Cancellation Steps</h4>
             <div className="space-y-2">
               {(instructions.specificSteps ?? instructions.steps)?.map(
-                (step: string, index: number) => (
+                (step: string | { title: string; description: string; url?: string; note?: string; }, index: number) => (
                   <div key={index} className="flex gap-3">
                     <div className="text-primary-foreground flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium">
                       {index + 1}
                     </div>
-                    <div className="text-sm">{step}</div>
+                    <div className="text-sm">
+                      {typeof step === 'string' ? step : `${step.title}: ${step.description}`}
+                    </div>
                   </div>
                 )
               )}

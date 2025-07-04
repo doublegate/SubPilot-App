@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -107,9 +107,15 @@ export function CancellationMonitoringDashboard() {
     { includeDetailedMetrics: true },
     {
       refetchInterval: autoRefresh ? 30000 : false, // Refresh every 30 seconds
-      onSuccess: () => setLastRefresh(new Date()),
     }
   );
+
+  // Handle data updates manually instead of onSuccess
+  useEffect(() => {
+    if (systemHealthData) {
+      setLastRefresh(new Date());
+    }
+  }, [systemHealthData]);
 
   // Type-safe system health with proper assertion
   const systemHealth = systemHealthData as SystemHealth | undefined;
@@ -576,7 +582,7 @@ export function CancellationMonitoringDashboard() {
               const analyticsData = analytics as {
                 summary: {
                   total: number;
-                  completed: number;
+                  successful: number;
                   failed: number;
                   pending: number;
                   successRate: number;
@@ -612,7 +618,7 @@ export function CancellationMonitoringDashboard() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold text-green-600">
-                          {analyticsData.summary.completed}
+                          {analyticsData.summary.successful}
                         </div>
                       </CardContent>
                     </Card>

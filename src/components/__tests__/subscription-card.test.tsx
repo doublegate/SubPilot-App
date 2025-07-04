@@ -80,8 +80,7 @@ describe('SubscriptionCard', () => {
     const mockUseMutation = vi.fn(options => {
       mockOnSuccess = options?.onSuccess;
       return {
-        mutate: vi.fn(),
-        mutateAsync: vi.fn(async () => {
+        mutate: vi.fn(async () => {
           const result = { id: 'cancellation-1', status: 'pending' };
           // Trigger the onSuccess callback
           mockOnSuccess?.(result);
@@ -91,7 +90,7 @@ describe('SubscriptionCard', () => {
       };
     });
 
-    mockInitiateMutation.mockImplementation(mockUseMutation);
+    mockInitiateMutation.mockReturnValue(mockUseMutation({}));
 
     render(
       <SubscriptionCard

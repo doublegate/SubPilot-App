@@ -16,15 +16,13 @@ import { Icons } from '@/components/ui/icons';
 import { api } from '@/trpc/react';
 import { ManualInstructionsDialog } from './manual-instructions-dialog';
 import { formatDistanceToNow } from 'date-fns';
+import { 
+  CancellationInstructions, 
+  ManualConfirmationData 
+} from '@/types/cancellation';
 
 interface CancellationStatusProps {
   requestId: string;
-}
-
-interface ManualConfirmationData {
-  success: boolean;
-  details?: string;
-  screenshotUrl?: string;
 }
 
 // Type definitions for status data
@@ -35,7 +33,7 @@ interface StatusData {
   createdAt: string;
   updatedAt: string;
   subscription: { name: string };
-  manualInstructions?: string | Record<string, unknown>;
+  manualInstructions?: CancellationInstructions;
   progress?: number;
   logs?: Array<{ message: string; timestamp: string; level: string }>;
 }
@@ -53,17 +51,16 @@ function isValidStatus(data: unknown): data is StatusData {
 }
 
 // Type guard for manual instructions
-function getManualInstructions(instructions: unknown): string | null {
+function getManualInstructions(instructions: unknown): CancellationInstructions | null {
   if (typeof instructions === 'string') {
-    return instructions;
+    try {
+      return JSON.parse(instructions) as CancellationInstructions;
+    } catch {
+      return instructions;
+    }
   }
   if (typeof instructions === 'object' && instructions !== null) {
-    // Handle case where instructions might be a JSON object
-    try {
-      return JSON.stringify(instructions);
-    } catch {
-      return null;
-    }
+    return instructions as CancellationInstructions;
   }
   return null;
 }
