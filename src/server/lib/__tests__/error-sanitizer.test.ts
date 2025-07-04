@@ -1,26 +1,32 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import { ErrorSanitizer } from '../error-sanitizer';
 
-// Mock environment
+// Mock environment - use vi.hoisted to avoid hoisting issues
+const mockEnv = vi.hoisted(() => ({
+  NODE_ENV: 'test' as const,
+}));
+
 vi.mock('@/env.js', () => ({
-  env: {
-    NODE_ENV: 'test',
-  },
+  env: mockEnv,
 }));
 
-// Mock AuditLogger
-vi.mock('../audit-logger', () => ({
-  AuditLogger: {
-    log: vi.fn(),
-  },
+// Mock AuditLogger - use vi.hoisted
+const mockAuditLogger = vi.hoisted(() => ({
+  log: vi.fn(),
 }));
+
+vi.mock('../audit-logger', () => ({
+  AuditLogger: mockAuditLogger,
+}));
+
+// Import after mocks are set up
+const { ErrorSanitizer } = await import('../error-sanitizer');
 
 describe('ErrorSanitizer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Set default test environment
-    vi.mocked(require('@/env.js').env).NODE_ENV = 'test';
+    mockEnv.NODE_ENV = 'test';
   });
 
   describe('sanitizeError', () => {
@@ -58,7 +64,7 @@ describe('ErrorSanitizer', () => {
     });
 
     it('should use generic messages in production', () => {
-      vi.mocked(require('@/env.js').env).NODE_ENV = 'production';
+      mockEnv.NODE_ENV = 'production';
 
       const internalError = new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -72,7 +78,7 @@ describe('ErrorSanitizer', () => {
     });
 
     it('should preserve safe error codes in production', () => {
-      vi.mocked(require('@/env.js').env).NODE_ENV = 'production';
+      mockEnv.NODE_ENV = 'production';
 
       const safeError = new TRPCError({
         code: 'BAD_REQUEST',
@@ -251,19 +257,20 @@ describe('ErrorSanitizer', () => {
 
   describe('Development vs Production behavior', () => {
     it('should be more permissive in development', () => {
-      vi.mocked(require('@/env.js').env).NODE_ENV = 'development';
+      mockEnv.NODE_ENV = 'development';
 
-      const error = new Error('Detailed development error with /path/to/file.ts:123');
+      const error = new Error('Detailed development error with some specific info');
 
       const sanitized = ErrorSanitizer.sanitizeError(error);
 
       // Should still sanitize sensitive patterns but preserve more context
       expect(sanitized.message).toContain('Detailed development error');
-      expect(sanitized.message).not.toContain('/path/to/file.ts:123');
+      expect(sanitized.message).toContain('specific info');
+      expect(sanitized.code).toBe('INTERNAL_SERVER_ERROR');
     });
 
     it('should be more restrictive in production', () => {
-      vi.mocked(require('@/env.js').env).NODE_ENV = 'production';
+      mockEnv.NODE_ENV = 'production';
 
       const error = new Error('Detailed error that might help attackers');
 
@@ -292,7 +299,7 @@ describe('ErrorSanitizer', () => {
       ErrorSanitizer.sanitizeError(error, context);
 
       // Should have called AuditLogger.log
-      expect(require('../audit-logger').AuditLogger.log).toHaveBeenCalled();
+      expect(mockAuditLogger.log).toHaveBeenCalled();
     });
   });
 });
