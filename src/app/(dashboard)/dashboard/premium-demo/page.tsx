@@ -18,7 +18,6 @@ import {
   Users,
   CreditCard,
   Download,
-  TrendingUp,
   Bot,
   Shield,
   Zap,

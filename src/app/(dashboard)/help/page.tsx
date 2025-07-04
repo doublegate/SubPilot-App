@@ -222,7 +222,7 @@ export default function HelpPage() {
             Contact Support
           </CardTitle>
           <CardDescription>
-            Can't find what you're looking for? Send us a message and we'll help
+            Can&apos;t find what you&apos;re looking for? Send us a message and we&apos;ll help
             you out.
           </CardDescription>
         </CardHeader>

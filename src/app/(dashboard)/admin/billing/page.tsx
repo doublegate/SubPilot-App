@@ -19,7 +19,6 @@ import {
   CreditCard,
   Settings,
   BarChart3,
-  Receipt,
   ExternalLink,
   AlertCircle,
 } from 'lucide-react';

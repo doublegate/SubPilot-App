@@ -6,8 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { PlaidConfigForm } from '@/components/admin/plaid-config-form';
 import { PlaidWebhookConfig } from '@/components/admin/plaid-webhook-config';
 import {
