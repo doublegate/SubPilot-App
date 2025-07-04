@@ -104,7 +104,7 @@ export class SessionManager {
         fingerprint,
         ip,
         userAgent,
-        deviceInfo: parsedDeviceInfo,
+        deviceInfo: parsedDeviceInfo as any,
         createdAt: new Date(),
         lastActivity: new Date(),
         expiresAt,
@@ -489,12 +489,12 @@ export class SessionManager {
       fingerprint: session.fingerprint,
       ip: session.ip,
       userAgent: session.userAgent,
-      deviceInfo: session.deviceInfo,
+      deviceInfo: session.deviceInfo as any,
       createdAt: session.createdAt,
       lastActivity: session.lastActivity,
       expiresAt: session.expiresAt,
       isActive: session.isActive,
-      revokedAt: session.revokedAt,
+      revokedAt: session.revokedAt ?? undefined,
     };
   }
 

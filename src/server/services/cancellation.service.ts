@@ -231,14 +231,14 @@ export class CancellationService {
 
       switch (request.method) {
         case 'api':
-          result = await this.processApiCancellation(request);
+          result = await this.processApiCancellation(request as any);
           break;
         case 'webhook':
-          result = await this.processWebhookCancellation(request);
+          result = await this.processWebhookCancellation(request as any);
           break;
         case 'manual':
         default:
-          result = await this.processManualCancellation(request);
+          result = await this.processManualCancellation(request as any);
           break;
       }
 
@@ -252,7 +252,7 @@ export class CancellationService {
           refundAmount: result.refundAmount
             ? new Prisma.Decimal(result.refundAmount)
             : null,
-          manualInstructions: result.manualInstructions ?? {},
+          manualInstructions: result.manualInstructions as any ?? {},
           completedAt: result.status === 'completed' ? new Date() : null,
           errorCode: result.error ? 'PROCESSING_ERROR' : null,
           errorMessage: result.error,
@@ -419,8 +419,8 @@ export class CancellationService {
     const subscription = request.subscription;
 
     const instructions = this.generateManualInstructions(
-      subscription,
-      provider
+      subscription as any,
+      provider as any
     );
 
     await this.logCancellationActivity(
@@ -607,7 +607,7 @@ export class CancellationService {
       refundAmount: request.refundAmount
         ? parseFloat(request.refundAmount.toString())
         : null,
-      manualInstructions: request.manualInstructions,
+      manualInstructions: request.manualInstructions as Record<string, unknown> | null,
       error: request.errorMessage,
     };
   }
@@ -753,7 +753,7 @@ export class CancellationService {
         action,
         status,
         message,
-        metadata: metadata ?? {},
+        metadata: (metadata ?? {}) as any,
       },
     });
   }

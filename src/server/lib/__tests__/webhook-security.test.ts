@@ -205,7 +205,7 @@ describe('WebhookSecurity', () => {
       const payload = { action: 'test' };
 
       // Clear API_SECRET
-      mockEnv.API_SECRET = undefined;
+      mockEnv.API_SECRET = undefined as any;
 
       expect(() => {
         WebhookSecurity.generateRequestSignature(payload);

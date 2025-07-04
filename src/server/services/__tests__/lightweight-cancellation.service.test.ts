@@ -6,6 +6,7 @@ import {
   type CancellationRequest,
   type CancellationLog,
 } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { TRPCError } from '@trpc/server';
 
 // Mock Prisma client
@@ -29,7 +30,7 @@ const mockSubscription = {
   id: 'sub_123',
   userId: 'user_123',
   name: 'Netflix',
-  amount: 15.99,
+  amount: new Decimal(15.99),
   status: 'active',
   category: 'streaming',
   isActive: true,

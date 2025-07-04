@@ -154,7 +154,6 @@ async function getRedisClient(): Promise<RedisLike> {
   if (process.env.REDIS_URL) {
     try {
       // Dynamic import to avoid build errors if ioredis is not installed
-      // @ts-expect-error - ioredis is an optional dependency
       const redisModule = (await import('ioredis')) as {
         default: new (url: string, options?: object) => RedisLike;
       };
@@ -507,7 +506,7 @@ export function createRateLimitMiddleware(
     const rateLimitResult = await checkRateLimit(clientId, {
       type,
       endpoint: path,
-      userTier,
+      userTier: userTier as 'basic' | 'team' | 'pro' | 'enterprise' | undefined,
       userId: ctx.session?.user?.id,
       ip: ctx.clientIp,
     });

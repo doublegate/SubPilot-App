@@ -507,8 +507,11 @@ export function checkJobQueueHealth() {
   const queue = getJobQueue();
   const stats = queue.getStats();
 
+  const isHealthy = stats.failed <= stats.completed * 0.1;
+
   return {
-    status: stats.failed > stats.completed * 0.1 ? 'degraded' : 'healthy',
+    healthy: isHealthy,
+    status: isHealthy ? 'healthy' : 'degraded',
     stats,
     isProcessing: queue.isProcessing,
     lastProcessed: new Date(),

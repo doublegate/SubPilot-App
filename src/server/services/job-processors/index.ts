@@ -7,7 +7,7 @@ import { AnalyticsJobProcessor } from './analytics-processor';
 import { AuditLogger } from '@/server/lib/audit-logger';
 
 // Advanced Generic Types for Job Processing
-type JobProcessor<T = unknown> = (job: Job<T>) => Promise<JobResult>;
+type JobProcessor<T = unknown> = (job: Job) => Promise<JobResult>;
 
 // Template Literal Types for Job Type Safety
 type JobTypePrefix = 'cancellation' | 'notification' | 'webhook' | 'analytics';
@@ -18,6 +18,7 @@ type JobAction =
   | 'track'
   | 'aggregate'
   | 'api'
+  | 'webhook'
   | 'manual_instructions'
   | 'confirm'
   | 'update_status'
@@ -333,14 +334,16 @@ export const shutdownJobProcessors = async (): Promise<void> => {
 interface JobProcessorStats {
   registered: number;
   isStarted: boolean;
-  processors: JobType[];
+  processors: string[];
 }
 
 interface QueueStats {
+  total: number;
   pending: number;
-  active: number;
+  processing: number;
   completed: number;
   failed: number;
+  delayed: number;
 }
 
 interface HealthCheckResult {

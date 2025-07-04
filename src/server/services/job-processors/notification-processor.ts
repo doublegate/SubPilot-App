@@ -86,7 +86,7 @@ export class NotificationJobProcessor {
       priority = 'normal',
       channels = ['email', 'in_app'],
       scheduledFor,
-    } = job.data as NotificationJobData;
+    } = job.data as unknown as NotificationJobData;
 
     try {
       // Get user data and preferences
@@ -251,18 +251,18 @@ export class NotificationJobProcessor {
     for (const channel of channels) {
       switch (channel) {
         case 'email':
-          if (preferences?.emailAlerts !== false) {
+          if ((preferences as any)?.emailAlerts !== false) {
             filtered.push(channel);
           }
           break;
         case 'push':
-          if (preferences?.pushNotifications !== false) {
+          if ((preferences as any)?.pushNotifications !== false) {
             filtered.push(channel);
           }
           break;
         case 'in_app':
           // In-app notifications are always enabled unless explicitly disabled
-          if (preferences?.inAppNotifications !== false) {
+          if ((preferences as any)?.inAppNotifications !== false) {
             filtered.push(channel);
           }
           break;
@@ -289,6 +289,9 @@ export class NotificationJobProcessor {
     message: string;
     htmlMessage?: string;
   }> {
+    // Cast data to any to avoid TypeScript property access errors
+    const dataAny = data as any;
+    
     if (customTitle && customMessage) {
       return {
         title: customTitle,
@@ -300,75 +303,75 @@ export class NotificationJobProcessor {
     const templates = {
       cancellation_success: {
         title: 'Subscription Cancelled Successfully',
-        message: `Great news! Your ${data.subscriptionName ?? 'subscription'} has been cancelled successfully.`,
+        message: `Great news! Your ${dataAny.subscriptionName ?? 'subscription'} has been cancelled successfully.`,
         htmlMessage: `
           <h2>Subscription Cancelled Successfully! 🎉</h2>
-          <p>Great news! Your <strong>${data.subscriptionName ?? 'subscription'}</strong> has been cancelled successfully.</p>
-          ${data.confirmationCode ? `<p><strong>Confirmation Code:</strong> ${data.confirmationCode}</p>` : ''}
-          ${data.effectiveDate ? `<p><strong>Effective Date:</strong> ${new Date(data.effectiveDate).toLocaleDateString()}</p>` : ''}
-          ${data.refundAmount ? `<p><strong>Refund Amount:</strong> $${data.refundAmount}</p>` : ''}
+          <p>Great news! Your <strong>${dataAny.subscriptionName ?? 'subscription'}</strong> has been cancelled successfully.</p>
+          ${dataAny.confirmationCode ? `<p><strong>Confirmation Code:</strong> ${dataAny.confirmationCode}</p>` : ''}
+          ${dataAny.effectiveDate ? `<p><strong>Effective Date:</strong> ${new Date(dataAny.effectiveDate).toLocaleDateString()}</p>` : ''}
+          ${dataAny.refundAmount ? `<p><strong>Refund Amount:</strong> $${dataAny.refundAmount}</p>` : ''}
           <p>You will no longer be charged for this subscription.</p>
         `,
       },
       cancellation_manual: {
         title: 'Manual Cancellation Required',
-        message: `We've prepared instructions to cancel your ${data.subscriptionName ?? 'subscription'}. Please follow the steps in your dashboard.`,
+        message: `We've prepared instructions to cancel your ${dataAny.subscriptionName ?? 'subscription'}. Please follow the steps in your dashboard.`,
         htmlMessage: `
           <h2>Manual Cancellation Instructions Ready</h2>
-          <p>We've prepared step-by-step instructions to cancel your <strong>${data.subscriptionName ?? 'subscription'}</strong>.</p>
+          <p>We've prepared step-by-step instructions to cancel your <strong>${dataAny.subscriptionName ?? 'subscription'}</strong>.</p>
           <p>Please check your SubPilot dashboard for detailed instructions.</p>
-          ${data.estimatedTime ? `<p><strong>Estimated Time:</strong> ${data.estimatedTime}</p>` : ''}
+          ${dataAny.estimatedTime ? `<p><strong>Estimated Time:</strong> ${dataAny.estimatedTime}</p>` : ''}
           <p>Once you've completed the cancellation, please confirm it in your dashboard.</p>
         `,
       },
       cancellation_error: {
         title: 'Cancellation Issue',
-        message: `We encountered an issue cancelling your ${data.subscriptionName ?? 'subscription'}. We're working to resolve this.`,
+        message: `We encountered an issue cancelling your ${dataAny.subscriptionName ?? 'subscription'}. We're working to resolve this.`,
         htmlMessage: `
           <h2>Cancellation Issue</h2>
-          <p>We encountered an issue cancelling your <strong>${data.subscriptionName ?? 'subscription'}</strong>.</p>
+          <p>We encountered an issue cancelling your <strong>${dataAny.subscriptionName ?? 'subscription'}</strong>.</p>
           <p>Our team is working to resolve this. You can also try manual cancellation instructions in your dashboard.</p>
-          ${data.error ? `<p><strong>Issue:</strong> ${data.error}</p>` : ''}
+          ${dataAny.error ? `<p><strong>Issue:</strong> ${dataAny.error}</p>` : ''}
           <p>We'll keep you updated on the progress.</p>
         `,
       },
       cancellation_retry: {
         title: 'Retrying Cancellation',
-        message: `We're retrying the cancellation of your ${data.subscriptionName ?? 'subscription'}.`,
+        message: `We're retrying the cancellation of your ${dataAny.subscriptionName ?? 'subscription'}.`,
         htmlMessage: `
           <h2>Retrying Cancellation</h2>
-          <p>We're retrying the cancellation of your <strong>${data.subscriptionName ?? 'subscription'}</strong>.</p>
-          ${data.nextRetryAt ? `<p><strong>Next Attempt:</strong> ${new Date(data.nextRetryAt).toLocaleString()}</p>` : ''}
+          <p>We're retrying the cancellation of your <strong>${dataAny.subscriptionName ?? 'subscription'}</strong>.</p>
+          ${dataAny.nextRetryAt ? `<p><strong>Next Attempt:</strong> ${new Date(dataAny.nextRetryAt).toLocaleString()}</p>` : ''}
           <p>You don't need to do anything - we'll automatically try again.</p>
         `,
       },
       webhook_received: {
         title: 'Cancellation Update',
-        message: `We received an update about your ${data.subscriptionName ?? 'subscription'} cancellation.`,
+        message: `We received an update about your ${dataAny.subscriptionName ?? 'subscription'} cancellation.`,
         htmlMessage: `
           <h2>Cancellation Update</h2>
-          <p>We received an update about your <strong>${data.subscriptionName ?? 'subscription'}</strong> cancellation.</p>
+          <p>We received an update about your <strong>${dataAny.subscriptionName ?? 'subscription'}</strong> cancellation.</p>
           <p>Check your dashboard for the latest status.</p>
         `,
       },
       status_update: {
         title: 'Subscription Status Update',
-        message: `Your ${data.subscriptionName ?? 'subscription'} status has been updated to: ${data.status ?? 'unknown'}`,
+        message: `Your ${dataAny.subscriptionName ?? 'subscription'} status has been updated to: ${dataAny.status ?? 'unknown'}`,
         htmlMessage: `
           <h2>Subscription Status Update</h2>
-          <p>Your <strong>${data.subscriptionName ?? 'subscription'}</strong> status has been updated.</p>
-          <p><strong>New Status:</strong> ${data.status ?? 'unknown'}</p>
+          <p>Your <strong>${dataAny.subscriptionName ?? 'subscription'}</strong> status has been updated.</p>
+          <p><strong>New Status:</strong> ${dataAny.status ?? 'unknown'}</p>
           <p>Check your dashboard for more details.</p>
         `,
       },
       workflow_progress: {
         title: 'Cancellation Progress Update',
-        message: `Your cancellation request is progressing: ${data.currentStep ?? 'processing'}`,
+        message: `Your cancellation request is progressing: ${dataAny.currentStep ?? 'processing'}`,
         htmlMessage: `
           <h2>Cancellation Progress Update</h2>
           <p>Your cancellation request is progressing through our system.</p>
-          <p><strong>Current Step:</strong> ${data.currentStep ?? 'processing'}</p>
-          ${data.estimatedCompletion ? `<p><strong>Estimated Completion:</strong> ${new Date(data.estimatedCompletion).toLocaleString()}</p>` : ''}
+          <p><strong>Current Step:</strong> ${dataAny.currentStep ?? 'processing'}</p>
+          ${dataAny.estimatedCompletion ? `<p><strong>Estimated Completion:</strong> ${new Date(dataAny.estimatedCompletion).toLocaleString()}</p>` : ''}
           <p>We'll notify you when it's complete.</p>
         `,
       },
@@ -481,11 +484,11 @@ export class NotificationJobProcessor {
     await this.db.notification.create({
       data: {
         userId,
-        type: data.notificationType ?? 'general',
+        type: (data as any).notificationType ?? 'general',
         title: content.title,
         message: content.message,
         severity: this.mapPriorityToSeverity(priority),
-        data: data,
+        data: data as any,
         scheduledFor: new Date(),
         read: false,
       },

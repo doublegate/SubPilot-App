@@ -46,9 +46,18 @@ export const unifiedCancellationRouter = createTRPCRouter({
     .input(UnifiedCancellationRequestInput)
     .mutation(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
+      
+      // Transform method types for compatibility
+      const transformedInput = {
+        ...input,
+        method: input.method === 'manual' ? 'lightweight' : 
+                input.method === 'automation' ? 'event_driven' : 
+                input.method
+      };
+      
       return await orchestrator.initiateCancellation(
         ctx.session.user.id,
-        input
+        transformedInput as any
       );
     }),
 

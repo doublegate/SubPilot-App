@@ -334,9 +334,9 @@ describe('UnifiedCancellationOrchestratorService', () => {
 
       const input = {
         subscriptionId: 'sub123',
-        method: 'event_driven' as const,
+        preferredMethod: 'automation' as const,
         priority: 'high' as const,
-        userPreference: {
+        scheduling: {
           scheduleFor: new Date(Date.now() + 86400000), // Tomorrow
         },
       };
@@ -429,7 +429,7 @@ describe('UnifiedCancellationOrchestratorService', () => {
 
       expect(result.success).toBe(false);
       expect(result.message).toContain('Cancellation request not found');
-      expect(result.error?.code).toBe('REQUEST_NOT_FOUND');
+      expect((result.error as any)?.code).toBe('REQUEST_NOT_FOUND');
     });
   });
 
@@ -519,7 +519,7 @@ describe('UnifiedCancellationOrchestratorService', () => {
 
       expect(result.success).toBe(false);
       expect(result.message).toContain('Failed cancellation request not found');
-      expect(result.error?.code).toBe('REQUEST_NOT_FOUND');
+      expect((result.error as any)?.code).toBe('REQUEST_NOT_FOUND');
     });
   });
 
@@ -603,7 +603,7 @@ describe('UnifiedCancellationOrchestratorService', () => {
       expect(result.message).toContain(
         'Cancellation request not found or not cancellable'
       );
-      expect(result.error?.code).toBe('REQUEST_NOT_FOUND');
+      expect((result.error as any)?.code).toBe('REQUEST_NOT_FOUND');
     });
   });
 
@@ -681,7 +681,7 @@ describe('UnifiedCancellationOrchestratorService', () => {
         .mockResolvedValueOnce(1) // failedRequests
         .mockResolvedValueOnce(0); // pendingRequests
 
-      mockDb.cancellationRequest.groupBy.mockResolvedValueOnce([
+      (mockDb.cancellationRequest.groupBy as any).mockResolvedValueOnce([
         { method: 'api', _count: { method: 1 } },
         { method: 'lightweight', _count: { method: 1 } },
       ] as any);

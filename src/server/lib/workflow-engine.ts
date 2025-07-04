@@ -267,7 +267,7 @@ class SimpleWorkflowEngine extends EventEmitter {
       }
 
       execution.status = 'completed';
-      execution.output = result;
+      execution.output = result as Record<string, WorkflowValue>;
       execution.completedAt = new Date();
 
       console.log(`[WorkflowEngine] Step ${step.id} completed successfully`);
@@ -351,7 +351,7 @@ class SimpleWorkflowEngine extends EventEmitter {
       }
 
       // Queue a job and wait for completion
-      const jobId = await this.jobQueue.addJob(jobType, {
+      const jobId = await this.jobQueue.addJob(jobType as string, {
         ...(jobData as Record<string, unknown>),
         workflowInstanceId: instance.id,
         stepId: step.id,
@@ -391,7 +391,7 @@ class SimpleWorkflowEngine extends EventEmitter {
       const { expression, trueStep, falseStep } = step.config;
 
       // Simple expression evaluation (in production, use a proper expression engine)
-      const result = this.evaluateCondition(expression, instance.variables);
+      const result = this.evaluateCondition(expression as string, instance.variables);
 
       return {
         conditionResult: result,
@@ -420,7 +420,7 @@ class SimpleWorkflowEngine extends EventEmitter {
 
       // Execute all parallel steps concurrently
       const results = await Promise.allSettled(
-        parallelSteps.map(async (stepId: string) => {
+        (parallelSteps as string[]).map(async (stepId: string) => {
           const definition = this.definitions.get(instance.definitionId);
           const parallelStep = definition?.steps.find(s => s.id === stepId);
 
@@ -434,15 +434,15 @@ class SimpleWorkflowEngine extends EventEmitter {
 
       return {
         parallelResults: results.map((result, index) => ({
-          stepId: parallelSteps[index],
+          stepId: (parallelSteps as string[])[index] as WorkflowValue,
           status: result.status,
-          value: result.status === 'fulfilled' ? result.value : undefined,
+          value: result.status === 'fulfilled' ? (result.value as unknown as WorkflowValue) : undefined,
           error:
             result.status === 'rejected'
               ? (result.reason as Error)?.message
               : undefined,
-        })),
-      };
+        })) as WorkflowValue,
+      } as Record<string, WorkflowValue>;
     });
   }
 
@@ -459,7 +459,7 @@ class SimpleWorkflowEngine extends EventEmitter {
 
       // Parse the expression and evaluate with variables
       const expr = parser.parse(expression);
-      const result = expr.evaluate(variables) as unknown;
+      const result = expr.evaluate(variables as any) as unknown;
 
       return Boolean(result);
     } catch (error) {

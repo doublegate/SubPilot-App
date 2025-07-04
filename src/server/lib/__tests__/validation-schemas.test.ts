@@ -333,7 +333,7 @@ describe('Validation Schemas', () => {
           allowedTypes: ['image/jpeg', 'image/png'],
           allowedExtensions: ['jpg', 'png'],
         });
-        expect(result.valid).toBe(true);
+        expect(result.success).toBe(true);
       });
 
       it('should reject files that are too large', () => {
@@ -341,8 +341,8 @@ describe('Validation Schemas', () => {
         const result = validationUtils.validateFileUpload(largeFile, {
           maxSizeKB: 1024,
         });
-        expect(result.valid).toBe(false);
-        expect(result.error).toContain('too large');
+        expect(result.success).toBe(false);
+        expect(result.errors).toContain('too large');
       });
 
       it('should reject invalid file types', () => {
@@ -350,8 +350,8 @@ describe('Validation Schemas', () => {
         const result = validationUtils.validateFileUpload(invalidFile, {
           allowedTypes: ['image/jpeg', 'image/png'],
         });
-        expect(result.valid).toBe(false);
-        expect(result.error).toContain('type not allowed');
+        expect(result.success).toBe(false);
+        expect(result.errors).toContain('type not allowed');
       });
 
       it('should reject invalid file extensions', () => {
@@ -359,8 +359,8 @@ describe('Validation Schemas', () => {
         const result = validationUtils.validateFileUpload(invalidFile, {
           allowedExtensions: ['jpg', 'png'],
         });
-        expect(result.valid).toBe(false);
-        expect(result.error).toContain('extension not allowed');
+        expect(result.success).toBe(false);
+        expect(result.errors).toContain('extension not allowed');
       });
     });
   });

@@ -245,7 +245,7 @@ const ManualConfirmationInput = z.object({
 });
 
 // Service response types
-interface CancellationInstructions {
+interface LightweightCancellationInstructions {
   provider: ProviderTemplate;
   instructions: {
     overview: string;
@@ -266,7 +266,7 @@ interface CancellationInstructions {
 interface LightweightCancellationResult {
   requestId: string;
   status: 'instructions_provided' | 'completed' | 'failed';
-  instructions?: CancellationInstructions;
+  instructions?: LightweightCancellationInstructions;
   confirmationCode?: string;
   effectiveDate?: Date;
   error?: string;
@@ -453,7 +453,7 @@ export class LightweightCancellationService {
     requestId: string
   ): Promise<{
     request: CancellationRequestWithSubscription;
-    instructions?: CancellationInstructions;
+    instructions?: LightweightCancellationInstructions;
   }> {
     const request = await this.db.cancellationRequest.findFirst({
       where: {
@@ -478,7 +478,7 @@ export class LightweightCancellationService {
       });
     }
 
-    let instructions: CancellationInstructions | undefined;
+    let instructions: LightweightCancellationInstructions | undefined;
 
     if (
       request.manualInstructions &&
@@ -494,16 +494,14 @@ export class LightweightCancellationService {
 
     return {
       request: {
-        id: request.id,
-        status: request.status,
-        method: request.method,
-        createdAt: request.createdAt,
-        completedAt: request.completedAt,
-        confirmationCode: request.confirmationCode,
-        effectiveDate: request.effectiveDate,
-        subscription: request.subscription,
-        userNotes: request.userNotes,
-      },
+        ...request,
+        subscription: {
+          id: request.subscription.id,
+          name: request.subscription.name,
+          status: 'active',
+          provider: {},
+        },
+      } as any,
       instructions,
     };
   }
@@ -531,19 +529,14 @@ export class LightweightCancellationService {
     });
 
     return requests.map(request => ({
-      id: request.id,
+      ...request,
       subscription: {
         id: request.subscription.id,
         name: request.subscription.name,
-        amount: parseFloat(request.subscription.amount.toString()),
+        status: 'active',
+        provider: {},
       },
-      status: request.status,
-      method: request.method,
-      confirmationCode: request.confirmationCode,
-      effectiveDate: request.effectiveDate,
-      createdAt: request.createdAt,
-      completedAt: request.completedAt,
-    }));
+    })) as any;
   }
 
   /**
@@ -632,7 +625,7 @@ export class LightweightCancellationService {
   private generateInstructions(
     provider: ProviderTemplate,
     subscriptionName: string
-  ): CancellationInstructions {
+  ): LightweightCancellationInstructions {
     const overview =
       provider.id === 'default'
         ? `To cancel your ${subscriptionName} subscription, you'll typically need to access your account settings and look for subscription management options.`

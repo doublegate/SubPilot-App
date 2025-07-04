@@ -220,7 +220,7 @@ describe('assistantRouter', () => {
       const { AssistantService } = await import(
         '@/server/services/assistant.service'
       );
-      const mockInstance = new AssistantService(mockCtx.db);
+      const mockInstance = new AssistantService(mockCtx.db as any);
       const tRPCError = new TRPCError({
         code: 'NOT_FOUND',
         message: 'Conversation not found',
@@ -241,7 +241,7 @@ describe('assistantRouter', () => {
       const { AssistantService } = await import(
         '@/server/services/assistant.service'
       );
-      const mockInstance = new AssistantService(mockCtx.db);
+      const mockInstance = new AssistantService(mockCtx.db as any);
       vi.mocked(mockInstance.sendMessage).mockRejectedValueOnce(
         new Error('Network error')
       );
@@ -271,7 +271,7 @@ describe('assistantRouter', () => {
       const { AssistantService } = await import(
         '@/server/services/assistant.service'
       );
-      const mockInstance = new AssistantService(mockCtx.db);
+      const mockInstance = new AssistantService(mockCtx.db as any);
       expect(mockInstance.executeAction).toHaveBeenCalledWith(
         'action_123',
         'user_123',
@@ -291,7 +291,7 @@ describe('assistantRouter', () => {
       const { AssistantService } = await import(
         '@/server/services/assistant.service'
       );
-      const mockInstance = new AssistantService(mockCtx.db);
+      const mockInstance = new AssistantService(mockCtx.db as any);
       expect(mockInstance.executeAction).toHaveBeenCalledWith(
         'action_123',
         'user_123',
@@ -303,7 +303,7 @@ describe('assistantRouter', () => {
       const { AssistantService } = await import(
         '@/server/services/assistant.service'
       );
-      const mockInstance = new AssistantService(mockCtx.db);
+      const mockInstance = new AssistantService(mockCtx.db as any);
       vi.mocked(mockInstance.executeAction).mockRejectedValueOnce(
         new Error('Action failed')
       );
@@ -321,7 +321,7 @@ describe('assistantRouter', () => {
       const { AssistantService } = await import(
         '@/server/services/assistant.service'
       );
-      const mockInstance = new AssistantService(mockCtx.db);
+      const mockInstance = new AssistantService(mockCtx.db as any);
       const complexResult = {
         success: true,
         actionId: 'action_123',
@@ -329,6 +329,11 @@ describe('assistantRouter', () => {
           complexData: { nested: true },
           array: [1, 2, 3],
           nullValue: null,
+        },
+        data: {
+          downloadUrl: 'https://example.com/export.csv',
+          format: 'csv',
+          size: 1024,
         },
         message: 'Complex action completed',
       };
@@ -425,7 +430,7 @@ describe('assistantRouter', () => {
       const { AssistantService } = await import(
         '@/server/services/assistant.service'
       );
-      const mockInstance = new AssistantService(mockCtx.db);
+      const mockInstance = new AssistantService(mockCtx.db as any);
       expect(mockInstance.getConversation).toHaveBeenCalledWith(
         'conv_123',
         'user_123'
@@ -436,7 +441,7 @@ describe('assistantRouter', () => {
       const { AssistantService } = await import(
         '@/server/services/assistant.service'
       );
-      const mockInstance = new AssistantService(mockCtx.db);
+      const mockInstance = new AssistantService(mockCtx.db as any);
       const tRPCError = new TRPCError({
         code: 'NOT_FOUND',
         message: 'Conversation not found',
@@ -456,7 +461,7 @@ describe('assistantRouter', () => {
       const { AssistantService } = await import(
         '@/server/services/assistant.service'
       );
-      const mockInstance = new AssistantService(mockCtx.db);
+      const mockInstance = new AssistantService(mockCtx.db as any);
       vi.mocked(mockInstance.getConversation).mockRejectedValueOnce(
         new Error('Service error')
       );

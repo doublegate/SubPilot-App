@@ -125,7 +125,7 @@ export const cancellationRouter = createTRPCRouter({
       }
 
       const providers = await ctx.db.cancellationProvider.findMany({
-        where: where as Record<string, unknown>,
+        where: where as unknown as Record<string, unknown>,
         orderBy: [{ successRate: 'desc' }, { name: 'asc' }],
         select: {
           id: true,

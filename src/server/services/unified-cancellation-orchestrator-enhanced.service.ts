@@ -349,7 +349,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
           realTimeUpdatesEnabled:
             input.userPreferences?.notificationPreferences?.realTime ??
             true,
-        } as Record<string, unknown>,
+        },
         tracking: {
           sseEndpoint: `/api/sse/cancellation/${orchestrationId}`,
           statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ orchestrationId }))}`,
@@ -540,10 +540,10 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       method: (method === 'automation' ? 'event_driven' : method) as "api" | "lightweight" | "event_driven",
       metadata: {
         attemptsUsed: 1,
-        providerInfo: capabilities,
+        providerInfo: capabilities as unknown as Record<string, unknown>,
         realTimeUpdatesEnabled:
           input.userPreferences?.notificationPreferences?.realTime ?? true,
-      } as Record<string, unknown>,
+      },
       tracking: {
         sseEndpoint: `/api/sse/cancellation/${orchestrationId}`,
         statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ orchestrationId }))}`,
@@ -643,18 +643,18 @@ export class UnifiedCancellationOrchestratorEnhancedService {
 
       return {
         success: true,
-        orchestrationId: baseResult.orchestrationId,
+        orchestrationId: baseResult.orchestrationId!,
         requestId: apiResult.requestId,
         status: apiResult.status === 'completed' ? 'completed' : 'processing',
         method: baseResult.method as "api" | "lightweight" | "event_driven",
         message: 'API cancellation initiated successfully',
-        estimatedCompletion: estimatedCompletion.toISOString(),
+        estimatedCompletion: estimatedCompletion,
         processingStarted: new Date(),
         confirmationCode: apiResult.confirmationCode ?? undefined,
         effectiveDate: apiResult.effectiveDate ?? undefined,
         refundAmount: apiResult.refundAmount ?? undefined,
-        metadata: baseResult.metadata,
-        tracking: baseResult.tracking,
+        metadata: baseResult.metadata!,
+        tracking: baseResult.tracking!,
       };
     } catch (error) {
       const errorMessage =
@@ -716,7 +716,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
 
       return {
         success: true,
-        orchestrationId: baseResult.orchestrationId,
+        orchestrationId: baseResult.orchestrationId!,
         requestId: automationResult.requestId,
         status: 'processing',
         method: baseResult.method as "api" | "lightweight" | "event_driven",
@@ -724,13 +724,13 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         estimatedCompletion: automationResult.estimatedCompletion ?? undefined,
         processingStarted: new Date(),
         metadata: {
-          ...baseResult.metadata,
+          ...(baseResult.metadata ?? {}),
           attemptsUsed: 1,
           realTimeUpdatesEnabled: 
             input.userPreferences?.notificationPreferences?.realTime ?? true,
           workflowId: automationResult.workflowId ?? undefined,
-        } as Record<string, unknown>,
-        tracking: baseResult.tracking,
+        },
+        tracking: baseResult.tracking!,
       };
     } catch (error) {
       const errorMessage =

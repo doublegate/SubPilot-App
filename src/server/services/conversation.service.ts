@@ -280,7 +280,7 @@ export class ConversationService {
       markdown += `${message.content}\n\n`;
 
       if (message.functionCall) {
-        const functionCall = message.functionCall as FunctionCall;
+        const functionCall = message.functionCall as unknown as FunctionCall;
         markdown += `*[Action: ${functionCall.name}]*\n\n`;
       }
 
@@ -340,7 +340,7 @@ export class ConversationService {
         topics.add('subscriptions');
 
       if (message.functionCall) {
-        const functionCall = message.functionCall as FunctionCall;
+        const functionCall = message.functionCall as unknown as FunctionCall;
         actions.add(functionCall.name);
       }
     }

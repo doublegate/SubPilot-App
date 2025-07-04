@@ -447,10 +447,11 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           subscriptionId: request.subscriptionId,
           reason: input.userNotes ?? 'Retry of failed cancellation',
           priority: request.priority as 'low' | 'normal' | 'high',
-          preferredMethod: input.forceMethod ?? 'auto',
+          preferredMethod: (input.forceMethod ?? 'auto') as 'auto' | 'api' | 'automation' | 'lightweight',
           userPreferences: {
             allowFallback: !input.forceMethod, // Don't allow fallback if method is forced
             maxRetries: input.escalate ? 5 : 3,
+            timeoutMinutes: 30,
           },
         };
 
@@ -1220,7 +1221,7 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
 
         const items = requests.map(request => {
           // Type guard for metadata access
-          const metadata = request.metadata as Record<string, unknown> | null;
+          const metadata = (request as any).metadata as Record<string, unknown> | null;
           const orchestrationId =
             metadata &&
             typeof metadata === 'object' &&
@@ -1276,8 +1277,8 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           },
           summary: {
             totalRequests: total,
-            byStatus: await getStatusBreakdown(ctx.db, ctx.session.user.id),
-            byMethod: await getMethodBreakdown(ctx.db, ctx.session.user.id),
+            byStatus: await getStatusBreakdown(ctx.db as any, ctx.session.user.id),
+            byMethod: await getMethodBreakdown(ctx.db as any, ctx.session.user.id),
           },
         };
       } catch (error) {
@@ -1320,11 +1321,11 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         );
         const analytics = await orchestrator.getUnifiedAnalytics(
           ctx.session.user.id,
-          input.timeframe
+          input.timeframe === 'quarter' || input.timeframe === 'year' ? 'month' : input.timeframe
         );
 
         // Add additional insights using the exported function
-        const insights = generateAnalyticsInsights(analytics);
+        const insights = generateAnalyticsInsights(analytics as any);
 
         return {
           ...analytics,
@@ -1439,7 +1440,7 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
 
         // Convert to percentages and calculate averages
         for (const method in methodHealth) {
-          if (methodHealth[method].recentRequests > 0) {
+          if (methodHealth[method] && methodHealth[method].recentRequests > 0) {
             methodHealth[method].successRate = Math.round(
               (methodHealth[method].successRate /
                 methodHealth[method].recentRequests) *

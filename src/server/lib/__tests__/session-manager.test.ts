@@ -761,7 +761,7 @@ describe('SessionManager', () => {
 
         const createCall = vi.mocked(mockPrisma.userSession.create).mock
           .calls[0];
-        const deviceInfo = createCall[0].data.deviceInfo;
+        const deviceInfo = createCall[0].data.deviceInfo as any;
 
         expect(deviceInfo.os).toBe('Unknown');
         expect(deviceInfo.browser).toBe('Unknown');
@@ -780,7 +780,7 @@ describe('SessionManager', () => {
 
         const createCall = vi.mocked(mockPrisma.userSession.create).mock
           .calls[0];
-        const deviceInfo = createCall[0].data.deviceInfo;
+        const deviceInfo = createCall[0].data.deviceInfo as any;
 
         expect(deviceInfo.os).toBe('Unknown');
         expect(deviceInfo.browser).toBe('Unknown');
@@ -844,7 +844,7 @@ describe('SessionManager', () => {
       const regularExpiry = regularCall[0].data.expiresAt;
       const expectedRegular = Date.now() + 24 * 60 * 60 * 1000;
 
-      expect(regularExpiry.getTime()).toBeCloseTo(expectedRegular, -1000);
+      expect((regularExpiry as Date).getTime()).toBeCloseTo(expectedRegular, -1000);
 
       // Remember me session (30 days)
       await sessionManager.createSession('user-123', 'session-456', {
@@ -858,7 +858,7 @@ describe('SessionManager', () => {
       const rememberExpiry = rememberCall[0].data.expiresAt;
       const expectedRemember = Date.now() + 30 * 24 * 60 * 60 * 1000;
 
-      expect(rememberExpiry.getTime()).toBeCloseTo(expectedRemember, -1000);
+      expect((rememberExpiry as Date).getTime()).toBeCloseTo(expectedRemember, -1000);
     });
 
     it('should enforce maximum concurrent sessions', async () => {

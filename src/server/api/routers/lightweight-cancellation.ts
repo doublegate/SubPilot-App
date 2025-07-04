@@ -72,7 +72,7 @@ export const lightweightCancellationRouter = createTRPCRouter({
         ctx.session.user.id,
         input.limit
       );
-      return history as Array<Record<string, unknown>>;
+      return history as unknown as Array<Record<string, unknown>>;
     }),
 
   /**
@@ -170,14 +170,14 @@ export const lightweightCancellationRouter = createTRPCRouter({
 
       // Create a temporary service instance to find provider and generate instructions
       const providerTemplate = (
-        service as {
+        service as unknown as {
           findProviderTemplate: (name: string) => unknown;
           generateInstructions: (template: unknown, name: string) => string[];
         }
       ).findProviderTemplate(subscription.name);
 
       const instructions = (
-        service as {
+        service as unknown as {
           generateInstructions: (template: unknown, name: string) => string[];
         }
       ).generateInstructions(providerTemplate, subscription.name);

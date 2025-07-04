@@ -1,19 +1,12 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { BillingService } from '@/server/services/billing.service';
-import { SubscriptionManagerService } from '@/server/services/subscription-manager.service';
+import { SubscriptionManagerService, type Feature } from '@/server/services/subscription-manager.service';
 
 // Direct environment variable access for linting compatibility
 const getAppUrl = (): string => {
   return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 };
-
-type Feature =
-  | 'analytics_advanced'
-  | 'cancellation_automation'
-  | 'ai_assistant'
-  | 'multi_accounts'
-  | 'priority_support';
 
 export const billingRouter = createTRPCRouter({
   /**
