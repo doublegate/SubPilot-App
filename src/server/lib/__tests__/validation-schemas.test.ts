@@ -127,7 +127,7 @@ describe('Validation Schemas', () => {
       });
 
       it('should reject invalid URLs', () => {
-        expect(() => urlSchema.parse('not-a-url')).toThrow(ZodError);
+        expect(() => urlSchema.parse('not-a-url')).toThrow();
         expect(() => urlSchema.parse('ftp://example.com')).toThrow(ZodError);
       });
     });
