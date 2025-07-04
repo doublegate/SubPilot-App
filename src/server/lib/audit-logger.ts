@@ -42,6 +42,8 @@ export type SecurityAction =
   | 'cancellation.manual_method_failed'
   | 'cancellation.api_method_success'
   | 'cancellation.automation_method_success'
+  | 'cancellation.api_method_failed'
+  | 'cancellation.manual_method_success'
   | 'cancellation.scheduling_validation_failed'
   | 'cancellation.scheduling_failed'
   | 'cancellation.already_cancelled'

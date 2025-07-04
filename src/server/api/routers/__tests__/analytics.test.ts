@@ -115,7 +115,7 @@ describe('Analytics Router', () => {
       });
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
@@ -177,7 +177,7 @@ describe('Analytics Router', () => {
       });
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
@@ -213,7 +213,7 @@ describe('Analytics Router', () => {
       });
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
@@ -244,7 +244,7 @@ describe('Analytics Router', () => {
       mockContext.db.transaction.findMany.mockResolvedValue(mockTransactions);
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getSpendingTrends({
         timeRange: 'month',
@@ -313,7 +313,7 @@ describe('Analytics Router', () => {
       );
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getSpendingTrends({
         timeRange: 'quarter',
@@ -366,7 +366,7 @@ describe('Analytics Router', () => {
       );
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getSubscriptionInsights();
 
@@ -397,7 +397,7 @@ describe('Analytics Router', () => {
       );
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getSubscriptionInsights();
 
@@ -439,7 +439,7 @@ describe('Analytics Router', () => {
       );
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getSubscriptionInsights();
 
@@ -485,7 +485,7 @@ describe('Analytics Router', () => {
       );
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
@@ -510,7 +510,7 @@ describe('Analytics Router', () => {
       mockContext.db.subscription.findMany.mockResolvedValue([]);
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
@@ -526,7 +526,7 @@ describe('Analytics Router', () => {
       mockContext.db.transaction.findMany.mockResolvedValue([]);
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.exportData({});
 
@@ -546,7 +546,7 @@ describe('Analytics Router', () => {
       mockContext.db.transaction.findMany.mockResolvedValue([]);
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.exportData({ format: 'json' });
 
@@ -576,7 +576,7 @@ describe('Analytics Router', () => {
       ]);
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
       const result = await caller.exportData({
         includeTransactions: true,
@@ -604,7 +604,7 @@ describe('Analytics Router', () => {
       });
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
 
       // First call
@@ -623,7 +623,7 @@ describe('Analytics Router', () => {
       mockContext.db.transaction.findMany.mockResolvedValue(mockTransactions);
 
       const caller = analyticsRouter.createCaller(
-        mockContext as RouterCallerContext
+        mockContext as any
       );
 
       // First call

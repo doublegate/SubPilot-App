@@ -90,15 +90,18 @@ export const assistantRouter = createTRPCRouter({
       const assistantService = new AssistantService(ctx.db);
 
       try {
-        const result = (await assistantService.executeAction(
+        const actionResult = await assistantService.executeAction(
           input.actionId,
           ctx.session.user.id,
           input.confirmed
-        )) as {
-          success: boolean;
-          actionId: string;
-          result?: unknown;
-          message?: string;
+        );
+        
+        // Transform the result to match the expected router output format
+        const result = {
+          success: actionResult.success,
+          actionId: input.actionId,
+          result: actionResult.data,
+          message: actionResult.message || actionResult.error,
         };
 
         return result;

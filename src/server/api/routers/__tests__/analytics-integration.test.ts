@@ -675,7 +675,7 @@ describe('Analytics Router Integration Tests', () => {
 
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions.slice(0, 2) as Subscription[] // Only first 2 within 30 days
+        mockSubscriptions.slice(0, 2) as any // Only first 2 within 30 days
       );
 
       const result = await caller.analytics.getUpcomingRenewals({});
@@ -710,7 +710,7 @@ describe('Analytics Router Integration Tests', () => {
 
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as Subscription[]
+        mockSubscriptions as any
       );
 
       const result = await caller.analytics.getUpcomingRenewals({ days: 5 });
