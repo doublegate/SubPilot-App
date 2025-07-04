@@ -1,15 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { WebhookSecurity } from '../webhook-security';
 import crypto from 'crypto';
 
-// Mock environment variables
-vi.mock('@/env.js', () => ({
-  env: {
-    PLAID_ENV: 'sandbox',
-    PLAID_WEBHOOK_SECRET: 'test-plaid-secret',
-    API_SECRET: 'test-api-secret',
-  },
+// Mock environment variables with hoisted pattern
+const mockEnv = vi.hoisted(() => ({
+  PLAID_ENV: 'sandbox',
+  PLAID_WEBHOOK_SECRET: 'test-plaid-secret',
+  API_SECRET: 'test-api-secret',
 }));
+
+vi.mock('@/env.js', () => ({
+  env: mockEnv,
+}));
+
+// Import after mocks are set up
+const { WebhookSecurity } = await import('../webhook-security');
 
 describe('WebhookSecurity', () => {
   const testPayload = JSON.stringify({ test: 'data', timestamp: Date.now() });
@@ -26,7 +30,7 @@ describe('WebhookSecurity', () => {
 
     it('should validate signature format in production', () => {
       // Mock production environment
-      vi.mocked(require('@/env.js').env).PLAID_ENV = 'production';
+      mockEnv.PLAID_ENV = 'production';
       
       const result = WebhookSecurity.verifyPlaidWebhook(testPayload, {});
       
@@ -126,7 +130,7 @@ describe('WebhookSecurity', () => {
         .digest('hex');
 
       // Mock API_SECRET
-      vi.mocked(require('@/env.js').env).API_SECRET = testSecret;
+      mockEnv.API_SECRET = testSecret;
 
       const result = WebhookSecurity.verifyRequestSignature(
         payload,
@@ -147,7 +151,7 @@ describe('WebhookSecurity', () => {
         .digest('hex');
 
       // Mock API_SECRET
-      vi.mocked(require('@/env.js').env).API_SECRET = testSecret;
+      mockEnv.API_SECRET = testSecret;
 
       const result = WebhookSecurity.verifyRequestSignature(
         payload,
@@ -163,7 +167,7 @@ describe('WebhookSecurity', () => {
       const timestamp = Date.now();
 
       // Mock API_SECRET
-      vi.mocked(require('@/env.js').env).API_SECRET = testSecret;
+      mockEnv.API_SECRET = testSecret;
 
       const result = WebhookSecurity.verifyRequestSignature(
         payload,
@@ -184,7 +188,7 @@ describe('WebhookSecurity', () => {
       const payload = { action: 'test' };
 
       // Mock API_SECRET
-      vi.mocked(require('@/env.js').env).API_SECRET = testSecret;
+      mockEnv.API_SECRET = testSecret;
 
       const result = WebhookSecurity.generateRequestSignature(payload);
 
@@ -198,7 +202,7 @@ describe('WebhookSecurity', () => {
       const payload = { action: 'test' };
 
       // Clear API_SECRET
-      vi.mocked(require('@/env.js').env).API_SECRET = undefined;
+      mockEnv.API_SECRET = undefined;
 
       expect(() => {
         WebhookSecurity.generateRequestSignature(payload);
