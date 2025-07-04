@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { BillingService } from '@/server/services/billing.service';
-import { SubscriptionManagerService, type Feature } from '@/server/services/subscription-manager.service';
+import {
+  SubscriptionManagerService,
+  type Feature,
+} from '@/server/services/subscription-manager.service';
 
 // Direct environment variable access for linting compatibility
 const getAppUrl = (): string => {

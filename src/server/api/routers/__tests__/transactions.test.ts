@@ -684,143 +684,155 @@ describe('Transactions Router - Full tRPC Integration', () => {
     });
   });
 
-  describe.skip('markAsSubscription', () => {
+  describe('markAsSubscription', () => {
     it('should mark transaction as subscription manually', async () => {
       const nonSubTransaction = {
         ...mockTransactions[1]!,
         isSubscription: false,
+        bankAccount: {
+          id: 'acc-1',
+          name: 'Checking Account',
+          isoCurrencyCode: 'USD',
+        },
       };
-      const updatedTransaction = { ...nonSubTransaction, isSubscription: true };
 
-      getMockDb().transaction.findUnique.mockResolvedValueOnce(
+      const mockSubscription = {
+        id: 'sub-new',
+        userId: 'user-1',
+        name: 'Starbucks Coffee',
+        amount: new Decimal(5.25),
+        currency: 'USD',
+        frequency: 'monthly',
+        category: 'Food & Drink',
+        detectionConfidence: 1.0,
+        provider: { name: 'Starbucks', type: 'manual' },
+        lastBilling: nonSubTransaction.date,
+      };
+
+      getMockDb().transaction.findFirst.mockResolvedValueOnce(
         nonSubTransaction
       );
-      getMockDb().transaction.update.mockResolvedValueOnce(updatedTransaction);
+      getMockDb().subscription.findFirst.mockResolvedValueOnce(null);
+      getMockDb().subscription.create.mockResolvedValueOnce(mockSubscription);
+      getMockDb().transaction.update.mockResolvedValueOnce({
+        ...nonSubTransaction,
+        isSubscription: true,
+        subscriptionId: 'sub-new',
+      });
 
-      // Method not implemented yet
-      // const result = await caller.markAsSubscription({
-      //   id: 'txn-2',
-      //   isSubscription: true,
-      // });
-
-      // expect(result).toEqual({ success: true });
-
-      expect(db.transaction.update).toHaveBeenCalledWith({
-        where: {
-          id: 'txn-2',
-          userId: 'user-1',
+      const result = await caller.markAsSubscription({
+        transactionId: 'txn-2',
+        subscriptionData: {
+          name: 'Starbucks Coffee',
+          category: 'Food & Drink',
+          frequency: 'monthly',
+          description: 'Coffee subscription',
         },
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.subscription).toEqual(mockSubscription);
+      expect(db.subscription.create).toHaveBeenCalledWith({
         data: {
-          isSubscription: true,
-          confidence: 1.0, // Manual marking gets full confidence
+          userId: 'user-1',
+          name: 'Starbucks Coffee',
+          description: 'Coffee subscription',
+          category: 'Food & Drink',
+          amount: nonSubTransaction.amount,
+          currency: 'USD',
+          frequency: 'monthly',
+          lastBilling: nonSubTransaction.date,
+          detectionConfidence: 1.0,
+          provider: {
+            name: 'Starbucks',
+            type: 'manual',
+          },
         },
       });
     });
 
-    it('should unmark transaction as subscription', async () => {
-      const subTransaction = mockTransactions[0]!;
-      const updatedTransaction = { ...subTransaction, isSubscription: false };
+    it('should handle transaction not found', async () => {
+      getMockDb().transaction.findFirst.mockResolvedValueOnce(null);
 
-      getMockDb().transaction.findUnique.mockResolvedValueOnce(subTransaction);
-      getMockDb().transaction.update.mockResolvedValueOnce(updatedTransaction);
-
-      // Method not implemented yet
-      // const result = await caller.markAsSubscription({
-      //   id: 'txn-1',
-      //   isSubscription: false,
-      // });
-
-      // expect(result).toEqual({ success: true });
-
-      expect(db.transaction.update).toHaveBeenCalledWith({
-        where: {
-          id: 'txn-1',
-          userId: 'user-1',
-        },
-        data: {
-          isSubscription: false,
-          confidence: 0,
-          subscriptionId: null,
-        },
-      });
+      await expect(
+        caller.markAsSubscription({
+          transactionId: 'nonexistent',
+          subscriptionData: {
+            name: 'Test Service',
+            frequency: 'monthly',
+          },
+        })
+      ).rejects.toThrow('Transaction not found');
     });
   });
 
-  describe.skip('detectSubscription', () => {
+  describe('detectSubscription', () => {
     it('should detect subscription for transaction', async () => {
-      const transaction = mockTransactions[1]!;
-      const detectionResult = {
-        isSubscription: true,
-        confidence: 0.85,
-        frequency: 'monthly' as const,
-        merchantName: 'Starbucks',
-        averageAmount: 5.25,
-        nextBillingDate: new Date('2024-08-20'),
+      const transaction = {
+        ...mockTransactions[1]!,
+        bankAccount: {
+          id: 'acc-1',
+          userId: 'user-1',
+          name: 'Checking Account',
+        },
       };
 
-      getMockDb().transaction.findUnique.mockResolvedValueOnce(transaction);
+      const similarTransactions = [
+        {
+          ...transaction,
+          id: 'txn-similar-1',
+          date: new Date('2024-06-20'),
+        },
+        {
+          ...transaction,
+          id: 'txn-similar-2',
+          date: new Date('2024-05-20'),
+        },
+      ];
 
-      // Mock subscription detector
-      const mockDetector = {
-        detectSingleTransaction: vi.fn().mockResolvedValue(detectionResult),
-        createSubscriptionsFromDetection: vi.fn().mockResolvedValue({
-          created: 1,
-          updated: 0,
-          skipped: 0,
-          errors: 0,
-        }),
-      };
-
-      vi.doMock('@/server/services/subscription-detector', () => ({
-        SubscriptionDetector: vi.fn().mockImplementation(() => mockDetector),
-      }));
-
-      // Method not implemented yet
-      // const result = await caller.detectSubscription({ id: 'txn-2' });
-
-      // expect(result).toEqual({
-      //   detected: true,
-      //   confidence: 0.85,
-      //   frequency: 'monthly',
-      //   merchantName: 'Starbucks',
-      //   subscriptionCreated: true,
-      // });
-
-      expect(mockDetector.detectSingleTransaction).toHaveBeenCalledWith(
-        'txn-2'
+      getMockDb().transaction.findFirst.mockResolvedValueOnce(transaction);
+      getMockDb().transaction.findMany.mockResolvedValueOnce(
+        similarTransactions
       );
+
+      const result = await caller.detectSubscription({
+        transactionId: 'txn-2',
+      });
+
+      expect(result.isRecurring).toBe(true);
+      expect(result.confidence).toBeGreaterThan(0);
+      expect(result.frequency).toBe('monthly');
+      expect(result.merchantName).toBe(transaction.merchantName);
+      expect(result.similarTransactions).toBe(2);
     });
 
     it('should handle no subscription detected', async () => {
-      const transaction = mockTransactions[1]!;
-
-      getMockDb().transaction.findUnique.mockResolvedValueOnce(transaction);
-
-      const mockDetector = {
-        detectSingleTransaction: vi.fn().mockResolvedValue(null),
-        createSubscriptionsFromDetection: vi.fn(),
+      const transaction = {
+        ...mockTransactions[1]!,
+        bankAccount: {
+          id: 'acc-1',
+          userId: 'user-1',
+          name: 'Checking Account',
+        },
       };
 
-      vi.doMock('@/server/services/subscription-detector', () => ({
-        SubscriptionDetector: vi.fn().mockImplementation(() => mockDetector),
-      }));
+      getMockDb().transaction.findFirst.mockResolvedValueOnce(transaction);
+      getMockDb().transaction.findMany.mockResolvedValueOnce([]); // No similar transactions
 
-      // Method not implemented yet
-      // const result = await caller.detectSubscription({ id: 'txn-2' });
+      const result = await caller.detectSubscription({
+        transactionId: 'txn-2',
+      });
 
-      // expect(result).toEqual({
-      //   detected: false,
-      //   confidence: 0,
-      //   subscriptionCreated: false,
-      // });
+      expect(result.isRecurring).toBe(false);
+      expect(result.confidence).toBe(0);
+      expect(result.frequency).toBeNull();
+      expect(result.similarTransactions).toBe(0);
+      expect(result.recommendation).toContain('No recurring pattern detected');
     });
   });
 
-  describe.skip('getStats', () => {
+  describe('getStats', () => {
     it('should return comprehensive transaction statistics', async () => {
-      // Also need to mock count at the top
-      getMockDb().transaction.count.mockResolvedValue(3);
-
       getMockDb()
         .transaction.count.mockResolvedValueOnce(100) // total
         .mockResolvedValueOnce(25) // subscriptions
@@ -834,11 +846,8 @@ describe('Transactions Router - Full tRPC Integration', () => {
           _sum: { amount: new Decimal(-350.25) },
         } as TransactionAggregateResult); // subscription spent
 
-      // Method not implemented yet - temporarily skip test
-      // const result = await caller.getStats();
+      const result = await caller.getStats({});
 
-      // TODO: Enable when getStats is implemented
-      /*
       expect(result).toEqual({
         totalTransactions: 100,
         subscriptionTransactions: 25,
@@ -848,25 +857,28 @@ describe('Transactions Router - Full tRPC Integration', () => {
         averageTransactionAmount: 12.51,
         subscriptionPercentage: 25,
       });
-      */
     });
 
     it('should handle zero transactions', async () => {
-      getMockDb().transaction.count.mockResolvedValue(0);
+      getMockDb()
+        .transaction.count.mockResolvedValueOnce(0) // total
+        .mockResolvedValueOnce(0) // subscriptions
+        .mockResolvedValueOnce(0); // pending
 
-      getMockDb().transaction.aggregate.mockResolvedValue({
-        _sum: { amount: null },
-      } as TransactionAggregateResult);
+      getMockDb()
+        .transaction.aggregate.mockResolvedValueOnce({
+          _sum: { amount: null },
+        } as TransactionAggregateResult) // total spent
+        .mockResolvedValueOnce({
+          _sum: { amount: null },
+        } as TransactionAggregateResult); // subscription spent
 
-      // Method not implemented yet
-      // const result = await caller.getStats(); // Method not implemented yet
+      const result = await caller.getStats({});
 
-      // TODO: Enable when getStats is implemented
-      /*
       expect(result.totalTransactions).toBe(0);
       expect(result.totalSpent).toBe(0);
       expect(result.averageTransactionAmount).toBe(0);
-      */
+      expect(result.subscriptionPercentage).toBe(0);
     });
   });
 

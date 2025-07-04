@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import React, { useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -116,26 +117,38 @@ export function AddSubscriptionModal({
     },
   });
 
-  const onSubmit = (data: AddSubscriptionFormData) => {
-    const provider = data.providerName
-      ? {
-          name: data.providerName,
-          website: data.providerWebsite ?? null,
-        }
-      : undefined;
+  const onSubmit = useCallback(
+    (data: AddSubscriptionFormData) => {
+      const provider = data.providerName
+        ? {
+            name: data.providerName,
+            website: data.providerWebsite ?? null,
+          }
+        : undefined;
 
-    createMutation.mutate({
-      name: data.name,
-      description: data.description,
-      amount: data.amount,
-      currency: data.currency,
-      frequency: data.frequency,
-      category: data.category,
-      notes: data.notes,
-      nextBilling: data.nextBilling,
-      provider,
-    });
-  };
+      createMutation.mutate({
+        name: data.name,
+        description: data.description,
+        amount: data.amount,
+        currency: data.currency,
+        frequency: data.frequency,
+        category: data.category,
+        notes: data.notes,
+        nextBilling: data.nextBilling,
+        provider,
+      });
+    },
+    [createMutation]
+  );
+
+  // Optimized amount change handler
+  const handleAmountChange = useCallback(
+    (field: { onChange: (value: number) => void }) =>
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        field.onChange(parseFloat(e.target.value));
+      },
+    []
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -227,9 +240,7 @@ export function AddSubscriptionModal({
                         placeholder="19.99"
                         aria-required="true"
                         {...field}
-                        onChange={e =>
-                          field.onChange(parseFloat(e.target.value))
-                        }
+                        onChange={handleAmountChange(field)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -248,7 +259,7 @@ export function AddSubscriptionModal({
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger aria-required="true">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -279,7 +290,7 @@ export function AddSubscriptionModal({
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger aria-required="true">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>

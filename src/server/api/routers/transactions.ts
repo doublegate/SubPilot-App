@@ -330,7 +330,7 @@ export const transactionsRouter = createTRPCRouter({
               ? t.category[0]
               : 'Other';
           acc[category] ??= 0;
-          acc[category] = (acc[category] ?? 0) + t.amount.toNumber();
+          acc[category] += t.amount.toNumber();
           return acc;
         },
         {} as Record<string, number>
@@ -424,5 +424,288 @@ export const transactionsRouter = createTRPCRouter({
         .sort((a, b) => b.occurrences - a.occurrences);
 
       return recurringPatterns;
+    }),
+
+  /**
+   * Manually mark transaction as subscription
+   */
+  markAsSubscription: protectedProcedure
+    .input(
+      z.object({
+        transactionId: z.string(),
+        subscriptionData: z.object({
+          name: z.string(),
+          category: z.string().optional(),
+          frequency: z.enum([
+            'monthly',
+            'yearly',
+            'weekly',
+            'quarterly',
+            'biannual',
+          ]),
+          description: z.string().optional(),
+        }),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify transaction ownership
+      const transaction = await ctx.db.transaction.findFirst({
+        where: {
+          id: input.transactionId,
+          bankAccount: {
+            userId: ctx.session.user.id,
+          },
+        },
+        include: {
+          bankAccount: true,
+        },
+      });
+
+      if (!transaction) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Transaction not found',
+        });
+      }
+
+      // Create or find existing subscription
+      let subscription = await ctx.db.subscription.findFirst({
+        where: {
+          userId: ctx.session.user.id,
+          name: input.subscriptionData.name,
+          amount: transaction.amount,
+        },
+      });
+
+      if (!subscription) {
+        // Create new subscription
+        subscription = await ctx.db.subscription.create({
+          data: {
+            userId: ctx.session.user.id,
+            name: input.subscriptionData.name,
+            description: input.subscriptionData.description,
+            category: input.subscriptionData.category,
+            amount: transaction.amount,
+            currency: transaction.bankAccount.isoCurrencyCode,
+            frequency: input.subscriptionData.frequency,
+            lastBilling: transaction.date,
+            detectionConfidence: 1.0, // Manual marking = 100% confidence
+            provider: {
+              name: transaction.merchantName ?? input.subscriptionData.name,
+              type: 'manual',
+            },
+          },
+        });
+      }
+
+      // Link transaction to subscription
+      await ctx.db.transaction.update({
+        where: { id: input.transactionId },
+        data: {
+          subscriptionId: subscription.id,
+          isSubscription: true,
+        },
+      });
+
+      return {
+        subscription,
+        success: true,
+        message: 'Transaction marked as subscription successfully',
+      };
+    }),
+
+  /**
+   * AI-powered subscription detection for single transaction
+   */
+  detectSubscription: protectedProcedure
+    .input(
+      z.object({
+        transactionId: z.string(),
+        forceDetection: z.boolean().optional().default(false),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify transaction ownership
+      const transaction = await ctx.db.transaction.findFirst({
+        where: {
+          id: input.transactionId,
+          bankAccount: {
+            userId: ctx.session.user.id,
+          },
+        },
+        include: {
+          bankAccount: true,
+        },
+      });
+
+      if (!transaction) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Transaction not found',
+        });
+      }
+
+      if (transaction.isSubscription && !input.forceDetection) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Transaction is already marked as subscription',
+        });
+      }
+
+      // Get similar transactions for pattern analysis
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const similarTransactions = await ctx.db.transaction.findMany({
+        where: {
+          bankAccount: {
+            userId: ctx.session.user.id,
+          },
+          merchantName: transaction.merchantName,
+          amount: {
+            gte: transaction.amount.mul(0.95), // ±5% tolerance
+            lte: transaction.amount.mul(1.05),
+          },
+          date: { gte: sixMonthsAgo },
+          id: { not: transaction.id },
+        },
+        orderBy: { date: 'desc' },
+        take: 10,
+      });
+
+      // Simple pattern analysis
+      const isRecurring = similarTransactions.length >= 2;
+      let frequency: string | null = null;
+      let confidence = 0;
+
+      if (isRecurring) {
+        // Calculate frequency based on transaction dates
+        const dates = [
+          transaction.date,
+          ...similarTransactions.map(t => t.date),
+        ].sort();
+        const daysBetween = [];
+
+        for (let i = 1; i < dates.length; i++) {
+          const diff = Math.abs(dates[i]!.getTime() - dates[i - 1]!.getTime());
+          daysBetween.push(Math.round(diff / (1000 * 60 * 60 * 24)));
+        }
+
+        const avgDays =
+          daysBetween.reduce((a, b) => a + b, 0) / daysBetween.length;
+
+        // Determine frequency
+        if (avgDays >= 25 && avgDays <= 35) {
+          frequency = 'monthly';
+          confidence = 0.8;
+        } else if (avgDays >= 350 && avgDays <= 375) {
+          frequency = 'yearly';
+          confidence = 0.8;
+        } else if (avgDays >= 85 && avgDays <= 95) {
+          frequency = 'quarterly';
+          confidence = 0.7;
+        } else if (avgDays >= 6 && avgDays <= 8) {
+          frequency = 'weekly';
+          confidence = 0.7;
+        } else {
+          frequency = 'monthly'; // Default fallback
+          confidence = 0.5;
+        }
+      }
+
+      return {
+        isRecurring,
+        confidence,
+        frequency,
+        merchantName: transaction.merchantName,
+        amount: transaction.amount.toNumber(),
+        similarTransactions: similarTransactions.length,
+        suggestedName: transaction.merchantName ?? transaction.description,
+        recommendation: isRecurring
+          ? `This appears to be a ${frequency} subscription with ${confidence * 100}% confidence`
+          : 'No recurring pattern detected',
+      };
+    }),
+
+  /**
+   * Get comprehensive transaction statistics
+   */
+  getStats: protectedProcedure
+    .input(
+      z.object({
+        accountId: z.string().optional(),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const where: Prisma.TransactionWhereInput = {
+        bankAccount: {
+          userId: ctx.session.user.id,
+        },
+      };
+
+      if (input.accountId) {
+        where.accountId = input.accountId;
+      }
+
+      if (input.startDate || input.endDate) {
+        where.date = {};
+        if (input.startDate) {
+          where.date.gte = input.startDate;
+        }
+        if (input.endDate) {
+          where.date.lte = input.endDate;
+        }
+      }
+
+      // Get various transaction counts
+      const [
+        totalTransactions,
+        subscriptionTransactions,
+        pendingTransactions,
+        totalSpentResult,
+        subscriptionSpentResult,
+      ] = await Promise.all([
+        ctx.db.transaction.count({ where }),
+        ctx.db.transaction.count({
+          where: { ...where, isSubscription: true },
+        }),
+        ctx.db.transaction.count({
+          where: { ...where, pending: true },
+        }),
+        ctx.db.transaction.aggregate({
+          where,
+          _sum: { amount: true },
+        }),
+        ctx.db.transaction.aggregate({
+          where: { ...where, isSubscription: true },
+          _sum: { amount: true },
+        }),
+      ]);
+
+      const totalSpent = Math.abs(
+        totalSpentResult._sum.amount?.toNumber() ?? 0
+      );
+      const subscriptionSpent = Math.abs(
+        subscriptionSpentResult._sum.amount?.toNumber() ?? 0
+      );
+      const averageTransactionAmount =
+        totalTransactions > 0 ? totalSpent / totalTransactions : 0;
+      const subscriptionPercentage =
+        totalTransactions > 0
+          ? (subscriptionTransactions / totalTransactions) * 100
+          : 0;
+
+      return {
+        totalTransactions,
+        subscriptionTransactions,
+        pendingTransactions,
+        totalSpent: Math.round(totalSpent * 100) / 100,
+        subscriptionSpent: Math.round(subscriptionSpent * 100) / 100,
+        averageTransactionAmount:
+          Math.round(averageTransactionAmount * 100) / 100,
+        subscriptionPercentage: Math.round(subscriptionPercentage * 100) / 100,
+      };
     }),
 });

@@ -450,7 +450,7 @@ class SSEManager {
     try {
       this.sendSSEMessage(connection.controller, {
         type: 'notification',
-        data: notification as any,
+        data: notification,
       });
       return true;
     } catch (error) {

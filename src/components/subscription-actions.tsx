@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { EditSubscriptionModal } from '@/components/edit-subscription-modal';
 import { ArchiveSubscriptionModal } from '@/components/archive-subscription-modal';
@@ -50,6 +50,17 @@ export function SubscriptionActions({
     router.push('/subscriptions');
   };
 
+  // Optimized click handlers with useCallback
+  const handleEditModalOpen = useCallback(() => setEditModalOpen(true), []);
+  const handleCancellationModalOpen = useCallback(
+    () => setCancellationModalOpen(true),
+    []
+  );
+  const handleArchiveModalOpen = useCallback(
+    () => setArchiveModalOpen(true),
+    []
+  );
+
   return (
     <>
       <div className="flex flex-wrap gap-4">
@@ -62,23 +73,17 @@ export function SubscriptionActions({
 
         {subscription.status === 'active' && (
           <>
-            <Button variant="outline" onClick={() => setEditModalOpen(true)}>
+            <Button variant="outline" onClick={handleEditModalOpen}>
               <Edit className="mr-2 h-4 w-4" />
               Edit Details
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => setCancellationModalOpen(true)}
-            >
+            <Button variant="outline" onClick={handleCancellationModalOpen}>
               <HelpCircle className="mr-2 h-4 w-4" />
               Cancel Guide
             </Button>
 
-            <Button
-              variant="destructive"
-              onClick={() => setArchiveModalOpen(true)}
-            >
+            <Button variant="destructive" onClick={handleArchiveModalOpen}>
               <Archive className="mr-2 h-4 w-4" />
               Mark as Cancelled
             </Button>
@@ -86,7 +91,7 @@ export function SubscriptionActions({
         )}
 
         {subscription.status === 'cancelled' && (
-          <Button variant="outline" onClick={() => setEditModalOpen(true)}>
+          <Button variant="outline" onClick={handleEditModalOpen}>
             <Edit className="mr-2 h-4 w-4" />
             Edit Details
           </Button>

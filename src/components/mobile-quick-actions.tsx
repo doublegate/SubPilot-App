@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Plus, Camera, FileDown, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -29,48 +29,67 @@ export function MobileQuickActions({
 }: MobileQuickActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const actions: QuickAction[] = [
-    {
-      icon: Plus,
-      label: 'Add Subscription',
-      onClick: () => {
-        onAddSubscription();
-        setIsOpen(false);
+  // Optimized click handlers with useCallback
+  const handleAddSubscription = useCallback(() => {
+    onAddSubscription();
+    setIsOpen(false);
+  }, [onAddSubscription]);
+
+  const handleScanReceipt = useCallback(() => {
+    onScanReceipt?.();
+    setIsOpen(false);
+  }, [onScanReceipt]);
+
+  const handleExport = useCallback(() => {
+    onExport();
+    setIsOpen(false);
+  }, [onExport]);
+
+  const handleSync = useCallback(() => {
+    onSync();
+    setIsOpen(false);
+  }, [onSync]);
+
+  // Memoized actions array
+  const actions: QuickAction[] = useMemo(
+    () => [
+      {
+        icon: Plus,
+        label: 'Add Subscription',
+        onClick: handleAddSubscription,
+        color: 'bg-blue-500',
       },
-      color: 'bg-blue-500',
-    },
-    ...(onScanReceipt
-      ? [
-          {
-            icon: Camera,
-            label: 'Scan Receipt',
-            onClick: () => {
-              onScanReceipt();
-              setIsOpen(false);
+      ...(onScanReceipt
+        ? [
+            {
+              icon: Camera,
+              label: 'Scan Receipt',
+              onClick: handleScanReceipt,
+              color: 'bg-green-500',
             },
-            color: 'bg-green-500',
-          },
-        ]
-      : []),
-    {
-      icon: FileDown,
-      label: 'Export Data',
-      onClick: () => {
-        onExport();
-        setIsOpen(false);
+          ]
+        : []),
+      {
+        icon: FileDown,
+        label: 'Export Data',
+        onClick: handleExport,
+        color: 'bg-purple-500',
       },
-      color: 'bg-purple-500',
-    },
-    {
-      icon: RefreshCw,
-      label: 'Sync Now',
-      onClick: () => {
-        onSync();
-        setIsOpen(false);
+      {
+        icon: RefreshCw,
+        label: 'Sync Now',
+        onClick: handleSync,
+        color: 'bg-cyan-500',
       },
-      color: 'bg-cyan-500',
-    },
-  ];
+    ],
+    [
+      handleAddSubscription,
+      handleScanReceipt,
+      handleExport,
+      handleSync,
+      onScanReceipt,
+    ]
+  );
 
   return (
     <div className={cn('fixed bottom-20 right-4 z-40', className)}>

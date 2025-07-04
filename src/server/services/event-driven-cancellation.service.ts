@@ -19,6 +19,34 @@ import type {
 } from '@/types/cancellation';
 import type { CancellationEventData } from '@/server/lib/event-bus';
 
+// Analytics response interfaces
+interface EventDrivenAnalyticsSummary {
+  totalRequests: number;
+  completedRequests: number;
+  failedRequests: number;
+  pendingRequests: number;
+  averageCompletionTime: number;
+  successRate: number;
+}
+
+interface EventDrivenTrend {
+  date: string;
+  requests: number;
+  completions: number;
+  failures: number;
+}
+
+type EventDrivenMethodEffectiveness = Record<
+  string,
+  {
+    totalAttempts: number;
+    successfulAttempts: number;
+    failedAttempts: number;
+    averageTime: number;
+    successRate: number;
+  }
+>;
+
 // Enhanced type definitions for event data
 interface AnalyticsEventData extends CancellationEventData {
   event: string;
@@ -59,18 +87,6 @@ function safeStringAccess(obj: unknown, property: string): string | undefined {
   if (typeof obj === 'object' && obj !== null && property in obj) {
     const value = (obj as Record<string, unknown>)[property];
     return typeof value === 'string' ? value : undefined;
-  }
-  return undefined;
-}
-
-function safeDateAccess(obj: unknown, property: string): Date | undefined {
-  if (typeof obj === 'object' && obj !== null && property in obj) {
-    const value = (obj as Record<string, unknown>)[property];
-    if (value instanceof Date) return value;
-    if (typeof value === 'string') {
-      const date = new Date(value);
-      return isNaN(date.getTime()) ? undefined : date;
-    }
   }
   return undefined;
 }
@@ -154,7 +170,10 @@ export class EventDrivenCancellationService {
       data: {
         userId,
         subscriptionId: validatedInput.subscriptionId,
-        method: (validatedInput.preferredMethod === 'webhook' ? 'automation' : validatedInput.preferredMethod) ?? 'api',
+        method:
+          (validatedInput.preferredMethod === 'webhook'
+            ? 'automation'
+            : validatedInput.preferredMethod) ?? 'api',
         priority: validatedInput.priority,
         status: validatedInput.scheduleFor ? 'scheduled' : 'pending',
         attempts: 0,
@@ -165,7 +184,9 @@ export class EventDrivenCancellationService {
     // Calculate estimated completion time
     const estimatedCompletion = this.calculateEstimatedCompletion(
       validatedInput.priority,
-      (validatedInput.preferredMethod === 'webhook' ? 'automation' : validatedInput.preferredMethod) ?? 'api'
+      (validatedInput.preferredMethod === 'webhook'
+        ? 'automation'
+        : validatedInput.preferredMethod) ?? 'api'
     );
 
     // Log the initiation
@@ -216,7 +237,10 @@ export class EventDrivenCancellationService {
         requestId: request.id,
         userId,
         subscriptionId: validatedInput.subscriptionId,
-        method: (validatedInput.preferredMethod === 'webhook' ? 'automation' : validatedInput.preferredMethod) ?? 'api',
+        method:
+          (validatedInput.preferredMethod === 'webhook'
+            ? 'automation'
+            : validatedInput.preferredMethod) ?? 'api',
         priority: validatedInput.priority,
         metadata: {
           workflowId,
@@ -258,7 +282,10 @@ export class EventDrivenCancellationService {
     const workflowData = {
       requestId,
       subscriptionId: input.subscriptionId,
-      method: (input.preferredMethod === 'webhook' ? 'automation' : input.preferredMethod) ?? 'api',
+      method:
+        (input.preferredMethod === 'webhook'
+          ? 'automation'
+          : input.preferredMethod) ?? 'api',
       priority: input.priority,
       notificationPreferences: input.notificationPreferences,
     };
@@ -438,19 +465,20 @@ export class EventDrivenCancellationService {
     );
 
     // Determine next steps
-    const nextSteps = this.determineNextSteps(request as any, workflowStatus as any);
+    const nextSteps = this.determineNextSteps(
+      request as CancellationRequestWithSubscription,
+      workflowStatus as WorkflowStatus
+    );
 
     return {
       request: {
         ...request,
-        status: request.status as any,
-        method: request.method as any,
-        priority: request.priority as any,
-        refundAmount: request.refundAmount ? parseFloat(request.refundAmount.toString()) : null,
-        subscription: request.subscription as any,
-      } as any,
-      workflow: workflowStatus as any,
-      timeline: timeline as any,
+        refundAmount: request.refundAmount
+          ? parseFloat(request.refundAmount.toString())
+          : null,
+      } as CancellationRequestWithSubscription,
+      workflow: workflowStatus as WorkflowStatus,
+      timeline: timeline as CancellationTimeline[],
       estimatedCompletion,
       nextSteps,
     };
@@ -462,7 +490,12 @@ export class EventDrivenCancellationService {
   private setupEventListeners(): void {
     // Listen for workflow progress updates
     onCancellationEvent('analytics.track', data => {
-      if (isAnalyticsEventData(data) && data.event === 'workflow.completed' && data.properties.workflowId && data.userId) {
+      if (
+        isAnalyticsEventData(data) &&
+        data.event === 'workflow.completed' &&
+        data.properties.workflowId &&
+        data.userId
+      ) {
         void this.handleWorkflowCompletion(data.userId, data.properties);
       }
     });
@@ -486,9 +519,9 @@ export class EventDrivenCancellationService {
       void (async () => {
         if (isRetryEventData(data) && data.userId) {
           if (data.willRetry) {
-            await this.handleAutomaticRetry(data as any);
+            await this.handleAutomaticRetry(data as AutoRetryData);
           } else {
-            await this.handleFinalFailure(data as any);
+            await this.handleFinalFailure(data as FinalFailureData);
           }
         }
       })();
@@ -747,9 +780,9 @@ export class EventDrivenCancellationService {
     userId: string,
     timeframe: 'day' | 'week' | 'month' = 'month'
   ): Promise<{
-    summary: any;
-    trends: any[];
-    methodEffectiveness: any;
+    summary: EventDrivenAnalyticsSummary;
+    trends: EventDrivenTrend[];
+    methodEffectiveness: EventDrivenMethodEffectiveness;
   }> {
     const endDate = new Date();
     const startDate = new Date();
@@ -821,7 +854,9 @@ export class EventDrivenCancellationService {
         status: t.status,
         method: t.method,
       })),
-      methodEffectiveness: this.processMethodStats(methodStats as any),
+      methodEffectiveness: this.processMethodStats(
+        methodStats as MethodStatistic[]
+      ),
     };
   }
 
@@ -842,7 +877,8 @@ export class EventDrivenCancellationService {
       };
 
       methodData[stat.method]!.total += stat._count.method;
-      methodData[stat.method]![stat.status as keyof MethodData] += stat._count.method;
+      methodData[stat.method]![stat.status as keyof MethodData] +=
+        stat._count.method;
     }
 
     // Calculate success rates

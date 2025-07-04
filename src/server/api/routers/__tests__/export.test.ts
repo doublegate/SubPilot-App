@@ -3,61 +3,62 @@ import { createInnerTRPCContext } from '@/server/api/trpc';
 import { exportRouter } from '../export';
 import type { Session } from 'next-auth';
 
-// Mock ExportService
-const mockExportResult = {
-  filename: 'subscriptions_export.csv',
-  content: 'CSV content here',
-  mimeType: 'text/csv',
-};
-
-const mockScheduledExport = {
-  id: 'export_123',
-  userId: 'user_123',
-  status: 'scheduled',
-  format: 'csv' as const,
-  scheduledFor: new Date(),
-  createdAt: new Date(),
-};
-
-const mockExportHistory = [
-  {
-    id: 'export_1',
-    filename: 'export1.csv',
-    status: 'completed',
+// Hoist mock data to avoid vitest hoisting issues
+const mockData = vi.hoisted(() => ({
+  mockExportCSVResult: {
+    filename: 'subscriptions_export.csv',
+    content: 'CSV content here',
+    mimeType: 'text/csv',
+  },
+  mockExportJSONResult: {
+    filename: 'subscriptions_export.json',
+    content: '{"data": "JSON content"}',
+    mimeType: 'application/json',
+  },
+  mockExportPDFResult: {
+    filename: 'subscriptions_export.pdf',
+    content: Buffer.from('PDF content'),
+    mimeType: 'application/pdf',
+  },
+  mockExportExcelResult: {
+    filename: 'subscriptions_export.xlsx',
+    content: Buffer.from('Excel content'),
+    mimeType:
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  },
+  mockScheduledExport: {
+    id: 'export_123',
+    userId: 'user_123',
+    status: 'scheduled',
+    format: 'csv' as const,
+    scheduledFor: new Date(),
     createdAt: new Date(),
   },
-  {
-    id: 'export_2',
-    filename: 'export2.json',
-    status: 'completed',
-    createdAt: new Date(),
-  },
-];
+  mockExportHistory: [
+    {
+      id: 'export_1',
+      filename: 'export1.csv',
+      status: 'completed',
+      createdAt: new Date(),
+    },
+    {
+      id: 'export_2',
+      filename: 'export2.json',
+      status: 'completed',
+      createdAt: new Date(),
+    },
+  ],
+}));
 
+// Mock ExportService with hoisted mock data
 vi.mock('@/server/services/export.service', () => ({
   ExportService: {
-    generateCSV: vi.fn().mockResolvedValue(mockExportResult),
-    generateJSON: vi.fn().mockResolvedValue({
-      ...mockExportResult,
-      filename: 'subscriptions_export.json',
-      content: '{"data": "JSON content"}',
-      mimeType: 'application/json',
-    }),
-    generatePDF: vi.fn().mockResolvedValue({
-      ...mockExportResult,
-      filename: 'subscriptions_export.pdf',
-      content: Buffer.from('PDF content'),
-      mimeType: 'application/pdf',
-    }),
-    generateExcel: vi.fn().mockResolvedValue({
-      ...mockExportResult,
-      filename: 'subscriptions_export.xlsx',
-      content: Buffer.from('Excel content'),
-      mimeType:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    }),
-    scheduleExport: vi.fn().mockResolvedValue(mockScheduledExport),
-    getExportHistory: vi.fn().mockResolvedValue(mockExportHistory),
+    generateCSV: vi.fn().mockResolvedValue(mockData.mockExportCSVResult),
+    generateJSON: vi.fn().mockResolvedValue(mockData.mockExportJSONResult),
+    generatePDF: vi.fn().mockResolvedValue(mockData.mockExportPDFResult),
+    generateExcel: vi.fn().mockResolvedValue(mockData.mockExportExcelResult),
+    scheduleExport: vi.fn().mockResolvedValue(mockData.mockScheduledExport),
+    getExportHistory: vi.fn().mockResolvedValue(mockData.mockExportHistory),
   },
 }));
 
@@ -96,9 +97,9 @@ describe('exportRouter', () => {
 
       expect(result).toEqual({
         success: true,
-        filename: 'subscriptions_export.csv',
-        content: 'CSV content here',
-        mimeType: 'text/csv',
+        filename: mockData.mockExportCSVResult.filename,
+        content: mockData.mockExportCSVResult.content,
+        mimeType: mockData.mockExportCSVResult.mimeType,
       });
     });
 
@@ -152,9 +153,9 @@ describe('exportRouter', () => {
 
       expect(result).toEqual({
         success: true,
-        filename: 'subscriptions_export.json',
-        content: '{"data": "JSON content"}',
-        mimeType: 'application/json',
+        filename: mockData.mockExportJSONResult.filename,
+        content: mockData.mockExportJSONResult.content,
+        mimeType: mockData.mockExportJSONResult.mimeType,
       });
     });
 
@@ -182,9 +183,9 @@ describe('exportRouter', () => {
 
       expect(result).toEqual({
         success: true,
-        filename: 'subscriptions_export.pdf',
-        content: Buffer.from('PDF content'),
-        mimeType: 'application/pdf',
+        filename: mockData.mockExportPDFResult.filename,
+        content: mockData.mockExportPDFResult.content,
+        mimeType: mockData.mockExportPDFResult.mimeType,
       });
     });
 
@@ -212,10 +213,9 @@ describe('exportRouter', () => {
 
       expect(result).toEqual({
         success: true,
-        filename: 'subscriptions_export.xlsx',
-        content: Buffer.from('Excel content'),
-        mimeType:
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        filename: mockData.mockExportExcelResult.filename,
+        content: mockData.mockExportExcelResult.content,
+        mimeType: mockData.mockExportExcelResult.mimeType,
       });
     });
 
@@ -250,7 +250,7 @@ describe('exportRouter', () => {
 
       expect(result).toEqual({
         success: true,
-        scheduledExport: mockScheduledExport,
+        scheduledExport: mockData.mockScheduledExport,
       });
     });
 
@@ -306,7 +306,7 @@ describe('exportRouter', () => {
       const result = await caller.getExportHistory({});
 
       expect(result).toEqual({
-        exports: mockExportHistory,
+        exports: mockData.mockExportHistory,
       });
     });
 
@@ -370,7 +370,7 @@ describe('exportRouter', () => {
 
       // Mock CSV to succeed but JSON to fail
       vi.mocked(ExportService.generateCSV).mockResolvedValueOnce(
-        mockExportResult
+        mockData.mockExportCSVResult
       );
       vi.mocked(ExportService.generateJSON).mockRejectedValueOnce(
         new Error('JSON failed')

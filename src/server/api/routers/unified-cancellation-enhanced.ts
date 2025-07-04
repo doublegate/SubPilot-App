@@ -447,7 +447,11 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           subscriptionId: request.subscriptionId,
           reason: input.userNotes ?? 'Retry of failed cancellation',
           priority: request.priority as 'low' | 'normal' | 'high',
-          preferredMethod: (input.forceMethod ?? 'auto') as 'auto' | 'api' | 'automation' | 'lightweight',
+          preferredMethod: (input.forceMethod ?? 'auto') as
+            | 'auto'
+            | 'api'
+            | 'automation'
+            | 'lightweight',
           userPreferences: {
             allowFallback: !input.forceMethod, // Don't allow fallback if method is forced
             maxRetries: input.escalate ? 5 : 3,
@@ -1221,7 +1225,7 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
 
         const items = requests.map(request => {
           // Type guard for metadata access
-          const metadata = (request as any).metadata as Record<string, unknown> | null;
+          const metadata = request.metadata as Record<string, unknown> | null;
           const orchestrationId =
             metadata &&
             typeof metadata === 'object' &&
@@ -1277,8 +1281,14 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
           },
           summary: {
             totalRequests: total,
-            byStatus: await getStatusBreakdown(ctx.db as any, ctx.session.user.id),
-            byMethod: await getMethodBreakdown(ctx.db as any, ctx.session.user.id),
+            byStatus: await getStatusBreakdown(
+              ctx.db as DatabaseClient,
+              ctx.session.user.id
+            ),
+            byMethod: await getMethodBreakdown(
+              ctx.db as DatabaseClient,
+              ctx.session.user.id
+            ),
           },
         };
       } catch (error) {
@@ -1321,11 +1331,13 @@ export const unifiedCancellationEnhancedRouter = createTRPCRouter({
         );
         const analytics = await orchestrator.getUnifiedAnalytics(
           ctx.session.user.id,
-          input.timeframe === 'quarter' || input.timeframe === 'year' ? 'month' : input.timeframe
+          input.timeframe === 'quarter' || input.timeframe === 'year'
+            ? 'month'
+            : input.timeframe
         );
 
         // Add additional insights using the exported function
-        const insights = generateAnalyticsInsights(analytics as any);
+        const insights = generateAnalyticsInsights(analytics as AnalyticsData);
 
         return {
           ...analytics,

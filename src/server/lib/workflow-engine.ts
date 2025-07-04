@@ -391,7 +391,10 @@ class SimpleWorkflowEngine extends EventEmitter {
       const { expression, trueStep, falseStep } = step.config;
 
       // Simple expression evaluation (in production, use a proper expression engine)
-      const result = this.evaluateCondition(expression as string, instance.variables);
+      const result = this.evaluateCondition(
+        expression as string,
+        instance.variables
+      );
 
       return {
         conditionResult: result,
@@ -436,7 +439,10 @@ class SimpleWorkflowEngine extends EventEmitter {
         parallelResults: results.map((result, index) => ({
           stepId: (parallelSteps as string[])[index] as WorkflowValue,
           status: result.status,
-          value: result.status === 'fulfilled' ? (result.value as unknown as WorkflowValue) : undefined,
+          value:
+            result.status === 'fulfilled'
+              ? (result.value as unknown as WorkflowValue)
+              : undefined,
           error:
             result.status === 'rejected'
               ? (result.reason as Error)?.message
@@ -444,6 +450,42 @@ class SimpleWorkflowEngine extends EventEmitter {
         })) as WorkflowValue,
       } as Record<string, WorkflowValue>;
     });
+  }
+
+  /**
+   * Convert WorkflowValue to simple types for expr-eval
+   */
+  private convertToSimpleValues(
+    variables: Record<string, WorkflowValue>
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(variables)) {
+      result[key] = this.simplifyValue(value);
+    }
+    return result;
+  }
+
+  private simplifyValue(value: WorkflowValue): unknown {
+    if (
+      value === null ||
+      value === undefined ||
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return value.map(v => this.simplifyValue(v));
+    }
+    if (typeof value === 'object') {
+      const result: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(value)) {
+        result[k] = this.simplifyValue(v);
+      }
+      return result;
+    }
+    return value;
   }
 
   /**
@@ -458,8 +500,10 @@ class SimpleWorkflowEngine extends EventEmitter {
       const parser = new Parser();
 
       // Parse the expression and evaluate with variables
+      // Convert WorkflowValue to basic types for expr-eval
+      const simpleVariables = this.convertToSimpleValues(variables);
       const expr = parser.parse(expression);
-      const result = expr.evaluate(variables as any) as unknown;
+      const result = expr.evaluate(simpleVariables) as unknown;
 
       return Boolean(result);
     } catch (error) {

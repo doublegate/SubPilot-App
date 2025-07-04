@@ -25,10 +25,10 @@ export interface JobOptions {
   timeout?: number;
 }
 
-export interface Job {
+export interface Job<T = JobData> {
   id: string;
   type: string;
-  data: JobData;
+  data: T;
   options: JobOptions;
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'delayed';
   attempts: number;
@@ -62,14 +62,14 @@ class MockJobQueue {
   /**
    * Add a job to the queue
    */
-  async addJob(
+  async addJob<T = JobData>(
     type: string,
-    data: JobData,
+    data: T,
     options: JobOptions = {}
   ): Promise<string> {
     const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    const job: Job = {
+    const job: Job<T> = {
       id: jobId,
       type,
       data,
@@ -112,11 +112,11 @@ class MockJobQueue {
   /**
    * Register a job processor
    */
-  registerProcessor(
+  registerProcessor<T = JobData>(
     type: string,
-    processor: (job: Job) => Promise<JobResult>
+    processor: (job: Job<T>) => Promise<JobResult>
   ): void {
-    this.processors.set(type, processor);
+    this.processors.set(type, processor as (job: Job) => Promise<JobResult>);
     console.log(`[JobQueue] Registered processor for job type: ${type}`);
   }
 

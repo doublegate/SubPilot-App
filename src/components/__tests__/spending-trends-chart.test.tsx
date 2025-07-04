@@ -92,7 +92,9 @@ describe('SpendingTrendsChart', () => {
 
     // Should still render controls
     expect(screen.getByText('Total')).toBeInTheDocument();
-    expect(screen.getByText('0.0%')).toBeInTheDocument();
+    // Find first occurrence of 0.0% trend
+    const trendElements = screen.getAllByText('0.0%');
+    expect(trendElements[0]).toBeInTheDocument();
   });
 
   it('handles single data point', () => {
@@ -100,7 +102,9 @@ describe('SpendingTrendsChart', () => {
 
     // Should render without errors
     expect(screen.getByText('Total Spending Trend')).toBeInTheDocument();
-    expect(screen.getByText('0.0%')).toBeInTheDocument();
+    // Find first occurrence of 0.0% trend
+    const trendElements = screen.getAllByText('0.0%');
+    expect(trendElements[0]).toBeInTheDocument();
   });
 
   it('formats currency correctly', () => {
@@ -179,7 +183,8 @@ describe('SpendingTrendsChart', () => {
     render(<SpendingTrendsChart data={zeroData} />);
 
     // Should not crash and show 0% trends
-    expect(screen.getByText('0.0%')).toBeInTheDocument();
+    const trendElements = screen.getAllByText('0.0%');
+    expect(trendElements[0]).toBeInTheDocument();
   });
 
   it('handles large numbers correctly', () => {

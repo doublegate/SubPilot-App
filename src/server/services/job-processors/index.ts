@@ -7,7 +7,7 @@ import { AnalyticsJobProcessor } from './analytics-processor';
 import { AuditLogger } from '@/server/lib/audit-logger';
 
 // Advanced Generic Types for Job Processing
-type JobProcessor<T = unknown> = (job: Job) => Promise<JobResult>;
+type JobProcessor<T = unknown> = (job: Job<T>) => Promise<JobResult>;
 
 // Template Literal Types for Job Type Safety
 type JobTypePrefix = 'cancellation' | 'notification' | 'webhook' | 'analytics';
@@ -23,7 +23,12 @@ type JobAction =
   | 'confirm'
   | 'update_status'
   | 'bulk_send'
-  | 'process_data';
+  | 'process_data'
+  | 'retry'
+  | 'timeout'
+  | 'cleanup'
+  | 'audit'
+  | 'sync';
 type JobType = `${JobTypePrefix}.${JobAction}`;
 
 // Conditional Types for Job Data Validation

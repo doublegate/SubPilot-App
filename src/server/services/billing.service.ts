@@ -3,6 +3,26 @@ import type Stripe from 'stripe';
 import { TRPCError } from '@trpc/server';
 import { getStripe, STRIPE_WEBHOOK_EVENTS } from '../lib/stripe';
 
+// Extended Stripe interfaces for proper typing
+interface StripeSubscriptionWithPeriods extends Stripe.Subscription {
+  current_period_start: number;
+  current_period_end: number;
+  trial_start?: number;
+  trial_end?: number;
+  cancel_at_period_end: boolean;
+  canceled_at?: number;
+}
+
+interface StripeInvoiceWithDetails extends Stripe.Invoice {
+  subscription: string | Stripe.Subscription | null;
+  customer: string | Stripe.Customer | null;
+  payment_intent: string | Stripe.PaymentIntent | null;
+}
+
+interface StripeCustomerReference {
+  id: string;
+}
+
 export class BillingService {
   constructor(private prisma: PrismaClient) {}
 
@@ -294,9 +314,9 @@ export class BillingService {
       throw new Error('Invalid session metadata');
     }
 
-    const subscription = await getStripe().subscriptions.retrieve(
+    const subscription = (await getStripe().subscriptions.retrieve(
       session.subscription as string
-    );
+    )) as StripeSubscriptionWithPeriods;
 
     // Create or update user subscription
     await this.prisma.userSubscription.upsert({
@@ -308,13 +328,13 @@ export class BillingService {
         stripeSubscriptionId: subscription.id,
         stripePriceId: subscription.items.data[0]?.price.id,
         status: subscription.status,
-        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
-        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
-        trialStart: (subscription as any).trial_start
-          ? new Date((subscription as any).trial_start * 1000)
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        trialStart: subscription.trial_start
+          ? new Date(subscription.trial_start * 1000)
           : null,
-        trialEnd: (subscription as any).trial_end
-          ? new Date((subscription as any).trial_end * 1000)
+        trialEnd: subscription.trial_end
+          ? new Date(subscription.trial_end * 1000)
           : null,
       },
       update: {
@@ -323,13 +343,13 @@ export class BillingService {
         stripeSubscriptionId: subscription.id,
         stripePriceId: subscription.items.data[0]?.price.id,
         status: subscription.status,
-        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
-        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
-        trialStart: (subscription as any).trial_start
-          ? new Date((subscription as any).trial_start * 1000)
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        trialStart: subscription.trial_start
+          ? new Date(subscription.trial_start * 1000)
           : null,
-        trialEnd: (subscription as any).trial_end
-          ? new Date((subscription as any).trial_end * 1000)
+        trialEnd: subscription.trial_end
+          ? new Date(subscription.trial_end * 1000)
           : null,
       },
     });
@@ -356,7 +376,7 @@ export class BillingService {
    * Handle subscription updated
    */
   async handleSubscriptionUpdated(
-    subscription: Stripe.Subscription
+    subscription: StripeSubscriptionWithPeriods
   ): Promise<void> {
     const userSubscription = await this.prisma.userSubscription.findUnique({
       where: { stripeSubscriptionId: subscription.id },
@@ -374,11 +394,11 @@ export class BillingService {
       where: { id: userSubscription.id },
       data: {
         status: subscription.status,
-        currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
-        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
-        cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
-        canceledAt: (subscription as any).canceled_at
-          ? new Date((subscription as any).canceled_at * 1000)
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        canceledAt: subscription.canceled_at
+          ? new Date(subscription.canceled_at * 1000)
           : null,
       },
     });
@@ -453,19 +473,24 @@ export class BillingService {
   /**
    * Handle successful payment
    */
-  async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
-    if (!(invoice as any).subscription || !(invoice as any).customer) {
+  async handlePaymentSucceeded(
+    invoice: StripeInvoiceWithDetails
+  ): Promise<void> {
+    if (!invoice.subscription || !invoice.customer) {
       return;
     }
 
+    const customerId =
+      typeof invoice.customer === 'string'
+        ? invoice.customer
+        : (invoice.customer as StripeCustomerReference).id;
+
     const userSubscription = await this.prisma.userSubscription.findUnique({
-      where: { stripeCustomerId: (invoice as any).customer as string },
+      where: { stripeCustomerId: customerId },
     });
 
     if (!userSubscription) {
-      console.error(
-        `No user subscription found for customer ${typeof (invoice as any).customer === 'string' ? (invoice as any).customer : (invoice as any).customer.id}`
-      );
+      console.error(`No user subscription found for customer ${customerId}`);
       return;
     }
 
@@ -478,7 +503,7 @@ export class BillingService {
         amount: invoice.amount_paid / 100,
         currency: invoice.currency,
         stripeInvoiceId: invoice.id,
-        stripePaymentIntentId: (invoice as any).payment_intent as string | undefined,
+        stripePaymentIntentId: invoice.payment_intent,
         status: 'completed',
         metadata: {
           invoiceNumber: invoice.number,
@@ -494,26 +519,29 @@ export class BillingService {
   /**
    * Handle failed payment
    */
-  async handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
-    if (!(invoice as any).subscription || !(invoice as any).customer) {
+  async handlePaymentFailed(invoice: StripeInvoiceWithDetails): Promise<void> {
+    if (!invoice.subscription || !invoice.customer) {
       return;
     }
 
+    const customerId =
+      typeof invoice.customer === 'string'
+        ? invoice.customer
+        : (invoice.customer as StripeCustomerReference).id;
+
     const userSubscription = await this.prisma.userSubscription.findUnique({
-      where: { stripeCustomerId: (invoice as any).customer as string },
+      where: { stripeCustomerId: customerId },
     });
 
     if (!userSubscription) {
-      console.error(
-        `No user subscription found for customer ${typeof (invoice as any).customer === 'string' ? (invoice as any).customer : (invoice as any).customer.id}`
-      );
+      console.error(`No user subscription found for customer ${customerId}`);
       return;
     }
 
     // Update subscription status if needed
-    if ((invoice as any).subscription) {
+    if (invoice.subscription) {
       const subscription = await getStripe().subscriptions.retrieve(
-        (invoice as any).subscription as string
+        invoice.subscription
       );
       await this.prisma.userSubscription.update({
         where: { id: userSubscription.id },

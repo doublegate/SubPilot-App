@@ -11,6 +11,7 @@ const mockPrisma = {
   },
   subscription: {
     findMany: vi.fn(),
+    findUnique: vi.fn(),
   },
 } as unknown as PrismaClient;
 
@@ -153,13 +154,13 @@ describe('AnalyticsService', () => {
         {
           id: '3',
           date: new Date('2024-01-20'),
-          amount: new Decimal(15), // 50% increase
+          amount: new Decimal(25), // Increase to ensure high severity (25 > 13.33 * 1.5 = 20)
           isSubscription: true,
           subscriptionId: 'sub-1',
           subscription: {
             id: 'sub-1',
             name: 'Netflix',
-            amount: new Decimal(15),
+            amount: new Decimal(25),
           },
         },
       ];
@@ -167,6 +168,12 @@ describe('AnalyticsService', () => {
       vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(
         mockTransactions as any
       );
+
+      vi.mocked(mockPrisma.subscription.findUnique).mockResolvedValue({
+        id: 'sub-1',
+        name: 'Netflix',
+        amount: new Decimal(25),
+      } as any);
 
       const result = await service.detectAnomalies('user-123');
 
@@ -212,6 +219,12 @@ describe('AnalyticsService', () => {
       vi.mocked(mockPrisma.transaction.findMany).mockResolvedValue(
         mockTransactions as any
       );
+
+      vi.mocked(mockPrisma.subscription.findUnique).mockResolvedValue({
+        id: 'sub-1',
+        name: 'Spotify',
+        amount: new Decimal(10),
+      } as any);
 
       const result = await service.detectAnomalies('user-123');
 

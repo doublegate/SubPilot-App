@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/trpc/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -90,7 +90,7 @@ export default function AdvancedAnalyticsPage() {
   );
 
   // Handle report success/error with useEffect
-  React.useEffect(() => {
+  useEffect(() => {
     if (generateReportQuery.isSuccess && generateReportQuery.data) {
       toast.success('Report generated successfully');
       // Handle report download or display
@@ -147,7 +147,7 @@ export default function AdvancedAnalyticsPage() {
   ];
 
   // Prepare time series data with predictions
-  const timeSeriesWithPredictions = React.useMemo(() => {
+  const timeSeriesWithPredictions = useMemo(() => {
     if (!timeSeries || !predictions) return [];
 
     const actualData = timeSeries.map(point => ({
@@ -171,7 +171,7 @@ export default function AdvancedAnalyticsPage() {
   }, [timeSeries, predictions]);
 
   // Prepare comparison data
-  const comparisonData = React.useMemo(() => {
+  const comparisonData = useMemo(() => {
     if (!comparisons || !categoryBreakdown) return [];
 
     return categoryBreakdown.map(cat => ({
@@ -184,7 +184,7 @@ export default function AdvancedAnalyticsPage() {
   }, [comparisons, categoryBreakdown]);
 
   // Prepare heatmap data (dummy data for now, would need real daily data)
-  const heatmapData = React.useMemo(() => {
+  const heatmapData = useMemo(() => {
     const data = [];
     const currentYear = new Date().getFullYear();
 

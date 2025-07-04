@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, CreditCard, PiggyBank, TrendingUp } from 'lucide-react';
@@ -32,6 +33,12 @@ export function AccountList({
   onSelectAccount,
   selectedAccountId,
 }: AccountListProps) {
+  // Optimized click handler with useCallback
+  const handleAccountClick = useCallback(
+    (accountId: string) => () => onSelectAccount?.(accountId),
+    [onSelectAccount]
+  );
+
   const getAccountIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'depository':
@@ -79,7 +86,7 @@ export function AccountList({
           className={`cursor-pointer transition-all hover:shadow-lg ${
             selectedAccountId === account.id ? 'ring-2 ring-primary' : ''
           } ${!account.isActive ? 'opacity-60' : ''}`}
-          onClick={() => onSelectAccount?.(account.id)}
+          onClick={handleAccountClick(account.id)}
         >
           <CardHeader className="pb-4">
             <div className="flex items-start justify-between">

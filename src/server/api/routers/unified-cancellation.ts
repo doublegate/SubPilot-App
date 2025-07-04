@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-import { UnifiedCancellationOrchestratorService } from '@/server/services/unified-cancellation-orchestrator.service';
+import {
+  UnifiedCancellationOrchestratorService,
+  type UnifiedCancellationRequest,
+} from '@/server/services/unified-cancellation-orchestrator.service';
 
 // Type definitions for return data
 interface MethodHealth {
@@ -46,18 +49,21 @@ export const unifiedCancellationRouter = createTRPCRouter({
     .input(UnifiedCancellationRequestInput)
     .mutation(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-      
+
       // Transform method types for compatibility
       const transformedInput = {
         ...input,
-        method: input.method === 'manual' ? 'lightweight' : 
-                input.method === 'automation' ? 'event_driven' : 
-                input.method
+        method:
+          input.method === 'manual'
+            ? 'lightweight'
+            : input.method === 'automation'
+              ? 'event_driven'
+              : input.method,
       };
-      
+
       return await orchestrator.initiateCancellation(
         ctx.session.user.id,
-        transformedInput as any
+        transformedInput as UnifiedCancellationRequest
       );
     }),
 

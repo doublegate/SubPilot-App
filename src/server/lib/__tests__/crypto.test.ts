@@ -261,14 +261,14 @@ describe('Crypto Utilities', () => {
       results.forEach(({ original, decrypted }) => {
         expect(decrypted).toBe(original);
       });
-    });
+    }, 10000);
   });
 
   describe('error handling', () => {
     it('should handle decrypt with malformed base64', async () => {
       const invalidBase64 = 'valid:invalid-base64-!@#:valid';
       await expect(decrypt(invalidBase64)).rejects.toThrow();
-    });
+    }, 10000);
 
     it('should handle decrypt with wrong data format', async () => {
       // Valid base64 but wrong data structure

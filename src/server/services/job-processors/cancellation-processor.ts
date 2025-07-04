@@ -11,12 +11,6 @@ import type {
 } from '@prisma/client';
 
 // Types for cancellation processing
-type CancellationRequestUpdate = Partial<
-  Pick<
-    CancellationRequest,
-    'status' | 'errorMessage' | 'completedAt'
-  >
->;
 
 type ProviderApiResponse = {
   success: boolean;
@@ -87,7 +81,7 @@ export class CancellationJobProcessor {
       // Validation passed
       await this.db.cancellationLog.create({
         data: {
-          requestId: requestId as string,
+          requestId: requestId!,
           action: 'validation_passed',
           status: 'success',
           message: 'Cancellation request validation completed successfully',
@@ -104,7 +98,7 @@ export class CancellationJobProcessor {
         },
       };
     } catch (error) {
-      await this.logError(requestId as string, 'validation_failed', error);
+      await this.logError(requestId!, 'validation_failed', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Validation failed',
@@ -138,7 +132,7 @@ export class CancellationJobProcessor {
 
       await this.db.cancellationLog.create({
         data: {
-          requestId: requestId as string,
+          requestId: requestId!,
           action: 'api_cancellation_started',
           status: 'info',
           message: `Starting API cancellation for provider: ${request.provider?.name ?? 'unknown'}`,
@@ -180,11 +174,11 @@ export class CancellationJobProcessor {
 
         await this.db.cancellationLog.create({
           data: {
-            requestId: requestId as string,
+            requestId: requestId!,
             action: 'api_cancellation_completed',
             status: 'success',
             message: `API cancellation completed. Confirmation: ${apiResult.confirmationCode}`,
-            metadata: apiResult as any,
+            metadata: apiResult as ProviderApiResponse,
           },
         });
 
@@ -205,7 +199,7 @@ export class CancellationJobProcessor {
       } else {
         // API failed, but might be retryable
         await this.logError(
-          requestId as string,
+          requestId!,
           'api_cancellation_failed',
           new Error(apiResult.error)
         );
@@ -217,7 +211,7 @@ export class CancellationJobProcessor {
         };
       }
     } catch (error) {
-      await this.logError(requestId as string, 'api_cancellation_error', error);
+      await this.logError(requestId!, 'api_cancellation_error', error);
       return {
         success: false,
         error:
@@ -252,7 +246,7 @@ export class CancellationJobProcessor {
 
       await this.db.cancellationLog.create({
         data: {
-          requestId: requestId as string,
+          requestId: requestId!,
           action: 'webhook_cancellation_initiated',
           status: 'info',
           message: 'Webhook cancellation initiated, waiting for confirmation',
@@ -291,7 +285,7 @@ export class CancellationJobProcessor {
         };
       }
     } catch (error) {
-      await this.logError(requestId as string, 'webhook_cancellation_error', error);
+      await this.logError(requestId!, 'webhook_cancellation_error', error);
       return {
         success: false,
         error:
@@ -329,7 +323,7 @@ export class CancellationJobProcessor {
       // Generate manual cancellation instructions
       const instructions = this.generateManualInstructions(
         request.subscription,
-        request.provider ?? ({} as any)
+        request.provider ?? ({} as CancellationProvider)
       );
 
       // Update request with manual instructions
@@ -344,7 +338,7 @@ export class CancellationJobProcessor {
 
       await this.db.cancellationLog.create({
         data: {
-          requestId: requestId as string,
+          requestId: requestId!,
           action: 'manual_instructions_generated',
           status: 'success',
           message: 'Manual cancellation instructions generated',
@@ -368,7 +362,7 @@ export class CancellationJobProcessor {
         },
       };
     } catch (error) {
-      await this.logError(requestId as string, 'manual_instructions_error', error);
+      await this.logError(requestId!, 'manual_instructions_error', error);
       return {
         success: false,
         error:
@@ -414,7 +408,7 @@ export class CancellationJobProcessor {
       // Final confirmation tasks
       await this.db.cancellationLog.create({
         data: {
-          requestId: requestId as string,
+          requestId: requestId!,
           action: 'cancellation_confirmed',
           status: 'success',
           message: 'Cancellation confirmed and finalized',
@@ -443,7 +437,7 @@ export class CancellationJobProcessor {
         },
       };
     } catch (error) {
-      await this.logError(requestId as string, 'confirmation_error', error);
+      await this.logError(requestId!, 'confirmation_error', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Confirmation failed',
@@ -459,28 +453,30 @@ export class CancellationJobProcessor {
     const { requestId, userId, status, data: updateData = {} } = job.data;
 
     try {
-      const updates: CancellationRequestUpdate = {
-        status: status as any,
+      const updates: Record<string, unknown> = {
+        status: status as string,
       };
 
       // Add additional data based on status
       if (status === 'completed') {
         updates.completedAt = new Date();
-        const data = updateData as any;
+        const data = updateData as Record<string, unknown>;
         if (data.confirmationCode) {
-          (updates as any).confirmationCode = data.confirmationCode;
+          updates.confirmationCode = data.confirmationCode;
         }
         if (data.effectiveDate) {
-          (updates as any).effectiveDate = new Date(data.effectiveDate);
+          updates.effectiveDate = new Date(data.effectiveDate as string);
         }
         if (data.refundAmount) {
-          (updates as any).refundAmount = new Prisma.Decimal(data.refundAmount);
+          updates.refundAmount = new Prisma.Decimal(
+            data.refundAmount as number
+          );
         }
       } else if (status === 'failed') {
-        const data = updateData as any;
+        const data = updateData as Record<string, unknown>;
         if (data.error) {
           updates.errorMessage = data.error;
-          (updates as any).errorCode = data.errorCode ?? 'PROCESSING_ERROR';
+          updates.errorCode = data.errorCode ?? 'PROCESSING_ERROR';
         }
       }
 
@@ -516,11 +512,11 @@ export class CancellationJobProcessor {
 
       await this.db.cancellationLog.create({
         data: {
-          requestId: requestId as string,
+          requestId: requestId!,
           action: 'status_updated',
           status: 'success',
-          message: `Status updated to: ${status}`,
-          metadata: updateData as any,
+          message: `Status updated to: ${typeof status === 'string' ? status : String(status)}`,
+          metadata: updateData as Record<string, unknown>,
         },
       });
 
@@ -532,7 +528,7 @@ export class CancellationJobProcessor {
         },
       };
     } catch (error) {
-      await this.logError(requestId as string, 'status_update_error', error);
+      await this.logError(requestId!, 'status_update_error', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Status update failed',
@@ -546,7 +542,7 @@ export class CancellationJobProcessor {
   /**
    * Simulate calling provider API for cancellation
    */
-  private async callProviderApi(request: CancellationRequest): Promise<
+  private async callProviderApi(_request: CancellationRequest): Promise<
     ProviderApiResponse & {
       success: boolean;
       confirmationCode?: string;
@@ -573,7 +569,7 @@ export class CancellationJobProcessor {
       // Sometimes include refund
       const refundAmount =
         Math.random() < 0.3
-          ? 10.00 // Simplified refund amount
+          ? 10.0 // Simplified refund amount
           : undefined;
 
       return {
@@ -720,7 +716,7 @@ export class CancellationJobProcessor {
 
     await this.db.cancellationLog.create({
       data: {
-        requestId: requestId as string,
+        requestId: requestId,
         action,
         status: 'failure',
         message: errorMessage,

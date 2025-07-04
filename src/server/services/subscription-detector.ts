@@ -587,7 +587,7 @@ export class SubscriptionDetector {
             id: string,
             userId: string,
             force: boolean
-          ) => Promise<{ category: string; confidence: number; }>;
+          ) => Promise<{ category: string; confidence: number }>;
         }
       | undefined;
     try {

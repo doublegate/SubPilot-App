@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import crypto from 'crypto';
 
 // Mock environment variables with hoisted pattern
@@ -11,6 +11,21 @@ const mockEnv = vi.hoisted(() => ({
 vi.mock('@/env', () => ({
   env: mockEnv,
 }));
+
+// Also mock process.env since the implementation uses it directly
+const originalProcessEnv = process.env;
+beforeEach(() => {
+  process.env = {
+    ...originalProcessEnv,
+    PLAID_ENV: mockEnv.PLAID_ENV,
+    PLAID_WEBHOOK_SECRET: mockEnv.PLAID_WEBHOOK_SECRET,
+    API_SECRET: mockEnv.API_SECRET,
+  };
+});
+
+afterEach(() => {
+  process.env = originalProcessEnv;
+});
 
 // Import after mocks are set up
 const { WebhookSecurity } = await import('../webhook-security');
@@ -31,6 +46,8 @@ describe('WebhookSecurity', () => {
     it('should validate signature format in production', () => {
       // Mock production environment
       mockEnv.PLAID_ENV = 'production';
+      process.env.PLAID_ENV = 'production';
+      process.env.PLAID_WEBHOOK_SECRET = 'test-plaid-secret';
 
       const result = WebhookSecurity.verifyPlaidWebhook(testPayload, {});
 
@@ -134,6 +151,7 @@ describe('WebhookSecurity', () => {
 
       // Mock API_SECRET
       mockEnv.API_SECRET = testSecret;
+      process.env.API_SECRET = testSecret;
 
       const result = WebhookSecurity.verifyRequestSignature(
         payload,

@@ -17,6 +17,38 @@ interface MockCategorizationService {
 vi.mock('@/server/services/categorization.service');
 vi.mock('@/server/services/cache.service');
 
+// Mock database
+vi.mock('@/server/db', () => ({
+  db: {
+    category: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    merchantAlias: {
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+    },
+    subscription: {
+      findMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    transaction: {
+      findMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
+  },
+}));
+
+// Import db after mocking
+import { db } from '@/server/db';
+
 const mockSession: Session = {
   user: {
     id: 'test-user-id',
@@ -232,7 +264,7 @@ describe('categorizationRouter', () => {
         },
       ];
 
-      ctx.db.category.findMany = vi.fn().mockResolvedValue(dbCategories);
+      vi.mocked(db.category.findMany).mockResolvedValue(dbCategories);
 
       const result = await categorizationRouter
         .createCaller(ctx)
@@ -315,7 +347,7 @@ describe('categorizationRouter', () => {
         originalName: 'netflix',
         normalizedName: 'Netflix Premium',
         category: 'streaming',
-        confidence: 0.99,
+        confidence: { toNumber: () => 0.99 }, // Mock Decimal object
         isVerified: true,
         usageCount: 100,
         createdAt: new Date(),

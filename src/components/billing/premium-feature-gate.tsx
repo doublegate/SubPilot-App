@@ -66,9 +66,14 @@ export function PremiumFeatureGate({
     return (
       <>
         {fallback ? (
-          <div onClick={handleClick} className="cursor-pointer">
+          <button
+            onClick={handleClick}
+            className="w-full cursor-pointer border-none bg-transparent p-0 text-left"
+            aria-label="Upgrade to access premium feature"
+            type="button"
+          >
             {fallback}
-          </div>
+          </button>
         ) : null}
 
         <UpgradeModal

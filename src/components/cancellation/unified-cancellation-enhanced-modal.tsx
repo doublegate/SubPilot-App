@@ -153,7 +153,9 @@ export function UnifiedCancellationEnhancedModal({
     | 'manual-instructions'
     | 'completed'
   >('eligibility');
-  const [selectedMethod, setSelectedMethod] = useState<'auto' | 'api' | 'automation' | 'lightweight'>('auto');
+  const [selectedMethod, setSelectedMethod] = useState<
+    'auto' | 'api' | 'automation' | 'lightweight'
+  >('auto');
   const [cancellationReason, setCancellationReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orchestrationId, setOrchestrationId] = useState<string | null>(null);
@@ -188,7 +190,7 @@ export function UnifiedCancellationEnhancedModal({
 
   const initiateCancellation =
     api.unifiedCancellationEnhanced.initiate.useMutation({
-      onSuccess: (data) => {
+      onSuccess: data => {
         // Convert API response to local CancellationResult format
         const localResult: CancellationResult = {
           status: data.status,
@@ -197,14 +199,17 @@ export function UnifiedCancellationEnhancedModal({
           requestId: data.requestId,
           method: data.method,
           estimatedCompletion: data.estimatedCompletion?.toISOString(),
-          manualInstructions: data.manualInstructions ? {
-            provider: data.manualInstructions.provider,
-            instructions: data.manualInstructions.steps ?? [],
-            contactInfo: data.manualInstructions.contactInfo,
-            estimatedTime: data.manualInstructions.provider.estimatedTime ?? 30,
-            tips: data.manualInstructions.tips,
-            warnings: data.manualInstructions.warnings,
-          } : undefined,
+          manualInstructions: data.manualInstructions
+            ? {
+                provider: data.manualInstructions.provider,
+                instructions: data.manualInstructions.steps ?? [],
+                contactInfo: data.manualInstructions.contactInfo,
+                estimatedTime:
+                  data.manualInstructions.provider.estimatedTime ?? 30,
+                tips: data.manualInstructions.tips,
+                warnings: data.manualInstructions.warnings,
+              }
+            : undefined,
           metadata: data.metadata,
           confirmationCode: data.confirmationCode,
           effectiveDate: data.effectiveDate,
@@ -216,14 +221,19 @@ export function UnifiedCancellationEnhancedModal({
         setEstimatedCompletion(data.estimatedCompletion ?? null);
 
         if (data.status === 'requires_manual') {
-          setManualInstructions(data.manualInstructions ? {
-            provider: data.manualInstructions.provider,
-            instructions: data.manualInstructions.steps ?? [],
-            contactInfo: data.manualInstructions.contactInfo,
-            estimatedTime: data.manualInstructions.provider.estimatedTime ?? 30,
-            tips: data.manualInstructions.tips,
-            warnings: data.manualInstructions.warnings,
-          } : null);
+          setManualInstructions(
+            data.manualInstructions
+              ? {
+                  provider: data.manualInstructions.provider,
+                  instructions: data.manualInstructions.steps ?? [],
+                  contactInfo: data.manualInstructions.contactInfo,
+                  estimatedTime:
+                    data.manualInstructions.provider.estimatedTime ?? 30,
+                  tips: data.manualInstructions.tips,
+                  warnings: data.manualInstructions.warnings,
+                }
+              : null
+          );
           setCurrentStep('manual-instructions');
         } else if (data.status === 'completed') {
           setCurrentStep('completed');
@@ -656,7 +666,11 @@ export function UnifiedCancellationEnhancedModal({
               capabilities?.methods && (
                 <RadioGroup
                   value={selectedMethod}
-                  onValueChange={(value) => setSelectedMethod(value as 'auto' | 'api' | 'automation' | 'lightweight')}
+                  onValueChange={value =>
+                    setSelectedMethod(
+                      value as 'auto' | 'api' | 'automation' | 'lightweight'
+                    )
+                  }
                 >
                   <div className="space-y-3">
                     {capabilities.methods.map((method: CancellationMethod) => (
@@ -1098,28 +1112,29 @@ export function UnifiedCancellationEnhancedModal({
             )}
 
             {/* Warnings */}
-            {manualInstructions.warnings && manualInstructions.warnings.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-orange-500" />
-                    Important Warnings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {manualInstructions.warnings?.map(
-                      (warning: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="mt-0.5 text-orange-500">•</span>
-                          <span className="text-sm">{warning}</span>
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
+            {manualInstructions.warnings &&
+              manualInstructions.warnings.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertCircle className="h-5 w-5 text-orange-500" />
+                      Important Warnings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {manualInstructions.warnings?.map(
+                        (warning: string, index: number) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="mt-0.5 text-orange-500">•</span>
+                            <span className="text-sm">{warning}</span>
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
 
             <Separator />
 

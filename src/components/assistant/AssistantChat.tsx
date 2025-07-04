@@ -68,8 +68,7 @@ export function AssistantChat({
     if (isOpen && initialMessage && !conversationId) {
       void startConversation.mutate({ initialMessage });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialMessage, conversationId]);
+  }, [isOpen, initialMessage, conversationId, startConversation]);
 
   // Auto-focus input
   useEffect(() => {
@@ -78,7 +77,7 @@ export function AssistantChat({
     }
   }, [isOpen]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     if (!message.trim()) return;
 
     if (!conversationId) {
@@ -86,31 +85,34 @@ export function AssistantChat({
     } else {
       sendMessage.mutate({ conversationId, message });
     }
-  };
+  }, [message, conversationId, startConversation, sendMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    },
+    [handleSendMessage]
+  );
 
-  const handleNewConversation = () => {
+  const handleNewConversation = useCallback(() => {
     setConversationId(null);
     setMessage('');
     setShowHistory(false);
-  };
+  }, []);
 
-  const handleSelectConversation = (id: string) => {
+  const handleSelectConversation = useCallback((id: string) => {
     setConversationId(id);
     setShowHistory(false);
-  };
+  }, []);
 
   const toggleHistory = useCallback(() => {
     setShowHistory(!showHistory);
   }, [showHistory]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       if (scrollAreaRef.current) {
         const scrollContainer = scrollAreaRef.current.querySelector(
@@ -121,11 +123,11 @@ export function AssistantChat({
         }
       }
     }, 100);
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [conversation?.messages]);
+  }, [conversation?.messages, scrollToBottom]);
 
   if (!isOpen) return null;
 
@@ -220,7 +222,7 @@ export function AssistantChat({
                   ref={inputRef}
                   value={message}
                   onChange={e => setMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="Ask me anything about your subscriptions..."
                   disabled={
                     sendMessage.isPending || startConversation.isPending

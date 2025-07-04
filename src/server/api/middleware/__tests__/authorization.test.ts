@@ -416,7 +416,7 @@ describe('AuthorizationMiddleware', () => {
         expect.objectContaining({
           where: {
             id: resourceId,
-            account: {
+            bankAccount: {
               userId,
             },
           },

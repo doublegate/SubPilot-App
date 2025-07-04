@@ -1,4 +1,4 @@
-import { type PrismaClient } from '@prisma/client';
+import { type PrismaClient, type Subscription } from '@prisma/client';
 import { CancellationService } from './cancellation.service';
 import { EventDrivenCancellationService } from './event-driven-cancellation.service';
 import { LightweightCancellationService } from './lightweight-cancellation.service';
@@ -30,6 +30,101 @@ export interface UnifiedCancellationRequest {
   };
 }
 
+// Provider capability details interface
+interface ProviderCapabilityDetails {
+  apiSupport: boolean;
+  automationSupport: boolean;
+  manualInstructions: boolean;
+  successRate?: number;
+  averageCompletionTime?: number;
+  lastUpdated?: Date;
+}
+
+// Error details interface
+interface CancellationErrorDetails {
+  stackTrace?: string;
+  httpStatus?: number;
+  originalError?: string;
+  timestamp?: Date;
+  context?: Record<string, unknown>;
+}
+
+// Service completion data interface
+interface ServiceCompletionData {
+  requestId: string;
+  orchestrationId?: string;
+  userId: string;
+  status: string;
+  message?: string;
+  subscriptionId?: string;
+  service?: string;
+  metadata?: Record<string, unknown>;
+}
+
+// Cancellation status response interface
+interface CancellationStatusResponse {
+  success: boolean;
+  message?: string;
+  status?: {
+    requestId: string;
+    status: string;
+    method?: string;
+    attempts?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+    subscription?: {
+      id: string;
+      name: string;
+      amount: number;
+      currency: string;
+    };
+    logs?: Array<{
+      id: string;
+      level: string;
+      message: string;
+      createdAt: Date;
+    }>;
+  };
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+// Analytics interfaces
+interface AnalyticsWhereClause {
+  createdAt?: {
+    gte?: Date;
+    lte?: Date;
+  };
+  userId?: string;
+  status?: string | { in: string[] };
+}
+
+interface UnifiedAnalyticsResponse {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  pendingRequests: number;
+  successRate: number;
+  methodStats: Array<{
+    method: string;
+    _count: { method: number };
+  }>;
+  recentRequests: Array<{
+    id: string;
+    status: string;
+    method: string;
+    createdAt: Date;
+    subscription: {
+      name: string;
+      amount: number;
+      currency: string;
+    };
+  }>;
+  timeframe: string;
+}
+
 // Unified cancellation result interface
 export interface UnifiedCancellationResult {
   success: boolean;
@@ -54,7 +149,7 @@ export interface UnifiedCancellationResult {
     expectedDuration?: string;
   };
   metadata?: {
-    providerCapabilities?: any;
+    providerCapabilities?: ProviderCapabilityDetails;
     fallbackReason?: string;
     originalMethod?: string;
     retryCount?: number;
@@ -62,7 +157,7 @@ export interface UnifiedCancellationResult {
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: CancellationErrorDetails;
   };
 }
 
@@ -432,7 +527,7 @@ export class UnifiedCancellationOrchestratorService {
   private async routeToService(
     method: 'api' | 'event_driven' | 'lightweight',
     userId: string,
-    subscription: any,
+    subscription: Subscription,
     input: UnifiedCancellationRequest,
     requestId: string,
     orchestrationId: string
@@ -518,11 +613,11 @@ export class UnifiedCancellationOrchestratorService {
    */
   private async routeToApiService(
     userId: string,
-    subscription: any,
+    subscription: Subscription,
     input: UnifiedCancellationRequest,
-    baseResult: any
+    baseResult: Partial<UnifiedCancellationResult>
   ): Promise<UnifiedCancellationResult> {
-    const result = await this.cancellationService.initiateCancellation(userId, {
+    void this.cancellationService.initiateCancellation(userId, {
       subscriptionId: input.subscriptionId,
       notes: input.reason,
       priority: input.priority ?? 'normal',
@@ -542,9 +637,9 @@ export class UnifiedCancellationOrchestratorService {
    */
   private async routeToEventDrivenService(
     userId: string,
-    subscription: any,
+    subscription: Subscription,
     input: UnifiedCancellationRequest,
-    baseResult: any
+    baseResult: Partial<UnifiedCancellationResult>
   ): Promise<UnifiedCancellationResult> {
     // Start workflow for automation
     const workflowId = await this.workflowEngine.startWorkflow(
@@ -575,9 +670,9 @@ export class UnifiedCancellationOrchestratorService {
    */
   private async routeToLightweightService(
     userId: string,
-    subscription: any,
+    subscription: Subscription,
     input: UnifiedCancellationRequest,
-    baseResult: any
+    baseResult: Partial<UnifiedCancellationResult>
   ): Promise<UnifiedCancellationResult> {
     const result =
       await this.lightweightService.provideCancellationInstructions(userId, {
@@ -632,7 +727,7 @@ export class UnifiedCancellationOrchestratorService {
 
       try {
         await this.logOrchestrationActivity(
-          baseResult.orchestrationId as string,
+          baseResult.orchestrationId,
           'fallback_attempt',
           'info',
           `Attempting fallback to ${fallbackMethod} method`,
@@ -661,8 +756,8 @@ export class UnifiedCancellationOrchestratorService {
           userId,
           subscription,
           input,
-          baseResult.requestId as string,
-          baseResult.orchestrationId as string
+          baseResult.requestId,
+          baseResult.orchestrationId
         );
 
         // Update result with fallback metadata
@@ -726,7 +821,7 @@ export class UnifiedCancellationOrchestratorService {
    */
   private async handleServiceCompletion(
     service: string,
-    data: any
+    data: ServiceCompletionData
   ): Promise<void> {
     try {
       const orchestrationId =
@@ -765,7 +860,7 @@ export class UnifiedCancellationOrchestratorService {
    */
   private async handleServiceFailure(
     service: string,
-    data: any
+    data: ServiceCompletionData
   ): Promise<void> {
     try {
       const orchestrationId =
@@ -804,7 +899,7 @@ export class UnifiedCancellationOrchestratorService {
    */
   private async handleServiceProgress(
     service: string,
-    data: any
+    data: ServiceCompletionData
   ): Promise<void> {
     try {
       const orchestrationId =
@@ -841,7 +936,9 @@ export class UnifiedCancellationOrchestratorService {
   /**
    * Handle manual confirmation events
    */
-  private async handleManualConfirmation(data: any): Promise<void> {
+  private async handleManualConfirmation(
+    data: ServiceCompletionData
+  ): Promise<void> {
     try {
       await this.logOrchestrationActivity(
         data.orchestrationId,
@@ -944,7 +1041,7 @@ export class UnifiedCancellationOrchestratorService {
     activityType: string,
     level: 'info' | 'success' | 'error',
     message: string,
-    metadata: any = {}
+    metadata: Record<string, unknown> = {}
   ): Promise<void> {
     try {
       // Create orchestration log entry
@@ -1070,7 +1167,7 @@ export class UnifiedCancellationOrchestratorService {
           stats.totalTime += metadata.completionTime;
         }
 
-        providerStats.set(metadata.provider as string, stats);
+        providerStats.set(metadata.provider, stats);
       }
     }
 
@@ -1149,7 +1246,7 @@ export class UnifiedCancellationOrchestratorService {
     userId: string,
     requestId: string,
     _orchestrationId?: string
-  ): Promise<any> {
+  ): Promise<CancellationStatusResponse> {
     try {
       const request = await this.db.cancellationRequest.findUnique({
         where: { id: requestId },
@@ -1279,14 +1376,21 @@ export class UnifiedCancellationOrchestratorService {
         options?.forceMethod ??
         (options?.escalate ? 'event_driven' : request.method);
 
+      // Ensure retryMethod is a valid method type
+      const validMethod = ['api', 'event_driven', 'lightweight'].includes(
+        retryMethod
+      )
+        ? (retryMethod as 'api' | 'event_driven' | 'lightweight')
+        : 'lightweight';
+
       // Re-orchestrate the cancellation
       return this.initiateCancellation(userId, {
         subscriptionId: request.subscription.id,
         reason: 'Retry',
-        method: retryMethod as any,
+        method: validMethod,
         priority: options?.escalate ? 'high' : 'normal',
         userPreference: {
-          preferredMethod: retryMethod as any,
+          preferredMethod: validMethod,
         },
       });
     } catch (error) {
@@ -1327,7 +1431,10 @@ export class UnifiedCancellationOrchestratorService {
         return {
           success: false,
           message: 'Cancellation request not found or not cancellable',
-          error: 'REQUEST_NOT_FOUND: Cancellation request not found or not cancellable',
+          error: {
+            code: 'REQUEST_NOT_FOUND',
+            message: 'Cancellation request not found or not cancellable',
+          },
         };
       }
 
@@ -1370,10 +1477,13 @@ export class UnifiedCancellationOrchestratorService {
   /**
    * Get unified analytics data
    */
-  async getUnifiedAnalytics(userId?: string, timeframe?: string): Promise<any> {
+  async getUnifiedAnalytics(
+    userId?: string,
+    timeframe?: string
+  ): Promise<UnifiedAnalyticsResponse> {
     const dateFilter = this.getDateFilterForTimeframe(timeframe);
 
-    const where: any = {
+    const where: AnalyticsWhereClause = {
       ...dateFilter,
       ...(userId ? { userId } : {}),
     };
@@ -1452,7 +1562,9 @@ export class UnifiedCancellationOrchestratorService {
   /**
    * Helper to get date filter for analytics timeframe
    */
-  private getDateFilterForTimeframe(timeframe?: string): any {
+  private getDateFilterForTimeframe(timeframe?: string): {
+    createdAt?: { gte: Date };
+  } {
     if (!timeframe) return {};
 
     const now = new Date();

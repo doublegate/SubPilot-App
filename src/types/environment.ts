@@ -331,8 +331,6 @@ export const createEnvAccessor = <T extends keyof TypedEnvironment>(
     if (value === undefined) {
       throw new Error(`Required environment variable ${key} is not set`);
     }
-    return assertEnvironmentType(key, value) as NonNullable<
-      TypedEnvironment[K]
-    >;
+    return assertEnvironmentType(key, value)!;
   },
 });

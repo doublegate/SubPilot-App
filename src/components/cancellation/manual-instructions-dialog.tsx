@@ -160,7 +160,7 @@ function getEstimatedTime(
   instructions: CancellationInstructions
 ): string | undefined {
   return hasProperty(instructions, 'estimatedTime')
-    ? instructions.estimatedTime as string | undefined
+    ? (instructions.estimatedTime as string | undefined)
     : undefined;
 }
 

@@ -174,13 +174,23 @@ describe('CancellationModal', () => {
       />
     );
 
+    // Find radio buttons by value attribute
+    const radioButtons = screen.getAllByRole('radio');
+    const normalRadio = radioButtons.find(
+      radio => (radio as HTMLInputElement).value === 'normal'
+    );
+    const highRadio = radioButtons.find(
+      radio => (radio as HTMLInputElement).value === 'high'
+    );
+
+    expect(normalRadio).toBeDefined();
+    expect(highRadio).toBeDefined();
+
     // Normal should be selected by default
-    const normalRadio = screen.getByDisplayValue('normal');
     expect(normalRadio).toBeChecked();
 
     // Select high priority
-    const highRadio = screen.getByDisplayValue('high');
-    fireEvent.click(highRadio);
+    fireEvent.click(highRadio!);
     expect(highRadio).toBeChecked();
     expect(normalRadio).not.toBeChecked();
   });
@@ -206,6 +216,15 @@ describe('CancellationModal', () => {
     const onCancellationStarted = vi.fn();
     mockInitiateMutation.mockResolvedValue({ status: 'processing' });
 
+    // Mock the mutation to call onSuccess
+    vi.mocked(api.cancellation.initiate.useMutation).mockReturnValue({
+      mutateAsync: mockInitiateMutation,
+      isPending: false,
+      onSuccess: (result: any) => {
+        onCancellationStarted();
+      },
+    } as any);
+
     render(
       <CancellationModal
         isOpen={true}
@@ -217,8 +236,15 @@ describe('CancellationModal', () => {
       />
     );
 
-    // Change priority and add notes
-    fireEvent.click(screen.getByDisplayValue('high'));
+    // Find radio buttons and change priority
+    const radioButtons = screen.getAllByRole('radio');
+    const highRadio = radioButtons.find(
+      radio => (radio as HTMLInputElement).value === 'high'
+    );
+    expect(highRadio).toBeDefined();
+    fireEvent.click(highRadio!);
+
+    // Add notes
     fireEvent.change(screen.getByPlaceholderText(/Any specific reasons/), {
       target: { value: 'Service quality issues' },
     });
@@ -233,6 +259,18 @@ describe('CancellationModal', () => {
         notes: 'Service quality issues',
       });
     });
+
+    // The onCancellationStarted will be called via the onSuccess callback
+    // We need to trigger the mutation configuration's onSuccess manually
+    const mutationConfig = vi.mocked(api.cancellation.initiate.useMutation).mock
+      .calls[0]?.[0];
+    if (mutationConfig?.onSuccess) {
+      mutationConfig.onSuccess(
+        { status: 'processing' } as any,
+        {} as any,
+        {} as any
+      );
+    }
 
     expect(onCancellationStarted).toHaveBeenCalled();
   });
@@ -263,9 +301,16 @@ describe('CancellationModal', () => {
   });
 
   it('shows loading state during submission', async () => {
+    // Mock a slow mutation to keep loading state active
+    let resolvePromise: (value: any) => void;
+    const slowPromise = new Promise(resolve => {
+      resolvePromise = resolve;
+    });
+    mockInitiateMutation.mockReturnValue(slowPromise);
+
     vi.mocked(api.cancellation.initiate.useMutation).mockReturnValue({
       mutateAsync: mockInitiateMutation,
-      isPending: true,
+      isPending: false,
     } as any);
 
     render(
@@ -279,9 +324,19 @@ describe('CancellationModal', () => {
       />
     );
 
-    expect(screen.getByText('Starting Cancellation...')).toBeInTheDocument();
+    // Click submit to trigger loading state
+    fireEvent.click(screen.getByText('Start Cancellation'));
+
+    // Now check for loading state after submission starts
+    await waitFor(() => {
+      expect(screen.getByText('Starting Cancellation...')).toBeInTheDocument();
+    });
+
     expect(screen.getByTestId('spinner-icon')).toBeInTheDocument();
-    expect(screen.getByText('Start Cancellation')).toBeDisabled();
+
+    // Button should be disabled during submission
+    const button = screen.getByText('Starting Cancellation...');
+    expect(button).toBeDisabled();
   });
 
   it('handles cancellation errors', async () => {
@@ -304,7 +359,11 @@ describe('CancellationModal', () => {
 
     // Test error handling
     if (mutationConfig?.onError) {
-      mutationConfig.onError({ message: 'Network error' } as any, {} as any, {} as any);
+      mutationConfig.onError(
+        { message: 'Network error' } as any,
+        {} as any,
+        {} as any
+      );
     }
 
     expect(toast).toHaveBeenCalledWith({
@@ -374,14 +433,22 @@ describe('CancellationModal', () => {
 
     // Test completed status
     if (mutationConfig?.onSuccess) {
-      mutationConfig.onSuccess({ status: 'completed' } as any, {} as any, {} as any);
+      mutationConfig.onSuccess(
+        { status: 'completed' } as any,
+        {} as any,
+        {} as any
+      );
       expect(toast).toHaveBeenCalledWith({
         title: 'Cancellation Started',
         description: 'Your subscription has been cancelled successfully!',
       });
 
       // Test processing status
-      mutationConfig.onSuccess({ status: 'processing' } as any, {} as any, {} as any);
+      mutationConfig.onSuccess(
+        { status: 'processing' } as any,
+        {} as any,
+        {} as any
+      );
       expect(toast).toHaveBeenCalledWith({
         title: 'Cancellation Started',
         description:
@@ -389,7 +456,11 @@ describe('CancellationModal', () => {
       });
 
       // Test pending status
-      mutationConfig.onSuccess({ status: 'pending' } as any, {} as any, {} as any);
+      mutationConfig.onSuccess(
+        { status: 'pending' } as any,
+        {} as any,
+        {} as any
+      );
       expect(toast).toHaveBeenCalledWith({
         title: 'Cancellation Started',
         description: 'Manual cancellation instructions have been generated.',

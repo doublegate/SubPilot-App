@@ -1,5 +1,9 @@
 import { TRPCError } from '@trpc/server';
-import type { PrismaClient } from '@prisma/client';
+import type {
+  PrismaClient,
+  Subscription,
+  CancellationProvider,
+} from '@prisma/client';
 import { AuditLogger } from '@/server/lib/audit-logger';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
@@ -231,14 +235,20 @@ export class CancellationService {
 
       switch (request.method) {
         case 'api':
-          result = await this.processApiCancellation(request as any);
+          result = await this.processApiCancellation(
+            request as CancellationRequestWithRelations
+          );
           break;
         case 'webhook':
-          result = await this.processWebhookCancellation(request as any);
+          result = await this.processWebhookCancellation(
+            request as CancellationRequestWithRelations
+          );
           break;
         case 'manual':
         default:
-          result = await this.processManualCancellation(request as any);
+          result = await this.processManualCancellation(
+            request as CancellationRequestWithRelations
+          );
           break;
       }
 
@@ -252,7 +262,7 @@ export class CancellationService {
           refundAmount: result.refundAmount
             ? new Prisma.Decimal(result.refundAmount)
             : null,
-          manualInstructions: result.manualInstructions as any ?? {},
+          manualInstructions: result.manualInstructions ?? {},
           completedAt: result.status === 'completed' ? new Date() : null,
           errorCode: result.error ? 'PROCESSING_ERROR' : null,
           errorMessage: result.error,
@@ -419,8 +429,8 @@ export class CancellationService {
     const subscription = request.subscription;
 
     const instructions = this.generateManualInstructions(
-      subscription as any,
-      provider as any
+      subscription as Subscription,
+      provider as CancellationProvider
     );
 
     await this.logCancellationActivity(
@@ -607,7 +617,10 @@ export class CancellationService {
       refundAmount: request.refundAmount
         ? parseFloat(request.refundAmount.toString())
         : null,
-      manualInstructions: request.manualInstructions as Record<string, unknown> | null,
+      manualInstructions: request.manualInstructions as Record<
+        string,
+        unknown
+      > | null,
       error: request.errorMessage,
     };
   }
@@ -753,7 +766,7 @@ export class CancellationService {
         action,
         status,
         message,
-        metadata: (metadata ?? {}) as any,
+        metadata: metadata ?? {},
       },
     });
   }

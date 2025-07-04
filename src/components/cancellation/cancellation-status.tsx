@@ -16,10 +16,7 @@ import { Icons } from '@/components/ui/icons';
 import { api } from '@/trpc/react';
 import { ManualInstructionsDialog } from './manual-instructions-dialog';
 import { formatDistanceToNow } from 'date-fns';
-import type {
-  CancellationInstructions,
-  ManualConfirmationData,
-} from '@/types/cancellation';
+import type { CancellationInstructions } from '@/types/cancellation';
 
 interface CancellationStatusProps {
   requestId: string;
@@ -88,11 +85,12 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
     },
   });
 
-  const confirmManualMutation = api.unifiedCancellationEnhanced.confirmManual.useMutation({
-    onSuccess: () => {
-      void refetch().catch(console.error);
-    },
-  });
+  const confirmManualMutation =
+    api.unifiedCancellationEnhanced.confirmManual.useMutation({
+      onSuccess: () => {
+        void refetch().catch(console.error);
+      },
+    });
 
   if (isLoading) {
     return (

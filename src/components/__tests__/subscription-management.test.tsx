@@ -94,14 +94,16 @@ describe('Subscription Management Components', () => {
       onSuccess: vi.fn(),
     };
 
-    it('renders add subscription modal', () => {
+    it('renders add subscription modal', async () => {
       render(<AddSubscriptionModal {...addProps} />);
 
-      expect(screen.getByText('Add Manual Subscription')).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText('Netflix Premium')
+        await screen.findByText('Add Manual Subscription')
       ).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('19.99')).toBeInTheDocument();
+      expect(
+        await screen.findByPlaceholderText('Netflix Premium')
+      ).toBeInTheDocument();
+      expect(await screen.findByPlaceholderText('19.99')).toBeInTheDocument();
     });
 
     it('has required form fields', () => {

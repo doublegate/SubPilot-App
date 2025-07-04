@@ -548,8 +548,14 @@ export const plaidRouter = createTRPCRouter({
               : [];
 
             added = [...added, ...addedTransactions] as TypedPlaidTransaction[];
-            modified = [...modified, ...modifiedTransactions] as TypedPlaidTransaction[];
-            removed = [...removed, ...removedTransactions] as TypedPlaidTransaction[];
+            modified = [
+              ...modified,
+              ...modifiedTransactions,
+            ] as TypedPlaidTransaction[];
+            removed = [
+              ...removed,
+              ...removedTransactions,
+            ] as TypedPlaidTransaction[];
 
             hasMore = syncResponse.data.has_more;
             cursor = syncResponse.data.next_cursor;

@@ -126,12 +126,24 @@ vi.mock('@/server/db', () => ({
       createMany: vi.fn(),
       deleteMany: vi.fn(),
       upsert: vi.fn(),
+      groupBy: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
     },
     notification: {
       create: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
+    },
+    subscription: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      upsert: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }));
@@ -158,6 +170,11 @@ const mockSession: Session = {
 describe('Plaid Router', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+
+    // Mock process.env for tests
+    process.env.PLAID_PRODUCTS = 'transactions,accounts';
+    process.env.PLAID_COUNTRY_CODES = 'US,CA';
+    process.env.PLAID_WEBHOOK_URL = 'https://example.com/webhooks/plaid';
 
     // Ensure isPlaidConfigured returns true by default
     const plaidClient = await import('@/server/plaid-client');
@@ -194,8 +211,8 @@ describe('Plaid Router', () => {
         products: ['transactions', 'accounts'],
         country_codes: ['US', 'CA'],
         language: 'en',
-        webhook: 'https://example.com/webhooks/plaid',
         redirect_uri: undefined,
+        webhook: 'https://example.com/webhooks/plaid',
       });
     });
 
@@ -442,6 +459,55 @@ describe('Plaid Router', () => {
       });
 
       vi.mocked(db.transaction.createMany).mockResolvedValue({ count: 1 });
+
+      // Mock subscription detection database calls
+      vi.mocked(db.transaction.groupBy).mockResolvedValue([
+        {
+          merchantName: 'Netflix',
+          _count: { id: 5 },
+          _avg: { amount: 15.99 },
+          _min: { date: new Date('2024-01-01') },
+          _max: { date: new Date('2024-06-01') },
+        },
+      ]);
+
+      vi.mocked(db.transaction.findMany).mockResolvedValue([
+        {
+          id: 'txn_recurring_1',
+          userId: 'user123',
+          bankAccountId: 'bank-account-1',
+          plaidTransactionId: 'plaid_txn_1',
+          amount: 15.99,
+          description: 'Netflix Subscription',
+          merchantName: 'Netflix',
+          date: new Date('2024-01-01'),
+          pending: false,
+          category: 'Subscription',
+          subcategory: 'Entertainment',
+          plaidCategory: ['Entertainment', 'Subscription'],
+          isoCurrencyCode: 'USD',
+          accountOwner: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      // Mock subscription operations
+      vi.mocked(db.subscription.findFirst).mockResolvedValue(null);
+      vi.mocked(db.subscription.create).mockResolvedValue({
+        id: 'sub_1',
+        userId: 'user123',
+        merchantName: 'Netflix',
+        amount: 15.99,
+        frequency: 'monthly',
+        nextBillingDate: new Date('2024-02-01'),
+        isActive: true,
+        confidence: 0.85,
+        category: 'Entertainment',
+        subcategory: 'Streaming',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     });
 
     it('should sync transactions using sync endpoint', async () => {

@@ -10,10 +10,127 @@ import {
   type CancellationStatus,
 } from '@/types/cancellation';
 
+// Remove duplicate interface - using enhanced version above
+
 // Import existing services
 import { CancellationService } from './cancellation.service';
 import { EventDrivenCancellationService } from './event-driven-cancellation.service';
 import { LightweightCancellationService } from './lightweight-cancellation.service';
+
+// Enhanced status response interfaces
+interface CancellationStatusResponse {
+  success: boolean;
+  message?: string;
+  status?: {
+    requestId: string;
+    status: string;
+    method?: string;
+    attempts?: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+    completedAt?: Date | null;
+    confirmationCode?: string | null;
+    effectiveDate?: Date | null;
+    subscription: {
+      id: string;
+      name: string;
+      amount: number | string; // Prisma Decimal can be number or string
+    };
+    provider?: {
+      name: string;
+      type: string;
+    } | null;
+  };
+  timeline?: Array<{
+    action: string;
+    status: string;
+    message: string;
+    createdAt: Date;
+  }>;
+  nextSteps?: string[];
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+// Orchestration status interface for better type safety (currently unused)
+// interface OrchestrationStatusResponse {
+//   orchestrationId: string;
+//   status: string;
+//   method: string;
+//   startTime: Date;
+//   lastUpdate: Date;
+//   progress?: number;
+//   logs: Array<{
+//     id: string;
+//     requestId: string;
+//     action: string;
+//     status: string;
+//     message: string;
+//     metadata: Record<string, unknown>;
+//     createdAt: Date;
+//   }>;
+// }
+
+// Manual confirmation interface (currently unused)
+// interface ManualConfirmationData {
+//   confirmationCode?: string;
+//   effectiveDate?: Date;
+//   refundAmount?: number;
+//   notes?: string;
+//   wasSuccessful: boolean;
+// }
+
+// Retry options interface (currently unused)
+// interface RetryOptions {
+//   forceMethod?: 'api' | 'automation' | 'lightweight';
+//   escalate?: boolean;
+// }
+
+// Analytics interfaces
+interface AnalyticsSummary {
+  total: number;
+  successful: number;
+  failed: number;
+  pending: number;
+  successRate: number;
+}
+
+interface MethodBreakdown {
+  api: number;
+  webhook: number;
+  manual: number;
+}
+
+interface SuccessRates {
+  overall: number;
+  byMethod: Record<string, number>;
+  byProvider: Record<string, number>;
+}
+
+interface ProviderAnalytic {
+  provider: string;
+  total: number;
+  successful: number;
+  avgTime: number;
+  successRate: number;
+}
+
+interface TrendData {
+  date: string;
+  requests: number;
+  successful: number;
+  successRate: number;
+}
+
+interface UnifiedAnalyticsResponse {
+  summary: AnalyticsSummary;
+  methodBreakdown: MethodBreakdown;
+  successRates: SuccessRates;
+  providerAnalytics: ProviderAnalytic[];
+  trends: TrendData[];
+}
 
 // Import utilities
 import { AuditLogger } from '@/server/lib/audit-logger';
@@ -186,7 +303,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     this.lightweightService = new LightweightCancellationService(db);
 
     this.setupEventListeners();
-    this.initializeCapabilityCache();
+    void this.initializeCapabilityCache();
   }
 
   /**
@@ -221,13 +338,16 @@ export class UnifiedCancellationOrchestratorEnhancedService {
           error: {
             code: 'VALIDATION_ERROR',
             message: 'Input validation failed',
-            details: validationResult.error.issues as unknown as Record<string, unknown>,
+            details: validationResult.error.issues as unknown as Record<
+              string,
+              unknown
+            >,
           },
         };
       }
-      
+
       const validatedInput = validationResult.data;
-      
+
       // Log orchestration start
       await this.logOrchestrationActivity(
         orchestrationId,
@@ -263,7 +383,9 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       const optimalMethod = this.determineOptimalMethod(
         capabilities,
         validatedInput.preferredMethod,
-        validatedInput.userPreferences as UserCancellationPreferences | undefined
+        validatedInput.userPreferences as
+          | UserCancellationPreferences
+          | undefined
       );
 
       // Convert Decimal to number for type compatibility
@@ -281,7 +403,10 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         status: subscription.status,
         isActive: subscription.isActive,
         provider: subscription.provider as Record<string, unknown>,
-        cancellationInfo: subscription.cancellationInfo as Record<string, unknown>,
+        cancellationInfo: subscription.cancellationInfo as Record<
+          string,
+          unknown
+        >,
         detectionConfidence: Number(subscription.detectionConfidence),
         createdAt: subscription.createdAt,
         updatedAt: subscription.updatedAt,
@@ -347,8 +472,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         metadata: {
           attemptsUsed: 1,
           realTimeUpdatesEnabled:
-            input.userPreferences?.notificationPreferences?.realTime ??
-            true,
+            input.userPreferences?.notificationPreferences?.realTime ?? true,
         },
         tracking: {
           sseEndpoint: `/api/sse/cancellation/${orchestrationId}`,
@@ -358,7 +482,10 @@ export class UnifiedCancellationOrchestratorEnhancedService {
           code: 'ORCHESTRATION_FAILED',
           message:
             error instanceof Error ? error.message : 'Unknown error occurred',
-          details: error instanceof Error ? { message: error.message, stack: error.stack } : (error as Record<string, unknown>),
+          details:
+            error instanceof Error
+              ? { message: error.message, stack: error.stack }
+              : (error as Record<string, unknown>),
         },
       };
     }
@@ -444,7 +571,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
             orchestrationId,
             requestId: this.generateRequestId(),
             status: 'failed',
-            method: (method === 'automation' ? 'event_driven' : method) as "api" | "lightweight" | "event_driven",
+            method: (method === 'automation' ? 'event_driven' : method)!,
             message: `All cancellation methods failed. Last error: ${lastError.message}`,
             metadata: {
               attemptsUsed: fallbackChain.length,
@@ -472,7 +599,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
             orchestrationId,
             requestId: this.generateRequestId(),
             status: 'failed',
-            method: (method === 'automation' ? 'event_driven' : method) as "api" | "lightweight" | "event_driven",
+            method: (method === 'automation' ? 'event_driven' : method)!,
             message: `${method} cancellation failed and fallback is disabled`,
             metadata: {
               attemptsUsed: i + 1,
@@ -537,7 +664,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
   ): Promise<UnifiedCancellationResult> {
     const baseResult = {
       orchestrationId,
-      method: (method === 'automation' ? 'event_driven' : method) as "api" | "lightweight" | "event_driven",
+      method: method === 'automation' ? 'event_driven' : method,
       metadata: {
         attemptsUsed: 1,
         providerInfo: capabilities as unknown as Record<string, unknown>,
@@ -646,7 +773,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         orchestrationId: baseResult.orchestrationId!,
         requestId: apiResult.requestId,
         status: apiResult.status === 'completed' ? 'completed' : 'processing',
-        method: baseResult.method as "api" | "lightweight" | "event_driven",
+        method: baseResult.method!,
         message: 'API cancellation initiated successfully',
         estimatedCompletion: estimatedCompletion,
         processingStarted: new Date(),
@@ -710,7 +837,8 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         metadata: {
           requestId: automationResult.requestId ?? 'unknown',
           workflowId: automationResult.workflowId ?? 'unknown',
-          estimatedCompletion: automationResult.estimatedCompletion ?? 'unknown',
+          estimatedCompletion:
+            automationResult.estimatedCompletion ?? 'unknown',
         },
       });
 
@@ -719,14 +847,14 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         orchestrationId: baseResult.orchestrationId!,
         requestId: automationResult.requestId,
         status: 'processing',
-        method: baseResult.method as "api" | "lightweight" | "event_driven",
+        method: baseResult.method!,
         message: 'Automation cancellation workflow started',
         estimatedCompletion: automationResult.estimatedCompletion ?? undefined,
         processingStarted: new Date(),
         metadata: {
           ...(baseResult.metadata ?? {}),
           attemptsUsed: 1,
-          realTimeUpdatesEnabled: 
+          realTimeUpdatesEnabled:
             input.userPreferences?.notificationPreferences?.realTime ?? true,
           workflowId: automationResult.workflowId ?? undefined,
         },
@@ -786,7 +914,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         orchestrationId: baseResult.orchestrationId!,
         requestId: manualResult.requestId,
         status: 'requires_manual' as const,
-        method: baseResult.method as "api" | "lightweight" | "event_driven",
+        method: baseResult.method!,
         message: 'Manual cancellation instructions generated',
         estimatedCompletion: new Date(
           Date.now() + capabilities.manualEstimatedTime * 60 * 1000
@@ -1087,32 +1215,27 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     userId: string,
     subscriptionId: string
   ) {
-    try {
-      const subscription = await this.db.subscription.findFirst({
-        where: {
-          id: subscriptionId,
-          userId,
-        },
+    const subscription = await this.db.subscription.findFirst({
+      where: {
+        id: subscriptionId,
+        userId,
+      },
+    });
+
+    if (!subscription) {
+      await AuditLogger.log({
+        userId,
+        action: 'subscription.access_denied',
+        resource: subscriptionId,
+        result: 'failure',
+        error: 'Subscription not found or access denied',
       });
-
-      if (!subscription) {
-        await AuditLogger.log({
-          userId,
-          action: 'subscription.access_denied',
-          resource: subscriptionId,
-          result: 'failure',
-          error: 'Subscription not found or access denied',
-        });
-        throw new Error(
-          'Subscription not found or you do not have permission to access it'
-        );
-      }
-
-      return subscription;
-    } catch (error) {
-      // Re-throw the error to maintain status-object pattern at caller level
-      throw error;
+      throw new Error(
+        'Subscription not found or you do not have permission to access it'
+      );
     }
+
+    return subscription;
   }
 
   /**
@@ -1121,46 +1244,41 @@ export class UnifiedCancellationOrchestratorEnhancedService {
   private async validateCancellationEligibility(
     userId: string,
     subscriptionId: string,
-    subscription: any
+    subscription: SubscriptionForCancellation
   ) {
-    try {
-      // Check if already cancelled
-      if (subscription.status === 'cancelled') {
-        await AuditLogger.log({
-          userId,
-          action: 'cancellation.already_cancelled',
-          resource: subscriptionId,
-          result: 'failure',
-          error: 'Subscription is already cancelled',
-        });
-        throw new Error('This subscription is already cancelled');
-      }
-
-      // Check for existing active cancellation requests
-      const existingRequest = await this.db.cancellationRequest.findFirst({
-        where: {
-          subscriptionId,
-          userId,
-          status: { in: ['pending', 'processing', 'scheduled'] },
-        },
+    // Check if already cancelled
+    if (subscription.status === 'cancelled') {
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.already_cancelled',
+        resource: subscriptionId,
+        result: 'failure',
+        error: 'Subscription is already cancelled',
       });
+      throw new Error('This subscription is already cancelled');
+    }
 
-      if (existingRequest) {
-        await AuditLogger.log({
-          userId,
-          action: 'cancellation.already_in_progress',
-          resource: subscriptionId,
-          result: 'failure',
-          error: 'Cancellation already in progress',
-          metadata: { existingRequestId: existingRequest.id },
-        });
-        throw new Error(
-          'A cancellation request is already in progress for this subscription'
-        );
-      }
-    } catch (error) {
-      // Re-throw the error to maintain status-object pattern at caller level
-      throw error;
+    // Check for existing active cancellation requests
+    const existingRequest = await this.db.cancellationRequest.findFirst({
+      where: {
+        subscriptionId,
+        userId,
+        status: { in: ['pending', 'processing', 'scheduled'] },
+      },
+    });
+
+    if (existingRequest) {
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.already_in_progress',
+        resource: subscriptionId,
+        result: 'failure',
+        error: 'Cancellation already in progress',
+        metadata: { existingRequestId: existingRequest.id },
+      });
+      throw new Error(
+        'A cancellation request is already in progress for this subscription'
+      );
     }
   }
 
@@ -1219,15 +1337,13 @@ export class UnifiedCancellationOrchestratorEnhancedService {
             status: 'scheduled',
             attempts: 0,
             userNotes: input.reason,
-            errorDetails: JSON.parse(
-              JSON.stringify({
-                orchestrationId,
-                scheduleFor: scheduleFor.toISOString(),
-                preferredMethod: method,
-                timezone: input.scheduling?.timezone,
-                capabilities,
-              })
-            ),
+            errorDetails: {
+              orchestrationId,
+              scheduleFor: scheduleFor.toISOString(),
+              preferredMethod: method,
+              timezone: input.scheduling?.timezone,
+              capabilities,
+            } as Record<string, unknown>,
           },
         });
 
@@ -1273,7 +1389,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       orchestrationId,
       requestId: request.id,
       status: 'scheduled',
-      method: (method === 'automation' ? 'event_driven' : method) as "api" | "lightweight" | "event_driven",
+      method: method === 'automation' ? 'event_driven' : method,
       message: `Cancellation scheduled for ${scheduleFor.toLocaleString()}`,
       estimatedCompletion: scheduleFor,
       metadata: {
@@ -1424,7 +1540,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
   private updateOrchestrationStatus(
     orchestrationId: string,
     status: CancellationStatus,
-    metadata?: Record<string, unknown>
+    _metadata?: Record<string, unknown>
   ): void {
     const orchestration = this.activeOrchestrations.get(orchestrationId);
     if (orchestration) {
@@ -1512,7 +1628,9 @@ export class UnifiedCancellationOrchestratorEnhancedService {
   /**
    * Handle service completion events
    */
-  private async handleServiceCompletion(data: ServiceEventData | Record<string, unknown>): Promise<void> {
+  private async handleServiceCompletion(
+    data: ServiceEventData | Record<string, unknown>
+  ): Promise<void> {
     // Implementation for handling service completion
     console.log(
       '[UnifiedCancellationOrchestratorEnhanced] Service completion:',
@@ -1523,7 +1641,9 @@ export class UnifiedCancellationOrchestratorEnhancedService {
   /**
    * Handle service progress events
    */
-  private async handleServiceProgress(data: ServiceEventData | Record<string, unknown>): Promise<void> {
+  private async handleServiceProgress(
+    data: ServiceEventData | Record<string, unknown>
+  ): Promise<void> {
     // Implementation for handling service progress
     console.log(
       '[UnifiedCancellationOrchestratorEnhanced] Service progress:',
@@ -1534,7 +1654,9 @@ export class UnifiedCancellationOrchestratorEnhancedService {
   /**
    * Handle service failure events
    */
-  private async handleServiceFailure(data: ServiceEventData | Record<string, unknown>): Promise<void> {
+  private async handleServiceFailure(
+    data: ServiceEventData | Record<string, unknown>
+  ): Promise<void> {
     // Implementation for handling service failure
     console.log(
       '[UnifiedCancellationOrchestratorEnhanced] Service failure:',
@@ -1555,7 +1677,8 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     try {
       // Use orchestrationId as requestId for orchestration logs
       // Create a synthetic request ID if none exists
-      const logRequestId = (metadata?.requestId as string) ?? `${orchestrationId}_log`;
+      const logRequestId =
+        (metadata?.requestId as string) ?? `${orchestrationId}_log`;
 
       await this.db.cancellationLog.create({
         data: {
@@ -1585,7 +1708,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     userId: string,
     requestId: string,
     _orchestrationId?: string
-  ): Promise<any> {
+  ): Promise<CancellationStatusResponse> {
     try {
       const request = await this.db.cancellationRequest.findUnique({
         where: { id: requestId },
@@ -1625,7 +1748,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
           subscription: {
             id: request.subscription.id,
             name: request.subscription.name,
-            amount: request.subscription.amount,
+            amount: Number(request.subscription.amount), // Convert Decimal to number
           },
           provider: request.provider
             ? {
@@ -1705,7 +1828,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         orderBy: { createdAt: 'asc' },
         take: 50,
       });
-      
+
       logs = dbLogs.map(log => ({
         id: log.id,
         requestId: log.requestId,
@@ -1803,7 +1926,11 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       return this.initiateCancellation(userId, {
         subscriptionId: request.subscription.id,
         reason: 'Retry of failed cancellation',
-        preferredMethod: retryMethod as any,
+        preferredMethod: (['auto', 'api', 'automation', 'lightweight'].includes(
+          retryMethod
+        )
+          ? retryMethod
+          : 'auto') as 'auto' | 'api' | 'automation' | 'lightweight',
         priority: options?.escalate ? 'high' : 'normal',
         userPreferences: {
           allowFallback: !options?.forceMethod, // Don't allow fallback if method is forced
@@ -1843,7 +1970,14 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     userId: string,
     requestId: string,
     _reason?: string
-  ): Promise<any> {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    error?: {
+      code: string;
+      message: string;
+    };
+  }> {
     try {
       const request = await this.db.cancellationRequest.findFirst({
         where: {
@@ -1910,7 +2044,24 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       notes?: string;
       wasSuccessful: boolean;
     }
-  ): Promise<any> {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    requestId?: string;
+    status?: string;
+    confirmationCode?: string;
+    effectiveDate?: Date;
+    refundAmount?: number;
+    subscription?: {
+      id: string;
+      name: string;
+      status: string;
+    };
+    error?: {
+      code: string;
+      message: string;
+    };
+  }> {
     try {
       // Verify this is a manual cancellation request
       const request = await this.db.cancellationRequest.findFirst({
@@ -2046,7 +2197,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
    */
   subscribeToUpdates(
     orchestrationId: string,
-    callback: (update: any) => void
+    callback: (update: CancellationProgressUpdate) => void
   ): () => void {
     const orchestration = this.activeOrchestrations.get(orchestrationId);
     if (orchestration) {
@@ -2171,7 +2322,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         },
         providerAnalytics: [],
         trends: [],
-      };
+      } as UnifiedAnalyticsResponse;
     }
 
     // Calculate summary statistics

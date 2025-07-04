@@ -26,7 +26,7 @@ const mockPrismaClient = {
 
 // Mock audit logger
 vi.mock('@/server/lib/audit-logger', () => ({
-  auditLogger: {
+  AuditLogger: {
     log: vi.fn(),
   },
 }));

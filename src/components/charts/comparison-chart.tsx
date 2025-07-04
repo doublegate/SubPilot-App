@@ -62,12 +62,8 @@ export const ComparisonChart = React.memo(function ComparisonChart({
     }).format(value);
   };
 
-  // Custom tooltip
-  const CustomTooltip = ({
-    active,
-    payload,
-    label,
-  }: {
+  // Custom tooltip with proper React types
+  const CustomTooltip: React.FC<{
     active?: boolean;
     payload?: Array<{
       name: string;
@@ -79,7 +75,7 @@ export const ComparisonChart = React.memo(function ComparisonChart({
       };
     }>;
     label?: string;
-  }) => {
+  }> = ({ active, payload, label }) => {
     if (!active || !payload?.length || !label) return null;
 
     const data = payload[0]?.payload;

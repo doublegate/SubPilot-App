@@ -13,7 +13,7 @@ import {
   Area,
 } from 'recharts';
 import { Card } from '@/components/ui/card';
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -93,6 +93,19 @@ export const SpendingTrendsChart = memo(function SpendingTrendsChart({
     }).format(value);
   }, []);
 
+  // Optimized click handlers
+  const handleChartTypeArea = useCallback(() => setChartType('area'), []);
+  const handleChartTypeLine = useCallback(() => setChartType('line'), []);
+  const handleToggleTotal = useCallback(() => setShowTotal(prev => !prev), []);
+  const handleToggleRecurring = useCallback(
+    () => setShowRecurring(prev => !prev),
+    []
+  );
+  const handleToggleNonRecurring = useCallback(
+    () => setShowNonRecurring(prev => !prev),
+    []
+  );
+
   const CustomTooltip = ({
     active,
     payload,
@@ -126,14 +139,14 @@ export const SpendingTrendsChart = memo(function SpendingTrendsChart({
           <Button
             variant={chartType === 'area' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setChartType('area')}
+            onClick={handleChartTypeArea}
           >
             Area Chart
           </Button>
           <Button
             variant={chartType === 'line' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setChartType('line')}
+            onClick={handleChartTypeLine}
           >
             Line Chart
           </Button>
@@ -143,21 +156,21 @@ export const SpendingTrendsChart = memo(function SpendingTrendsChart({
           <Button
             variant={showTotal ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setShowTotal(!showTotal)}
+            onClick={handleToggleTotal}
           >
             Total
           </Button>
           <Button
             variant={showRecurring ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setShowRecurring(!showRecurring)}
+            onClick={handleToggleRecurring}
           >
             Recurring
           </Button>
           <Button
             variant={showNonRecurring ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setShowNonRecurring(!showNonRecurring)}
+            onClick={handleToggleNonRecurring}
           >
             One-time
           </Button>

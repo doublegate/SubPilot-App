@@ -98,7 +98,7 @@ export class AnalyticsJobProcessor {
       const result = await this.processAnalyticsEvent(
         userId ?? 'anonymous',
         event,
-        properties ?? ({} as any),
+        (properties ?? {}) as AnalyticsProperties,
         timestamp ? new Date(timestamp as string | number | Date) : new Date()
       );
 
@@ -136,17 +136,34 @@ export class AnalyticsJobProcessor {
     const { type, timeframe, filters } = job.data;
 
     try {
+      // Validate type parameter
+      if (typeof type !== 'string') {
+        return {
+          success: false,
+          error: 'Invalid aggregation type',
+        };
+      }
+
       let result;
 
       switch (type) {
         case 'cancellation_stats':
-          result = await this.aggregateCancellationStats(timeframe as string, filters as Record<string, unknown>);
+          result = await this.aggregateCancellationStats(
+            timeframe as string,
+            filters as Record<string, unknown>
+          );
           break;
         case 'user_activity':
-          result = await this.aggregateUserActivity(timeframe as string, filters as Record<string, unknown>);
+          result = await this.aggregateUserActivity(
+            timeframe as string,
+            filters as Record<string, unknown>
+          );
           break;
         case 'system_health':
-          result = await this.aggregateSystemHealth(timeframe as string, filters as Record<string, unknown>);
+          result = await this.aggregateSystemHealth(
+            timeframe as string,
+            filters as Record<string, unknown>
+          );
           break;
         default:
           return {
@@ -156,7 +173,11 @@ export class AnalyticsJobProcessor {
       }
 
       // Store aggregated data
-      await this.storeAggregatedData(type as string, timeframe as string, result as Record<string, unknown>);
+      await this.storeAggregatedData(
+        type as string,
+        timeframe as string,
+        result as Record<string, unknown>
+      );
 
       return {
         success: true,
@@ -344,7 +365,8 @@ export class AnalyticsJobProcessor {
       action: 'analytics.cancellation_failed',
       resource: properties.requestId ?? 'unknown',
       result: 'failure',
-      error: typeof properties.error === 'string' ? properties.error : undefined,
+      error:
+        typeof properties.error === 'string' ? properties.error : undefined,
       metadata: {
         attempt: properties.attempt,
         willRetry: properties.willRetry,
@@ -376,7 +398,8 @@ export class AnalyticsJobProcessor {
     await AuditLogger.log({
       userId,
       action: mapEventToAction(event) ?? 'unknown_action',
-      resource: typeof properties.jobId === 'string' ? properties.jobId : 'unknown',
+      resource:
+        typeof properties.jobId === 'string' ? properties.jobId : 'unknown',
       result: event.includes('failed') ? 'failure' : 'success',
       metadata: {
         jobType: properties.jobType,
@@ -408,7 +431,12 @@ export class AnalyticsJobProcessor {
     await AuditLogger.log({
       userId,
       action: mapEventToAction(event) ?? 'unknown_action',
-      resource: (typeof properties.instanceId === 'string' ? properties.instanceId : typeof properties.workflowId === 'string' ? properties.workflowId : 'unknown'),
+      resource:
+        typeof properties.instanceId === 'string'
+          ? properties.instanceId
+          : typeof properties.workflowId === 'string'
+            ? properties.workflowId
+            : 'unknown',
       result: properties.status === 'failed' ? 'failure' : 'success',
       metadata: {
         workflowId: properties.workflowId,
@@ -469,7 +497,8 @@ export class AnalyticsJobProcessor {
     await AuditLogger.log({
       userId,
       action: 'analytics.notification_sent',
-      resource: typeof properties.jobId === 'string' ? properties.jobId : 'unknown',
+      resource:
+        typeof properties.jobId === 'string' ? properties.jobId : 'unknown',
       result: properties.success ? 'success' : 'failure',
       metadata: {
         type: properties.type,
@@ -502,7 +531,10 @@ export class AnalyticsJobProcessor {
     await AuditLogger.log({
       userId,
       action: mapEventToAction(event) ?? 'unknown_action',
-      resource: typeof properties.resourceId === 'string' ? properties.resourceId : 'unknown',
+      resource:
+        typeof properties.resourceId === 'string'
+          ? properties.resourceId
+          : 'unknown',
       result: 'success',
       metadata: {
         event,
@@ -707,7 +739,9 @@ export class AnalyticsJobProcessor {
       totalOperations,
       failedOperations,
       errorRate,
-      systemStatus: errorRate > 10 ? 'critical' : errorRate > 5 ? 'degraded' : 'healthy',
+      commonErrors,
+      systemStatus:
+        errorRate > 10 ? 'critical' : errorRate > 5 ? 'degraded' : 'healthy',
       uptime: 99.9, // Default uptime percentage
     };
   }

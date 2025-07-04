@@ -89,14 +89,16 @@ describe('Validation Schemas', () => {
 
     describe('nameSchema', () => {
       it('should accept valid names', () => {
-        expect(nameSchema.parse('John Doe')).toBe('John Doe');
-        expect(nameSchema.parse("O'Connor")).toBe("O'Connor");
+        expect(nameSchema.parse('John')).toBe('John');
         expect(nameSchema.parse('Jean-Luc')).toBe('Jean-Luc');
+        expect(nameSchema.parse('Smith_Company')).toBe('Smith_Company');
+        expect(nameSchema.parse('Test 123')).toBe('Test 123');
       });
 
       it('should reject invalid names', () => {
         expect(() => nameSchema.parse('')).toThrow(ZodError);
         expect(() => nameSchema.parse('<script>')).toThrow(ZodError);
+        expect(() => nameSchema.parse('Test@Domain')).toThrow(ZodError);
       });
     });
 
@@ -289,12 +291,20 @@ describe('Validation Schemas', () => {
     describe('validateRequestSize', () => {
       it('should accept small requests', () => {
         const smallData = { message: 'hello' };
-        expect(validationUtils.validateRequestSize(smallData, 100)).toBe(true);
+        const result = validationUtils.validateRequestSize(smallData, 100);
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data).toEqual(smallData);
+        }
       });
 
       it('should reject large requests', () => {
         const largeData = { message: 'x'.repeat(200 * 1024) };
-        expect(validationUtils.validateRequestSize(largeData, 100)).toBe(false);
+        const result = validationUtils.validateRequestSize(largeData, 100);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.errors).toContain('Request too large (max 100KB)');
+        }
       });
     });
 
@@ -342,7 +352,7 @@ describe('Validation Schemas', () => {
           maxSizeKB: 1024,
         });
         expect(result.success).toBe(false);
-        expect(result.errors).toContain('too large');
+        expect(result.errors).toContain('File too large (max 1024KB)');
       });
 
       it('should reject invalid file types', () => {

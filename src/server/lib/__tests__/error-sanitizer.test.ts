@@ -10,6 +10,10 @@ vi.mock('@/env', () => ({
   env: mockEnv,
 }));
 
+// Mock process.env safely
+const originalNodeEnv = process.env.NODE_ENV;
+process.env.NODE_ENV = 'test';
+
 // Mock AuditLogger - use vi.hoisted
 const mockAuditLogger = vi.hoisted(() => ({
   log: vi.fn(),
@@ -27,6 +31,7 @@ describe('ErrorSanitizer', () => {
     vi.clearAllMocks();
     // Set default test environment
     mockEnv.NODE_ENV = 'test';
+    process.env.NODE_ENV = 'test';
   });
 
   describe('sanitizeError', () => {
@@ -68,6 +73,7 @@ describe('ErrorSanitizer', () => {
 
     it('should use generic messages in production', () => {
       mockEnv.NODE_ENV = 'production';
+      process.env.NODE_ENV = 'production';
 
       const internalError = new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -82,6 +88,7 @@ describe('ErrorSanitizer', () => {
 
     it('should preserve safe error codes in production', () => {
       mockEnv.NODE_ENV = 'production';
+      process.env.NODE_ENV = 'production';
 
       const safeError = new TRPCError({
         code: 'BAD_REQUEST',
@@ -279,6 +286,7 @@ describe('ErrorSanitizer', () => {
 
     it('should be more restrictive in production', () => {
       mockEnv.NODE_ENV = 'production';
+      process.env.NODE_ENV = 'production';
 
       const error = new Error('Detailed error that might help attackers');
 

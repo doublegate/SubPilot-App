@@ -1,10 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import type { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import type {
-  CancellationRequestWithSubscription,
-  CancellationInstructions,
-} from '@/types/cancellation';
+import type { CancellationRequestWithSubscription } from '@/types/cancellation';
 
 // Interface for manual instructions stored in the database
 interface ManualInstructionsData {
@@ -501,7 +498,7 @@ export class LightweightCancellationService {
           status: 'active',
           provider: {},
         },
-      } as any,
+      } as CancellationRequestWithSubscription,
       instructions,
     };
   }
@@ -533,10 +530,11 @@ export class LightweightCancellationService {
       subscription: {
         id: request.subscription.id,
         name: request.subscription.name,
+        amount: request.subscription.amount.toNumber(),
         status: 'active',
         provider: {},
       },
-    })) as any;
+    })) as CancellationRequestWithSubscription[];
   }
 
   /**

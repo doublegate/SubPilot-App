@@ -46,6 +46,7 @@ describe('Auth Router', () => {
     password: null, // Required by Prisma schema
     createdAt: new Date(),
     updatedAt: new Date(),
+    isAdmin: false,
     notificationPreferences: {
       emailAlerts: true,
       pushNotifications: false,
@@ -89,6 +90,7 @@ describe('Auth Router', () => {
           createdAt: true,
           updatedAt: true,
           notificationPreferences: true,
+          isAdmin: true,
         },
       });
     });

@@ -63,9 +63,13 @@ interface TimelineEvent {
 }
 
 interface RealtimeUpdate {
-  type: string;
-  data: Record<string, unknown>;
-  timestamp: string | Date;
+  requestId: string;
+  orchestrationId: string;
+  status: string;
+  action: string;
+  message: string;
+  timestamp: string;
+  metadata?: Record<string, unknown> | null;
 }
 
 interface CancellationMethod {
@@ -142,9 +146,7 @@ export function UnifiedCancellationModal({
   const [notes, setNotes] = useState('');
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [orchestrationId, setOrchestrationId] = useState<string | null>(null);
-  const [realtimeUpdates, setRealtimeUpdates] = useState<
-    Array<Record<string, unknown>>
-  >([]);
+  const [realtimeUpdates, setRealtimeUpdates] = useState<RealtimeUpdate[]>([]);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
 
   // API calls
@@ -215,7 +217,8 @@ export function UnifiedCancellationModal({
       onClose();
     },
     onError: (error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       toast.error(`Failed to cancel request: ${errorMessage}`);
     },
   });
@@ -227,13 +230,16 @@ export function UnifiedCancellationModal({
         onSuccess?.({
           success: true,
           requestId: currentRequestId ?? '',
-          method: (statusQuery.data as unknown as StatusQueryData)?.status?.method ?? 'manual',
+          method:
+            (statusQuery.data as unknown as StatusQueryData)?.status?.method ??
+            'manual',
         });
         cleanup();
         onClose();
       },
       onError: (error: unknown) => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         toast.error(`Failed to confirm cancellation: ${errorMessage}`);
       },
     });
@@ -248,13 +254,20 @@ export function UnifiedCancellationModal({
 
     es.onmessage = event => {
       try {
-        const data = JSON.parse(event.data as string) as Record<
-          string,
-          unknown
-        >;
+        const data = JSON.parse(
+          event.data as string
+        ) as Partial<RealtimeUpdate>;
         setRealtimeUpdates(prev => [
           ...prev,
-          { ...data, timestamp: new Date() },
+          {
+            requestId: data.requestId ?? '',
+            orchestrationId: data.orchestrationId ?? '',
+            status: data.status ?? '',
+            action: data.action ?? '',
+            message: data.message ?? '',
+            timestamp: new Date().toISOString(),
+            metadata: data.metadata ?? null,
+          },
         ]);
 
         if (data.type === 'cancellation.orchestration_progress') {
@@ -697,14 +710,16 @@ export function UnifiedCancellationModal({
               </TabsContent>
 
               <TabsContent value="alternatives" className="space-y-2">
-                {alternativeOptions?.map((option: AlternativeOption, index: number) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-2 rounded bg-gray-50 p-2"
-                  >
-                    <span className="text-sm">{option.instructions}</span>
-                  </div>
-                ))}
+                {alternativeOptions?.map(
+                  (option: AlternativeOption, index: number) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 rounded bg-gray-50 p-2"
+                    >
+                      <span className="text-sm">{option.instructions}</span>
+                    </div>
+                  )
+                )}
 
                 {status.status === 'failed' && (
                   <div className="flex gap-2 pt-2">
@@ -735,10 +750,14 @@ export function UnifiedCancellationModal({
                           {update.type as string}
                         </Badge>
                         <span className="text-xs text-gray-500">
-                          {new Date(update.timestamp as string | Date).toLocaleTimeString()}
+                          {new Date(
+                            update.timestamp as string | Date
+                          ).toLocaleTimeString()}
                         </span>
                       </div>
-                      <p className="mt-1">{(update.message as string) ?? (update.title as string)}</p>
+                      <p className="mt-1">
+                        {(update.message as string) ?? (update.title as string)}
+                      </p>
                     </div>
                   )
                 )}
@@ -832,7 +851,9 @@ export function UnifiedCancellationModal({
               <RadioGroup
                 value={selectedMethod}
                 onValueChange={(value: string) =>
-                  setSelectedMethod(value as 'auto' | 'manual' | 'api' | 'automation')
+                  setSelectedMethod(
+                    value as 'auto' | 'manual' | 'api' | 'automation'
+                  )
                 }
               >
                 {availableMethodsQuery.data?.methods.map(

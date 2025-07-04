@@ -428,7 +428,7 @@ export class AssistantService {
         functionCall: response.functionCall
           ? {
               name: response.functionCall.name,
-              arguments: response.functionCall.arguments as any,
+              arguments: response.functionCall.arguments,
             }
           : undefined,
       },
@@ -514,7 +514,7 @@ export class AssistantService {
         data: {
           status: 'completed',
           completedAt: new Date(),
-          result: result as any,
+          result: result,
         },
       });
 
@@ -743,7 +743,7 @@ If you need to take an action, use the appropriate function.`;
       data: {
         conversationId,
         type: actionType,
-        parameters: parameters as any,
+        parameters: parameters,
         requiresConfirmation,
         targetResource: parameters.subscriptionId,
       },
@@ -812,7 +812,10 @@ If you need to take an action, use the appropriate function.`;
         ) as unknown as Promise<ActionExecutionResult>;
 
       case ASSISTANT_ACTIONS.SET_REMINDER:
-        return this.createReminder(userId, parameters) as unknown as Promise<ActionExecutionResult>;
+        return this.createReminder(
+          userId,
+          parameters
+        ) as unknown as Promise<ActionExecutionResult>;
 
       case ASSISTANT_ACTIONS.EXPLAIN_CHARGE:
         return this.explainTransaction(
@@ -900,6 +903,7 @@ If you need to take an action, use the appropriate function.`;
       success: true,
       data: {
         totalSpending,
+        averageSpending: avgSpending,
         subscriptionCount: subscriptions.length,
         categories: Object.fromEntries(
           Object.entries(byCategory).map(([key, value]) => [key, value.total])

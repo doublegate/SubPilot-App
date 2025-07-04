@@ -582,20 +582,27 @@ export function CancellationMonitoringDashboard() {
               // Transform the analytics data to match the expected interface
               const analyticsData = {
                 summary: analytics.summary,
-                methodBreakdown: analytics.methodBreakdown as Record<string, number>,
-                successRates: analytics.successRates?.byMethod ?? {} as Record<string, number>,
-                providerAnalytics: (analytics.providerAnalytics ?? []).map((provider: {
-                  provider: string;
-                  total: number;
-                  successful: number;
-                  avgTime: number;
-                  successRate: number;
-                }): ProviderStats => ({
-                  provider: provider.provider,
-                  totalAttempts: provider.total,
-                  averageCompletionTime: provider.avgTime,
-                  successRate: provider.successRate,
-                })),
+                methodBreakdown: analytics.methodBreakdown as Record<
+                  string,
+                  number
+                >,
+                successRates:
+                  analytics.successRates?.byMethod ??
+                  ({} as Record<string, number>),
+                providerAnalytics: (analytics.providerAnalytics ?? []).map(
+                  (provider: {
+                    provider: string;
+                    total: number;
+                    successful: number;
+                    avgTime: number;
+                    successRate: number;
+                  }): ProviderStats => ({
+                    provider: provider.provider,
+                    totalAttempts: provider.total,
+                    averageCompletionTime: provider.avgTime,
+                    successRate: provider.successRate,
+                  })
+                ),
                 insights: (analytics.insights ?? []) as AlertData[],
               };
               return (

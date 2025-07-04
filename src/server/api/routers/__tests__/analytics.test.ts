@@ -114,9 +114,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(275.98) },
       });
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -176,9 +174,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(100) },
       });
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -212,9 +208,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(100) },
       });
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -243,9 +237,7 @@ describe('Analytics Router', () => {
     it('should calculate trends correctly', async () => {
       mockContext.db.transaction.findMany.mockResolvedValue(mockTransactions);
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingTrends({
         timeRange: 'month',
         groupBy: 'day',
@@ -312,9 +304,7 @@ describe('Analytics Router', () => {
         monthlyTransactions
       );
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSpendingTrends({
         timeRange: 'quarter',
         groupBy: 'month',
@@ -345,29 +335,48 @@ describe('Analytics Router', () => {
     it('should identify unused subscriptions', async () => {
       const now = new Date();
       const twoMonthsAgo = new Date(now.getTime() - 65 * 24 * 60 * 60 * 1000); // 65 days ago
+      const recentDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
 
       const subscriptionsWithTransactions = [
-        createMockSubscription({
-          id: 'sub-1',
-          isActive: true,
-          amount: createDecimal(15),
-          createdAt: new Date(),
-        }),
-        createMockSubscription({
-          id: 'sub-2',
-          isActive: true,
-          amount: createDecimal(20),
-          createdAt: new Date(),
-        }),
+        // This subscription has recent transactions (not unused)
+        {
+          ...createMockSubscription({
+            id: 'sub-1',
+            isActive: true,
+            amount: createDecimal(15),
+            createdAt: new Date(),
+          }),
+          transactions: [
+            {
+              id: 'tx-1',
+              date: recentDate,
+              amount: createDecimal(15),
+            },
+          ],
+        },
+        // This subscription has no recent transactions (unused)
+        {
+          ...createMockSubscription({
+            id: 'sub-2',
+            isActive: true,
+            amount: createDecimal(20),
+            createdAt: new Date(),
+          }),
+          transactions: [
+            {
+              id: 'tx-2',
+              date: twoMonthsAgo,
+              amount: createDecimal(20),
+            },
+          ],
+        },
       ];
 
       mockContext.db.subscription.findMany.mockResolvedValue(
         subscriptionsWithTransactions
       );
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSubscriptionInsights();
 
       expect(result.unusedCount).toBe(1);
@@ -396,9 +405,7 @@ describe('Analytics Router', () => {
         subscriptionsWithPriceChanges
       );
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSubscriptionInsights();
 
       // Note: The router doesn't return priceIncreaseCount, only insights array
@@ -438,9 +445,7 @@ describe('Analytics Router', () => {
         subscriptionsWithAges
       );
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getSubscriptionInsights();
 
       // Note: The router doesn't return averageSubscriptionAge field directly
@@ -484,9 +489,7 @@ describe('Analytics Router', () => {
         upcomingSubscriptions
       );
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
       expect(result.totalCount).toBe(3);
@@ -509,9 +512,7 @@ describe('Analytics Router', () => {
     it('should handle empty renewals', async () => {
       mockContext.db.subscription.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
       expect(result.totalCount).toBe(0);
@@ -525,9 +526,7 @@ describe('Analytics Router', () => {
       mockContext.db.subscription.findMany.mockResolvedValue(mockSubscriptions);
       mockContext.db.transaction.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.exportData({});
 
       expect(result.data?.subscriptions).toEqual(
@@ -545,9 +544,7 @@ describe('Analytics Router', () => {
       ]);
       mockContext.db.transaction.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.exportData({ format: 'json' });
 
       expect(result.subscriptions).toEqual(
@@ -575,9 +572,7 @@ describe('Analytics Router', () => {
         },
       ]);
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
       const result = await caller.exportData({
         includeTransactions: true,
         format: 'csv',
@@ -603,9 +598,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(100) },
       });
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
 
       // First call
       await caller.getSpendingOverview({ timeRange: 'month' });
@@ -622,9 +615,7 @@ describe('Analytics Router', () => {
 
       mockContext.db.transaction.findMany.mockResolvedValue(mockTransactions);
 
-      const caller = analyticsRouter.createCaller(
-        mockContext as any
-      );
+      const caller = analyticsRouter.createCaller(mockContext as any);
 
       // First call
       await caller.getSpendingTrends({ timeRange: 'month', groupBy: 'day' });

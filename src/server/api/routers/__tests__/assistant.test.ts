@@ -52,56 +52,64 @@ const mockStats = {
 
 const mockActionResult = {
   success: true,
-  actionId: 'action_123',
-  result: { message: 'Action completed successfully' },
+  data: { message: 'Action completed successfully' },
   message: 'Subscription cancellation initiated',
+};
+
+// Create mock service instances
+const mockAssistantServiceInstance = {
+  startConversation: vi.fn().mockResolvedValue(mockConversation),
+  sendMessage: vi.fn().mockResolvedValue({
+    message: {
+      id: 'msg_new',
+      content: 'AI response',
+      role: 'assistant',
+    },
+    conversation: mockConversation,
+  }),
+  executeAction: vi.fn().mockResolvedValue(mockActionResult),
+  getConversation: vi.fn().mockResolvedValue(mockConversation),
+};
+
+const mockConversationServiceInstance = {
+  getUserConversations: vi.fn().mockResolvedValue({
+    conversations: mockConversationList,
+    total: mockConversationList.length,
+  }),
+  delete: vi.fn().mockResolvedValue({ success: true }),
+  updateTitle: vi.fn().mockResolvedValue({
+    ...mockConversation,
+    title: 'Updated Title',
+  }),
+  search: vi.fn().mockResolvedValue({
+    conversations: [mockConversationList[0]],
+    total: 1,
+  }),
+  getStats: vi.fn().mockResolvedValue(mockStats),
+  exportConversation: vi
+    .fn()
+    .mockResolvedValue('# Conversation Export\n\nMarkdown content here'),
+  getConversation: vi.fn().mockResolvedValue(mockConversation),
+  generateSummary: vi
+    .fn()
+    .mockResolvedValue(
+      'This conversation covers subscription management topics.'
+    ),
+  deleteAll: vi.fn().mockResolvedValue({ deletedCount: 5 }),
 };
 
 // Mock AssistantService
 vi.mock('@/server/services/assistant.service', () => ({
-  AssistantService: vi.fn().mockImplementation(() => ({
-    startConversation: vi.fn().mockResolvedValue(mockConversation),
-    sendMessage: vi.fn().mockResolvedValue({
-      message: {
-        id: 'msg_new',
-        content: 'AI response',
-        role: 'assistant',
-      },
-      conversation: mockConversation,
-    }),
-    executeAction: vi.fn().mockResolvedValue(mockActionResult),
-    getConversation: vi.fn().mockResolvedValue(mockConversation),
-  })),
+  AssistantService: vi
+    .fn()
+    .mockImplementation(() => mockAssistantServiceInstance),
 }));
 
 // Mock ConversationService
 vi.mock('@/server/services/conversation.service', () => ({
-  ConversationService: vi.fn().mockImplementation(() => ({
-    getUserConversations: vi.fn().mockResolvedValue({
-      conversations: mockConversationList,
-      total: mockConversationList.length,
-    }),
-    delete: vi.fn().mockResolvedValue({ success: true }),
-    updateTitle: vi.fn().mockResolvedValue({
-      ...mockConversation,
-      title: 'Updated Title',
-    }),
-    search: vi.fn().mockResolvedValue({
-      conversations: [mockConversationList[0]],
-      total: 1,
-    }),
-    getStats: vi.fn().mockResolvedValue(mockStats),
-    exportConversation: vi
-      .fn()
-      .mockResolvedValue('# Conversation Export\n\nMarkdown content here'),
-    getConversation: vi.fn().mockResolvedValue(mockConversation),
-    generateSummary: vi
-      .fn()
-      .mockResolvedValue(
-        'This conversation covers subscription management topics.'
-      ),
-    deleteAll: vi.fn().mockResolvedValue({ deletedCount: 5 }),
-  })),
+  ConversationService: vi
+    .fn()
+    .mockImplementation(() => mockConversationServiceInstance),
 }));
 
 // Mock Prisma DB
@@ -129,6 +137,52 @@ describe('assistantRouter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // Reset all mock functions to their default implementations
+    mockAssistantServiceInstance.startConversation.mockResolvedValue(
+      mockConversation
+    );
+    mockAssistantServiceInstance.sendMessage.mockResolvedValue({
+      message: {
+        id: 'msg_new',
+        content: 'AI response',
+        role: 'assistant',
+      },
+      conversation: mockConversation,
+    });
+    mockAssistantServiceInstance.executeAction.mockResolvedValue(
+      mockActionResult
+    );
+    mockAssistantServiceInstance.getConversation.mockResolvedValue(
+      mockConversation
+    );
+
+    mockConversationServiceInstance.getUserConversations.mockResolvedValue({
+      conversations: mockConversationList,
+      total: mockConversationList.length,
+    });
+    mockConversationServiceInstance.delete.mockResolvedValue({ success: true });
+    mockConversationServiceInstance.updateTitle.mockResolvedValue({
+      ...mockConversation,
+      title: 'Updated Title',
+    });
+    mockConversationServiceInstance.search.mockResolvedValue({
+      conversations: [mockConversationList[0]],
+      total: 1,
+    });
+    mockConversationServiceInstance.getStats.mockResolvedValue(mockStats);
+    mockConversationServiceInstance.exportConversation.mockResolvedValue(
+      '# Conversation Export\n\nMarkdown content here'
+    );
+    mockConversationServiceInstance.getConversation.mockResolvedValue(
+      mockConversation
+    );
+    mockConversationServiceInstance.generateSummary.mockResolvedValue(
+      'This conversation covers subscription management topics.'
+    );
+    mockConversationServiceInstance.deleteAll.mockResolvedValue({
+      deletedCount: 5,
+    });
+
     mockCtx = {
       session: {
         user: mockUser,
@@ -148,11 +202,12 @@ describe('assistantRouter', () => {
 
       expect(result).toEqual(mockConversation);
 
-      // The service is already mocked, so we just verify the mock was called
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
+      expect(
+        mockAssistantServiceInstance.startConversation
+      ).toHaveBeenCalledWith(
+        'user_123',
+        'Hello, I need help with my subscriptions'
       );
-      expect(AssistantService).toHaveBeenCalled();
     });
 
     it('should start a conversation without initial message', async () => {
@@ -162,11 +217,9 @@ describe('assistantRouter', () => {
 
       expect(result).toEqual(mockConversation);
 
-      // The service is already mocked
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      expect(AssistantService).toHaveBeenCalled();
+      expect(
+        mockAssistantServiceInstance.startConversation
+      ).toHaveBeenCalledWith('user_123', undefined);
     });
 
     it('should handle service failure', async () => {
@@ -186,13 +239,13 @@ describe('assistantRouter', () => {
       });
 
       expect(result.message.content).toBe('AI response');
-      expect(result).toEqual(mockConversation);
+      expect(result.conversation).toEqual(mockConversation);
 
-      // Service is already mocked
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
+      expect(mockAssistantServiceInstance.sendMessage).toHaveBeenCalledWith(
+        'conv_123',
+        'user_123',
+        'Cancel my Netflix subscription'
       );
-      expect(AssistantService).toHaveBeenCalled();
     });
 
     it('should validate message length constraints', async () => {
@@ -217,15 +270,11 @@ describe('assistantRouter', () => {
     });
 
     it('should handle TRPC errors from service', async () => {
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      const mockInstance = new AssistantService(mockCtx.db as any);
       const tRPCError = new TRPCError({
         code: 'NOT_FOUND',
         message: 'Conversation not found',
       });
-      vi.mocked(mockInstance.sendMessage).mockRejectedValueOnce(tRPCError);
+      mockAssistantServiceInstance.sendMessage.mockRejectedValueOnce(tRPCError);
 
       const caller = assistantRouter.createCaller(mockCtx as any);
 
@@ -238,11 +287,7 @@ describe('assistantRouter', () => {
     });
 
     it('should handle general service errors', async () => {
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      const mockInstance = new AssistantService(mockCtx.db as any);
-      vi.mocked(mockInstance.sendMessage).mockRejectedValueOnce(
+      mockAssistantServiceInstance.sendMessage.mockRejectedValueOnce(
         new Error('Network error')
       );
 
@@ -266,13 +311,14 @@ describe('assistantRouter', () => {
         confirmed: true,
       });
 
-      expect(result).toEqual(mockActionResult);
+      expect(result).toEqual({
+        success: true,
+        actionId: 'action_123',
+        result: { message: 'Action completed successfully' },
+        message: 'Subscription cancellation initiated',
+      });
 
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      const mockInstance = new AssistantService(mockCtx.db as any);
-      expect(mockInstance.executeAction).toHaveBeenCalledWith(
+      expect(mockAssistantServiceInstance.executeAction).toHaveBeenCalledWith(
         'action_123',
         'user_123',
         true
@@ -286,13 +332,14 @@ describe('assistantRouter', () => {
         actionId: 'action_123',
       });
 
-      expect(result).toEqual(mockActionResult);
+      expect(result).toEqual({
+        success: true,
+        actionId: 'action_123',
+        result: { message: 'Action completed successfully' },
+        message: 'Subscription cancellation initiated',
+      });
 
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      const mockInstance = new AssistantService(mockCtx.db as any);
-      expect(mockInstance.executeAction).toHaveBeenCalledWith(
+      expect(mockAssistantServiceInstance.executeAction).toHaveBeenCalledWith(
         'action_123',
         'user_123',
         false
@@ -300,11 +347,7 @@ describe('assistantRouter', () => {
     });
 
     it('should handle action execution failure', async () => {
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      const mockInstance = new AssistantService(mockCtx.db as any);
-      vi.mocked(mockInstance.executeAction).mockRejectedValueOnce(
+      mockAssistantServiceInstance.executeAction.mockRejectedValueOnce(
         new Error('Action failed')
       );
 
@@ -318,18 +361,8 @@ describe('assistantRouter', () => {
     });
 
     it('should validate output format with any type', async () => {
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      const mockInstance = new AssistantService(mockCtx.db as any);
-      const complexResult = {
+      const complexServiceResult = {
         success: true,
-        actionId: 'action_123',
-        result: {
-          complexData: { nested: true },
-          array: [1, 2, 3],
-          nullValue: null,
-        },
         data: {
           downloadUrl: 'https://example.com/export.csv',
           format: 'csv',
@@ -337,8 +370,8 @@ describe('assistantRouter', () => {
         },
         message: 'Complex action completed',
       };
-      vi.mocked(mockInstance.executeAction).mockResolvedValueOnce(
-        complexResult
+      mockAssistantServiceInstance.executeAction.mockResolvedValueOnce(
+        complexServiceResult
       );
 
       const caller = assistantRouter.createCaller(mockCtx as any);
@@ -347,7 +380,16 @@ describe('assistantRouter', () => {
         actionId: 'action_123',
       });
 
-      expect(result).toEqual(complexResult);
+      expect(result).toEqual({
+        success: true,
+        actionId: 'action_123',
+        result: {
+          downloadUrl: 'https://example.com/export.csv',
+          format: 'csv',
+          size: 1024,
+        },
+        message: 'Complex action completed',
+      });
     });
   });
   describe('getConversations', () => {
@@ -359,11 +401,9 @@ describe('assistantRouter', () => {
       expect(result.conversations).toEqual(mockConversationList);
       expect(result.total).toBe(2);
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.getUserConversations).toHaveBeenCalledWith(
+      expect(
+        mockConversationServiceInstance.getUserConversations
+      ).toHaveBeenCalledWith(
         'user_123',
         20, // default limit
         0 // default offset
@@ -378,15 +418,9 @@ describe('assistantRouter', () => {
         offset: 5,
       });
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.getUserConversations).toHaveBeenCalledWith(
-        'user_123',
-        10,
-        5
-      );
+      expect(
+        mockConversationServiceInstance.getUserConversations
+      ).toHaveBeenCalledWith('user_123', 10, 5);
     });
 
     it('should validate pagination bounds', async () => {
@@ -401,11 +435,7 @@ describe('assistantRouter', () => {
     });
 
     it('should handle service errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.getUserConversations).mockRejectedValueOnce(
+      mockConversationServiceInstance.getUserConversations.mockRejectedValueOnce(
         new Error('DB error')
       );
 
@@ -427,26 +457,20 @@ describe('assistantRouter', () => {
 
       expect(result).toEqual(mockConversation);
 
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      const mockInstance = new AssistantService(mockCtx.db as any);
-      expect(mockInstance.getConversation).toHaveBeenCalledWith(
+      expect(mockAssistantServiceInstance.getConversation).toHaveBeenCalledWith(
         'conv_123',
         'user_123'
       );
     });
 
     it('should handle TRPC errors', async () => {
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      const mockInstance = new AssistantService(mockCtx.db as any);
       const tRPCError = new TRPCError({
         code: 'NOT_FOUND',
         message: 'Conversation not found',
       });
-      vi.mocked(mockInstance.getConversation).mockRejectedValueOnce(tRPCError);
+      mockAssistantServiceInstance.getConversation.mockRejectedValueOnce(
+        tRPCError
+      );
 
       const caller = assistantRouter.createCaller(mockCtx as any);
 
@@ -458,11 +482,7 @@ describe('assistantRouter', () => {
     });
 
     it('should handle general errors', async () => {
-      const { AssistantService } = await import(
-        '@/server/services/assistant.service'
-      );
-      const mockInstance = new AssistantService(mockCtx.db as any);
-      vi.mocked(mockInstance.getConversation).mockRejectedValueOnce(
+      mockAssistantServiceInstance.getConversation.mockRejectedValueOnce(
         new Error('Service error')
       );
 
@@ -486,23 +506,18 @@ describe('assistantRouter', () => {
 
       expect(result.success).toBe(true);
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
+      expect(mockConversationServiceInstance.delete).toHaveBeenCalledWith(
+        'conv_123',
+        'user_123'
       );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.delete).toHaveBeenCalledWith('conv_123', 'user_123');
     });
 
     it('should handle TRPC errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
       const tRPCError = new TRPCError({
         code: 'FORBIDDEN',
         message: 'Not authorized to delete this conversation',
       });
-      vi.mocked(mockInstance.delete).mockRejectedValueOnce(tRPCError);
+      mockConversationServiceInstance.delete.mockRejectedValueOnce(tRPCError);
 
       const caller = assistantRouter.createCaller(mockCtx as any);
 
@@ -514,11 +529,7 @@ describe('assistantRouter', () => {
     });
 
     it('should handle general errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.delete).mockRejectedValueOnce(
+      mockConversationServiceInstance.delete.mockRejectedValueOnce(
         new Error('Database error')
       );
 
@@ -543,11 +554,7 @@ describe('assistantRouter', () => {
 
       expect(result.title).toBe('Updated Title');
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.updateTitle).toHaveBeenCalledWith(
+      expect(mockConversationServiceInstance.updateTitle).toHaveBeenCalledWith(
         'conv_123',
         'user_123',
         'Updated Title'
@@ -576,11 +583,7 @@ describe('assistantRouter', () => {
     });
 
     it('should handle errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.updateTitle).mockRejectedValueOnce(
+      mockConversationServiceInstance.updateTitle.mockRejectedValueOnce(
         new Error('Update failed')
       );
 
@@ -606,11 +609,7 @@ describe('assistantRouter', () => {
       expect(result.conversations).toEqual([mockConversationList[0]]);
       expect(result.total).toBe(1);
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.search).toHaveBeenCalledWith(
+      expect(mockConversationServiceInstance.search).toHaveBeenCalledWith(
         'user_123',
         'subscription',
         20 // default limit
@@ -625,11 +624,7 @@ describe('assistantRouter', () => {
         limit: 10,
       });
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.search).toHaveBeenCalledWith(
+      expect(mockConversationServiceInstance.search).toHaveBeenCalledWith(
         'user_123',
         'netflix',
         10
@@ -664,11 +659,7 @@ describe('assistantRouter', () => {
     });
 
     it('should handle search errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.search).mockRejectedValueOnce(
+      mockConversationServiceInstance.search.mockRejectedValueOnce(
         new Error('Search failed')
       );
 
@@ -689,19 +680,13 @@ describe('assistantRouter', () => {
 
       expect(result).toEqual(mockStats);
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
+      expect(mockConversationServiceInstance.getStats).toHaveBeenCalledWith(
+        'user_123'
       );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.getStats).toHaveBeenCalledWith('user_123');
     });
 
     it('should handle stats errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.getStats).mockRejectedValueOnce(
+      mockConversationServiceInstance.getStats.mockRejectedValueOnce(
         new Error('Stats error')
       );
 
@@ -726,14 +711,9 @@ describe('assistantRouter', () => {
         '# Conversation Export\n\nMarkdown content here'
       );
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.exportConversation).toHaveBeenCalledWith(
-        'conv_123',
-        'user_123'
-      );
+      expect(
+        mockConversationServiceInstance.exportConversation
+      ).toHaveBeenCalledWith('conv_123', 'user_123');
     });
 
     it('should export conversation as markdown when specified', async () => {
@@ -761,26 +741,17 @@ describe('assistantRouter', () => {
       expect(result.format).toBe('json');
       expect(result.content).toBe(JSON.stringify(mockConversation, null, 2));
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.getConversation).toHaveBeenCalledWith(
-        'conv_123',
-        'user_123'
-      );
+      expect(
+        mockConversationServiceInstance.getConversation
+      ).toHaveBeenCalledWith('conv_123', 'user_123');
     });
 
     it('should handle TRPC errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
       const tRPCError = new TRPCError({
         code: 'NOT_FOUND',
         message: 'Conversation not found',
       });
-      vi.mocked(mockInstance.exportConversation).mockRejectedValueOnce(
+      mockConversationServiceInstance.exportConversation.mockRejectedValueOnce(
         tRPCError
       );
 
@@ -794,11 +765,7 @@ describe('assistantRouter', () => {
     });
 
     it('should handle general errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.exportConversation).mockRejectedValueOnce(
+      mockConversationServiceInstance.exportConversation.mockRejectedValueOnce(
         new Error('Export failed')
       );
 
@@ -824,14 +791,9 @@ describe('assistantRouter', () => {
         'This conversation covers subscription management topics.'
       );
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.generateSummary).toHaveBeenCalledWith(
-        'conv_123',
-        'user_123'
-      );
+      expect(
+        mockConversationServiceInstance.generateSummary
+      ).toHaveBeenCalledWith('conv_123', 'user_123');
 
       // Verify the summary was saved to the database
       expect(mockCtx.db.conversation.update).toHaveBeenCalledWith({
@@ -843,15 +805,13 @@ describe('assistantRouter', () => {
     });
 
     it('should handle TRPC errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
       const tRPCError = new TRPCError({
         code: 'FORBIDDEN',
         message: 'Access denied',
       });
-      vi.mocked(mockInstance.generateSummary).mockRejectedValueOnce(tRPCError);
+      mockConversationServiceInstance.generateSummary.mockRejectedValueOnce(
+        tRPCError
+      );
 
       const caller = assistantRouter.createCaller(mockCtx as any);
 
@@ -863,11 +823,7 @@ describe('assistantRouter', () => {
     });
 
     it('should handle general errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.generateSummary).mockRejectedValueOnce(
+      mockConversationServiceInstance.generateSummary.mockRejectedValueOnce(
         new Error('AI service failed')
       );
 
@@ -889,19 +845,13 @@ describe('assistantRouter', () => {
 
       expect(result.deletedCount).toBe(5);
 
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
+      expect(mockConversationServiceInstance.deleteAll).toHaveBeenCalledWith(
+        'user_123'
       );
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.deleteAll).toHaveBeenCalledWith('user_123');
     });
 
     it('should handle clear operation errors', async () => {
-      const { ConversationService } = await import(
-        '@/server/services/conversation.service'
-      );
-      const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.deleteAll).mockRejectedValueOnce(
+      mockConversationServiceInstance.deleteAll.mockRejectedValueOnce(
         new Error('Delete failed')
       );
 

@@ -179,8 +179,14 @@ export class AnalyticsService {
     const predictedValue = trendValue * seasonalFactor;
 
     // Calculate confidence based on data consistency
-    const variance = this.calculateVariance(timeSeries.map(p => p.value));
-    const confidence = Math.max(0, Math.min(1, 1 - variance / predictedValue));
+    const values = timeSeries.map(p => p.value);
+    const variance = this.calculateVariance(values);
+    const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+    const coefficientOfVariation = mean > 0 ? Math.sqrt(variance) / mean : 1;
+    const confidence =
+      predictedValue > 0
+        ? Math.max(0.1, Math.min(1, 1 - coefficientOfVariation))
+        : 0;
 
     return {
       predictedValue: Math.max(0, predictedValue),

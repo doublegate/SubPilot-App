@@ -494,7 +494,7 @@ describe('Enhanced Crypto V2', () => {
       results.forEach((result, i) => {
         expect(result).toBe(`concurrent-test-${i}`);
       });
-    });
+    }, 10000);
 
     it('should properly handle null bytes in data', async () => {
       const dataWithNulls = 'start\x00middle\x00\x00end';

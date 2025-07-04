@@ -255,7 +255,7 @@ describe('LightweightCancellationService', () => {
           subscription: {
             id: 'sub_1',
             name: 'Netflix',
-            amount: 15.99,
+            amount: new Decimal(15.99),
           },
         },
       ];

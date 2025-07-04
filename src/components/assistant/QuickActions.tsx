@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   TrendingDown,
@@ -54,6 +55,12 @@ const quickActions = [
 ];
 
 export function QuickActions({ onSelectAction }: QuickActionsProps) {
+  // Optimized click handler with useCallback
+  const handleActionClick = useCallback(
+    (message: string) => () => onSelectAction(message),
+    [onSelectAction]
+  );
+
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       {quickActions.map(action => {
@@ -63,7 +70,7 @@ export function QuickActions({ onSelectAction }: QuickActionsProps) {
             key={action.label}
             variant="outline"
             className="h-auto justify-start p-3 text-left"
-            onClick={() => onSelectAction(action.message)}
+            onClick={handleActionClick(action.message)}
           >
             <Icon className={`mr-3 h-5 w-5 shrink-0 ${action.color}`} />
             <div className="text-sm">

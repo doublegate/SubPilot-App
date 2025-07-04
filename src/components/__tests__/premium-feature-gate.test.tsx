@@ -82,9 +82,9 @@ describe('PremiumFeatureGate', () => {
       </PremiumFeatureGate>
     );
 
-    expect(screen.getByRole('img', { hidden: true })).toHaveClass(
-      'animate-spin'
-    );
+    // Look for spinner by class instead of role
+    const spinner = document.querySelector('.animate-spin');
+    expect(spinner).toBeInTheDocument();
     expect(screen.queryByText('Premium Content')).not.toBeInTheDocument();
   });
 

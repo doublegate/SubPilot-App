@@ -14,7 +14,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { Card } from '@/components/ui/card';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -67,6 +67,12 @@ export function CategoryBreakdownChart({
 }: CategoryBreakdownChartProps) {
   const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
   const [sortBy, setSortBy] = useState<'amount' | 'percentage'>('amount');
+
+  // Optimized click handlers with useCallback
+  const handleSetPieChart = useCallback(() => setChartType('pie'), []);
+  const handleSetBarChart = useCallback(() => setChartType('bar'), []);
+  const handleSortByAmount = useCallback(() => setSortBy('amount'), []);
+  const handleSortByPercentage = useCallback(() => setSortBy('percentage'), []);
 
   // Sort data
   const sortedData = [...data].sort((a, b) => {
@@ -143,14 +149,14 @@ export function CategoryBreakdownChart({
           <Button
             variant={chartType === 'pie' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setChartType('pie')}
+            onClick={handleSetPieChart}
           >
             Pie Chart
           </Button>
           <Button
             variant={chartType === 'bar' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setChartType('bar')}
+            onClick={handleSetBarChart}
           >
             Bar Chart
           </Button>
@@ -161,14 +167,14 @@ export function CategoryBreakdownChart({
           <Button
             variant={sortBy === 'amount' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setSortBy('amount')}
+            onClick={handleSortByAmount}
           >
             Amount
           </Button>
           <Button
             variant={sortBy === 'percentage' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setSortBy('percentage')}
+            onClick={handleSortByPercentage}
           >
             Percentage
           </Button>

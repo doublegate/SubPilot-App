@@ -42,7 +42,7 @@ export function BillingStats({ stats }: BillingStatsProps) {
     },
     {
       title: 'Churn Rate',
-      value: `${((stats.churnRate / totalActiveSubscriptions) * 100).toFixed(1)}%`,
+      value: `${totalActiveSubscriptions > 0 ? ((stats.churnRate / totalActiveSubscriptions) * 100).toFixed(1) : '0.0'}%`,
       description: 'Last 30 days',
       icon: BarChart3,
       trend: '-2%',

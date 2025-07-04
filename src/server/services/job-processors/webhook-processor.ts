@@ -133,8 +133,9 @@ export class WebhookJobProcessor {
     const { webhookId, provider, payload, requestId } = data;
 
     try {
-      // Validate webhook payload structure
-      const validation = this.validateWebhookPayload(provider, payload as any);
+      // Validate webhook payload structure with proper type assertion
+      const webhookPayload = payload as WebhookPayload;
+      const validation = this.validateWebhookPayload(provider, webhookPayload);
 
       if (!validation.valid) {
         await this.logWebhookActivity(
@@ -151,10 +152,11 @@ export class WebhookJobProcessor {
       }
 
       // Verify webhook authenticity (signature, timestamp, etc.)
+      const webhookHeaders = data.headers as WebhookHeaders;
       const authValidation = await this.verifyWebhookAuthenticity(
         provider,
-        payload as any,
-        data.headers as any
+        webhookPayload,
+        webhookHeaders
       );
 
       if (!authValidation.valid) {
@@ -183,7 +185,7 @@ export class WebhookJobProcessor {
           webhookId,
           provider,
           requestId,
-          validatedPayload: validation.processedPayload ?? payload,
+          validatedPayload: validation.processedPayload ?? webhookPayload,
         },
       };
     } catch (error) {
@@ -210,8 +212,13 @@ export class WebhookJobProcessor {
     const webhookIdStr = webhookId as string;
 
     try {
-      // Extract relevant data based on provider type
-      const extractedData = this.extractWebhookData(provider as string, payload as any);
+      // Extract relevant data based on provider type with proper type assertion
+      const providerStr = provider as string;
+      const webhookPayload = payload as WebhookPayload;
+      const extractedData = this.extractWebhookData(
+        providerStr,
+        webhookPayload
+      );
 
       if (!extractedData.success) {
         await this.logWebhookActivity(
@@ -231,8 +238,8 @@ export class WebhookJobProcessor {
       await this.storeWebhookResult(
         webhookIdStr,
         provider as string,
-        extractedData.data as any,
-        requestId as string
+        extractedData.data,
+        requestId!
       );
 
       await this.logWebhookActivity(
@@ -320,7 +327,9 @@ export class WebhookJobProcessor {
       const timestamp = payload.timestamp ?? headers?.['x-timestamp'];
       if (timestamp) {
         const now = Date.now();
-        const webhookTime = new Date(timestamp as string | number | Date).getTime();
+        const webhookTime = new Date(
+          timestamp as string | number | Date
+        ).getTime();
         const timeDiff = Math.abs(now - webhookTime);
 
         // Reject webhooks older than 5 minutes
@@ -332,10 +341,14 @@ export class WebhookJobProcessor {
       // Provider-specific signature verification
       switch (provider.toLowerCase()) {
         case 'stripe':
-          return this.verifyStripeSignature(payload, headers || {});
+          return this.verifyStripeSignature(payload, headers ?? {});
         default:
           // For demo providers, we'll simulate signature verification
-          return this.simulateSignatureVerification(provider, payload, headers || {});
+          return this.simulateSignatureVerification(
+            provider,
+            payload,
+            headers ?? {}
+          );
       }
     } catch (error) {
       return {
@@ -727,14 +740,14 @@ export class WebhookJobProcessor {
             errorDetails: {
               expectedWebhookId: expectedWebhookId as string,
               timeoutAt: new Date(),
-            } as any,
+            } as Record<string, unknown>,
           },
         });
 
         await this.logWebhookActivity(
           expectedWebhookId as string,
           'timeout',
-          `Webhook timeout for request ${requestId}: ${timeoutReason}`
+          `Webhook timeout for request ${requestId}: ${timeoutReason as string}`
         );
 
         // Emit timeout event to trigger fallback

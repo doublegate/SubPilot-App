@@ -514,6 +514,8 @@ model CancellationRequest {
   nextRetryAt       DateTime?
   
   // Results
+  result            Json     @default("{}") // Detailed cancellation result object
+  metadata          Json     @default("{}") // Additional metadata for the request
   confirmationCode  String?  // Cancellation confirmation number
   refundAmount      Decimal? // If refund was processed
   effectiveDate     DateTime? // When cancellation takes effect
@@ -553,6 +555,10 @@ model CancellationRequest {
   @@index([status])
   @@index([userId, status])
   @@index([createdAt])
+  @@index([method]) // For filtering by cancellation method
+  @@index([providerId]) // For provider-specific queries
+  @@index([status, createdAt]) // For status-ordered queries
+  @@index([userId, method]) // For user method preferences
   @@map("cancellation_requests")
 }
 
@@ -579,6 +585,9 @@ model CancellationLog {
   @@index([requestId])
   @@index([action])
   @@index([createdAt])
+  @@index([status]) // For filtering by log status
+  @@index([requestId, createdAt]) // For chronological log queries
+  @@index([action, status]) // For action-specific status queries
   @@map("cancellation_logs")
 }
 

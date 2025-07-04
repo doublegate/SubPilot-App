@@ -48,7 +48,17 @@ export const nameSchema = z
   .trim()
   .min(1, 'Name is required')
   .max(100, 'Name too long')
-  .regex(/^[a-zA-Z0-9\s.-_']+$/, 'Invalid characters in name');
+  .regex(/^[a-zA-Z0-9\s.\-_]+$/, 'Invalid characters in name')
+  .refine(name => {
+    // Additional security checks for SQL injection patterns
+    const sqlPatterns = [
+      /('|")/i, // quotes
+      /(--|#|\/\*|\*\/)/i, // SQL comments
+      /(union|select|insert|delete|update|drop|create|alter|exec|execute)/i, // SQL keywords
+      /(\||&|;|=)/i, // SQL operators and statement terminators
+    ];
+    return !sqlPatterns.some(pattern => pattern.test(name));
+  }, 'Invalid characters in name');
 
 // Amount validation (monetary amounts)
 export const amountSchema = z
@@ -599,16 +609,14 @@ export const validationUtils = {
 
     // Type validation
     if (allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
-      errors.push(`File type not allowed. Allowed: ${allowedTypes.join(', ')}`);
+      errors.push('type not allowed');
     }
 
     // Extension validation
     if (allowedExtensions.length > 0) {
       const ext = file.name.split('.').pop()?.toLowerCase();
       if (!ext || !allowedExtensions.includes(ext)) {
-        errors.push(
-          `File extension not allowed. Allowed: ${allowedExtensions.join(', ')}`
-        );
+        errors.push('extension not allowed');
       }
     }
 

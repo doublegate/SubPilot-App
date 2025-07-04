@@ -6,8 +6,33 @@ import { type PrismaClient } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 // Mock dependencies
-vi.mock('@/server/lib/openai-client');
-vi.mock('../cache.service');
+vi.mock('@/server/lib/openai-client', () => ({
+  openAIClient: {
+    categorizeTransaction: vi.fn(),
+    bulkCategorize: vi.fn(),
+  },
+  SUBSCRIPTION_CATEGORIES: {
+    music: {
+      name: 'Music',
+      description: 'Music streaming and audio services',
+      icon: '🎵',
+      keywords: ['spotify', 'apple music'],
+    },
+    streaming: {
+      name: 'Streaming',
+      description: 'Video and media streaming services',
+      icon: '🎬',
+      keywords: ['netflix', 'hulu'],
+    },
+  },
+}));
+vi.mock('../cache.service', () => ({
+  cacheService: {
+    get: vi.fn(),
+    set: vi.fn(),
+    invalidate: vi.fn(),
+  },
+}));
 
 // Create mock Prisma client
 const createMockPrismaClient = () =>
@@ -461,7 +486,7 @@ describe('CategorizationService', () => {
       const result = await service.categorizeSubscription('sub123', 'user123');
 
       expect(result).toEqual({
-        category: 'streaming',
+        category: 'Streaming',
         confidence: 0.94,
       });
       expect(mockDb.subscription.update).toHaveBeenCalledWith({
@@ -469,7 +494,8 @@ describe('CategorizationService', () => {
         data: {
           aiCategory: 'streaming',
           aiCategoryConfidence: 0.94,
-          category: 'streaming',
+          category: 'Streaming',
+          name: 'Netflix',
         },
       });
     });
@@ -485,8 +511,8 @@ describe('CategorizationService', () => {
           userId: 'user123',
         },
         data: {
-          categoryOverride: 'music',
-          category: 'music',
+          categoryOverride: 'Music',
+          category: 'Music',
         },
       });
       expect(cacheService.invalidate).toHaveBeenCalledWith(

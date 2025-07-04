@@ -104,7 +104,7 @@ export class SessionManager {
         fingerprint,
         ip,
         userAgent,
-        deviceInfo: parsedDeviceInfo as any,
+        deviceInfo: parsedDeviceInfo,
         createdAt: new Date(),
         lastActivity: new Date(),
         expiresAt,
@@ -348,7 +348,7 @@ export class SessionManager {
     else if (ua.includes('mac')) os = 'macOS';
     else if (ua.includes('linux')) os = 'Linux';
     else if (ua.includes('android')) os = 'Android';
-    else if (ua.includes('ios') ?? ua.includes('iphone') ?? ua.includes('ipad'))
+    else if (ua.includes('ios') || ua.includes('iphone') || ua.includes('ipad'))
       os = 'iOS';
 
     let browser = 'Unknown';
@@ -358,7 +358,7 @@ export class SessionManager {
     else if (ua.includes('edge')) browser = 'Edge';
 
     let device = mobile ? 'Mobile' : 'Desktop';
-    if (ua.includes('tablet') ?? ua.includes('ipad')) device = 'Tablet';
+    if (ua.includes('tablet') || ua.includes('ipad')) device = 'Tablet';
 
     return {
       os,
@@ -453,10 +453,9 @@ export class SessionManager {
     const sessionAge = Date.now() - session.createdAt.getTime();
     const oneHour = 60 * 60 * 1000;
 
-    const deviceInfo = session.deviceInfo as { trusted?: boolean };
+    const deviceInfo = session.deviceInfo as DeviceInfo;
     return (
       sessionAge < oneHour ||
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- checking boolean values, not null/undefined
       deviceInfo.trusted ||
       process.env.NODE_ENV === 'development'
     );
@@ -489,7 +488,7 @@ export class SessionManager {
       fingerprint: session.fingerprint,
       ip: session.ip,
       userAgent: session.userAgent,
-      deviceInfo: session.deviceInfo as any,
+      deviceInfo: session.deviceInfo as DeviceInfo,
       createdAt: session.createdAt,
       lastActivity: session.lastActivity,
       expiresAt: session.expiresAt,

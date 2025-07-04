@@ -60,12 +60,8 @@ export const TimeSeriesChart = React.memo(function TimeSeriesChart({
     }).format(value);
   };
 
-  // Custom tooltip
-  const CustomTooltip = ({
-    active,
-    payload,
-    label,
-  }: {
+  // Custom tooltip with proper Recharts types
+  const CustomTooltip: React.FC<{
     active?: boolean;
     payload?: Array<{
       name: string;
@@ -74,7 +70,7 @@ export const TimeSeriesChart = React.memo(function TimeSeriesChart({
       dataKey: string;
     }>;
     label?: string;
-  }) => {
+  }> = ({ active, payload, label }) => {
     if (!active || !payload?.length || !label) return null;
 
     const actualValue = payload.find(p => p.dataKey === 'value');

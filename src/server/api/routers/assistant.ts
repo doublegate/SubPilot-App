@@ -95,13 +95,13 @@ export const assistantRouter = createTRPCRouter({
           ctx.session.user.id,
           input.confirmed
         );
-        
+
         // Transform the result to match the expected router output format
         const result = {
           success: actionResult.success,
           actionId: input.actionId,
           result: actionResult.data,
-          message: actionResult.message || actionResult.error,
+          message: actionResult.message ?? actionResult.error,
         };
 
         return result;
