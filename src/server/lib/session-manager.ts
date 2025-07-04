@@ -1,7 +1,6 @@
-import { type PrismaClient } from '@prisma/client';
-import { createHash, randomBytes } from 'crypto';
+import { type PrismaClient, type UserSession } from '@prisma/client';
+import { createHash } from 'crypto';
 import { AuditLogger } from './audit-logger';
-import { env } from '@/env.js';
 
 export interface SessionInfo {
   id: string;
@@ -25,18 +24,29 @@ export interface DeviceInfo {
   trusted: boolean;
 }
 
+// Define security event types as union types for better type safety
+type SessionSecurityEventType = 
+  | 'created'
+  | 'expired'
+  | 'revoked'
+  | 'suspicious_activity'
+  | 'concurrent_limit';
+
+// Define specific event detail types for different event types
+type SessionEventDetails = 
+  | { rememberMe: boolean; deviceInfo: DeviceInfo; expiresAt: Date } // created
+  | { reason: string } // revoked
+  | { originalIp: string; originalUserAgent: string; originalFingerprint: string; currentFingerprint: string; timeSinceCreation: number } // suspicious_activity
+  | { maxSessions: number; activeCount: number } // concurrent_limit
+  | Record<string, unknown>; // fallback
+
 export interface SessionSecurityEvent {
-  type:
-    | 'created'
-    | 'expired'
-    | 'revoked'
-    | 'suspicious_activity'
-    | 'concurrent_limit';
+  type: SessionSecurityEventType;
   sessionId: string;
   userId: string;
   ip: string;
   userAgent: string;
-  details: Record<string, any>;
+  details: SessionEventDetails;
 }
 
 /**
@@ -88,7 +98,7 @@ export class SessionManager {
         fingerprint,
         ip,
         userAgent,
-        deviceInfo: parsedDeviceInfo as any,
+        deviceInfo: parsedDeviceInfo,
         createdAt: new Date(),
         lastActivity: new Date(),
         expiresAt,
@@ -105,7 +115,7 @@ export class SessionManager {
       userAgent,
       details: {
         rememberMe,
-        deviceInfo: parsedDeviceInfo as any,
+        deviceInfo: parsedDeviceInfo,
         expiresAt,
       },
     });
@@ -225,7 +235,11 @@ export class SessionManager {
     userId: string,
     excludeSessionId?: string
   ): Promise<number> {
-    const whereCondition: any = {
+    const whereCondition: {
+      userId: string;
+      isActive: boolean;
+      id?: { not: string };
+    } = {
       userId,
       isActive: true,
     };
@@ -269,7 +283,7 @@ export class SessionManager {
       orderBy: { lastActivity: 'desc' },
     });
 
-    return sessions.map(this.mapToSessionInfo);
+    return sessions.map((session) => this.mapToSessionInfo(session));
   }
 
   /**
@@ -328,7 +342,7 @@ export class SessionManager {
     else if (ua.includes('mac')) os = 'macOS';
     else if (ua.includes('linux')) os = 'Linux';
     else if (ua.includes('android')) os = 'Android';
-    else if (ua.includes('ios') || ua.includes('iphone') || ua.includes('ipad'))
+    else if (ua.includes('ios') ?? ua.includes('iphone') ?? ua.includes('ipad'))
       os = 'iOS';
 
     let browser = 'Unknown';
@@ -338,7 +352,7 @@ export class SessionManager {
     else if (ua.includes('edge')) browser = 'Edge';
 
     let device = mobile ? 'Mobile' : 'Desktop';
-    if (ua.includes('tablet') || ua.includes('ipad')) device = 'Tablet';
+    if (ua.includes('tablet') ?? ua.includes('ipad')) device = 'Tablet';
 
     return {
       os,
@@ -395,7 +409,7 @@ export class SessionManager {
    * Handle suspicious activity detection
    */
   private async handleSuspiciousActivity(
-    session: any,
+    session: UserSession,
     current: {
       currentIp: string;
       currentUserAgent: string;
@@ -422,8 +436,8 @@ export class SessionManager {
    * Determine if fingerprint mismatch should be allowed
    */
   private shouldAllowFingerprintMismatch(
-    session: any,
-    currentFingerprint: string
+    session: UserSession,
+    _currentFingerprint: string
   ): boolean {
     // Allow fingerprint changes if:
     // 1. Session is recent (within 1 hour)
@@ -433,10 +447,12 @@ export class SessionManager {
     const sessionAge = Date.now() - session.createdAt.getTime();
     const oneHour = 60 * 60 * 1000;
 
+    const deviceInfo = session.deviceInfo as { trusted?: boolean };
     return (
       sessionAge < oneHour ||
-      session.deviceInfo.trusted ||
-      env.NODE_ENV === 'development'
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- checking boolean values, not null/undefined
+      deviceInfo.trusted ||
+      process.env.NODE_ENV === 'development'
     );
   }
 
@@ -460,7 +476,7 @@ export class SessionManager {
   /**
    * Map database record to SessionInfo
    */
-  private mapToSessionInfo(session: any): SessionInfo {
+  private mapToSessionInfo(session: UserSession): SessionInfo {
     return {
       id: session.id,
       userId: session.userId,

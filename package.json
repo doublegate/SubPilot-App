@@ -113,6 +113,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
     "@playwright/test": "^1.49.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
@@ -132,6 +133,8 @@
     "dotenv-cli": "^8.0.0",
     "eslint": "^9.17.0",
     "eslint-config-next": "^15.1.8",
+    "eslint-formatter-compact": "^8.40.0",
+    "eslint-formatter-unix": "^8.40.0",
     "jsdom": "^25.0.1",
     "msw": "^2.7.0",
     "msw-trpc": "^2.0.0-beta.1",

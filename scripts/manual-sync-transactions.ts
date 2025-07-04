@@ -37,7 +37,7 @@ async function manualSync() {
       console.log(`   User: ${item.user.email}`);
       console.log(`   Status: ${item.status}`);
       console.log(`   Accounts: ${item.bankAccounts.length}`);
-      console.log(`   Last Webhook: ${item.lastWebhook || 'Never'}`);
+      console.log(`   Last Webhook: ${item.lastWebhook ?? 'Never'}`);
       console.log(`   Needs Sync: ${item.needsSync}`);
       console.log(
         `   Access Token: ${item.accessToken ? '✓ Present' : '✗ Missing'}`
@@ -75,7 +75,7 @@ async function manualSync() {
       console.log(`\n⚠️  ${errorItems.length} Plaid items have errors:`);
       for (const item of errorItems) {
         console.log(
-          `   - ${item.institutionName}: ${item.errorMessage || 'Unknown error'}`
+          `   - ${item.institutionName}: ${item.errorMessage ?? 'Unknown error'}`
         );
       }
     }

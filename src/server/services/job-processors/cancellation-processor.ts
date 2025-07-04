@@ -1,9 +1,27 @@
 import type { PrismaClient } from '@prisma/client';
-import { CancellationService } from '../cancellation.service';
+// import { CancellationService } from '../cancellation.service';
 import { emitCancellationEvent } from '@/server/lib/event-bus';
 import type { Job, JobResult } from '@/server/lib/job-queue';
 import { AuditLogger } from '@/server/lib/audit-logger';
 import { Prisma } from '@prisma/client';
+import type { CancellationRequest, Subscription, CancellationProvider } from '@prisma/client';
+
+// Types for cancellation processing
+type CancellationRequestUpdate = Partial<Pick<CancellationRequest, 'status' | 'result' | 'errorMessage' | 'completedAt' | 'metadata'>>;
+
+type ProviderApiResponse = {
+  success: boolean;
+  message?: string;
+  errorCode?: string;
+  data?: Record<string, unknown>;
+};
+
+type WebhookCancellationResponse = {
+  success: boolean;
+  webhookId?: string;
+  message?: string;
+  errorCode?: string;
+};
 
 /**
  * Job processor for cancellation-related tasks
@@ -114,7 +132,7 @@ export class CancellationJobProcessor {
           requestId,
           action: 'api_cancellation_started',
           status: 'info',
-          message: `Starting API cancellation for provider: ${request.provider?.name || 'unknown'}`,
+          message: `Starting API cancellation for provider: ${request.provider?.name ?? 'unknown'}`,
         },
       });
 
@@ -432,7 +450,7 @@ export class CancellationJobProcessor {
     const { requestId, userId, status, data: updateData = {} } = job.data;
 
     try {
-      const updates: any = {
+      const updates: CancellationRequestUpdate = {
         status,
         updatedAt: new Date(),
       };
@@ -452,7 +470,7 @@ export class CancellationJobProcessor {
       } else if (status === 'failed') {
         if (updateData.error) {
           updates.errorMessage = updateData.error;
-          updates.errorCode = updateData.errorCode || 'PROCESSING_ERROR';
+          updates.errorCode = updateData.errorCode ?? 'PROCESSING_ERROR';
         }
       }
 
@@ -519,7 +537,7 @@ export class CancellationJobProcessor {
   /**
    * Simulate calling provider API for cancellation
    */
-  private async callProviderApi(request: any): Promise<{
+  private async callProviderApi(request: CancellationRequest): Promise<ProviderApiResponse & {
     success: boolean;
     confirmationCode?: string;
     effectiveDate?: Date;
@@ -577,7 +595,7 @@ export class CancellationJobProcessor {
   /**
    * Simulate initiating webhook cancellation
    */
-  private async initiateWebhookCancellation(request: any): Promise<{
+  private async initiateWebhookCancellation(request: CancellationRequest): Promise<WebhookCancellationResponse & {
     success: boolean;
     webhookId?: string;
     expectedAt?: Date;
@@ -624,7 +642,7 @@ export class CancellationJobProcessor {
   /**
    * Generate manual cancellation instructions
    */
-  private generateManualInstructions(subscription: any, provider: any) {
+  private generateManualInstructions(subscription: Subscription, provider: CancellationProvider) {
     const baseInstructions = {
       type: 'manual',
       service: subscription.name,
@@ -653,7 +671,7 @@ export class CancellationJobProcessor {
         providerId: provider.id,
         providerName: provider.name,
         website:
-          provider.loginUrl || `https://${subscription.name.toLowerCase()}.com`,
+          provider.loginUrl ?? `https://${subscription.name.toLowerCase()}.com`,
         phone: provider.phoneNumber,
         email: provider.email,
         chatUrl: provider.chatUrl,
@@ -661,7 +679,7 @@ export class CancellationJobProcessor {
         estimatedTime: provider.averageTime
           ? `${provider.averageTime} minutes`
           : baseInstructions.estimatedTime,
-        specificSteps: provider.instructions || [],
+        specificSteps: provider.instructions ?? [],
         requiresPhone: provider.phoneNumber && provider.difficulty === 'hard',
         supports2FA: provider.requires2FA,
         hasRetentionOffers: provider.requiresRetention,
@@ -677,7 +695,7 @@ export class CancellationJobProcessor {
   private async logError(
     requestId: string,
     action: string,
-    error: any
+    error: unknown
   ): Promise<void> {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';

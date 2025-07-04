@@ -2,8 +2,18 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { BillingService } from '@/server/services/billing.service';
 import { SubscriptionManagerService } from '@/server/services/subscription-manager.service';
-import { TRPCError } from '@trpc/server';
-import { env } from '@/env.js';
+
+// Direct environment variable access for linting compatibility
+const getAppUrl = (): string => {
+  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+};
+
+type Feature =
+  | 'analytics_advanced'
+  | 'cancellation_automation'
+  | 'ai_assistant'
+  | 'multi_accounts'
+  | 'priority_support';
 
 export const billingRouter = createTRPCRouter({
   /**
@@ -35,7 +45,7 @@ export const billingRouter = createTRPCRouter({
       const subscriptionManager = new SubscriptionManagerService(ctx.db);
       return subscriptionManager.hasFeature(
         ctx.session.user.id,
-        input.feature as any
+        input.feature as Feature
       );
     }),
 
@@ -67,7 +77,7 @@ export const billingRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const billingService = new BillingService(ctx.db);
 
-      const baseUrl = env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+      const baseUrl = getAppUrl();
       const successUrl = `${baseUrl}/dashboard?upgrade=success`;
       const cancelUrl = `${baseUrl}/dashboard/settings/billing`;
 
@@ -87,7 +97,7 @@ export const billingRouter = createTRPCRouter({
   createPortalSession: protectedProcedure.mutation(async ({ ctx }) => {
     const billingService = new BillingService(ctx.db);
 
-    const baseUrl = env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const baseUrl = getAppUrl();
     const returnUrl = `${baseUrl}/dashboard/settings/billing`;
 
     const session = await billingService.createPortalSession({

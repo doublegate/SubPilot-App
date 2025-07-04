@@ -1,5 +1,3 @@
-import { env } from '@/env.js';
-
 /**
  * Plaid configuration utilities for managing production vs sandbox settings
  */
@@ -18,18 +16,24 @@ export interface PlaidConfig {
  * Get the current Plaid configuration
  */
 export const getPlaidConfig = (): PlaidConfig => {
-  if (!env.PLAID_CLIENT_ID || !env.PLAID_SECRET) {
+  if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
     throw new Error('Plaid credentials not configured');
   }
 
   return {
-    clientId: env.PLAID_CLIENT_ID,
-    secret: env.PLAID_SECRET,
-    environment: env.PLAID_ENV,
-    products: env.PLAID_PRODUCTS?.split(',') || ['transactions', 'accounts'],
-    countryCodes: env.PLAID_COUNTRY_CODES?.split(',') || ['US'],
-    webhookUrl: env.PLAID_WEBHOOK_URL,
-    redirectUri: env.PLAID_REDIRECT_URI,
+    clientId: process.env.PLAID_CLIENT_ID,
+    secret: process.env.PLAID_SECRET,
+    environment: (process.env.PLAID_ENV ?? 'sandbox') as
+      | 'sandbox'
+      | 'development'
+      | 'production',
+    products: process.env.PLAID_PRODUCTS?.split(',') ?? [
+      'transactions',
+      'accounts',
+    ],
+    countryCodes: process.env.PLAID_COUNTRY_CODES?.split(',') ?? ['US'],
+    webhookUrl: process.env.PLAID_WEBHOOK_URL,
+    redirectUri: process.env.PLAID_REDIRECT_URI,
   };
 };
 
@@ -37,21 +41,21 @@ export const getPlaidConfig = (): PlaidConfig => {
  * Check if we're in production mode
  */
 export const isProductionMode = (): boolean => {
-  return env.PLAID_ENV === 'production';
+  return process.env.PLAID_ENV === 'production';
 };
 
 /**
  * Check if we're in sandbox mode
  */
 export const isSandboxMode = (): boolean => {
-  return env.PLAID_ENV === 'sandbox';
+  return process.env.PLAID_ENV === 'sandbox';
 };
 
 /**
  * Check if we're in development mode
  */
 export const isDevelopmentMode = (): boolean => {
-  return env.PLAID_ENV === 'development';
+  return process.env.PLAID_ENV === 'development';
 };
 
 /**
@@ -160,32 +164,39 @@ export const validatePlaidConfig = (): {
 } => {
   const errors: string[] = [];
 
-  if (!env.PLAID_CLIENT_ID) {
+  if (!process.env.PLAID_CLIENT_ID) {
     errors.push('PLAID_CLIENT_ID is required');
   }
 
-  if (!env.PLAID_SECRET) {
+  if (!process.env.PLAID_SECRET) {
     errors.push('PLAID_SECRET is required');
   }
 
-  if (!['sandbox', 'development', 'production'].includes(env.PLAID_ENV)) {
+  if (
+    !['sandbox', 'development', 'production'].includes(
+      process.env.PLAID_ENV ?? 'sandbox'
+    )
+  ) {
     errors.push('PLAID_ENV must be sandbox, development, or production');
   }
 
   // Production-specific validations
   if (isProductionMode()) {
-    if (!env.PLAID_WEBHOOK_URL) {
+    if (!process.env.PLAID_WEBHOOK_URL) {
       errors.push('PLAID_WEBHOOK_URL is required in production');
     }
 
     if (
-      env.PLAID_WEBHOOK_URL &&
-      !env.PLAID_WEBHOOK_URL.startsWith('https://')
+      process.env.PLAID_WEBHOOK_URL &&
+      !process.env.PLAID_WEBHOOK_URL.startsWith('https://')
     ) {
       errors.push('PLAID_WEBHOOK_URL must use HTTPS in production');
     }
 
-    if (!env.NEXTAUTH_SECRET || env.NEXTAUTH_SECRET.length < 32) {
+    if (
+      !process.env.NEXTAUTH_SECRET ||
+      process.env.NEXTAUTH_SECRET.length < 32
+    ) {
       errors.push(
         'NEXTAUTH_SECRET must be at least 32 characters in production'
       );
@@ -201,7 +212,7 @@ export const validatePlaidConfig = (): {
     'liabilities',
     'investments',
   ];
-  const products = env.PLAID_PRODUCTS?.split(',') || [];
+  const products = process.env.PLAID_PRODUCTS?.split(',') ?? [];
   const invalidProducts = products.filter(
     (p: string) => !validProducts.includes(p.trim())
   );
@@ -212,7 +223,7 @@ export const validatePlaidConfig = (): {
 
   // Validate country codes
   const validCountries = ['US', 'CA', 'GB', 'FR', 'ES', 'NL', 'IE'];
-  const countries = env.PLAID_COUNTRY_CODES?.split(',') || [];
+  const countries = process.env.PLAID_COUNTRY_CODES?.split(',') ?? [];
   const invalidCountries = countries.filter(
     (c: string) => !validCountries.includes(c.trim())
   );

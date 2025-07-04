@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { AccountService } from '@/server/services/account.service';
-import { TRPCError } from '@trpc/server';
 
 export const accountRouter = createTRPCRouter({
   /**

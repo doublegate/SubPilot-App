@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { AuditLogger } from '@/server/lib/audit-logger';
 import { WebhookSecurity } from '@/server/lib/webhook-security';
-import { env } from '@/env.js';
 
 // Webhook payload interface
 interface CancellationWebhookPayload {
@@ -13,7 +12,7 @@ interface CancellationWebhookPayload {
   effectiveDate?: string;
   refundAmount?: number;
   error?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -22,11 +21,21 @@ interface CancellationWebhookPayload {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
-    const payload: CancellationWebhookPayload = JSON.parse(body);
+    const parsedBody = JSON.parse(body) as unknown;
+
+    // Validate payload structure
+    if (!parsedBody || typeof parsedBody !== 'object') {
+      return NextResponse.json(
+        { error: 'Invalid payload format' },
+        { status: 400 }
+      );
+    }
+
+    const payload = parsedBody as CancellationWebhookPayload;
 
     // Verify webhook signature (if provider supports it)
     const signature =
-      request.headers.get('x-signature') || request.headers.get('signature');
+      request.headers.get('x-signature') ?? request.headers.get('signature');
     const providerId = request.headers.get('x-provider-id');
 
     if (!providerId) {
@@ -48,7 +57,8 @@ export async function POST(request: NextRequest) {
     // Verify webhook signature if configured
     if (signature && provider.authType === 'webhook_signature') {
       // Get webhook secret from environment
-      const webhookSecret = env.WEBHOOK_SECRET ?? env.API_SECRET;
+      const webhookSecret =
+        process.env.WEBHOOK_SECRET ?? process.env.API_SECRET;
       if (!webhookSecret) {
         console.error('❌ WEBHOOK_SECRET not configured');
         await AuditLogger.log({
@@ -83,7 +93,7 @@ export async function POST(request: NextRequest) {
             signature: signature.substring(0, 10) + '...', // Log only partial signature for security
             provider: provider.name,
             ip:
-              request.headers.get('x-forwarded-for') ||
+              request.headers.get('x-forwarded-for') ??
               request.headers.get('x-real-ip'),
           },
         });
@@ -160,7 +170,7 @@ export async function POST(request: NextRequest) {
         confirmationCode: payload.confirmationCode,
         effectiveDate: status === 'completed' ? effectiveDate : null,
         refundAmount: payload.refundAmount?.toString(),
-        errorMessage: payload.error || null,
+        errorMessage: payload.error ?? null,
         errorDetails: payload.error ? { webhookError: payload.error } : {},
         completedAt: status === 'completed' ? new Date() : null,
       },
@@ -176,7 +186,7 @@ export async function POST(request: NextRequest) {
         metadata: {
           provider: provider.name,
           confirmationCode: payload.confirmationCode,
-          webhookPayload: payload as any,
+          webhookPayload: JSON.stringify(payload),
         },
       },
     });
@@ -220,7 +230,7 @@ export async function POST(request: NextRequest) {
           userId: cancellationRequest.userId,
           type: 'cancellation_failed',
           title: 'Cancellation failed ❌',
-          message: `Failed to cancel ${cancellationRequest.subscription.name}. ${payload.error || 'Please try again or use manual cancellation.'}`,
+          message: `Failed to cancel ${cancellationRequest.subscription.name}. ${payload.error ?? 'Please try again or use manual cancellation.'}`,
           severity: 'warning',
           scheduledFor: new Date(),
           data: {

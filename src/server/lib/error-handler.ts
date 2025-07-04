@@ -112,7 +112,7 @@ export function createErrorResponse(
 ): ErrorResponse {
   // Handle TRPCError
   if (error instanceof TRPCError) {
-    const code = TRPCErrorCodeMap[error.code] || ErrorCodes.INTERNAL_ERROR;
+    const code = TRPCErrorCodeMap[error.code] ?? ErrorCodes.INTERNAL_ERROR;
     return {
       error: {
         code,
@@ -237,7 +237,7 @@ export function sanitizeError(error: unknown): TRPCError {
       return new TRPCError({
         code: error.code,
         message: getUserFriendlyMessage(
-          TRPCErrorCodeMap[error.code] || ErrorCodes.INTERNAL_ERROR
+          TRPCErrorCodeMap[error.code] ?? ErrorCodes.INTERNAL_ERROR
         ),
       });
     }

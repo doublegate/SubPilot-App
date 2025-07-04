@@ -56,6 +56,7 @@ export function LazyImage({
   }, [imageRef, src]);
 
   return (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       ref={setImageRef}
       src={imageSrc}

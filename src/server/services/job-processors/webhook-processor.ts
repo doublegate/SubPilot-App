@@ -1,8 +1,108 @@
 import type { PrismaClient } from '@prisma/client';
 import { emitCancellationEvent } from '@/server/lib/event-bus';
 import type { Job, JobResult } from '@/server/lib/job-queue';
-import { AuditLogger } from '@/server/lib/audit-logger';
-import { Prisma } from '@prisma/client';
+import { AuditLogger, type SecurityAction } from '@/server/lib/audit-logger';
+
+// External service webhook interfaces
+interface NetflixWebhookPayload {
+  event_type: 'subscription.cancelled' | 'subscription.updated';
+  subscription_id: string;
+  user_id: string;
+  effective_date?: string;
+  cancellation_reason?: string;
+  timestamp?: string;
+}
+
+interface SpotifyWebhookPayload {
+  type: 'subscription.cancelled' | 'subscription.updated';
+  data: {
+    subscription_id: string;
+    user_id: string;
+    cancelled_at?: string;
+    updated_at?: string;
+  };
+  timestamp?: string;
+}
+
+interface AdobeWebhookPayload {
+  event: {
+    type: string;
+    data?: {
+      subscription_id?: string;
+      customer_id?: string;
+    };
+    created?: string;
+  };
+  timestamp?: string;
+}
+
+interface StripeWebhookPayload {
+  type: 'customer.subscription.deleted' | 'customer.subscription.updated' | 'invoice.payment_succeeded' | 'invoice.payment_failed';
+  data: {
+    object: {
+      id?: string;
+      customer?: string;
+      status?: string;
+      canceled_at?: number;
+      current_period_start?: number;
+      current_period_end?: number;
+    };
+  };
+  timestamp?: string;
+}
+
+type WebhookPayload = NetflixWebhookPayload | SpotifyWebhookPayload | AdobeWebhookPayload | StripeWebhookPayload | Record<string, unknown>;
+
+interface WebhookHeaders {
+  'x-timestamp'?: string | string[];
+  'plaid-verification-key-id'?: string | string[];
+  'stripe-signature'?: string | string[];
+  'x-signature'?: string | string[];
+  'x-webhook-signature'?: string | string[];
+  [key: string]: string | string[] | undefined;
+}
+
+interface WebhookValidationResult {
+  valid: boolean;
+  error?: string;
+  processedPayload?: WebhookPayload;
+}
+
+interface WebhookDataExtractionResult {
+  success: boolean;
+  data?: ExtractedWebhookData;
+  error?: string;
+}
+
+interface ExtractedWebhookData {
+  provider: string;
+  eventType: string;
+  subscriptionId?: string;
+  userId?: string;
+  customerId?: string;
+  status: string;
+  effectiveDate: Date;
+  metadata: {
+    cancellationReason?: string;
+    originalPayload: WebhookPayload;
+    [key: string]: unknown;
+  };
+}
+
+// Helper function to map webhook actions to security actions
+function mapWebhookActionToSecurityAction(action: string): SecurityAction {
+  switch (action) {
+    case 'signature_verification_failed':
+      return 'webhook.signature_verification_failed';
+    case 'cancellation_request_not_found':
+      return 'webhook.cancellation_request_not_found';
+    case 'cancellation_confirmed':
+      return 'webhook.cancellation_confirmed';
+    default:
+      // Default to a generic webhook action
+      return 'webhook.signature_verification_failed';
+  }
+}
 
 /**
  * Job processor for webhook-related tasks
@@ -14,7 +114,14 @@ export class WebhookJobProcessor {
    * Process webhook validation job
    */
   async processWebhookValidation(job: Job): Promise<JobResult> {
-    const { webhookId, provider, payload, requestId } = job.data;
+    const data = job.data as {
+      webhookId: string;
+      provider: string;
+      payload: unknown;
+      requestId: string;
+      headers: unknown;
+    };
+    const { webhookId, provider, payload, requestId } = data;
 
     try {
       // Validate webhook payload structure
@@ -24,12 +131,12 @@ export class WebhookJobProcessor {
         await this.logWebhookActivity(
           webhookId,
           'validation_failed',
-          validation.error || 'Invalid payload'
+          validation.error ?? 'Invalid payload'
         );
 
         return {
           success: false,
-          error: validation.error || 'Webhook validation failed',
+          error: validation.error ?? 'Webhook validation failed',
           retry: false, // Don't retry invalid webhooks
         };
       }
@@ -38,19 +145,19 @@ export class WebhookJobProcessor {
       const authValidation = await this.verifyWebhookAuthenticity(
         provider,
         payload,
-        job.data.headers
+        data.headers
       );
 
       if (!authValidation.valid) {
         await this.logWebhookActivity(
           webhookId,
           'auth_failed',
-          authValidation.error || 'Authentication failed'
+          authValidation.error ?? 'Authentication failed'
         );
 
         return {
           success: false,
-          error: authValidation.error || 'Webhook authentication failed',
+          error: authValidation.error ?? 'Webhook authentication failed',
           retry: false,
         };
       }
@@ -67,7 +174,7 @@ export class WebhookJobProcessor {
           webhookId,
           provider,
           requestId,
-          validatedPayload: validation.processedPayload || payload,
+          validatedPayload: validation.processedPayload ?? payload,
         },
       };
     } catch (error) {
@@ -100,12 +207,12 @@ export class WebhookJobProcessor {
         await this.logWebhookActivity(
           webhookId,
           'extraction_failed',
-          extractedData.error || 'Data extraction failed'
+          extractedData.error ?? 'Data extraction failed'
         );
 
         return {
           success: false,
-          error: extractedData.error || 'Failed to extract webhook data',
+          error: extractedData.error ?? 'Failed to extract webhook data',
           retry: false,
         };
       }
@@ -161,12 +268,8 @@ export class WebhookJobProcessor {
    */
   private validateWebhookPayload(
     provider: string,
-    payload: any
-  ): {
-    valid: boolean;
-    error?: string;
-    processedPayload?: any;
-  } {
+    payload: WebhookPayload
+  ): WebhookValidationResult {
     try {
       // Basic structure validation
       if (!payload || typeof payload !== 'object') {
@@ -199,12 +302,12 @@ export class WebhookJobProcessor {
    */
   private async verifyWebhookAuthenticity(
     provider: string,
-    payload: any,
-    headers?: any
+    payload: WebhookPayload,
+    headers?: WebhookHeaders
   ): Promise<{ valid: boolean; error?: string }> {
     try {
       // Check timestamp to prevent replay attacks
-      const timestamp = payload.timestamp || headers?.['x-timestamp'];
+      const timestamp = payload.timestamp ?? headers?.['x-timestamp'];
       if (timestamp) {
         const now = Date.now();
         const webhookTime = new Date(timestamp).getTime();
@@ -237,12 +340,8 @@ export class WebhookJobProcessor {
    */
   private extractWebhookData(
     provider: string,
-    payload: any
-  ): {
-    success: boolean;
-    data?: any;
-    error?: string;
-  } {
+    payload: WebhookPayload
+  ): WebhookDataExtractionResult {
     try {
       switch (provider.toLowerCase()) {
         case 'netflix':
@@ -270,13 +369,13 @@ export class WebhookJobProcessor {
   private async storeWebhookResult(
     webhookId: string,
     provider: string,
-    data: any,
+    data: ExtractedWebhookData,
     requestId?: string
   ): Promise<void> {
     // In a real implementation, you might have a webhooks table
     // For now, we'll store in audit logs
     await AuditLogger.log({
-      userId: data.userId || 'system',
+      userId: data.userId ?? 'system',
       action: 'webhook.processed',
       resource: webhookId,
       result: 'success',
@@ -291,22 +390,19 @@ export class WebhookJobProcessor {
   /**
    * Provider-specific webhook validators
    */
-  private validateNetflixWebhook(payload: any): {
-    valid: boolean;
-    error?: string;
-    processedPayload?: any;
-  } {
-    const requiredFields = ['event_type', 'subscription_id', 'user_id'];
+  private validateNetflixWebhook(payload: WebhookPayload): WebhookValidationResult {
+    const netflixPayload = payload as NetflixWebhookPayload;
+    const requiredFields: (keyof NetflixWebhookPayload)[] = ['event_type', 'subscription_id', 'user_id'];
 
     for (const field of requiredFields) {
-      if (!payload[field]) {
+      if (!netflixPayload[field]) {
         return { valid: false, error: `Missing required field: ${field}` };
       }
     }
 
     if (
       !['subscription.cancelled', 'subscription.updated'].includes(
-        payload.event_type
+        netflixPayload.event_type
       )
     ) {
       return { valid: false, error: 'Invalid event type' };
@@ -315,92 +411,80 @@ export class WebhookJobProcessor {
     return {
       valid: true,
       processedPayload: {
-        eventType: payload.event_type,
-        subscriptionId: payload.subscription_id,
-        userId: payload.user_id,
-        effectiveDate: payload.effective_date,
-        cancellationReason: payload.cancellation_reason,
+        eventType: netflixPayload.event_type,
+        subscriptionId: netflixPayload.subscription_id,
+        userId: netflixPayload.user_id,
+        effectiveDate: netflixPayload.effective_date,
+        cancellationReason: netflixPayload.cancellation_reason,
       },
     };
   }
 
-  private validateSpotifyWebhook(payload: any): {
-    valid: boolean;
-    error?: string;
-    processedPayload?: any;
-  } {
-    if (!payload.type || !payload.data) {
+  private validateSpotifyWebhook(payload: WebhookPayload): WebhookValidationResult {
+    const spotifyPayload = payload as SpotifyWebhookPayload;
+    if (!spotifyPayload.type || !spotifyPayload.data) {
       return { valid: false, error: 'Missing type or data field' };
     }
 
-    if (payload.type !== 'subscription.cancelled') {
+    if (spotifyPayload.type !== 'subscription.cancelled') {
       return { valid: false, error: 'Invalid event type' };
     }
 
     return {
       valid: true,
       processedPayload: {
-        eventType: payload.type,
-        subscriptionId: payload.data.subscription_id,
-        userId: payload.data.user_id,
-        cancelledAt: payload.data.cancelled_at,
+        eventType: spotifyPayload.type,
+        subscriptionId: spotifyPayload.data.subscription_id,
+        userId: spotifyPayload.data.user_id,
+        cancelledAt: spotifyPayload.data.cancelled_at,
       },
     };
   }
 
-  private validateAdobeWebhook(payload: any): {
-    valid: boolean;
-    error?: string;
-    processedPayload?: any;
-  } {
-    if (!payload.event?.type) {
+  private validateAdobeWebhook(payload: WebhookPayload): WebhookValidationResult {
+    const adobePayload = payload as AdobeWebhookPayload;
+    if (!adobePayload.event?.type) {
       return { valid: false, error: 'Missing event type' };
     }
 
     return {
       valid: true,
       processedPayload: {
-        eventType: payload.event.type,
-        subscriptionId: payload.event.data?.subscription_id,
-        customerId: payload.event.data?.customer_id,
-        timestamp: payload.event.created,
+        eventType: adobePayload.event.type,
+        subscriptionId: adobePayload.event.data?.subscription_id,
+        customerId: adobePayload.event.data?.customer_id,
+        timestamp: adobePayload.event.created,
       },
     };
   }
 
-  private validateStripeWebhook(payload: any): {
-    valid: boolean;
-    error?: string;
-    processedPayload?: any;
-  } {
-    if (!payload.type || !payload.data) {
+  private validateStripeWebhook(payload: WebhookPayload): WebhookValidationResult {
+    const stripePayload = payload as StripeWebhookPayload;
+    if (!stripePayload.type || !stripePayload.data) {
       return { valid: false, error: 'Missing type or data field' };
     }
 
-    const validTypes = [
+    const validTypes: StripeWebhookPayload['type'][] = [
       'customer.subscription.deleted',
       'customer.subscription.updated',
       'invoice.payment_succeeded',
       'invoice.payment_failed',
     ];
 
-    if (!validTypes.includes(payload.type)) {
+    if (!validTypes.includes(stripePayload.type)) {
       return { valid: false, error: 'Invalid event type' };
     }
 
     return {
       valid: true,
-      processedPayload: payload,
+      processedPayload: stripePayload,
     };
   }
 
-  private validateGenericWebhook(payload: any): {
-    valid: boolean;
-    error?: string;
-    processedPayload?: any;
-  } {
+  private validateGenericWebhook(payload: WebhookPayload): WebhookValidationResult {
     // Basic validation for unknown providers
-    if (!payload.event_type && !payload.type) {
+    const genericPayload = payload as Record<string, unknown>;
+    if (!genericPayload.event_type && !genericPayload.type) {
       return { valid: false, error: 'Missing event type' };
     }
 
@@ -410,48 +494,42 @@ export class WebhookJobProcessor {
   /**
    * Provider-specific data extractors
    */
-  private extractNetflixData(payload: any): {
-    success: boolean;
-    data?: any;
-    error?: string;
-  } {
+  private extractNetflixData(payload: WebhookPayload): WebhookDataExtractionResult {
+    const netflixPayload = payload as Record<string, unknown>;
     return {
       success: true,
       data: {
         provider: 'netflix',
-        eventType: payload.eventType,
-        subscriptionId: payload.subscriptionId,
-        userId: payload.userId,
+        eventType: netflixPayload.eventType as string,
+        subscriptionId: netflixPayload.subscriptionId as string,
+        userId: netflixPayload.userId as string,
         status:
-          payload.eventType === 'subscription.cancelled'
+          netflixPayload.eventType === 'subscription.cancelled'
             ? 'cancelled'
             : 'updated',
-        effectiveDate: payload.effectiveDate
-          ? new Date(payload.effectiveDate)
+        effectiveDate: netflixPayload.effectiveDate
+          ? new Date(netflixPayload.effectiveDate as string)
           : new Date(),
         metadata: {
-          cancellationReason: payload.cancellationReason,
+          cancellationReason: netflixPayload.cancellationReason as string,
           originalPayload: payload,
         },
       },
     };
   }
 
-  private extractSpotifyData(payload: any): {
-    success: boolean;
-    data?: any;
-    error?: string;
-  } {
+  private extractSpotifyData(payload: WebhookPayload): WebhookDataExtractionResult {
+    const spotifyPayload = payload as Record<string, unknown>;
     return {
       success: true,
       data: {
         provider: 'spotify',
-        eventType: payload.eventType,
-        subscriptionId: payload.subscriptionId,
-        userId: payload.userId,
+        eventType: spotifyPayload.eventType as string,
+        subscriptionId: spotifyPayload.subscriptionId as string,
+        userId: spotifyPayload.userId as string,
         status: 'cancelled',
-        effectiveDate: payload.cancelledAt
-          ? new Date(payload.cancelledAt)
+        effectiveDate: spotifyPayload.cancelledAt
+          ? new Date(spotifyPayload.cancelledAt as string)
           : new Date(),
         metadata: {
           originalPayload: payload,
@@ -460,21 +538,18 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractAdobeData(payload: any): {
-    success: boolean;
-    data?: any;
-    error?: string;
-  } {
+  private extractAdobeData(payload: WebhookPayload): WebhookDataExtractionResult {
+    const adobePayload = payload as Record<string, unknown>;
     return {
       success: true,
       data: {
         provider: 'adobe',
-        eventType: payload.eventType,
-        subscriptionId: payload.subscriptionId,
-        customerId: payload.customerId,
-        status: payload.eventType.includes('cancel') ? 'cancelled' : 'updated',
-        effectiveDate: payload.timestamp
-          ? new Date(payload.timestamp)
+        eventType: adobePayload.eventType as string,
+        subscriptionId: adobePayload.subscriptionId as string,
+        customerId: adobePayload.customerId as string,
+        status: (adobePayload.eventType as string).includes('cancel') ? 'cancelled' : 'updated',
+        effectiveDate: adobePayload.timestamp
+          ? new Date(adobePayload.timestamp as string)
           : new Date(),
         metadata: {
           originalPayload: payload,
@@ -483,21 +558,18 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractStripeData(payload: any): {
-    success: boolean;
-    data?: any;
-    error?: string;
-  } {
-    const subscription = payload.data?.object;
+  private extractStripeData(payload: WebhookPayload): WebhookDataExtractionResult {
+    const stripePayload = payload as StripeWebhookPayload;
+    const subscription = stripePayload.data?.object;
 
     return {
       success: true,
       data: {
         provider: 'stripe',
-        eventType: payload.type,
+        eventType: stripePayload.type,
         subscriptionId: subscription?.id,
         customerId: subscription?.customer,
-        status: subscription?.status,
+        status: subscription?.status ?? 'unknown',
         effectiveDate: subscription?.canceled_at
           ? new Date(subscription.canceled_at * 1000)
           : new Date(),
@@ -508,19 +580,17 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractGenericData(payload: any): {
-    success: boolean;
-    data?: any;
-    error?: string;
-  } {
+  private extractGenericData(payload: WebhookPayload): WebhookDataExtractionResult {
+    const genericPayload = payload as Record<string, unknown>;
     return {
       success: true,
       data: {
         provider: 'generic',
-        eventType: payload.event_type || payload.type || 'unknown',
-        rawPayload: payload,
+        eventType: (genericPayload.event_type ?? genericPayload.type ?? 'unknown') as string,
+        status: 'unknown',
         effectiveDate: new Date(),
         metadata: {
+          rawPayload: payload,
           originalPayload: payload,
         },
       },
@@ -531,8 +601,8 @@ export class WebhookJobProcessor {
    * Signature verification methods
    */
   private verifyStripeSignature(
-    payload: any,
-    headers: any
+    payload: WebhookPayload,
+    headers: WebhookHeaders
   ): { valid: boolean; error?: string } {
     // In a real implementation, you'd verify the Stripe signature
     // using the webhook secret and the stripe library
@@ -548,12 +618,12 @@ export class WebhookJobProcessor {
 
   private simulateSignatureVerification(
     provider: string,
-    payload: any,
-    headers: any
+    payload: WebhookPayload,
+    headers: WebhookHeaders
   ): { valid: boolean; error?: string } {
     // Simulate signature verification for demo providers
     const signature =
-      headers?.['x-signature'] || headers?.['x-webhook-signature'];
+      headers?.['x-signature'] ?? headers?.['x-webhook-signature'];
 
     // For demo purposes, we'll accept webhooks with any signature or no signature
     // In production, you'd implement proper signature verification
@@ -567,15 +637,15 @@ export class WebhookJobProcessor {
     webhookId: string,
     action: string,
     message: string,
-    metadata?: any
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     try {
       await AuditLogger.log({
         userId: 'system',
-        action: `webhook.${action}` as any,
+        action: mapWebhookActionToSecurityAction(action),
         resource: webhookId,
         result:
-          action.includes('error') || action.includes('failed')
+          action.includes('error') ?? action.includes('failed')
             ? 'failure'
             : 'success',
         metadata: {
@@ -617,7 +687,7 @@ export class WebhookJobProcessor {
           data: {
             status: 'failed',
             errorCode: 'WEBHOOK_TIMEOUT',
-            errorMessage: timeoutReason || 'Webhook confirmation timeout',
+            errorMessage: timeoutReason ?? 'Webhook confirmation timeout',
             errorDetails: {
               expectedWebhookId,
               timeoutAt: new Date(),

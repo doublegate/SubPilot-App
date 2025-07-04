@@ -2,12 +2,22 @@ import { EventEmitter } from 'events';
 import { getJobQueue } from './job-queue';
 import { Parser } from 'expr-eval';
 
+// Define workflow value types
+export type WorkflowValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | WorkflowValue[]
+  | { [key: string]: WorkflowValue };
+
 // Workflow interfaces
 export interface WorkflowStep {
   id: string;
   name: string;
   type: 'task' | 'condition' | 'parallel' | 'wait';
-  config: any;
+  config: Record<string, WorkflowValue>;
   nextSteps?: string[];
   onSuccess?: string[];
   onFailure?: string[];
@@ -21,7 +31,7 @@ export interface WorkflowDefinition {
   version: string;
   steps: WorkflowStep[];
   startStep: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, WorkflowValue>;
 }
 
 export interface WorkflowInstance {
@@ -30,7 +40,7 @@ export interface WorkflowInstance {
   userId: string;
   status: 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
   currentStep?: string;
-  variables: Record<string, any>;
+  variables: Record<string, WorkflowValue>;
   startedAt: Date;
   completedAt?: Date;
   error?: string;
@@ -42,8 +52,8 @@ export interface WorkflowStepExecution {
   status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
   startedAt: Date;
   completedAt?: Date;
-  input?: any;
-  output?: any;
+  input?: Record<string, WorkflowValue>;
+  output?: Record<string, WorkflowValue>;
   error?: string;
   retryCount: number;
 }
@@ -54,7 +64,10 @@ class SimpleWorkflowEngine extends EventEmitter {
   private instances = new Map<string, WorkflowInstance>();
   private stepProcessors = new Map<
     string,
-    (step: WorkflowStep, instance: WorkflowInstance) => Promise<any>
+    (
+      step: WorkflowStep,
+      instance: WorkflowInstance
+    ) => Promise<Record<string, WorkflowValue>>
   >();
   private jobQueue = getJobQueue();
 
@@ -78,7 +91,7 @@ class SimpleWorkflowEngine extends EventEmitter {
   async startWorkflow(
     definitionId: string,
     userId: string,
-    variables: Record<string, any> = {}
+    variables: Record<string, WorkflowValue> = {}
   ): Promise<string> {
     const definition = this.definitions.get(definitionId);
 
@@ -104,7 +117,9 @@ class SimpleWorkflowEngine extends EventEmitter {
     console.log(`[WorkflowEngine] Started workflow instance: ${instanceId}`);
 
     // Start executing the workflow
-    setImmediate(() => this.executeWorkflow(instanceId));
+    setImmediate(() => {
+      void this.executeWorkflow(instanceId);
+    });
 
     this.emit('workflow.started', { instanceId, definitionId, userId });
 
@@ -115,7 +130,7 @@ class SimpleWorkflowEngine extends EventEmitter {
    * Get workflow instance status
    */
   getWorkflowStatus(instanceId: string): WorkflowInstance | null {
-    return this.instances.get(instanceId) || null;
+    return this.instances.get(instanceId) ?? null;
   }
 
   /**
@@ -172,7 +187,7 @@ class SimpleWorkflowEngine extends EventEmitter {
 
         if (stepExecution.status === 'failed') {
           // Handle step failure
-          const nextSteps = step.onFailure || [];
+          const nextSteps = step.onFailure ?? [];
           if (nextSteps.length === 0) {
             this.failWorkflow(
               instance,
@@ -183,7 +198,7 @@ class SimpleWorkflowEngine extends EventEmitter {
           instance.currentStep = nextSteps[0]; // Take first failure path
         } else if (stepExecution.status === 'completed') {
           // Handle step success
-          const nextSteps = step.onSuccess || step.nextSteps || [];
+          const nextSteps = step.onSuccess ?? step.nextSteps ?? [];
           if (nextSteps.length === 0) {
             // No more steps, workflow completed
             this.completeWorkflow(instance);
@@ -314,7 +329,10 @@ class SimpleWorkflowEngine extends EventEmitter {
    */
   registerStepProcessor(
     stepType: string,
-    processor: (step: WorkflowStep, instance: WorkflowInstance) => Promise<any>
+    processor: (
+      step: WorkflowStep,
+      instance: WorkflowInstance
+    ) => Promise<Record<string, WorkflowValue>>
   ): void {
     this.stepProcessors.set(stepType, processor);
     console.log(`[WorkflowEngine] Registered step processor: ${stepType}`);
@@ -334,7 +352,7 @@ class SimpleWorkflowEngine extends EventEmitter {
 
       // Queue a job and wait for completion
       const jobId = await this.jobQueue.addJob(jobType, {
-        ...jobData,
+        ...(jobData as Record<string, unknown>),
         workflowInstanceId: instance.id,
         stepId: step.id,
         variables: instance.variables,
@@ -351,9 +369,13 @@ class SimpleWorkflowEngine extends EventEmitter {
           }
 
           if (job.status === 'completed') {
-            resolve((job as any).result || { success: true });
+            resolve(
+              (job as { result?: Record<string, WorkflowValue> }).result ?? {
+                success: true,
+              }
+            );
           } else if (job.status === 'failed') {
-            reject(new Error(job.error || 'Job failed'));
+            reject(new Error(job.error ?? 'Job failed'));
           } else {
             // Job still processing, check again
             setTimeout(checkJob, 1000);
@@ -378,7 +400,7 @@ class SimpleWorkflowEngine extends EventEmitter {
     });
 
     // Wait step processor
-    this.registerStepProcessor('wait', async (step, instance) => {
+    this.registerStepProcessor('wait', async (step, _instance) => {
       const { duration } = step.config;
 
       if (typeof duration === 'number' && duration > 0) {
@@ -415,7 +437,10 @@ class SimpleWorkflowEngine extends EventEmitter {
           stepId: parallelSteps[index],
           status: result.status,
           value: result.status === 'fulfilled' ? result.value : undefined,
-          error: result.status === 'rejected' ? result.reason : undefined,
+          error:
+            result.status === 'rejected'
+              ? (result.reason as Error)?.message
+              : undefined,
         })),
       };
     });
@@ -426,7 +451,7 @@ class SimpleWorkflowEngine extends EventEmitter {
    */
   private evaluateCondition(
     expression: string,
-    variables: Record<string, any>
+    variables: Record<string, WorkflowValue>
   ): boolean {
     try {
       // Use safe expression parser instead of eval
@@ -434,7 +459,7 @@ class SimpleWorkflowEngine extends EventEmitter {
 
       // Parse the expression and evaluate with variables
       const expr = parser.parse(expression);
-      const result = expr.evaluate(variables);
+      const result = expr.evaluate(variables) as unknown;
 
       return Boolean(result);
     } catch (error) {

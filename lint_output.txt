@@ -1,0 +1,4 @@
+
+> subpilot-app@1.6.0 lint
+> next lint
+

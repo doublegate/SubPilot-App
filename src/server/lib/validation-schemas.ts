@@ -48,7 +48,7 @@ export const nameSchema = z
   .trim()
   .min(1, 'Name is required')
   .max(100, 'Name too long')
-  .regex(/^[a-zA-Z0-9\s\.\-_']+$/, 'Invalid characters in name');
+  .regex(/^[a-zA-Z0-9\s.-_']+$/, 'Invalid characters in name');
 
 // Amount validation (monetary amounts)
 export const amountSchema = z
@@ -85,7 +85,7 @@ export const urlSchema = z
 // Phone number validation
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[\d\s\-\(\)]{10,20}$/, 'Invalid phone number format')
+  .regex(/^\+?[\d\s\-()]{10,20}$/, 'Invalid phone number format')
   .transform(val => val.replace(/\s/g, ''));
 
 // ============================================================================
@@ -186,7 +186,7 @@ export const searchSchema = z.object({
     .trim()
     .min(1, 'Search query required')
     .max(100, 'Search query too long')
-    .regex(/^[a-zA-Z0-9\s\.\-_']+$/, 'Invalid search characters'),
+    .regex(/^[a-zA-Z0-9\s.-_']+$/, 'Invalid search characters'),
   filters: z.record(z.string(), z.any()).optional(),
 });
 
@@ -321,7 +321,7 @@ export const auditActionSchema = z
   .string()
   .min(1, 'Audit action required')
   .max(100, 'Audit action too long')
-  .regex(/^[a-z_\.]+$/, 'Invalid audit action format');
+  .regex(/^[a-z_.]+$/, 'Invalid audit action format');
 
 export const auditResultSchema = z.enum(['success', 'failure', 'error']);
 
@@ -386,57 +386,211 @@ export const apiSchemas = {
   bulkIds: bulkIdsSchema,
 };
 
+// ============================================================================
+// ADVANCED GENERIC UTILITIES FOR TYPE-SAFE VALIDATION
+// ============================================================================
+
+// Template Literal Types for Schema Keys (used in validation utilities)
+// type SchemaKey<T extends string> = `${T}Schema`;
+// type ValidationKey<T extends string> = `validate${Capitalize<T>}`;
+
+// Generic Validation Result with Discriminated Union
+export type ValidationResult<T> =
+  | { success: true; data: T }
+  | { success: false; errors: string[] };
+
+// Advanced Schema Factory with Generic Constraints
+export const createEntitySchema = <T extends Record<string, unknown>>(
+  fields: { [K in keyof T]: z.ZodType<T[K]> }
+) => z.object(fields);
+
+// Conditional Schema Builder for Update Operations
+export const createUpdateSchema = <T extends z.ZodObject<z.ZodRawShape>>(
+  baseSchema: T,
+  requiredFields: (keyof T['shape'])[] = []
+) => {
+  const shape = baseSchema.shape;
+  const updateShape: Record<string, z.ZodTypeAny> = {};
+  
+  for (const [key, schema] of Object.entries(shape)) {
+    updateShape[key] = requiredFields.includes(key)
+      ? schema
+      : schema.optional();
+  }
+  
+  return z.object(updateShape);
+};
+
+// Type-safe Environment Variable Schema Builder
+export const createEnvSchema = <T extends Record<string, z.ZodTypeAny>>(
+  serverSchema: T,
+  clientSchema: Record<string, z.ZodTypeAny> = {}
+) => ({
+  server: z.object(serverSchema),
+  client: z.object(clientSchema),
+  runtimeEnv: {} as { [K in keyof T]: T[K]['_output'] },
+});
+
 export const validationUtils = {
   /**
-   * Validate request size limit
+   * Generic request size validator with type safety
    */
-  validateRequestSize: (data: unknown, maxSizeKB = 100): boolean => {
-    const size = JSON.stringify(data).length;
-    return size <= maxSizeKB * 1024;
+  validateRequestSize: <T>(data: T, maxSizeKB = 100): ValidationResult<T> => {
+    try {
+      const size = JSON.stringify(data).length;
+      if (size <= maxSizeKB * 1024) {
+        return { success: true, data };
+      }
+      return { success: false, errors: [`Request too large (max ${maxSizeKB}KB)`] };
+    } catch {
+      return { success: false, errors: ['Invalid data format'] };
+    }
   },
 
   /**
-   * Sanitize string for safe storage/display
+   * Type-safe string sanitizer with template literal validation
    */
-  sanitizeString: (str: string): string => {
-    return str
-      .trim()
-      .replace(/[<>'"&]/g, '') // Remove potentially dangerous characters
-      .substring(0, 1000); // Limit length
+  sanitizeString: <T extends string>(
+    str: T,
+    options: {
+      maxLength?: number;
+      allowedChars?: RegExp;
+      preserveCase?: boolean;
+    } = {}
+  ): string => {
+    const {
+      maxLength = 1000,
+      allowedChars = /^[a-zA-Z0-9\s.-_']+$/,
+      preserveCase = true,
+    } = options;
+
+    let sanitized = str.trim();
+    
+    if (!preserveCase) {
+      sanitized = sanitized.toLowerCase();
+    }
+    
+    // Remove dangerous characters
+    sanitized = sanitized.replace(/[<>'"&]/g, '');
+    
+    // Apply character whitelist if provided
+    if (!allowedChars.test(sanitized)) {
+      sanitized = sanitized.replace(/[^a-zA-Z0-9\s.-_']/g, '');
+    }
+    
+    return sanitized.substring(0, maxLength);
   },
 
   /**
-   * Validate file upload
+   * Advanced file upload validator with type constraints
    */
-  validateFileUpload: (
-    file: { size: number; type: string; name: string },
+  validateFileUpload: <T extends { size: number; type: string; name: string }>(
+    file: T,
     options: {
       maxSizeKB?: number;
-      allowedTypes?: string[];
-      allowedExtensions?: string[];
+      allowedTypes?: readonly string[];
+      allowedExtensions?: readonly string[];
+      customValidators?: Array<(file: T) => ValidationResult<T>>;
     } = {}
-  ): { valid: boolean; error?: string } => {
+  ): ValidationResult<T> => {
     const {
       maxSizeKB = 1024,
       allowedTypes = [],
       allowedExtensions = [],
+      customValidators = [],
     } = options;
 
+    const errors: string[] = [];
+
+    // Size validation
     if (file.size > maxSizeKB * 1024) {
-      return { valid: false, error: `File too large (max ${maxSizeKB}KB)` };
+      errors.push(`File too large (max ${maxSizeKB}KB)`);
     }
 
+    // Type validation
     if (allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
-      return { valid: false, error: 'File type not allowed' };
+      errors.push(`File type not allowed. Allowed: ${allowedTypes.join(', ')}`);
     }
 
+    // Extension validation
     if (allowedExtensions.length > 0) {
       const ext = file.name.split('.').pop()?.toLowerCase();
       if (!ext || !allowedExtensions.includes(ext)) {
-        return { valid: false, error: 'File extension not allowed' };
+        errors.push(`File extension not allowed. Allowed: ${allowedExtensions.join(', ')}`);
       }
     }
 
-    return { valid: true };
+    // Custom validation
+    for (const validator of customValidators) {
+      const result = validator(file);
+      if (!result.success) {
+        errors.push(...result.errors);
+      }
+    }
+
+    return errors.length > 0
+      ? { success: false, errors }
+      : { success: true, data: file };
+  },
+
+  /**
+   * Type-safe pagination validator with generic constraints
+   */
+  validatePagination: <T extends { page?: number; limit?: number; sortBy?: string }>(
+    params: T
+  ): ValidationResult<Required<Pick<T, 'page' | 'limit'>> & Omit<T, 'page' | 'limit'>> => {
+    const errors: string[] = [];
+    
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 20;
+    
+    if (page < 1 || page > 1000) {
+      errors.push('Page must be between 1 and 1000');
+    }
+    
+    if (limit < 1 || limit > 100) {
+      errors.push('Limit must be between 1 and 100');
+    }
+    
+    if (errors.length > 0) {
+      return { success: false, errors };
+    }
+    
+    return {
+      success: true,
+      data: { ...params, page, limit } as Required<Pick<T, 'page' | 'limit'>> & Omit<T, 'page' | 'limit'>
+    };
+  },
+
+  /**
+   * Conditional field validator based on context
+   */
+  validateConditionalFields: <T extends Record<string, unknown>>(
+    data: T,
+    conditions: Array<{
+      condition: (data: T) => boolean;
+      requiredFields: (keyof T)[];
+      message?: string;
+    }>
+  ): ValidationResult<T> => {
+    const errors: string[] = [];
+    
+    for (const { condition, requiredFields, message } of conditions) {
+      if (condition(data)) {
+        const missing = requiredFields.filter(field => 
+          data[field] === undefined || data[field] === null || data[field] === ''
+        );
+        
+        if (missing.length > 0) {
+          errors.push(
+            message ?? `Required fields when condition met: ${missing.join(', ')}`
+          );
+        }
+      }
+    }
+    
+    return errors.length > 0
+      ? { success: false, errors }
+      : { success: true, data };
   },
 };

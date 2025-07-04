@@ -202,7 +202,7 @@ export function CancellationConfirmationModal({
             <Alert>
               <Icons.helpCircle className="h-4 w-4" />
               <AlertDescription>
-                If you're having trouble cancelling, consider contacting
+                If you&apos;re having trouble cancelling, consider contacting
                 customer support directly. We can also help you find alternative
                 cancellation methods.
               </AlertDescription>

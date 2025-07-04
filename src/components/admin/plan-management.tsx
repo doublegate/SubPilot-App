@@ -19,19 +19,29 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Plus } from 'lucide-react';
-import { api } from '@/trpc/react';
 import { toast } from 'sonner';
+
+interface Plan {
+  id: string;
+  name: string;
+  displayName: string;
+  price: number;
+  stripePriceId: string | null;
+  features: string[];
+  maxBankAccounts: number;
+  maxTeamMembers: number;
+  isActive: boolean;
+}
 
 export function PlanManagement() {
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
 
   // Mock plans for now
-  const plans = [
+  const plans: Plan[] = [
     {
       id: '1',
       name: 'free',
@@ -86,7 +96,7 @@ export function PlanManagement() {
     },
   ];
 
-  const handleEditPlan = (plan: any) => {
+  const handleEditPlan = (plan: Plan) => {
     setEditingPlan(plan);
     setIsEditOpen(true);
   };
@@ -203,7 +213,7 @@ export function PlanManagement() {
                 <Label htmlFor="stripePriceId">Stripe Price ID</Label>
                 <Input
                   id="stripePriceId"
-                  value={editingPlan.stripePriceId || ''}
+                  value={editingPlan.stripePriceId ?? ''}
                   placeholder="price_..."
                   onChange={e =>
                     setEditingPlan({

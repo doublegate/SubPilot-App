@@ -4,6 +4,10 @@ import { ProfileForm } from '@/components/profile/profile-form';
 export default async function ProfilePage() {
   const session = await auth();
 
+  if (!session) {
+    return <div>Please sign in to access your profile.</div>;
+  }
+
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-8">

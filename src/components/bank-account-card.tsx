@@ -100,7 +100,7 @@ export function BankAccountCard({ item }: BankAccountCardProps) {
               <Building2 className="h-8 w-8 text-muted-foreground" />
               <div>
                 <CardTitle className="text-lg">
-                  {item.institutionName || 'Unknown Bank'}
+                  {item.institutionName ?? 'Unknown Bank'}
                 </CardTitle>
                 <CardDescription className="text-sm">
                   {item.accounts.length}{' '}
@@ -184,9 +184,9 @@ export function BankAccountCard({ item }: BankAccountCardProps) {
             <AlertDialogTitle>Remove bank connection?</AlertDialogTitle>
             <AlertDialogDescription>
               This will remove the connection to{' '}
-              {item.institutionName || 'this bank'} and all associated accounts.
-              Your transaction history will be preserved, but you won't receive
-              new updates.
+              {item.institutionName ?? 'this bank'} and all associated accounts.
+              Your transaction history will be preserved, but you won&apos;t
+              receive new updates.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

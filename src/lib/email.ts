@@ -1,5 +1,4 @@
 import * as nodemailer from 'nodemailer';
-import { env } from '@/env.js';
 
 // Custom type for verification request parameters
 interface EmailProvider {
@@ -31,11 +30,11 @@ type SendVerificationRequestParams = {
 
 // Create transporter based on environment
 const createTransporter = (): nodemailer.Transporter => {
-  if (env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
     // Use Mailhog for development
     return nodemailer.createTransport({
-      host: env.SMTP_HOST ?? 'localhost',
-      port: parseInt(env.SMTP_PORT ?? '1025'),
+      host: process.env.SMTP_HOST ?? 'localhost',
+      port: parseInt(process.env.SMTP_PORT ?? '1025'),
       secure: false,
       ignoreTLS: true,
     });
@@ -47,7 +46,7 @@ const createTransporter = (): nodemailer.Transporter => {
       secure: false,
       auth: {
         user: 'apikey',
-        pass: env.SENDGRID_API_KEY ?? '',
+        pass: process.env.SENDGRID_API_KEY ?? '',
       },
     });
   }
@@ -143,7 +142,7 @@ If you didn't request this email, you can safely ignore it.
 
   try {
     await transporter.sendMail({
-      from: env.FROM_EMAIL ?? '"SubPilot" <noreply@subpilot.com>',
+      from: process.env.FROM_EMAIL ?? '"SubPilot" <noreply@subpilot.com>',
       to: email,
       subject: `Sign in to ${host}`,
       text,
@@ -170,7 +169,7 @@ export async function sendEmail({
   const transporter = createTransporter();
 
   await transporter.sendMail({
-    from: env.FROM_EMAIL ?? '"SubPilot" <noreply@subpilot.com>',
+    from: process.env.FROM_EMAIL ?? '"SubPilot" <noreply@subpilot.com>',
     to,
     subject,
     html,

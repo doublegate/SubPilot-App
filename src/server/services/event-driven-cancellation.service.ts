@@ -88,7 +88,7 @@ export class EventDrivenCancellationService {
       data: {
         userId,
         subscriptionId: validatedInput.subscriptionId,
-        method: validatedInput.preferredMethod || 'api',
+        method: validatedInput.preferredMethod ?? 'api',
         priority: validatedInput.priority,
         status: validatedInput.scheduleFor ? 'scheduled' : 'pending',
         attempts: 0,
@@ -99,13 +99,13 @@ export class EventDrivenCancellationService {
     // Calculate estimated completion time
     const estimatedCompletion = this.calculateEstimatedCompletion(
       validatedInput.priority,
-      validatedInput.preferredMethod || 'api'
+      validatedInput.preferredMethod ?? 'api'
     );
 
     // Log the initiation
     await AuditLogger.log({
       userId,
-      action: 'create' as any,
+      action: 'cancellation.initiated',
       resource: request.id,
       result: 'success',
       metadata: {
@@ -150,7 +150,7 @@ export class EventDrivenCancellationService {
         requestId: request.id,
         userId,
         subscriptionId: validatedInput.subscriptionId,
-        method: validatedInput.preferredMethod || 'api',
+        method: validatedInput.preferredMethod ?? 'api',
         priority: validatedInput.priority,
         metadata: {
           workflowId,
@@ -192,7 +192,7 @@ export class EventDrivenCancellationService {
     const workflowData = {
       requestId,
       subscriptionId: input.subscriptionId,
-      method: input.preferredMethod || 'api',
+      method: input.preferredMethod ?? 'api',
       priority: input.priority,
       notificationPreferences: input.notificationPreferences,
     };
@@ -345,7 +345,8 @@ export class EventDrivenCancellationService {
 
     // Get workflow status if available
     let workflowStatus;
-    const workflowId = (request as any).metadata?.workflowId;
+    const errorDetails = request.errorDetails as Record<string, unknown> | null;
+    const workflowId = errorDetails?.workflowId as string | undefined;
     if (workflowId) {
       workflowStatus = this.workflowEngine.getWorkflowStatus(workflowId);
     }
@@ -398,7 +399,7 @@ export class EventDrivenCancellationService {
     // Listen for workflow progress updates
     onCancellationEvent('analytics.track', data => {
       if (data.event === 'workflow.completed' && data.properties.workflowId) {
-        this.handleWorkflowCompletion(data.userId, data.properties);
+        void this.handleWorkflowCompletion(data.userId, data.properties);
       }
     });
 
@@ -408,17 +409,19 @@ export class EventDrivenCancellationService {
         data.event === 'job.completed' &&
         data.properties.jobType?.startsWith('cancellation.')
       ) {
-        this.handleJobCompletion(data.userId, data.properties);
+        void this.handleJobCompletion(data.userId, data.properties);
       }
     });
 
     // Enhanced failure handling with automatic retry logic
-    onCancellationEvent('cancellation.failed', async data => {
-      if (data.willRetry) {
-        await this.handleAutomaticRetry(data);
-      } else {
-        await this.handleFinalFailure(data);
-      }
+    onCancellationEvent('cancellation.failed', data => {
+      void (async () => {
+        if (data.willRetry) {
+          await this.handleAutomaticRetry(data);
+        } else {
+          await this.handleFinalFailure(data);
+        }
+      })();
     });
 
     console.log(
@@ -431,7 +434,7 @@ export class EventDrivenCancellationService {
    */
   private async handleWorkflowCompletion(
     userId: string,
-    properties: any
+    properties: Record<string, unknown>
   ): Promise<void> {
     try {
       // Send completion notification with workflow summary
@@ -460,7 +463,7 @@ export class EventDrivenCancellationService {
    */
   private async handleJobCompletion(
     userId: string,
-    properties: any
+    properties: Record<string, unknown>
   ): Promise<void> {
     try {
       const jobTypeMap: Record<string, string> = {
@@ -471,7 +474,7 @@ export class EventDrivenCancellationService {
         'cancellation.confirm': 'Cancellation Confirmed',
       };
 
-      const title = jobTypeMap[properties.jobType] || 'Processing Complete';
+      const title = jobTypeMap[properties.jobType] ?? 'Processing Complete';
 
       sendRealtimeNotification(userId, {
         type: 'job.status',
@@ -516,7 +519,7 @@ export class EventDrivenCancellationService {
       // Log retry scheduling
       await AuditLogger.log({
         userId: data.userId,
-        action: 'update' as any,
+        action: 'subscription.cancelled',
         resource: data.requestId,
         result: 'success',
         metadata: {
@@ -570,7 +573,7 @@ export class EventDrivenCancellationService {
       // Log final failure
       await AuditLogger.log({
         userId: data.userId,
-        action: 'delete' as any,
+        action: 'subscription.cancelled',
         resource: data.requestId,
         result: 'failure',
         error: data.error,
@@ -650,7 +653,7 @@ export class EventDrivenCancellationService {
         nextSteps.push('Manual cancellation instructions available');
         nextSteps.push('Contact support if needed');
         break;
-      case 'scheduled':
+      case 'scheduled': {
         const scheduleFor = request.metadata?.scheduleFor;
         if (scheduleFor) {
           nextSteps.push(
@@ -659,6 +662,7 @@ export class EventDrivenCancellationService {
         }
         nextSteps.push('Can be cancelled before execution');
         break;
+      }
       default:
         nextSteps.push('Status unknown - contact support');
     }
@@ -758,14 +762,12 @@ export class EventDrivenCancellationService {
     const methodData: Record<string, any> = {};
 
     for (const stat of stats) {
-      if (!methodData[stat.method]) {
-        methodData[stat.method] = {
+      methodData[stat.method] ??= {
           total: 0,
           completed: 0,
           failed: 0,
           pending: 0,
         };
-      }
 
       methodData[stat.method].total += stat._count.method;
       methodData[stat.method][stat.status] += stat._count.method;

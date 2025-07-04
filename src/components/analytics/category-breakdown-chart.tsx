@@ -77,10 +77,11 @@ export function CategoryBreakdownChart({
   });
 
   // Get color for category
-  const getColor = (category: string, index: number) => {
+  const getColor = (category: string, index: number): string => {
     return (
-      CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] ||
-      FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+      CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS] ??
+      FALLBACK_COLORS[index % FALLBACK_COLORS.length] ??
+      '#6b7280'
     );
   };
 
@@ -111,7 +112,7 @@ export function CategoryBreakdownChart({
     if (!active || !payload?.length) return null;
 
     const data = payload[0]?.payload;
-    if (!data) return null;
+    if (!data || typeof data !== 'object') return null;
 
     return (
       <div className="rounded-lg border bg-background p-3 shadow-md">
@@ -223,7 +224,13 @@ export function CategoryBreakdownChart({
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ category, percentage }) =>
+                label={({
+                  category,
+                  percentage,
+                }: {
+                  category: string;
+                  percentage: number;
+                }) =>
                   percentage > 5 ? `${category} ${percentage.toFixed(2)}%` : ''
                 }
                 outerRadius={Math.min(height * 0.35, 150)}

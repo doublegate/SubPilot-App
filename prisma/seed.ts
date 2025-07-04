@@ -60,8 +60,8 @@ async function main() {
     return;
   }
 
-  const email = process.env.TEST_USER_EMAIL || 'test@subpilot.dev';
-  const password = process.env.TEST_USER_PASSWORD || 'testpassword123';
+  const email = process.env.TEST_USER_EMAIL ?? 'test@subpilot.dev';
+  const password = process.env.TEST_USER_PASSWORD ?? 'testpassword123';
 
   // Warn about test user in development
   if (!process.env.TEST_USER_PASSWORD) {

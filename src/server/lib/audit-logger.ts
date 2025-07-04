@@ -272,7 +272,7 @@ export class AuditLogger {
     if (filters.action) where.action = filters.action;
     if (filters.result) where.result = filters.result;
 
-    if (filters.startDate || filters.endDate) {
+    if (filters.startDate ?? filters.endDate) {
       where.timestamp = {
         ...(filters.startDate && { gte: filters.startDate }),
         ...(filters.endDate && { lte: filters.endDate }),

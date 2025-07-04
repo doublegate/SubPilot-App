@@ -11,6 +11,33 @@ import { CancellationConfirmationModal } from './cancellation-confirmation-modal
 import { LightweightCancellationModal } from './lightweight-cancellation-modal';
 import { formatDistanceToNow } from 'date-fns';
 
+// Type guard for request object
+function isValidRequest(data: unknown): data is {
+  id: string;
+  status: string;
+  subscription: { name: string };
+  createdAt: string;
+} {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'id' in data &&
+    'status' in data &&
+    'subscription' in data &&
+    'createdAt' in data
+  );
+}
+
+// Type guard for history array
+function isValidHistory(data: unknown): data is Array<{
+  id: string;
+  status: string;
+  subscription: { name: string };
+  createdAt: string;
+}> {
+  return Array.isArray(data) && data.every(isValidRequest);
+}
+
 export function LightweightCancellationDashboard() {
   const [selectedRequestId, setSelectedRequestId] = useState<string>('');
   const [selectedSubscriptionName, setSelectedSubscriptionName] =
@@ -56,7 +83,7 @@ export function LightweightCancellationDashboard() {
     setShowConfirmationModal(false);
     setSelectedRequestId('');
     setSelectedSubscriptionName('');
-    refetch();
+    void refetch().catch(console.error);
   };
 
   const getStatusColor = (status: string) => {
@@ -149,11 +176,11 @@ export function LightweightCancellationDashboard() {
                 process, it will appear here.
               </AlertDescription>
             </Alert>
-          ) : (
+          ) : isValidHistory(history) ? (
             <div className="space-y-4">
               {history.map(request => (
                 <div
-                  key={request.id}
+                  key={String(request.id)}
                   className="rounded-lg border p-4 transition-colors hover:bg-gray-50"
                 >
                   <div className="flex items-start justify-between">
@@ -181,7 +208,9 @@ export function LightweightCancellationDashboard() {
                         {request.completedAt && (
                           <p>
                             Completed{' '}
-                            {formatDistanceToNow(new Date(request.completedAt))}{' '}
+                            {formatDistanceToNow(
+                              new Date(String(request.completedAt))
+                            )}{' '}
                             ago
                           </p>
                         )}
@@ -192,7 +221,7 @@ export function LightweightCancellationDashboard() {
                           <p>
                             Effective:{' '}
                             {new Date(
-                              request.effectiveDate
+                              String(request.effectiveDate)
                             ).toLocaleDateString()}
                           </p>
                         )}
@@ -251,6 +280,13 @@ export function LightweightCancellationDashboard() {
                 </div>
               ))}
             </div>
+          ) : (
+            <Alert>
+              <Icons.alertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Unable to load cancellation history. Please try refreshing.
+              </AlertDescription>
+            </Alert>
           )}
         </CardContent>
       </Card>
@@ -271,7 +307,11 @@ export function LightweightCancellationDashboard() {
           onClose={() => setShowInstructionsModal(false)}
           subscriptionId="" // Not needed for viewing existing
           subscriptionName={selectedSubscriptionName}
-          onInstructionsGenerated={() => {}} // Not applicable
+          onInstructionsGenerated={(requestId: string) => {
+            // Dashboard view only - no need to handle instruction generation
+            // as we're viewing existing instructions, not creating new ones
+            console.debug('Instructions generated with requestId:', requestId);
+          }}
         />
       )}
     </div>

@@ -17,7 +17,6 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import {
   CreditCard,
-  ExternalLink,
   AlertCircle,
   Download,
   Loader2,
@@ -129,7 +128,7 @@ export function BillingSettings() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">
-                {subscription?.plan?.displayName || 'Free'}
+                {subscription?.plan?.displayName ?? 'Free'}
               </h3>
               <p className="text-sm text-muted-foreground">
                 {subscription?.plan?.description}
@@ -144,7 +143,7 @@ export function BillingSettings() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Price</span>
                   <span className="font-medium">
-                    ${Number(subscription?.plan?.price || 0).toFixed(2)}/month
+                    ${Number(subscription?.plan?.price ?? 0).toFixed(2)}/month
                   </span>
                 </div>
                 {subscription &&
@@ -315,7 +314,7 @@ export function BillingSettings() {
                 >
                   <div>
                     <p className="font-medium">
-                      Invoice #{invoice.number || invoice.id?.slice(-8)}
+                      Invoice #{invoice.number ?? invoice.id?.slice(-8)}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {invoice.paidAt
@@ -330,7 +329,7 @@ export function BillingSettings() {
                     <Button size="sm" variant="ghost" asChild>
                       <a
                         href={
-                          invoice.invoicePdf || invoice.hostedInvoiceUrl || '#'
+                          invoice.invoicePdf ?? invoice.hostedInvoiceUrl ?? '#'
                         }
                         target="_blank"
                         rel="noopener noreferrer"

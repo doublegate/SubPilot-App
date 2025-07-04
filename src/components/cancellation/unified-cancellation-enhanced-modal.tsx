@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -26,15 +27,10 @@ import {
   Loader2,
   Wifi,
   WifiOff,
-  Play,
-  Pause,
-  Square,
-  RefreshCw,
   ExternalLink,
   Phone,
   Mail,
   MessageCircle,
-  Shield,
   TrendingUp,
   Users,
   Timer,
@@ -42,6 +38,12 @@ import {
 } from 'lucide-react';
 import { api } from '@/trpc/react';
 import { toast } from 'sonner';
+import type {
+  CancellationResult,
+  CancellationModalProps,
+  ManualInstructions,
+  ConfirmManualRequest,
+} from '@/types/cancellation';
 
 interface Subscription {
   id: string;
@@ -51,11 +53,45 @@ interface Subscription {
   nextBilling?: Date;
 }
 
+interface CancellationResult {
+  status: string;
+  message?: string;
+  orchestrationId?: string;
+  requestId?: string;
+  method?: string;
+  estimatedCompletion?: string;
+  manualInstructions?: ManualInstructions;
+  metadata?: Record<string, unknown>;
+  confirmationCode?: string;
+  effectiveDate?: string | Date;
+  refundAmount?: number;
+}
+
+interface ManualInstructions {
+  provider: {
+    name: string;
+    logo?: string;
+    difficulty?: 'easy' | 'medium' | 'hard';
+  };
+  instructions: string[];
+  contactInfo?: {
+    phone?: string;
+    email?: string;
+    website?: string;
+    chat?: string;
+  };
+  estimatedTime: number;
+  tips?: string[];
+  warnings?: string[];
+}
+
+// This interface was moved to a shared location to avoid duplication
+
 interface UnifiedCancellationEnhancedModalProps {
   isOpen: boolean;
   onClose: () => void;
   subscription: Subscription;
-  onSuccess?: (result: any) => void;
+  onSuccess?: (_result: CancellationResult) => void;
 }
 
 interface CancellationMethod {
@@ -77,7 +113,34 @@ interface RealTimeUpdate {
   method?: string;
   error?: string;
   progress?: number;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
+  willRetry?: boolean;
+  finalStatus?: string;
+}
+
+interface ProviderCapabilitiesResponse {
+  subscription: {
+    id: string;
+    name: string;
+  };
+  provider: {
+    id: string;
+    name: string;
+    dataSource: string;
+    lastAssessed: Date;
+  } | null;
+  capabilities: {
+    difficulty: string;
+    requires2FA: boolean;
+    hasRetentionOffers: boolean;
+    requiresHumanIntervention: boolean;
+  };
+  methods: CancellationMethod[];
+  recommendations?: {
+    primaryMethod: string;
+    reasoning: string[];
+    considerations: string[];
+  };
 }
 
 export function UnifiedCancellationEnhancedModal({
@@ -106,71 +169,84 @@ export function UnifiedCancellationEnhancedModal({
   const [estimatedCompletion, setEstimatedCompletion] = useState<Date | null>(
     null
   );
-  const [result, setResult] = useState<any>(null);
-  const [manualInstructions, setManualInstructions] = useState<any>(null);
+  const [result, setResult] = useState<CancellationResult | null>(null);
+  const [manualInstructions, setManualInstructions] =
+    useState<ManualInstructions | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Refs for SSE and cleanup
   const eventSourceRef = useRef<EventSource | null>(null);
-  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // API queries and mutations
-  const { data: eligibility, isLoading: checkingEligibility } = (
-    api.unifiedCancellationEnhanced.canCancel as any
-  ).useQuery({ subscriptionId: subscription.id }, { enabled: isOpen });
+  const { data: eligibility, isLoading: checkingEligibility } =
+    api.unifiedCancellationEnhanced.canCancel.useQuery(
+      { subscriptionId: subscription.id },
+      { enabled: isOpen }
+    );
 
-  const { data: capabilities, isLoading: loadingCapabilities } = (
-    api.unifiedCancellationEnhanced.getProviderCapabilities as any
-  ).useQuery(
-    { subscriptionId: subscription.id },
-    { enabled: isOpen && currentStep === 'method-selection' }
-  );
+  const { data: capabilities, isLoading: loadingCapabilities } =
+    api.unifiedCancellationEnhanced.getProviderCapabilities.useQuery(
+      { subscriptionId: subscription.id },
+      { enabled: isOpen && currentStep === 'method-selection' }
+    ) as { data: ProviderCapabilitiesResponse | undefined; isLoading: boolean };
 
-  const initiateCancellation = (
-    api.unifiedCancellationEnhanced.initiate as any
-  ).useMutation({
-    onSuccess: (data: any) => {
-      setResult(data);
-      setOrchestrationId(data.orchestrationId);
-      setRequestId(data.requestId);
-      setEstimatedCompletion(
-        data.estimatedCompletion ? new Date(data.estimatedCompletion) : null
-      );
+  const initiateCancellation =
+    api.unifiedCancellationEnhanced.initiate.useMutation({
+      onSuccess: (data: CancellationResult) => {
+        setResult(data);
+        setOrchestrationId(data.orchestrationId ?? null);
+        setRequestId(data.requestId ?? null);
+        setEstimatedCompletion(
+          data.estimatedCompletion ? new Date(data.estimatedCompletion) : null
+        );
 
-      if (data.status === 'requires_manual') {
-        setManualInstructions(data.manualInstructions);
-        setCurrentStep('manual-instructions');
-      } else if (data.status === 'completed') {
+        if (data.status === 'requires_manual') {
+          setManualInstructions(data.manualInstructions ?? null);
+          setCurrentStep('manual-instructions');
+        } else if (data.status === 'completed') {
+          setCurrentStep('completed');
+        } else {
+          setCurrentStep('processing');
+          // Start real-time updates
+          if (data.orchestrationId) {
+            connectToRealTimeUpdates(data.orchestrationId);
+          }
+        }
+
+        setIsProcessing(false);
+        toast.success('Cancellation initiated successfully');
+      },
+      onError: (error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        setError(errorMessage);
+        setIsProcessing(false);
+        toast.error(`Failed to initiate cancellation: ${errorMessage}`);
+      },
+    });
+
+  const confirmManual =
+    api.unifiedCancellationEnhanced.confirmManual.useMutation({
+      onSuccess: (data: CancellationResult) => {
+        // Transform API response to match CancellationResult interface
+        const result: CancellationResult = {
+          status: data.status,
+          message: data.message,
+          requestId: data.requestId,
+          confirmationCode: data.confirmationCode,
+          effectiveDate: data.effectiveDate,
+          refundAmount: data.refundAmount,
+        };
+        setResult(result);
         setCurrentStep('completed');
-      } else {
-        setCurrentStep('processing');
-        // Start real-time updates
-        connectToRealTimeUpdates(data.orchestrationId);
-      }
-
-      setIsProcessing(false);
-      toast.success('Cancellation initiated successfully');
-    },
-    onError: (error: any) => {
-      setError(error.message);
-      setIsProcessing(false);
-      toast.error(`Failed to initiate cancellation: ${error.message}`);
-    },
-  });
-
-  const confirmManual = (
-    api.unifiedCancellationEnhanced.confirmManual as any
-  ).useMutation({
-    onSuccess: (data: any) => {
-      setResult(data);
-      setCurrentStep('completed');
-      toast.success('Manual cancellation confirmed');
-      onSuccess?.(data);
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to confirm cancellation: ${error.message}`);
-    },
-  });
+        toast.success('Manual cancellation confirmed');
+        onSuccess?.(result);
+      },
+      onError: (error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        toast.error(`Failed to confirm cancellation: ${errorMessage}`);
+      },
+    });
 
   // Real-time updates via Server-Sent Events
   const connectToRealTimeUpdates = (orchId: string) => {
@@ -188,8 +264,12 @@ export function UnifiedCancellationEnhancedModal({
 
     eventSource.onmessage = event => {
       try {
-        const update: RealTimeUpdate = JSON.parse(event.data);
-        handleRealTimeUpdate(update);
+        const eventData = event.data as string;
+        const parsedData: unknown = JSON.parse(eventData);
+        if (typeof parsedData === 'object' && parsedData && 'type' in parsedData) {
+          const update = parsedData as RealTimeUpdate;
+          handleRealTimeUpdate(update);
+        }
       } catch (error) {
         console.error('[SSE] Error parsing update:', error);
       }
@@ -222,7 +302,7 @@ export function UnifiedCancellationEnhancedModal({
           setCurrentStep('completed');
           setCurrentProgress(100);
         } else if (update.status === 'failed') {
-          setError(update.message || 'Cancellation failed');
+          setError(update.message ?? 'Cancellation failed');
         }
         break;
 
@@ -233,15 +313,15 @@ export function UnifiedCancellationEnhancedModal({
 
       case 'method_failed':
         toast.warning(
-          `${update.method} method failed${(update as any).willRetry ? ', trying alternative...' : ''}`
+          `${update.method} method failed${update.willRetry ? ', trying alternative...' : ''}`
         );
-        if ((update as any).willRetry) {
+        if (update.willRetry) {
           setCurrentProgress(50);
         }
         break;
 
       case 'orchestration_final':
-        if ((update as any).finalStatus === 'completed') {
+        if (update.finalStatus === 'completed') {
           setCurrentStep('completed');
           setCurrentProgress(100);
           toast.success('Cancellation completed successfully!');
@@ -259,13 +339,13 @@ export function UnifiedCancellationEnhancedModal({
   };
 
   // Disconnect from real-time updates
-  const disconnectRealTimeUpdates = () => {
+  const disconnectRealTimeUpdates = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
     setIsConnected(false);
-  };
+  }, []);
 
   // Handle method selection and confirmation
   const handleProceed = () => {
@@ -324,13 +404,14 @@ export function UnifiedCancellationEnhancedModal({
 
   // Cleanup on unmount
   useEffect(() => {
+    const timeoutRef = updateTimeoutRef.current;
     return () => {
       disconnectRealTimeUpdates();
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
+      if (timeoutRef) {
+        clearTimeout(timeoutRef);
       }
     };
-  }, []);
+  }, [disconnectRealTimeUpdates]);
 
   // Handle modal close
   const handleClose = () => {
@@ -429,8 +510,8 @@ export function UnifiedCancellationEnhancedModal({
                 <Alert>
                   <CheckCircle2 className="h-4 w-4" />
                   <AlertDescription>
-                    This subscription can be cancelled. We'll help you through
-                    the process.
+                    This subscription can be cancelled. We&apos;ll help you
+                    through the process.
                   </AlertDescription>
                 </Alert>
 
@@ -502,7 +583,7 @@ export function UnifiedCancellationEnhancedModal({
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {eligibility?.message ||
+                  {eligibility?.message ??
                     'This subscription cannot be cancelled at this time.'}
                   {eligibility?.existingRequestId && (
                     <div className="mt-2">
@@ -534,8 +615,8 @@ export function UnifiedCancellationEnhancedModal({
                 Choose Cancellation Method
               </h3>
               <p className="text-muted-foreground">
-                Select how you'd like to cancel your subscription. We recommend
-                the automatic option for best results.
+                Select how you&apos;d like to cancel your subscription. We
+                recommend the automatic option for best results.
               </p>
             </div>
 
@@ -707,7 +788,7 @@ export function UnifiedCancellationEnhancedModal({
               <Label htmlFor="reason">Reason for cancelling (optional)</Label>
               <Textarea
                 id="reason"
-                placeholder="Tell us why you're cancelling..."
+                placeholder="Tell us why you&apos;re cancelling..."
                 value={cancellationReason}
                 onChange={e => setCancellationReason(e.target.value)}
                 className="mt-1"
@@ -718,7 +799,7 @@ export function UnifiedCancellationEnhancedModal({
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 Once started, the cancellation process will begin immediately.
-                You'll receive real-time updates on the progress.
+                You&apos;ll receive real-time updates on the progress.
               </AlertDescription>
             </Alert>
 
@@ -807,7 +888,7 @@ export function UnifiedCancellationEnhancedModal({
                           {new Date(update.timestamp).toLocaleTimeString()}
                         </span>
                         <span className="flex-1">
-                          {update.message || update.type}
+                          {update.message ?? update.type}
                         </span>
                       </div>
                     ))}
@@ -850,9 +931,11 @@ export function UnifiedCancellationEnhancedModal({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   {manualInstructions.provider.logo && (
-                    <img
+                    <Image
                       src={manualInstructions.provider.logo}
                       alt={manualInstructions.provider.name}
+                      width={24}
+                      height={24}
                       className="h-6 w-6"
                     />
                   )}
@@ -881,9 +964,9 @@ export function UnifiedCancellationEnhancedModal({
             </Card>
 
             {/* Contact Information */}
-            {(manualInstructions.contactInfo.website ||
-              manualInstructions.contactInfo.phone ||
-              manualInstructions.contactInfo.email ||
+            {(manualInstructions.contactInfo.website ??
+              manualInstructions.contactInfo.phone ??
+              manualInstructions.contactInfo.email ??
               manualInstructions.contactInfo.chat) && (
               <Card>
                 <CardHeader>
@@ -949,7 +1032,7 @@ export function UnifiedCancellationEnhancedModal({
               </CardHeader>
               <CardContent>
                 <ol className="space-y-3">
-                  {manualInstructions.steps.map(
+                  {manualInstructions.instructions.map(
                     (step: string, index: number) => (
                       <li key={index} className="flex gap-3">
                         <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white">
@@ -1099,10 +1182,10 @@ export function UnifiedCancellationEnhancedModal({
                 <div className="flex gap-3">
                   <Button
                     onClick={() => handleManualConfirmation(true)}
-                    disabled={confirmManual.isLoading}
+                    disabled={confirmManual.isPending}
                     className="flex-1"
                   >
-                    {confirmManual.isLoading ? (
+                    {confirmManual.isPending ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -1112,7 +1195,7 @@ export function UnifiedCancellationEnhancedModal({
                   <Button
                     variant="destructive"
                     onClick={() => handleManualConfirmation(false)}
-                    disabled={confirmManual.isLoading}
+                    disabled={confirmManual.isPending}
                     className="flex-1"
                   >
                     <X className="mr-2 h-4 w-4" />
@@ -1139,7 +1222,7 @@ export function UnifiedCancellationEnhancedModal({
                 {result.status === 'completed' ? 'Completed' : 'Initiated'}!
               </h3>
               <p className="text-muted-foreground">
-                {result.message ||
+                {result.message ??
                   'Your subscription has been successfully cancelled.'}
               </p>
             </div>

@@ -79,7 +79,7 @@ export function CancellationModal({
         priority,
         notes: notes.trim() || undefined,
       });
-    } catch (error) {
+    } catch {
       // Error is handled by the mutation's onError
     }
   };
@@ -89,7 +89,7 @@ export function CancellationModal({
       case 'completed':
         return 'Your subscription has been cancelled successfully!';
       case 'processing':
-        return "Cancellation is being processed. You'll be notified when complete.";
+        return "Cancellation is being processed. You&apos;ll be notified when complete.";
       case 'pending':
         return 'Manual cancellation instructions have been generated.';
       default:

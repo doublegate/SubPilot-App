@@ -6,11 +6,59 @@ import { WebhookJobProcessor } from './webhook-processor';
 import { AnalyticsJobProcessor } from './analytics-processor';
 import { AuditLogger } from '@/server/lib/audit-logger';
 
+// Advanced Generic Types for Job Processing
+type JobProcessor<T = unknown> = (job: Job<T>) => Promise<JobResult>;
+
+// Template Literal Types for Job Type Safety
+type JobTypePrefix = 'cancellation' | 'notification' | 'webhook' | 'analytics';
+type JobAction = 'validate' | 'process' | 'send' | 'track' | 'aggregate' | 'api' | 'manual_instructions' | 'confirm' | 'update_status' | 'bulk_send' | 'process_data';
+type JobType = `${JobTypePrefix}.${JobAction}`;
+
+// Conditional Types for Job Data Validation
+type JobDataFor<T extends JobType> = 
+  T extends `cancellation.${string}` ? CancellationJobData :
+  T extends `notification.${string}` ? NotificationJobData :
+  T extends `webhook.${string}` ? WebhookJobData :
+  T extends `analytics.${string}` ? AnalyticsJobData :
+  Record<string, unknown>;
+
+// Branded Job Types for Type Safety
+interface CancellationJobData {
+  subscriptionId: string;
+  userId: string;
+  method?: string;
+  reason?: string;
+}
+
+interface NotificationJobData {
+  userId: string;
+  type: string;
+  message: string;
+  title: string;
+}
+
+interface WebhookJobData {
+  signature: string;
+  payload: Record<string, unknown>;
+  source: string;
+}
+
+interface AnalyticsJobData {
+  userId: string;
+  event: string;
+  properties: Record<string, unknown>;
+}
+
+// Mapped Types for Processor Registry
+type ProcessorRegistry = {
+  [K in JobType]: JobProcessor<JobDataFor<K>>;
+};
+
 /**
  * Central registry for all job processors
  */
 export class JobProcessorRegistry {
-  private processors = new Map<string, (job: Job) => Promise<JobResult>>();
+  private processors = new Map<JobType, JobProcessor>();
   private isStarted = false;
 
   constructor(private db: PrismaClient) {
@@ -76,10 +124,13 @@ export class JobProcessorRegistry {
   }
 
   /**
-   * Register a job processor
+   * Register a job processor with type safety
    */
-  register(jobType: string, processor: (job: Job) => Promise<JobResult>): void {
-    this.processors.set(jobType, processor);
+  register<T extends JobType>(
+    jobType: T, 
+    processor: JobProcessor<JobDataFor<T>>
+  ): void {
+    this.processors.set(jobType, processor as JobProcessor);
     console.log(`[JobProcessorRegistry] Registered processor for: ${jobType}`);
   }
 
@@ -109,7 +160,7 @@ export class JobProcessorRegistry {
 
           // Log successful processing
           await AuditLogger.log({
-            userId: job.data?.userId || 'system',
+            userId: job.data?.userId ?? 'system',
             action: 'job.processed',
             resource: job.id,
             result: result.success ? 'success' : 'failure',
@@ -139,7 +190,7 @@ export class JobProcessorRegistry {
 
           // Log processing error
           await AuditLogger.log({
-            userId: job.data?.userId || 'system',
+            userId: job.data?.userId ?? 'system',
             action: 'job.error',
             resource: job.id,
             result: 'failure',
@@ -224,14 +275,14 @@ export class JobProcessorRegistry {
   /**
    * Check if a processor is registered for a job type
    */
-  hasProcessor(jobType: string): boolean {
+  hasProcessor(jobType: JobType): boolean {
     return this.processors.has(jobType);
   }
 
   /**
-   * Get all registered job types
+   * Get all registered job types with type safety
    */
-  getJobTypes(): string[] {
+  getJobTypes(): JobType[] {
     return Array.from(this.processors.keys());
   }
 }
@@ -242,9 +293,7 @@ let registryInstance: JobProcessorRegistry | null = null;
 export const getJobProcessorRegistry = (
   db: PrismaClient
 ): JobProcessorRegistry => {
-  if (!registryInstance) {
-    registryInstance = new JobProcessorRegistry(db);
-  }
+  registryInstance ??= new JobProcessorRegistry(db);
   return registryInstance;
 };
 
@@ -269,12 +318,31 @@ export const shutdownJobProcessors = async (): Promise<void> => {
   }
 };
 
-// Health check for job processors
-export const checkJobProcessorHealth = async (): Promise<{
+// Advanced Health Check Types
+interface JobProcessorStats {
+  registered: number;
+  isStarted: boolean;
+  processors: JobType[];
+}
+
+interface QueueStats {
+  pending: number;
+  active: number;
+  completed: number;
+  failed: number;
+}
+
+interface HealthCheckResult {
   healthy: boolean;
-  stats?: any;
+  stats?: {
+    processors: JobProcessorStats;
+    queue: QueueStats;
+  };
   error?: string;
-}> => {
+}
+
+// Health check for job processors with type safety
+export const checkJobProcessorHealth = async (): Promise<HealthCheckResult> => {
   try {
     if (!registryInstance) {
       return {

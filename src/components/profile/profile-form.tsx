@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
@@ -20,11 +20,7 @@ export function ProfileForm() {
     email: user?.email ?? '',
   });
 
-  if (!user) {
-    return <div>Loading...</div>;
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -33,14 +29,34 @@ export function ProfileForm() {
       toast.success('Profile updated successfully');
       setIsLoading(false);
     }, 1000);
-  };
+  }, []);
+
+  const handleAvatarChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // TODO: Implement avatar upload
+      toast.info('Avatar upload feature coming soon!');
+    }
+  }, []);
+
+  const handleAvatarClick = useCallback(() => {
+    document.getElementById('avatar-upload')?.click();
+  }, []);
+
+  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, name: e.target.value }));
+  }, []);
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex items-center space-x-6">
         <div className="shrink-0">
           <Avatar className="h-24 w-24">
-            <AvatarImage src={user.image || ''} />
+            <AvatarImage src={user.image ?? ''} />
             <AvatarFallback className="text-2xl">
               {user.name?.[0]?.toUpperCase() ?? user.email?.[0]?.toUpperCase()}
             </AvatarFallback>
@@ -55,13 +71,7 @@ export function ProfileForm() {
             id="avatar-upload"
             className="hidden"
             accept="image/*"
-            onChange={async e => {
-              const file = e.target.files?.[0];
-              if (file) {
-                // TODO: Implement avatar upload
-                toast.info('Avatar upload feature coming soon!');
-              }
-            }}
+            onChange={handleAvatarChange}
           />
           <Button
             type="button"
@@ -69,7 +79,7 @@ export function ProfileForm() {
             size="sm"
             className="text-sm"
             disabled={isLoading}
-            onClick={() => document.getElementById('avatar-upload')?.click()}
+            onClick={handleAvatarClick}
           >
             Change avatar
           </Button>
@@ -82,7 +92,7 @@ export function ProfileForm() {
           id="name"
           type="text"
           value={formData.name}
-          onChange={e => setFormData({ ...formData, name: e.target.value })}
+          onChange={handleNameChange}
           disabled={isLoading}
         />
       </div>

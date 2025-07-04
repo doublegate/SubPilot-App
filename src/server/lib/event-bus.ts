@@ -6,6 +6,20 @@ import { EventEmitter } from 'events';
  * Provides a unified event system for communication between different
  * cancellation services and components.
  */
+
+// Define the event data type
+export interface CancellationEventData {
+  requestId?: string;
+  orchestrationId?: string;
+  userId?: string;
+  subscriptionId?: string;
+  method?: 'api' | 'automation' | 'manual';
+  status?: string;
+  error?: string;
+  progress?: number;
+  metadata?: Record<string, unknown>;
+  [key: string]: unknown;
+}
 class CancellationEventBus extends EventEmitter {
   private static instance: CancellationEventBus;
 
@@ -24,7 +38,10 @@ class CancellationEventBus extends EventEmitter {
   /**
    * Emit a cancellation-related event
    */
-  public emitCancellationEvent(eventType: string, data: any): void {
+  public emitCancellationEvent(
+    eventType: string,
+    data: CancellationEventData
+  ): void {
     this.emit(eventType, data);
 
     // Also emit a generic 'cancellation' event for global listeners
@@ -41,7 +58,7 @@ class CancellationEventBus extends EventEmitter {
    */
   public onCancellationEvent(
     eventType: string,
-    listener: (data: any) => void
+    listener: (data: CancellationEventData) => void
   ): void {
     this.on(eventType, listener);
   }
@@ -51,7 +68,7 @@ class CancellationEventBus extends EventEmitter {
    */
   public onceCancellationEvent(
     eventType: string,
-    listener: (data: any) => void
+    listener: (data: CancellationEventData) => void
   ): void {
     this.once(eventType, listener);
   }
@@ -61,7 +78,7 @@ class CancellationEventBus extends EventEmitter {
    */
   public offCancellationEvent(
     eventType: string,
-    listener: (data: any) => void
+    listener: (data: CancellationEventData) => void
   ): void {
     this.off(eventType, listener);
   }
@@ -96,27 +113,30 @@ class CancellationEventBus extends EventEmitter {
 const eventBus = CancellationEventBus.getInstance();
 
 // Export convenience functions
-export function emitCancellationEvent(eventType: string, data: any): void {
+export function emitCancellationEvent(
+  eventType: string,
+  data: CancellationEventData
+): void {
   eventBus.emitCancellationEvent(eventType, data);
 }
 
 export function onCancellationEvent(
   eventType: string,
-  listener: (data: any) => void
+  listener: (data: CancellationEventData) => void
 ): void {
   eventBus.onCancellationEvent(eventType, listener);
 }
 
 export function onceCancellationEvent(
   eventType: string,
-  listener: (data: any) => void
+  listener: (data: CancellationEventData) => void
 ): void {
   eventBus.onceCancellationEvent(eventType, listener);
 }
 
 export function offCancellationEvent(
   eventType: string,
-  listener: (data: any) => void
+  listener: (data: CancellationEventData) => void
 ): void {
   eventBus.offCancellationEvent(eventType, listener);
 }

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { encrypt, decrypt, hashData } from '../crypto';
 
 // Mock environment
-vi.mock('@/env.js', () => ({
+vi.mock('@/env', () => ({
   env: {
     NODE_ENV: 'development',
     NEXTAUTH_SECRET: 'test-secret-key-for-encryption-thats-long-enough',

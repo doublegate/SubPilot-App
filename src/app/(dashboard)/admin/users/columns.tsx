@@ -37,15 +37,15 @@ export const columns: ColumnDef<User>[] = [
       return (
         <div className="flex items-center gap-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.image || ''} />
+            <AvatarImage src={user.image ?? ''} />
             <AvatarFallback>
-              {user.name?.[0]?.toUpperCase() ||
-                user.email?.[0]?.toUpperCase() ||
+              {user.name?.[0]?.toUpperCase() ??
+                user.email?.[0]?.toUpperCase() ??
                 '?'}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">{user.name || 'Unknown'}</p>
+            <p className="font-medium">{user.name ?? 'Unknown'}</p>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
@@ -75,9 +75,10 @@ export const columns: ColumnDef<User>[] = [
     header: 'Plan',
     cell: ({ row }) => {
       const plan = row.getValue('subscriptionPlan');
+      const planString = typeof plan === 'string' ? plan : 'Unknown';
       const variant =
-        plan === 'pro' || plan === 'team' ? 'default' : 'secondary';
-      return <Badge variant={variant}>{plan}</Badge>;
+        planString === 'pro' || planString === 'team' ? 'default' : 'secondary';
+      return <Badge variant={variant}>{planString}</Badge>;
     },
   },
   {

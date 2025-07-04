@@ -64,7 +64,7 @@ export function CreateAccountDialog({
   const createAccount = api.account.create.useMutation({
     onSuccess: () => {
       toast.success('Team account created successfully');
-      utils.account.list.invalidate();
+      void utils.account.list.invalidate().catch(console.error);
       onOpenChange(false);
       form.reset();
     },

@@ -145,7 +145,7 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
 
   // Calculate month summary
   const getMonthSummary = (month: number) => {
-    const monthData = monthsData[month] || [];
+    const monthData = monthsData[month] ?? [];
     const total = monthData.reduce((sum, day) => sum + day.value, 0);
     const average = monthData.length > 0 ? total / monthData.length : 0;
     const nonZeroDays = monthData.filter(day => day.value > 0).length;
@@ -154,7 +154,6 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
 
   // Render mini month view for year overview
   const renderMiniMonth = (month: number) => {
-    const monthData = monthsData[month] || [];
     const summary = getMonthSummary(month);
 
     // Create a simple visualization - just show intensity
@@ -208,7 +207,7 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
 
   // Render full month view
   const renderFullMonth = (month: number) => {
-    const monthData = monthsData[month] || [];
+    const monthData = monthsData[month] ?? [];
     const summary = getMonthSummary(month);
 
     // Create a 6x7 grid for the month
@@ -226,7 +225,7 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
       const dayIndex = (day - 1 + firstDay) % 7;
       const weekIndex = Math.floor((day - 1 + firstDay) / 7);
       if (weekIndex < 6) {
-        grid[weekIndex]![dayIndex] = dayData || { day, month, value: 0 };
+        grid[weekIndex]![dayIndex] = dayData ?? { day, month, value: 0 };
       }
     }
 

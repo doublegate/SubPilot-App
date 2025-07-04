@@ -318,11 +318,12 @@ export const analyticsRouter = createTRPCRouter({
           case 'day':
             key = t.date.toISOString().split('T')[0] ?? '';
             break;
-          case 'week':
+          case 'week': {
             const week = new Date(t.date);
             week.setDate(week.getDate() - week.getDay());
             key = week.toISOString().split('T')[0] ?? '';
             break;
+          }
           case 'month':
             key = `${t.date.getFullYear()}-${String(t.date.getMonth() + 1).padStart(2, '0')}`;
             break;
@@ -398,13 +399,13 @@ export const analyticsRouter = createTRPCRouter({
 
     const unusedSubscriptions = subscriptions.filter(s => {
       if (!s.isActive) return false;
-      const lastTransaction = s.transactions[0];
+      const lastTransaction = s.transactions?.[0];
       return !lastTransaction || lastTransaction.date < sixtyDaysAgo;
     });
 
     // Find price increases
     const priceIncreases = subscriptions.filter(s => {
-      if (s.transactions.length < 2) return false;
+      if (!s.transactions || s.transactions.length < 2) return false;
       const recent = s.transactions[0];
       const previous = s.transactions[1];
       if (!recent || !previous) return false;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { AssistantChat } from './AssistantChat';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';

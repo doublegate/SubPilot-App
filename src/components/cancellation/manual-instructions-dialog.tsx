@@ -18,10 +18,32 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/ui/icons';
 
+interface CancellationInstructions {
+  provider: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  estimatedTime?: string;
+  steps?: Array<{
+    title: string;
+    description: string;
+    url?: string;
+    note?: string;
+  }>;
+  specificSteps?: string[];
+  alternativeMethod?: {
+    description: string;
+    contactInfo?: string;
+  };
+  tips?: string[];
+  website?: string;
+  phone?: string;
+  email?: string;
+  chatUrl?: string;
+}
+
 interface ManualInstructionsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  instructions: any;
+  instructions: CancellationInstructions;
   requestId: string;
   onConfirmation: (data: {
     confirmationCode?: string;
@@ -35,7 +57,7 @@ export function ManualInstructionsDialog({
   isOpen,
   onClose,
   instructions,
-  requestId,
+  requestId: _requestId,
   onConfirmation,
 }: ManualInstructionsDialogProps) {
   const [confirmationCode, setConfirmationCode] = useState('');
@@ -45,7 +67,12 @@ export function ManualInstructionsDialog({
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const handleConfirmCancellation = () => {
-    const data: any = {};
+    const data: {
+      confirmationCode?: string;
+      effectiveDate?: Date;
+      notes?: string;
+      refundAmount?: number;
+    } = {};
 
     if (confirmationCode.trim()) {
       data.confirmationCode = confirmationCode.trim();
@@ -109,9 +136,9 @@ export function ManualInstructionsDialog({
           </div>
 
           {/* Contact Information */}
-          {(instructions.website ||
-            instructions.phone ||
-            instructions.email ||
+          {(instructions.website ??
+            instructions.phone ??
+            instructions.email ??
             instructions.chatUrl) && (
             <div className="grid grid-cols-1 gap-4 rounded-lg bg-muted p-4 md:grid-cols-2">
               <h4 className="col-span-full text-sm font-medium">
@@ -193,7 +220,7 @@ export function ManualInstructionsDialog({
           <div className="space-y-3">
             <h4 className="font-medium">Cancellation Steps</h4>
             <div className="space-y-2">
-              {(instructions.specificSteps || instructions.steps)?.map(
+              {(instructions.specificSteps ?? instructions.steps)?.map(
                 (step: string, index: number) => (
                   <div key={index} className="flex gap-3">
                     <div className="text-primary-foreground flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium">
@@ -228,7 +255,7 @@ export function ManualInstructionsDialog({
             <div className="text-center">
               <Button onClick={() => setShowConfirmation(true)}>
                 <Icons.check className="mr-2 h-4 w-4" />
-                I've Completed the Cancellation
+                I&apos;ve Completed the Cancellation
               </Button>
             </div>
           ) : (
@@ -304,7 +331,7 @@ export function ManualInstructionsDialog({
                 <Icons.info className="h-4 w-4" />
                 <AlertDescription>
                   This information helps us track your cancellation and improve
-                  our service. Only provide details you're comfortable sharing.
+                  our service. Only provide details you&apos;re comfortable sharing.
                 </AlertDescription>
               </Alert>
             </div>

@@ -13,7 +13,7 @@ import { Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function PlaidWebhookConfig() {
-  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.com'}/api/webhooks/plaid`;
+  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://your-domain.com'}/api/webhooks/plaid`;
 
   const webhookEvents = [
     {
@@ -44,8 +44,15 @@ export function PlaidWebhookConfig() {
   ];
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(webhookUrl);
-    toast.success('Webhook URL copied to clipboard');
+    void navigator.clipboard
+      .writeText(webhookUrl)
+      .then(() => {
+        toast.success('Webhook URL copied to clipboard');
+      })
+      .catch(err => {
+        console.error('Failed to copy to clipboard:', err);
+        toast.error('Failed to copy URL');
+      });
   };
 
   return (

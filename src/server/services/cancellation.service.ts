@@ -4,6 +4,51 @@ import { AuditLogger } from '@/server/lib/audit-logger';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
+// Cancellation domain interfaces
+interface CancellationRequestWithRelations {
+  id: string;
+  userId: string;
+  subscriptionId: string;
+  method: string;
+  status: string;
+  provider?: {
+    name: string;
+    type: string;
+    apiEndpoint?: string;
+  };
+  subscription?: {
+    name: string;
+    amount: number;
+    frequency: string;
+  };
+  userNotes?: string;
+  attempts: number;
+  createdAt: Date;
+}
+
+interface SubscriptionWithProvider {
+  id: string;
+  name: string;
+  amount: number;
+  frequency: string;
+  provider?: {
+    name: string;
+    type: string;
+    websiteUrl?: string;
+    supportUrl?: string;
+    phone?: string;
+  };
+}
+
+interface CancellationProvider {
+  name: string;
+  type: string;
+  apiEndpoint?: string;
+  websiteUrl?: string;
+  supportUrl?: string;
+  phone?: string;
+}
+
 // Input schemas for validation
 export const CancellationRequestInput = z.object({
   subscriptionId: z.string(),
@@ -25,7 +70,7 @@ export interface CancellationResult {
   confirmationCode: string | null;
   effectiveDate: Date | null;
   refundAmount: number | null;
-  manualInstructions: any | null;
+  manualInstructions: Record<string, unknown> | null;
   error: string | null;
 }
 
@@ -214,7 +259,7 @@ export class CancellationService {
           refundAmount: result.refundAmount
             ? new Prisma.Decimal(result.refundAmount)
             : null,
-          manualInstructions: result.manualInstructions || {},
+          manualInstructions: result.manualInstructions ?? {},
           completedAt: result.status === 'completed' ? new Date() : null,
           errorCode: result.error ? 'PROCESSING_ERROR' : null,
           errorMessage: result.error,
@@ -290,7 +335,7 @@ export class CancellationService {
    * Process API-based cancellation
    */
   private async processApiCancellation(
-    request: any
+    request: CancellationRequestWithRelations
   ): Promise<CancellationResult> {
     // For now, this will simulate API cancellation
     // In a real implementation, this would call the provider's cancellation API
@@ -346,7 +391,7 @@ export class CancellationService {
    * Process webhook-based cancellation
    */
   private async processWebhookCancellation(
-    request: any
+    request: CancellationRequestWithRelations
   ): Promise<CancellationResult> {
     // For webhook-based cancellations, we would typically:
     // 1. Send a cancellation request to the provider
@@ -375,7 +420,7 @@ export class CancellationService {
    * Process manual cancellation (generates instructions for user)
    */
   private async processManualCancellation(
-    request: any
+    request: CancellationRequestWithRelations
   ): Promise<CancellationResult> {
     const provider = request.provider;
     const subscription = request.subscription;
@@ -406,7 +451,10 @@ export class CancellationService {
   /**
    * Generate manual cancellation instructions
    */
-  private generateManualInstructions(subscription: any, provider: any) {
+  private generateManualInstructions(
+    subscription: SubscriptionWithProvider, 
+    provider: CancellationProvider
+  ) {
     const baseInstructions = {
       service: subscription.name,
       steps: [
@@ -427,7 +475,7 @@ export class CancellationService {
       return {
         ...baseInstructions,
         website:
-          provider.loginUrl ||
+          provider.loginUrl ??
           `https://${subscription.name.toLowerCase()}.com/account`,
         phone: provider.phoneNumber,
         email: provider.email,
@@ -436,7 +484,7 @@ export class CancellationService {
         estimatedTime: provider.averageTime
           ? `${provider.averageTime} minutes`
           : '5-15 minutes',
-        specificSteps: provider.instructions || [],
+        specificSteps: provider.instructions ?? [],
       };
     }
 
@@ -472,12 +520,12 @@ export class CancellationService {
     }
 
     // Update the cancellation request
-    const updatedRequest = await this.db.cancellationRequest.update({
+    const _updatedRequest = await this.db.cancellationRequest.update({
       where: { id: requestId },
       data: {
         status: 'completed',
         confirmationCode: validatedData.confirmationCode,
-        effectiveDate: validatedData.effectiveDate || new Date(),
+        effectiveDate: validatedData.effectiveDate ?? new Date(),
         refundAmount: validatedData.refundAmount
           ? new Prisma.Decimal(validatedData.refundAmount)
           : null,
@@ -524,9 +572,9 @@ export class CancellationService {
     return {
       requestId,
       status: 'completed',
-      confirmationCode: validatedData.confirmationCode || null,
-      effectiveDate: validatedData.effectiveDate || new Date(),
-      refundAmount: validatedData.refundAmount || null,
+      confirmationCode: validatedData.confirmationCode ?? null,
+      effectiveDate: validatedData.effectiveDate ?? new Date(),
+      refundAmount: validatedData.refundAmount ?? null,
       manualInstructions: null,
       error: null,
     };
@@ -555,7 +603,7 @@ export class CancellationService {
 
     return {
       requestId: request.id,
-      status: request.status as any,
+      status: request.status as 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled',
       confirmationCode: request.confirmationCode,
       effectiveDate: request.effectiveDate,
       refundAmount: request.refundAmount
@@ -679,7 +727,7 @@ export class CancellationService {
   /**
    * Determine the best cancellation method for a provider
    */
-  private determineCancellationMethod(provider: any): string {
+  private determineCancellationMethod(provider: CancellationProvider): string {
     if (provider.type === 'api' && provider.apiEndpoint) {
       return 'api';
     }
@@ -697,7 +745,7 @@ export class CancellationService {
     action: string,
     status: string,
     message: string,
-    metadata?: any
+    metadata?: Record<string, unknown>
   ) {
     await this.db.cancellationLog.create({
       data: {
@@ -705,7 +753,7 @@ export class CancellationService {
         action,
         status,
         message,
-        metadata: metadata || {},
+        metadata: metadata ?? {},
       },
     });
   }

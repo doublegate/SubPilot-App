@@ -1,4 +1,5 @@
 import { api } from '@/trpc/server';
+import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -90,9 +91,11 @@ async function SupportedInstitutions() {
           {institutions.map(inst => (
             <div key={inst.id} className="flex items-center gap-3">
               {inst.logo && (
-                <img
+                <Image
                   src={inst.logo}
                   alt={inst.name}
+                  width={32}
+                  height={32}
                   className="h-8 w-8 rounded"
                 />
               )}

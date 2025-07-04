@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { analyticsRouter } from '../analytics';
 import {
@@ -7,7 +6,7 @@ import {
   createMockSubscription,
   createMockTransaction,
 } from '@/test/test-utils';
-import type { MockContext, MockSubscription } from '@/test/test-utils';
+import type { MockContext, MockSubscription, RouterCallerContext } from '@/test/test-utils';
 
 // Create properly typed mock context
 let mockContext: MockContext;
@@ -111,7 +110,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(275.98) },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -171,7 +170,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(100) },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -205,7 +204,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(100) },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getSpendingOverview({
         timeRange: 'month',
       });
@@ -234,7 +233,7 @@ describe('Analytics Router', () => {
     it('should calculate trends correctly', async () => {
       mockContext.db.transaction.findMany.mockResolvedValue(mockTransactions);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getSpendingTrends({
         timeRange: 'month',
         groupBy: 'day',
@@ -301,7 +300,7 @@ describe('Analytics Router', () => {
         monthlyTransactions
       );
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getSpendingTrends({
         timeRange: 'quarter',
         groupBy: 'month',
@@ -352,7 +351,7 @@ describe('Analytics Router', () => {
         subscriptionsWithTransactions
       );
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getSubscriptionInsights();
 
       expect(result.unusedCount).toBe(1);
@@ -381,7 +380,7 @@ describe('Analytics Router', () => {
         subscriptionsWithPriceChanges
       );
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getSubscriptionInsights();
 
       // Note: The router doesn't return priceIncreaseCount, only insights array
@@ -421,7 +420,7 @@ describe('Analytics Router', () => {
         subscriptionsWithAges
       );
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getSubscriptionInsights();
 
       // Note: The router doesn't return averageSubscriptionAge field directly
@@ -465,7 +464,7 @@ describe('Analytics Router', () => {
         upcomingSubscriptions
       );
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
       expect(result.totalCount).toBe(3);
@@ -488,7 +487,7 @@ describe('Analytics Router', () => {
     it('should handle empty renewals', async () => {
       mockContext.db.subscription.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.getUpcomingRenewals({ days: 30 });
 
       expect(result.totalCount).toBe(0);
@@ -502,7 +501,7 @@ describe('Analytics Router', () => {
       mockContext.db.subscription.findMany.mockResolvedValue(mockSubscriptions);
       mockContext.db.transaction.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.exportData({});
 
       expect(result.data?.subscriptions).toEqual(
@@ -520,7 +519,7 @@ describe('Analytics Router', () => {
       ]);
       mockContext.db.transaction.findMany.mockResolvedValue([]);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.exportData({ format: 'json' });
 
       expect(result.subscriptions).toEqual(
@@ -548,7 +547,7 @@ describe('Analytics Router', () => {
         },
       ]);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
       const result = await caller.exportData({
         includeTransactions: true,
         format: 'csv',
@@ -574,7 +573,7 @@ describe('Analytics Router', () => {
         _sum: { amount: createDecimal(100) },
       });
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
 
       // First call
       await caller.getSpendingOverview({ timeRange: 'month' });
@@ -591,7 +590,7 @@ describe('Analytics Router', () => {
 
       mockContext.db.transaction.findMany.mockResolvedValue(mockTransactions);
 
-      const caller = analyticsRouter.createCaller(mockContext as any);
+      const caller = analyticsRouter.createCaller(mockContext as RouterCallerContext);
 
       // First call
       await caller.getSpendingTrends({ timeRange: 'month', groupBy: 'day' });

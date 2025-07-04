@@ -60,7 +60,7 @@ export class SubscriptionDetector {
   private async findExistingSubscription(
     userId: string,
     merchantName: string
-  ): Promise<any> {
+  ): Promise<Subscription | null> {
     const normalizedName = this.normalizeMerchantName(merchantName);
 
     // First try exact match
@@ -130,7 +130,7 @@ export class SubscriptionDetector {
       orderBy: { createdAt: 'asc' }, // Keep oldest entries
     });
 
-    const groups = new Map<string, any[]>();
+    const groups = new Map<string, Subscription[]>();
     let duplicatesRemoved = 0;
 
     // Group subscriptions by normalized name
@@ -260,8 +260,7 @@ export class SubscriptionDetector {
 
       const group: TransactionGroup = {
         merchantName: merchant.merchantName,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        transactions: transactions as any,
+        transactions: transactions as Transaction[],
       };
 
       const result = this.analyzeTransactionGroup(group);
@@ -269,8 +268,10 @@ export class SubscriptionDetector {
         detectionResults.push(result);
 
         // Update transaction records with detection results
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await this.updateTransactionDetection(transactions as any, result);
+        await this.updateTransactionDetection(
+          transactions as Transaction[],
+          result
+        );
       }
     }
 
@@ -323,7 +324,7 @@ export class SubscriptionDetector {
 
     for (const transaction of transactions) {
       const merchantName = this.normalizeMerchantName(
-        transaction.merchantName ?? transaction.description
+        transaction.merchantName ?? transaction.description ?? ''
       );
 
       if (!groups.has(merchantName)) {
@@ -580,7 +581,15 @@ export class SubscriptionDetector {
     let errors = 0;
 
     // Import categorization service if available
-    let categorizationService: any;
+    let categorizationService:
+      | {
+          categorizeSubscription: (
+            id: string,
+            userId: string,
+            force: boolean
+          ) => Promise<void>;
+        }
+      | undefined;
     try {
       const { getCategorizationService } = await import(
         './categorization.service'

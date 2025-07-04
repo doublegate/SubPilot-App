@@ -1,9 +1,4 @@
 // Test file
-/* eslint-disable @typescript-eslint/unbound-method */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { transactionsRouter } from '../transactions';
@@ -11,6 +6,46 @@ import { db } from '@/server/db';
 import type { Session } from 'next-auth';
 import { TRPCError } from '@trpc/server';
 import { Decimal } from '@prisma/client/runtime/library';
+import type { Transaction, BankAccount, Prisma, PrismaClient } from '@prisma/client';
+
+// Type for mocked database
+type MockedDb = {
+  [K in keyof PrismaClient]: K extends `$${string}`
+    ? PrismaClient[K]
+    : {
+        findMany: ReturnType<typeof vi.fn>;
+        findFirst: ReturnType<typeof vi.fn>;
+        findUnique: ReturnType<typeof vi.fn>;
+        create: ReturnType<typeof vi.fn>;
+        update: ReturnType<typeof vi.fn>;
+        updateMany: ReturnType<typeof vi.fn>;
+        delete: ReturnType<typeof vi.fn>;
+        deleteMany: ReturnType<typeof vi.fn>;
+        count: ReturnType<typeof vi.fn>;
+        aggregate: ReturnType<typeof vi.fn>;
+        groupBy?: ReturnType<typeof vi.fn>;
+        upsert?: ReturnType<typeof vi.fn>;
+        fields?: unknown;
+      };
+};
+
+// Types for transactions with relations
+type TransactionWithAccount = Transaction & {
+  account: Pick<BankAccount, 'name'>;
+};
+
+type TransactionWithPending = Transaction & {
+  pending: boolean;
+};
+
+// Prisma aggregate result type
+type TransactionAggregateResult = {
+  _sum: { amount: Decimal | null };
+  _count?: Record<string, number>;
+  _avg?: Record<string, Decimal | null>;
+  _min?: Record<string, unknown>;
+  _max?: Record<string, unknown>;
+};
 
 // Mock Prisma client
 vi.mock('@/server/db', () => {
@@ -75,8 +110,8 @@ vi.mock('@/server/services/subscription-detector', () => ({
 }));
 
 // Helper to get mocked db - with explicit return type to fix ESLint
-const getMockDb = (): any => {
-  return db as any;
+const getMockDb = (): MockedDb => {
+  return db as MockedDb;
 };
 
 describe('Transactions Router - Full tRPC Integration', () => {
@@ -120,7 +155,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
       amount: new Decimal(-15.99),
       date: new Date('2024-07-15'),
       description: 'Netflix Monthly Subscription',
-      category: ['Entertainment'] as any, // JsonValue array
+      category: ['Entertainment'] as Prisma.JsonValue, // JsonValue array
       subcategory: null,
       pending: false,
       isSubscription: true,
@@ -145,7 +180,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
       amount: new Decimal(-5.25),
       date: new Date('2024-07-20'),
       description: 'Coffee Purchase',
-      category: ['Food and Drink'] as any, // JsonValue array
+      category: ['Food and Drink'] as Prisma.JsonValue, // JsonValue array
       subcategory: 'Coffee Shop',
       pending: false,
       isSubscription: false,
@@ -178,7 +213,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
       amount: new Decimal(-2.99),
       date: new Date('2024-07-18'),
       description: 'App Store Purchase',
-      category: ['Software'] as any, // JsonValue array
+      category: ['Software'] as Prisma.JsonValue, // JsonValue array
       subcategory: 'Mobile Apps',
       pending: true,
       isSubscription: false,
@@ -221,7 +256,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
         merchantName: 'Netflix',
         amount: -15.99,
         currency: 'USD',
-        category: ['Entertainment'] as any,
+        category: ['Entertainment'] as Prisma.JsonValue,
         pending: false,
         isRecurring: true,
         account: {
@@ -324,7 +359,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
       // All transactions from acc-1 should have the same account name
       expect(
         result.transactions.every(
-          (t: any) => t.account.name === 'Checking Account'
+          (t: TransactionWithAccount) => t.account.name === 'Checking Account'
         )
       ).toBe(true);
 
@@ -493,7 +528,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
       });
 
       expect(result.transactions).toHaveLength(2);
-      expect(result.transactions.every((t: any) => !t.pending)).toBe(true);
+      expect(result.transactions.every((t: TransactionWithPending) => !t.pending)).toBe(true);
 
       expect(db.transaction.findMany).toHaveBeenCalledWith({
         where: {
@@ -572,7 +607,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
         amount: -15.99,
         date: expect.any(Date) as unknown as Date,
         description: 'Netflix Monthly Subscription',
-        category: ['Entertainment'] as any,
+        category: ['Entertainment'] as Prisma.JsonValue,
         isSubscription: true,
       });
 
@@ -787,10 +822,10 @@ describe('Transactions Router - Full tRPC Integration', () => {
       getMockDb()
         .transaction.aggregate.mockResolvedValueOnce({
           _sum: { amount: new Decimal(-1250.75) },
-        } as any) // total spent
+        } as TransactionAggregateResult) // total spent
         .mockResolvedValueOnce({
           _sum: { amount: new Decimal(-350.25) },
-        } as any); // subscription spent
+        } as TransactionAggregateResult); // subscription spent
 
       // Method not implemented yet - temporarily skip test
       // const result = await caller.getStats();
@@ -814,7 +849,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
 
       getMockDb().transaction.aggregate.mockResolvedValue({
         _sum: { amount: null },
-      } as any);
+      } as TransactionAggregateResult);
 
       // Method not implemented yet
       // const result = await caller.getStats(); // Method not implemented yet

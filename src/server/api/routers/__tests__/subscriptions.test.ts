@@ -1,15 +1,17 @@
 // Test file
-/* eslint-disable @typescript-eslint/unbound-method */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { subscriptionsRouter } from '../subscriptions';
 import type { Session } from 'next-auth';
 import { TRPCError } from '@trpc/server';
 import { Decimal } from '@prisma/client/runtime/library';
+import type { Subscription, User, Transaction, Notification } from '@prisma/client';
+
+// Test types for mocking Prisma relations and aggregations
+type MockSubscriptionWithCount = Subscription & {
+  _count: { transactions: number };
+  transactions: Transaction[];
+};
 
 // Mock email service
 vi.mock('@/server/services/email.service', () => ({
@@ -179,7 +181,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         transactions: s.transactions ? [s.transactions[0]] : [],
       }));
       vi.mocked(db.subscription.findMany).mockResolvedValue(
-        subsWithCount as any
+        subsWithCount as MockSubscriptionWithCount[]
       );
 
       vi.mocked(db.subscription.count).mockResolvedValue(3);
@@ -539,7 +541,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         email: 'test@example.com',
         name: 'Test User',
       };
-      vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as Partial<User> as User);
 
       vi.mocked(db.notification.create).mockResolvedValue(
         // @ts-expect-error - Mock object incomplete for testing
@@ -592,7 +594,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         email: 'test@example.com',
         name: 'Test User',
       };
-      vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as Partial<User> as User);
 
       vi.mocked(db.notification.create).mockResolvedValue(
         // @ts-expect-error - Mock object incomplete for testing
@@ -631,16 +633,16 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       // The router doesn't check if subscription is already cancelled
       // It will just update it again
       const updatedSub = { ...cancelledSubscription };
-      vi.mocked(db.subscription.update).mockResolvedValue(updatedSub as any);
+      vi.mocked(db.subscription.update).mockResolvedValue(updatedSub as Partial<Subscription> as Subscription);
 
       const mockUser = {
         id: 'user-1',
         email: 'test@example.com',
         name: 'Test User',
       };
-      vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as any);
+      vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as Partial<User> as User);
 
-      vi.mocked(db.notification.create).mockResolvedValue({} as any);
+      vi.mocked(db.notification.create).mockResolvedValue({} as Partial<Notification> as Notification);
 
       const result = await caller.markCancelled({
         id: 'sub-3',
@@ -779,7 +781,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
   describe('edge cases', () => {
     it('should handle subscriptions with very large amounts', async () => {
       const expensiveSubscription = {
-        ...(mockSubscriptions[0]! as any),
+        ...(mockSubscriptions[0]! as Subscription),
         amount: new Decimal(9999.99),
       };
 

@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Search, MessageSquare, Trash2 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -29,7 +29,7 @@ interface ConversationHistoryProps {
 export function ConversationHistory({
   currentConversationId,
   onSelectConversation,
-  onClose,
+  onClose: _onClose,
 }: ConversationHistoryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);

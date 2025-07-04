@@ -1,6 +1,5 @@
 import { type NextRequest } from 'next/server';
 import { auth } from '@/server/auth.config';
-import { createSSEStream } from '@/server/lib/realtime-notifications';
 import { db } from '@/server/db';
 
 export const runtime = 'nodejs';
@@ -55,46 +54,50 @@ export async function GET(
         controller.enqueue(new TextEncoder().encode(initialMessage));
 
         // Setup periodic status updates
-        const updateInterval = setInterval(async () => {
-          try {
-            // Check for updated cancellation status
-            const updatedRequest = await db.cancellationRequest.findUnique({
-              where: { id: requestId },
-              include: {
-                logs: {
-                  orderBy: { createdAt: 'desc' },
-                  take: 1,
+        const updateInterval = setInterval(() => {
+          void (async () => {
+            try {
+              // Check for updated cancellation status
+              const updatedRequest = await db.cancellationRequest.findUnique({
+                where: { id: requestId },
+                include: {
+                  logs: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 1,
+                  },
                 },
-              },
-            });
+              });
 
-            if (updatedRequest) {
-              const updateMessage = `event: cancellation.update\ndata: ${JSON.stringify(
-                {
-                  type: 'cancellation.update',
-                  requestId,
-                  orchestrationId,
-                  status: updatedRequest.status,
-                  lastLog: updatedRequest.logs[0],
-                  updatedAt: updatedRequest.updatedAt,
+              if (updatedRequest) {
+                const updateMessage = `event: cancellation.update\ndata: ${JSON.stringify(
+                  {
+                    type: 'cancellation.update',
+                    requestId,
+                    orchestrationId,
+                    status: updatedRequest.status,
+                    lastLog: updatedRequest.logs[0],
+                    updatedAt: updatedRequest.updatedAt,
+                  }
+                )}\n\n`;
+
+                controller.enqueue(new TextEncoder().encode(updateMessage));
+
+                // Close stream if cancellation is complete
+                if (
+                  ['completed', 'failed', 'cancelled'].includes(
+                    updatedRequest.status
+                  )
+                ) {
+                  clearInterval(updateInterval);
+                  controller.close();
                 }
-              )}\n\n`;
-
-              controller.enqueue(new TextEncoder().encode(updateMessage));
-
-              // Close stream if cancellation is complete
-              if (
-                ['completed', 'failed', 'cancelled'].includes(
-                  updatedRequest.status
-                )
-              ) {
-                clearInterval(updateInterval);
-                controller.close();
               }
+            } catch (error) {
+              console.error('[SSE] Error sending update:', error);
             }
-          } catch (error) {
-            console.error('[SSE] Error sending update:', error);
-          }
+          })().catch(error => {
+            console.error('[SSE] Unhandled error in update interval:', error);
+          });
         }, 2000); // Every 2 seconds
 
         // Cleanup on close
@@ -109,7 +112,7 @@ export async function GET(
       console.log(
         `[SSE] Client disconnected from cancellation stream: ${requestId}`
       );
-      close();
+      // Note: cleanup is handled by stream's return function
     });
 
     return new Response(stream, {

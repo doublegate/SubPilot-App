@@ -7,6 +7,16 @@ import { emitCancellationEvent } from './event-bus';
  * system like Bull/BullMQ, Agenda, or cloud-based solutions like AWS SQS.
  */
 
+// Define job data types
+export interface JobData {
+  requestId?: string;
+  orchestrationId?: string;
+  userId?: string;
+  subscriptionId?: string;
+  method?: 'api' | 'automation' | 'manual';
+  [key: string]: unknown;
+}
+
 export interface JobOptions {
   delay?: number;
   priority?: number;
@@ -18,7 +28,7 @@ export interface JobOptions {
 export interface Job {
   id: string;
   type: string;
-  data: any;
+  data: JobData;
   options: JobOptions;
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'delayed';
   attempts: number;
@@ -30,7 +40,7 @@ export interface Job {
 
 export interface JobResult {
   success: boolean;
-  data?: any;
+  data?: Record<string, unknown>;
   error?: string;
   duration?: number;
   retry?: boolean | { delay?: number; attempts?: number };
@@ -42,7 +52,7 @@ export interface JobResult {
 class MockJobQueue {
   private jobs = new Map<string, Job>();
   private processors = new Map<string, (job: Job) => Promise<JobResult>>();
-  private isProcessing = false;
+  public isProcessing = false;
   private processingInterval?: NodeJS.Timeout;
 
   constructor() {
@@ -54,7 +64,7 @@ class MockJobQueue {
    */
   async addJob(
     type: string,
-    data: any,
+    data: JobData,
     options: JobOptions = {}
   ): Promise<string> {
     const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -139,7 +149,7 @@ class MockJobQueue {
 
     this.isProcessing = true;
     this.processingInterval = setInterval(() => {
-      this.processNextJob();
+      void this.processNextJob();
     }, 1000); // Check for jobs every second
 
     console.log('[JobQueue] Started job processing');
@@ -163,7 +173,7 @@ class MockJobQueue {
   private async processNextJob(): Promise<void> {
     // Get next pending job (highest priority first)
     const pendingJobs = this.getJobsByStatus('pending').sort(
-      (a, b) => (b.options.priority || 0) - (a.options.priority || 0)
+      (a, b) => (b.options.priority ?? 0) - (a.options.priority ?? 0)
     );
 
     if (pendingJobs.length === 0) return;
@@ -220,7 +230,7 @@ class MockJobQueue {
 
         console.log(`[JobQueue] Job ${job.id} completed successfully`);
       } else {
-        throw new Error(result.error || 'Job failed without error message');
+        throw new Error(result.error ?? 'Job failed without error message');
       }
     } catch (error) {
       const errorMessage =
@@ -228,7 +238,7 @@ class MockJobQueue {
       job.error = errorMessage;
 
       // Check if we should retry
-      if (job.attempts < (job.options.maxAttempts || 3)) {
+      if (job.attempts < (job.options.maxAttempts ?? 3)) {
         // Schedule retry
         job.status = 'pending';
 
@@ -500,7 +510,7 @@ export function checkJobQueueHealth() {
   return {
     status: stats.failed > stats.completed * 0.1 ? 'degraded' : 'healthy',
     stats,
-    isProcessing: (queue as any).isProcessing || false,
+    isProcessing: queue.isProcessing,
     lastProcessed: new Date(),
   };
 }

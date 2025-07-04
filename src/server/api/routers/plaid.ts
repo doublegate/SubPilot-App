@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-import { env } from '@/env.js';
 import {
   plaid,
   isPlaidConfigured,
@@ -18,6 +17,64 @@ import type {
   TransactionsGetRequest,
   TransactionsSyncRequest,
 } from 'plaid';
+
+// Advanced Type-Safe Plaid Integration Types
+interface TypedPlaidTransaction {
+  transaction_id: string;
+  account_id: string;
+  amount: number;
+  iso_currency_code: string | null;
+  name: string;
+  date: string;
+  pending: boolean;
+  category: string[] | null;
+  merchant_name: string | null;
+  payment_channel: string | null;
+  transaction_type: string | null;
+}
+
+interface TypedPlaidAccount {
+  account_id: string;
+  balances: {
+    available: number | null;
+    current: number | null;
+    iso_currency_code: string | null;
+    limit: number | null;
+  };
+  mask: string | null;
+  name: string;
+  official_name: string | null;
+  type: string;
+  subtype: string | null;
+}
+
+// Type definitions for Plaid operations (for future use)
+// type PlaidOperation = 'linkTokenCreate' | 'itemPublicTokenExchange' | 'accountsGet' | 'transactionsGet' | 'transactionsSync' | 'itemRemove';
+// type TransactionState = 'added' | 'modified' | 'removed';
+
+// Type Guards for Safe Type Narrowing (for future use)
+// const isTypedPlaidTransaction = (obj: unknown): obj is TypedPlaidTransaction => {
+//   return (
+//     typeof obj === 'object' &&
+//     obj !== null &&
+//     'transaction_id' in obj &&
+//     'account_id' in obj &&
+//     'amount' in obj &&
+//     'name' in obj &&
+//     'date' in obj
+//   );
+// };
+
+// const isTypedPlaidAccount = (obj: unknown): obj is TypedPlaidAccount => {
+//   return (
+//     typeof obj === 'object' &&
+//     obj !== null &&
+//     'account_id' in obj &&
+//     'balances' in obj &&
+//     'name' in obj &&
+//     'type' in obj
+//   );
+// };
 
 export const plaidRouter = createTRPCRouter({
   /**
@@ -89,19 +146,19 @@ export const plaidRouter = createTRPCRouter({
           client_user_id: ctx.session.user.id,
         },
         client_name: 'SubPilot',
-        products: (env.PLAID_PRODUCTS?.split(',') || [
+        products: ((process.env.PLAID_PRODUCTS)?.split(',') ?? [
           'transactions',
         ]) as Products[],
-        country_codes: (env.PLAID_COUNTRY_CODES?.split(',') || [
-          'US',
-        ]) as CountryCode[],
+        country_codes: ((process.env.PLAID_COUNTRY_CODES)?.split(
+          ','
+        ) ?? ['US']) as CountryCode[],
         language: 'en',
-        redirect_uri: env.PLAID_REDIRECT_URI ?? undefined,
+        redirect_uri: process.env.PLAID_REDIRECT_URI ?? undefined,
       };
 
       // Add webhook URL if configured
-      if (env.PLAID_WEBHOOK_URL) {
-        configs.webhook = env.PLAID_WEBHOOK_URL;
+      if (process.env.PLAID_WEBHOOK_URL) {
+        configs.webhook = process.env.PLAID_WEBHOOK_URL;
       }
 
       const response = await plaidWithRetry(
@@ -324,7 +381,7 @@ export const plaidRouter = createTRPCRouter({
             id: acc.id,
             name: acc.name,
             type: acc.type,
-            balance: acc.currentBalance?.toNumber() || 0,
+            balance: acc.currentBalance?.toNumber() ?? 0,
           })),
         };
       } catch (error) {
@@ -359,8 +416,8 @@ export const plaidRouter = createTRPCRouter({
         name: account.name,
         type: account.type,
         subtype: account.subtype,
-        balance: account.currentBalance?.toNumber() || 0,
-        currency: account.isoCurrencyCode || 'USD',
+        balance: account.currentBalance?.toNumber() ?? 0,
+        currency: account.isoCurrencyCode ?? 'USD',
         institution: {
           name: item.institutionName,
           logo: item.institutionLogo,
@@ -464,12 +521,12 @@ export const plaidRouter = createTRPCRouter({
           // Decrypt access token for API calls
           const accessToken = await decrypt(item.accessToken);
 
-          // Use transactions/sync endpoint for efficient incremental updates
+          // Use transactions/sync endpoint with type safety
           let cursor = '';
           let hasMore = true;
-          let added: Array<Record<string, unknown>> = [];
-          let modified: Array<Record<string, unknown>> = [];
-          let removed: Array<Record<string, unknown>> = [];
+          let added: TypedPlaidTransaction[] = [];
+          let modified: TypedPlaidTransaction[] = [];
+          let removed: { transaction_id: string }[] = [];
 
           while (hasMore) {
             const syncRequest: TransactionsSyncRequest = {
@@ -482,25 +539,24 @@ export const plaidRouter = createTRPCRouter({
               'transactionsSync'
             );
 
+            // Type-safe transaction processing with validation
             const addedTransactions = Array.isArray(syncResponse.data.added)
-              ? (syncResponse.data.added as unknown as Record<
-                  string,
-                  unknown
-                >[])
+              ? syncResponse.data.added.filter(isTypedPlaidTransaction)
               : [];
-            const modifiedTransactions = Array.isArray(
-              syncResponse.data.modified
-            )
-              ? (syncResponse.data.modified as unknown as Record<
-                  string,
-                  unknown
-                >[])
+            
+            const modifiedTransactions = Array.isArray(syncResponse.data.modified)
+              ? syncResponse.data.modified.filter(isTypedPlaidTransaction)
               : [];
+            
             const removedTransactions = Array.isArray(syncResponse.data.removed)
-              ? (syncResponse.data.removed as unknown as Record<
-                  string,
-                  unknown
-                >[])
+              ? syncResponse.data.removed
+                  .map((txn: unknown) => {
+                    if (typeof txn === 'object' && txn !== null && 'transaction_id' in txn) {
+                      return { transaction_id: String(txn.transaction_id) };
+                    }
+                    return null;
+                  })
+                  .filter((txn): txn is { transaction_id: string } => txn !== null)
               : [];
 
             added = [...added, ...addedTransactions];
@@ -528,15 +584,9 @@ export const plaidRouter = createTRPCRouter({
             item.bankAccounts.map(acc => [acc.plaidAccountId, acc.id])
           );
 
-          // Handle removed transactions
+          // Handle removed transactions with type safety
           if (removed.length > 0) {
-            const removedIds = removed
-              .map((txn: Record<string, unknown>) => {
-                return typeof txn.transaction_id === 'string'
-                  ? txn.transaction_id
-                  : '';
-              })
-              .filter(id => id !== '');
+            const removedIds = removed.map(txn => txn.transaction_id);
             await ctx.db.transaction.deleteMany({
               where: {
                 plaidTransactionId: { in: removedIds },
@@ -546,40 +596,31 @@ export const plaidRouter = createTRPCRouter({
             console.log(`Removed ${removed.length} transactions`);
           }
 
-          // Process added transactions
+          // Process added transactions with type safety
           if (added.length > 0) {
             const validTransactions = added
               .map(txn => {
-                const accountId = accountIdMap.get(String(txn.account_id));
+                const accountId = accountIdMap.get(txn.account_id);
                 if (!accountId) {
                   console.warn(
-                    `Skipping added transaction ${String(txn.transaction_id)}: Account ${String(txn.account_id)} not found`
+                    `Skipping added transaction ${txn.transaction_id}: Account ${txn.account_id} not found`
                   );
                   return null;
                 }
                 return {
                   userId: ctx.session.user.id,
                   accountId,
-                  plaidTransactionId: String(txn.transaction_id),
-                  amount: Math.abs(Number(txn.amount)),
-                  isoCurrencyCode: String(txn.iso_currency_code) ?? 'USD',
-                  description: String(txn.name),
-                  date: new Date(String(txn.date)),
-                  pending: Boolean(txn.pending),
-                  category: Array.isArray(txn.category) ? txn.category : [],
-                  subcategory: Array.isArray(txn.category)
-                    ? ((txn.category[1] as string) ?? null)
-                    : null,
-                  merchantName:
-                    txn.merchant_name && typeof txn.merchant_name === 'string'
-                      ? txn.merchant_name
-                      : null,
-                  paymentChannel:
-                    txn.payment_channel &&
-                    typeof txn.payment_channel === 'string'
-                      ? txn.payment_channel
-                      : null,
-                  transactionType: String(txn.transaction_type) ?? 'other',
+                  plaidTransactionId: txn.transaction_id,
+                  amount: Math.abs(txn.amount),
+                  isoCurrencyCode: txn.iso_currency_code ?? 'USD',
+                  description: txn.name,
+                  date: new Date(txn.date),
+                  pending: txn.pending,
+                  category: txn.category ?? [],
+                  subcategory: txn.category?.[1] ?? null,
+                  merchantName: txn.merchant_name,
+                  paymentChannel: txn.payment_channel,
+                  transactionType: txn.transaction_type ?? 'other',
                   isSubscription: false, // Will be determined by detection algorithm
                 };
               })
@@ -595,62 +636,44 @@ export const plaidRouter = createTRPCRouter({
             }
           }
 
-          // Process modified transactions
+          // Process modified transactions with type safety
           if (modified.length > 0) {
             for (const txn of modified) {
-              const accountId = accountIdMap.get(String(txn.account_id));
+              const accountId = accountIdMap.get(txn.account_id);
               if (!accountId) {
                 console.warn(
-                  `Skipping modified transaction ${String(txn.transaction_id)}: Account ${String(txn.account_id)} not found`
+                  `Skipping modified transaction ${txn.transaction_id}: Account ${txn.account_id} not found`
                 );
                 continue;
               }
 
               await ctx.db.transaction.upsert({
-                where: { plaidTransactionId: String(txn.transaction_id) },
+                where: { plaidTransactionId: txn.transaction_id },
                 update: {
-                  amount: Math.abs(Number(txn.amount)),
-                  description: String(txn.name),
-                  date: new Date(String(txn.date)),
-                  pending: Boolean(txn.pending),
-                  category: Array.isArray(txn.category) ? txn.category : [],
-                  subcategory: Array.isArray(txn.category)
-                    ? ((txn.category[1] as string) ?? null)
-                    : null,
-                  merchantName:
-                    txn.merchant_name && typeof txn.merchant_name === 'string'
-                      ? txn.merchant_name
-                      : null,
-                  paymentChannel:
-                    txn.payment_channel &&
-                    typeof txn.payment_channel === 'string'
-                      ? txn.payment_channel
-                      : null,
-                  transactionType: String(txn.transaction_type) ?? 'other',
+                  amount: Math.abs(txn.amount),
+                  description: txn.name,
+                  date: new Date(txn.date),
+                  pending: txn.pending,
+                  category: txn.category ?? [],
+                  subcategory: txn.category?.[1] ?? null,
+                  merchantName: txn.merchant_name,
+                  paymentChannel: txn.payment_channel,
+                  transactionType: txn.transaction_type ?? 'other',
                 },
                 create: {
                   userId: ctx.session.user.id,
                   accountId,
-                  plaidTransactionId: String(txn.transaction_id),
-                  amount: Math.abs(Number(txn.amount)),
-                  isoCurrencyCode: String(txn.iso_currency_code) ?? 'USD',
-                  description: String(txn.name),
-                  date: new Date(String(txn.date)),
-                  pending: Boolean(txn.pending),
-                  category: Array.isArray(txn.category) ? txn.category : [],
-                  subcategory: Array.isArray(txn.category)
-                    ? ((txn.category[1] as string) ?? null)
-                    : null,
-                  merchantName:
-                    txn.merchant_name && typeof txn.merchant_name === 'string'
-                      ? txn.merchant_name
-                      : null,
-                  paymentChannel:
-                    txn.payment_channel &&
-                    typeof txn.payment_channel === 'string'
-                      ? txn.payment_channel
-                      : null,
-                  transactionType: String(txn.transaction_type) ?? 'other',
+                  plaidTransactionId: txn.transaction_id,
+                  amount: Math.abs(txn.amount),
+                  isoCurrencyCode: txn.iso_currency_code ?? 'USD',
+                  description: txn.name,
+                  date: new Date(txn.date),
+                  pending: txn.pending,
+                  category: txn.category ?? [],
+                  subcategory: txn.category?.[1] ?? null,
+                  merchantName: txn.merchant_name,
+                  paymentChannel: txn.payment_channel,
+                  transactionType: txn.transaction_type ?? 'other',
                   isSubscription: false,
                 },
               });

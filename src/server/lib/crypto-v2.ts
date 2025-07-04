@@ -1,6 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
-import { env } from '@/env.js';
 
 const scryptAsync = promisify(scrypt);
 
@@ -11,7 +10,6 @@ const scryptAsync = promisify(scrypt);
 
 // Declare global type for TypeScript
 declare global {
-  // eslint-disable-next-line no-var
   var __encryptionWarningShown: boolean | undefined;
 }
 
@@ -23,7 +21,10 @@ const getEncryptionSecret = (): string => {
 
   if (process.env.ENCRYPTION_KEY) {
     secret = process.env.ENCRYPTION_KEY;
-  } else if (env.NODE_ENV === 'development' && env.NEXTAUTH_SECRET) {
+  } else if (
+    process.env.NODE_ENV === 'development' &&
+    process.env.NEXTAUTH_SECRET
+  ) {
     // Log warning without exposing sensitive information
     if (!global.__encryptionWarningShown) {
       console.warn(
@@ -31,7 +32,7 @@ const getEncryptionSecret = (): string => {
       );
       global.__encryptionWarningShown = true; // Only show warning once
     }
-    secret = env.NEXTAUTH_SECRET;
+    secret = process.env.NEXTAUTH_SECRET;
   } else {
     throw new Error(
       'ENCRYPTION_KEY environment variable is required for encryption'

@@ -6,6 +6,13 @@ import { cacheService } from '@/server/services/cache.service';
 import { type Session } from 'next-auth';
 import { TRPCError } from '@trpc/server';
 
+// Mock categorization service interface
+interface MockCategorizationService {
+  categorizeTransaction: ReturnType<typeof vi.fn>;
+  getCategoryMapping: ReturnType<typeof vi.fn>;
+  bulkCategorize: ReturnType<typeof vi.fn>;
+}
+
 // Mock dependencies
 vi.mock('@/server/services/categorization.service');
 vi.mock('@/server/services/cache.service');
@@ -21,7 +28,7 @@ const mockSession: Session = {
 
 describe('categorizationRouter', () => {
   let ctx: ReturnType<typeof createInnerTRPCContext>;
-  let mockCategorizationService: any;
+  let mockCategorizationService: MockCategorizationService;
 
   beforeEach(() => {
     vi.clearAllMocks();

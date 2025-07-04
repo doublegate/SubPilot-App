@@ -66,7 +66,7 @@ export class AuthorizationMiddleware {
           metadata: {
             resourceType,
             attempted_resource_id: resourceId,
-            auditAction: auditAction || `unauthorized_access.${resourceType}`,
+            auditAction: auditAction ?? `unauthorized_access.${resourceType}`,
             ip: 'unknown', // Will be populated by middleware if available
           },
         });
@@ -147,7 +147,7 @@ export class AuthorizationMiddleware {
         return this.verifyPlaidItemOwnership(resourceId, userId, requireActive);
 
       default:
-        console.error(`Unknown resource type: ${resourceType}`);
+        console.error(`Unknown resource type: ${resourceType as string}`);
         return false;
     }
   }
@@ -296,7 +296,7 @@ export class AuthorizationMiddleware {
         result: 'failure',
         metadata: {
           requiredRole: 'admin',
-          userIsAdmin: user?.isAdmin || false,
+          userIsAdmin: user?.isAdmin ?? false,
           attemptType: 'unauthorized_admin_access',
         },
       });

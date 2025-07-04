@@ -148,7 +148,7 @@ export class UnifiedCancellationOrchestratorService {
         type: 'cancellation.orchestration_started',
         title: 'Cancellation Initiated',
         message: `Starting ${optimalMethod} cancellation for ${subscription.name}`,
-        priority: input.priority || 'normal',
+        priority: input.priority ?? 'normal',
         data: {
           orchestrationId,
           requestId,
@@ -219,9 +219,9 @@ export class UnifiedCancellationOrchestratorService {
    * Determine the optimal cancellation method
    */
   private async determineOptimalMethod(
-    subscription: any,
+    subscription: { name: string; provider?: { name: string } },
     requestedMethod?: string,
-    userPreference?: any
+    userPreference?: { preferredMethod?: string }
   ): Promise<'api' | 'automation' | 'manual'> {
     // If user explicitly requested a method, try to honor it
     if (requestedMethod && requestedMethod !== 'auto') {
@@ -247,13 +247,13 @@ export class UnifiedCancellationOrchestratorService {
     }
 
     // Intelligent selection based on capabilities and success rates
-    if (capabilities.apiSupport && (capabilities.successRate || 0) > 0.8) {
+    if (capabilities.apiSupport && (capabilities.successRate ?? 0) > 0.8) {
       return 'api';
     }
 
     if (
       capabilities.automationSupport &&
-      (capabilities.successRate || 0) > 0.6
+      (capabilities.successRate ?? 0) > 0.6
     ) {
       return 'automation';
     }
@@ -362,7 +362,7 @@ export class UnifiedCancellationOrchestratorService {
         {
           subscriptionId: input.subscriptionId,
           notes: input.reason,
-          priority: input.priority || 'normal',
+          priority: input.priority ?? 'normal',
         }
       );
 
@@ -459,11 +459,11 @@ export class UnifiedCancellationOrchestratorService {
    * Handle fallback to alternative methods
    */
   private async handleFallback(
-    originalMethod: string,
+    originalMethod: 'api' | 'automation' | 'manual',
     userId: string,
-    subscription: any,
+    subscription: { id: string; name: string; provider?: unknown },
     input: UnifiedCancellationRequest,
-    baseResult: any,
+    baseResult: { status: string; error?: string; [key: string]: unknown },
     fallbackReason: string
   ): Promise<UnifiedCancellationResult> {
     // Determine fallback hierarchy
@@ -472,7 +472,7 @@ export class UnifiedCancellationOrchestratorService {
       'automation',
       'manual',
     ];
-    const currentIndex = fallbackHierarchy.indexOf(originalMethod as any);
+    const currentIndex = fallbackHierarchy.indexOf(originalMethod);
 
     // Try next method in hierarchy
     for (let i = currentIndex + 1; i < fallbackHierarchy.length; i++) {
@@ -538,22 +538,22 @@ export class UnifiedCancellationOrchestratorService {
    */
   private setupEventListeners(): void {
     // Listen for API service events
-    onCancellationEvent('cancellation.api.completed', async data => {
-      await this.handleServiceCompletion('api', data);
+    onCancellationEvent('cancellation.api.completed', data => {
+      void this.handleServiceCompletion('api', data);
     });
 
-    onCancellationEvent('cancellation.api.failed', async data => {
-      await this.handleServiceFailure('api', data);
+    onCancellationEvent('cancellation.api.failed', data => {
+      void this.handleServiceFailure('api', data);
     });
 
     // Listen for event-driven service events
-    onCancellationEvent('cancellation.event_driven.progress', async data => {
-      await this.handleServiceProgress('event_driven', data);
+    onCancellationEvent('cancellation.event_driven.progress', data => {
+      void this.handleServiceProgress('event_driven', data);
     });
 
     // Listen for manual confirmations
-    onCancellationEvent('cancellation.manual.confirmed', async data => {
-      await this.handleManualConfirmation(data);
+    onCancellationEvent('cancellation.manual.confirmed', data => {
+      void this.handleManualConfirmation(data);
     });
 
     console.log(
@@ -570,7 +570,7 @@ export class UnifiedCancellationOrchestratorService {
   ): Promise<void> {
     try {
       const orchestrationId =
-        data.orchestrationId || `${service}_${data.requestId}`;
+        data.orchestrationId ?? `${service}_${data.requestId}`;
 
       await this.logOrchestrationActivity(
         orchestrationId,
@@ -609,7 +609,7 @@ export class UnifiedCancellationOrchestratorService {
   ): Promise<void> {
     try {
       const orchestrationId =
-        data.orchestrationId || `${service}_${data.requestId}`;
+        data.orchestrationId ?? `${service}_${data.requestId}`;
 
       await this.logOrchestrationActivity(
         orchestrationId,
@@ -648,7 +648,7 @@ export class UnifiedCancellationOrchestratorService {
   ): Promise<void> {
     try {
       const orchestrationId =
-        data.orchestrationId || `${service}_${data.requestId}`;
+        data.orchestrationId ?? `${service}_${data.requestId}`;
 
       await this.logOrchestrationActivity(
         orchestrationId,
@@ -662,7 +662,7 @@ export class UnifiedCancellationOrchestratorService {
       sendRealtimeNotification(data.userId, {
         type: 'cancellation.orchestration_progress',
         title: 'Cancellation Update',
-        message: data.message || `${service} cancellation in progress`,
+        message: data.message ?? `${service} cancellation in progress`,
         priority: 'normal',
         data: {
           orchestrationId,
@@ -864,8 +864,8 @@ export class UnifiedCancellationOrchestratorService {
     >();
 
     for (const log of logs) {
-      const metadata = log.metadata as any;
-      const orchestrationId = metadata.orchestrationId;
+      const metadata = log.metadata as Record<string, unknown>;
+      const orchestrationId = metadata.orchestrationId as string | undefined;
 
       if (orchestrationId) {
         orchestrationIds.add(orchestrationId);
@@ -874,7 +874,7 @@ export class UnifiedCancellationOrchestratorService {
       // Count methods
       if (metadata.method) {
         methodCounts[metadata.method] =
-          (methodCounts[metadata.method] || 0) + 1;
+          (methodCounts[metadata.method] ?? 0) + 1;
       }
 
       // Count successes
@@ -892,7 +892,7 @@ export class UnifiedCancellationOrchestratorService {
 
       // Track provider stats
       if (metadata.provider) {
-        const stats = providerStats.get(metadata.provider) || {
+        const stats = providerStats.get(metadata.provider) ?? {
           total: 0,
           successful: 0,
           totalTime: 0,
@@ -947,7 +947,7 @@ export class UnifiedCancellationOrchestratorService {
     provider: string,
     capabilities: Partial<ProviderCapability>
   ): Promise<void> {
-    const existing = this.providerCapabilities.get(provider) || {
+    const existing = this.providerCapabilities.get(provider) ?? {
       apiSupport: false,
       automationSupport: false,
       manualInstructions: true,
@@ -974,7 +974,7 @@ export class UnifiedCancellationOrchestratorService {
     provider?: string
   ): Map<string, ProviderCapability> | ProviderCapability | null {
     if (provider) {
-      return this.providerCapabilities.get(provider) || null;
+      return this.providerCapabilities.get(provider) ?? null;
     }
     return this.providerCapabilities;
   }
@@ -1039,7 +1039,7 @@ export class UnifiedCancellationOrchestratorService {
   async retryCancellation(
     userId: string,
     requestId: string,
-    options?: { forceMethod?: string; escalate?: boolean }
+    options?: { forceMethod?: 'api' | 'automation' | 'manual'; escalate?: boolean }
   ): Promise<UnifiedCancellationResult> {
     // Get the existing request
     const request = await this.db.cancellationRequest.findFirst({
@@ -1073,7 +1073,7 @@ export class UnifiedCancellationOrchestratorService {
     return this.initiateCancellation(userId, {
       subscriptionId: request.subscription.id,
       reason: 'Retry',
-      method: (options?.forceMethod as any) || request.method,
+      method: options?.forceMethod ?? request.method,
       priority: options?.escalate ? 'high' : 'normal',
     });
   }
@@ -1200,7 +1200,7 @@ export class UnifiedCancellationOrchestratorService {
       },
       methodBreakdown,
       averageCompletionTime: Math.round(averageCompletionTime * 100) / 100,
-      timeframe: timeframe || '30days',
+      timeframe: timeframe ?? '30days',
     };
   }
 

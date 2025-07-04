@@ -21,6 +21,53 @@ interface CancellationStatusProps {
   requestId: string;
 }
 
+interface ManualConfirmationData {
+  success: boolean;
+  details?: string;
+  screenshotUrl?: string;
+}
+
+// Type definitions for status data
+interface StatusData {
+  id: string;
+  status: string;
+  method: string;
+  createdAt: string;
+  updatedAt: string;
+  subscription: { name: string };
+  manualInstructions?: string | Record<string, unknown>;
+  progress?: number;
+  logs?: Array<{ message: string; timestamp: string; level: string }>;
+}
+
+// Type guard for status object
+function isValidStatus(data: unknown): data is StatusData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'id' in data &&
+    'status' in data &&
+    'method' in data &&
+    'subscription' in data
+  );
+}
+
+// Type guard for manual instructions
+function getManualInstructions(instructions: unknown): string | null {
+  if (typeof instructions === 'string') {
+    return instructions;
+  }
+  if (typeof instructions === 'object' && instructions !== null) {
+    // Handle case where instructions might be a JSON object
+    try {
+      return JSON.stringify(instructions);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 export function CancellationStatus({ requestId }: CancellationStatusProps) {
   const [showInstructions, setShowInstructions] = useState(false);
 
@@ -38,13 +85,13 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
 
   const retryMutation = api.cancellation.retry.useMutation({
     onSuccess: () => {
-      refetch();
+      void refetch().catch(console.error);
     },
   });
 
   const confirmManualMutation = api.cancellation.confirmManual.useMutation({
     onSuccess: () => {
-      refetch();
+      void refetch().catch(console.error);
     },
   });
 
@@ -229,8 +276,8 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
                     Manual Cancellation Required
                   </div>
                   <div>
-                    We've prepared step-by-step instructions to help you cancel
-                    this subscription.
+                    We&apos;ve prepared step-by-step instructions to help you
+                    cancel this subscription.
                   </div>
                   <Button
                     size="sm"
@@ -278,21 +325,24 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
       </Card>
 
       {/* Manual Instructions Dialog */}
-      {status.manualInstructions && (
-        <ManualInstructionsDialog
-          isOpen={showInstructions}
-          onClose={() => setShowInstructions(false)}
-          instructions={status.manualInstructions}
-          requestId={requestId}
-          onConfirmation={confirmationData => {
-            confirmManualMutation.mutate({
-              requestId,
-              confirmation: confirmationData,
-            });
-            setShowInstructions(false);
-          }}
-        />
-      )}
+      {isValidStatus(status) && status.manualInstructions && (() => {
+        const instructions = getManualInstructions(status.manualInstructions);
+        return instructions ? (
+          <ManualInstructionsDialog
+            isOpen={showInstructions}
+            onClose={() => setShowInstructions(false)}
+            instructions={instructions}
+            requestId={requestId}
+            onConfirmation={(confirmationData: ManualConfirmationData) => {
+              confirmManualMutation.mutate({
+                requestId,
+                confirmation: confirmationData,
+              });
+              setShowInstructions(false);
+            }}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }

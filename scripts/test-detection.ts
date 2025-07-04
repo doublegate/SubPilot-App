@@ -32,7 +32,7 @@ async function testDetection() {
     console.log('\nRecent transactions:');
     transactions.forEach(t => {
       console.log(
-        `- ${t.merchantName || t.description || 'Unknown'} - $${t.amount} - ${t.date.toISOString().split('T')[0]}`
+        `- ${t.merchantName ?? t.description ?? 'Unknown'} - $${t.amount} - ${t.date.toISOString().split('T')[0]}`
       );
     });
 
@@ -48,7 +48,7 @@ async function testDetection() {
       console.log(`\n- Merchant: ${r.merchantName}`);
       console.log(`  Is Subscription: ${r.isSubscription}`);
       console.log(`  Confidence: ${(r.confidence * 100).toFixed(1)}%`);
-      console.log(`  Frequency: ${r.frequency || 'Unknown'}`);
+      console.log(`  Frequency: ${r.frequency ?? 'Unknown'}`);
       console.log(`  Average Amount: $${r.averageAmount.toFixed(2)}`);
       console.log(
         `  Next Billing: ${r.nextBillingDate ? r.nextBillingDate.toISOString().split('T')[0] : 'Unknown'}`

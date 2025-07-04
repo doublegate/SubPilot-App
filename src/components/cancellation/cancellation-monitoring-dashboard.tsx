@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,26 +13,57 @@ import {
   CheckCircle2,
   Clock,
   TrendingUp,
-  TrendingDown,
   Zap,
   Settings,
   FileText,
   Wifi,
   WifiOff,
   Server,
-  Users,
   BarChart3,
   RefreshCw,
   AlertTriangle,
   Info,
-  Shield,
   Timer,
   Target,
 } from 'lucide-react';
 import { api } from '@/trpc/react';
 import { toast } from 'sonner';
 
-interface SystemHealthData {
+// Type definitions for system health data
+interface PerformanceMetrics {
+  p50ResponseTime: number;
+  p95ResponseTime: number;
+  p99ResponseTime: number;
+}
+
+interface UptimeMetrics {
+  uptime: string;
+  lastDowntime: string | null;
+  plannedMaintenance: string | null;
+}
+
+type ErrorBreakdown = Record<string, number>;
+
+interface DetailedMetrics {
+  performanceMetrics: PerformanceMetrics;
+  uptimeMetrics: UptimeMetrics;
+  errorBreakdown: ErrorBreakdown;
+}
+
+interface MethodHealth {
+  available: boolean;
+  successRate: number;
+  recentRequests: number;
+  avgResponseTime: number;
+}
+
+interface SystemLoad {
+  cpu: number;
+  memory: number;
+  activeConnections: number;
+}
+
+interface SystemHealth {
   status: 'healthy' | 'degraded' | 'unhealthy';
   lastChecked: Date;
   overall: {
@@ -41,65 +72,23 @@ interface SystemHealthData {
     avgResponseTimeMs: number;
     recentFailures: number;
   };
-  methods: Record<
-    string,
-    {
-      available: boolean;
-      successRate: number;
-      recentRequests: number;
-      avgResponseTime: number;
-    }
-  >;
-  system: {
-    cpu: number;
-    memory: number;
-    activeConnections: number;
-  };
+  methods: Record<string, MethodHealth>;
+  system: SystemLoad;
   recommendations: string[];
-  detailed?: {
-    errorBreakdown: Record<string, number>;
-    performanceMetrics: {
-      p50ResponseTime: number;
-      p95ResponseTime: number;
-      p99ResponseTime: number;
-    };
-    uptimeMetrics: {
-      uptime: string;
-      lastDowntime: Date | null;
-      plannedMaintenance: Date | null;
-    };
-  };
+  detailed?: DetailedMetrics;
 }
 
-interface AnalyticsData {
-  summary: {
-    total: number;
-    completed: number;
-    failed: number;
-    pending: number;
-    successRate: number;
-  };
-  methodBreakdown: Record<string, number>;
-  successRates: Record<string, number>;
-  providerAnalytics: Array<{
-    provider: string;
-    totalAttempts: number;
-    successRate: number;
-    averageCompletionTime: number;
-  }>;
-  trends: Array<{
-    date: string;
-    total: number;
-    completed: number;
-    failed: number;
-  }>;
-  insights: Array<{
-    type: 'info' | 'warning' | 'error';
-    title: string;
-    message: string;
-  }>;
-  timeframe: string;
-  generatedAt: Date;
+interface ProviderStats {
+  provider: string;
+  totalAttempts: number;
+  averageCompletionTime: number;
+  successRate: number;
+}
+
+interface AlertData {
+  type: 'error' | 'warning' | 'info';
+  title: string;
+  message: string;
 }
 
 export function CancellationMonitoringDashboard() {
@@ -111,10 +100,10 @@ export function CancellationMonitoringDashboard() {
 
   // API queries
   const {
-    data: systemHealth,
+    data: systemHealthData,
     isLoading: loadingHealth,
     refetch: refetchHealth,
-  } = (api.unifiedCancellationEnhanced.getSystemHealth as any).useQuery(
+  } = api.unifiedCancellationEnhanced.getSystemHealth.useQuery(
     { includeDetailedMetrics: true },
     {
       refetchInterval: autoRefresh ? 30000 : false, // Refresh every 30 seconds
@@ -122,11 +111,14 @@ export function CancellationMonitoringDashboard() {
     }
   );
 
+  // Type-safe system health with proper assertion
+  const systemHealth = systemHealthData as SystemHealth | undefined;
+
   const {
     data: analytics,
     isLoading: loadingAnalytics,
     refetch: refetchAnalytics,
-  } = (api.unifiedCancellationEnhanced.getAnalytics as any).useQuery(
+  } = api.unifiedCancellationEnhanced.getAnalytics.useQuery(
     {
       timeframe: selectedTimeframe,
       includeProviderBreakdown: true,
@@ -244,14 +236,14 @@ export function CancellationMonitoringDashboard() {
                 <div className="text-2xl font-bold">
                   <Badge
                     className={getStatusColor(
-                      systemHealth?.status || 'unknown'
+                      systemHealth?.status ?? 'unknown'
                     )}
                   >
-                    {systemHealth?.status || 'Unknown'}
+                    {systemHealth?.status ?? 'Unknown'}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {systemHealth?.overall.successRate || 0}% success rate
+                  {systemHealth?.overall?.successRate ?? 0}% success rate
                 </p>
               </CardContent>
             </Card>
@@ -266,7 +258,7 @@ export function CancellationMonitoringDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {systemHealth?.overall.totalRecentRequests || 0}
+                  {systemHealth?.overall?.totalRecentRequests ?? 0}
                 </div>
                 <p className="text-xs text-muted-foreground">Last hour</p>
               </CardContent>
@@ -282,7 +274,7 @@ export function CancellationMonitoringDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {systemHealth?.overall.avgResponseTimeMs
+                  {systemHealth?.overall?.avgResponseTimeMs
                     ? formatDuration(systemHealth.overall.avgResponseTimeMs)
                     : '0ms'}
                 </div>
@@ -300,7 +292,7 @@ export function CancellationMonitoringDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">
-                  {systemHealth?.overall.recentFailures || 0}
+                  {systemHealth?.overall?.recentFailures ?? 0}
                 </div>
                 <p className="text-xs text-muted-foreground">Last 24 hours</p>
               </CardContent>
@@ -378,12 +370,10 @@ export function CancellationMonitoringDashboard() {
                 <CardContent>
                   <div className="space-y-2">
                     {systemHealth.recommendations.map(
-                      (recommendation: any, index: number) => (
+                      (recommendation: string, index: number) => (
                         <Alert key={index}>
                           <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>
-                            {String(recommendation)}
-                          </AlertDescription>
+                          <AlertDescription>{recommendation}</AlertDescription>
                         </Alert>
                       )
                     )}
@@ -403,11 +393,11 @@ export function CancellationMonitoringDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="mb-2 text-2xl font-bold">
-                  {systemHealth?.system.cpu || 0}%
+                  {systemHealth?.system?.cpu ?? 0}%
                 </div>
                 <Progress
-                  value={systemHealth?.system.cpu || 0}
-                  className={`h-2 ${(systemHealth?.system.cpu || 0) > 80 ? 'bg-red-100' : 'bg-green-100'}`}
+                  value={systemHealth?.system?.cpu ?? 0}
+                  className={`h-2 ${(systemHealth?.system?.cpu ?? 0) > 80 ? 'bg-red-100' : 'bg-green-100'}`}
                 />
               </CardContent>
             </Card>
@@ -420,11 +410,11 @@ export function CancellationMonitoringDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="mb-2 text-2xl font-bold">
-                  {systemHealth?.system.memory || 0}%
+                  {systemHealth?.system?.memory ?? 0}%
                 </div>
                 <Progress
-                  value={systemHealth?.system.memory || 0}
-                  className={`h-2 ${(systemHealth?.system.memory || 0) > 80 ? 'bg-red-100' : 'bg-green-100'}`}
+                  value={systemHealth?.system?.memory ?? 0}
+                  className={`h-2 ${(systemHealth?.system?.memory ?? 0) > 80 ? 'bg-red-100' : 'bg-green-100'}`}
                 />
               </CardContent>
             </Card>
@@ -437,7 +427,7 @@ export function CancellationMonitoringDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="mb-2 text-2xl font-bold">
-                  {systemHealth?.system.activeConnections || 0}
+                  {systemHealth?.system?.activeConnections ?? 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Real-time connections
@@ -447,7 +437,7 @@ export function CancellationMonitoringDashboard() {
           </div>
 
           {/* Detailed Metrics */}
-          {systemHealth?.detailed && (
+          {systemHealth?.detailed?.performanceMetrics && (
             <>
               {/* Performance Metrics */}
               <Card>
@@ -459,8 +449,8 @@ export function CancellationMonitoringDashboard() {
                     <div className="text-center">
                       <div className="text-2xl font-bold">
                         {formatDuration(
-                          systemHealth.detailed.performanceMetrics
-                            .p50ResponseTime
+                          systemHealth?.detailed?.performanceMetrics
+                            ?.p50ResponseTime ?? 0
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -470,8 +460,8 @@ export function CancellationMonitoringDashboard() {
                     <div className="text-center">
                       <div className="text-2xl font-bold">
                         {formatDuration(
-                          systemHealth.detailed.performanceMetrics
-                            .p95ResponseTime
+                          systemHealth?.detailed?.performanceMetrics
+                            ?.p95ResponseTime ?? 0
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">P95</p>
@@ -479,8 +469,8 @@ export function CancellationMonitoringDashboard() {
                     <div className="text-center">
                       <div className="text-2xl font-bold">
                         {formatDuration(
-                          systemHealth.detailed.performanceMetrics
-                            .p99ResponseTime
+                          systemHealth?.detailed?.performanceMetrics
+                            ?.p99ResponseTime ?? 0
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">P99</p>
@@ -490,15 +480,18 @@ export function CancellationMonitoringDashboard() {
               </Card>
 
               {/* Error Breakdown */}
-              {Object.keys(systemHealth.detailed.errorBreakdown).length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Error Breakdown</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {Object.entries(systemHealth.detailed.errorBreakdown).map(
-                        ([error, count]) => (
+              {systemHealth?.detailed?.errorBreakdown &&
+                Object.keys(systemHealth.detailed.errorBreakdown).length >
+                  0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Error Breakdown</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {Object.entries(
+                          systemHealth.detailed.errorBreakdown
+                        ).map(([error, count]) => (
                           <div
                             key={error}
                             className="flex items-center justify-between"
@@ -506,12 +499,11 @@ export function CancellationMonitoringDashboard() {
                             <span className="text-sm">{error}</span>
                             <Badge variant="destructive">{String(count)}</Badge>
                           </div>
-                        )
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
               {/* Uptime Metrics */}
               <Card>
@@ -523,13 +515,14 @@ export function CancellationMonitoringDashboard() {
                     <div className="flex justify-between">
                       <span>System Uptime:</span>
                       <span className="font-medium text-green-600">
-                        {systemHealth.detailed.uptimeMetrics.uptime}
+                        {systemHealth?.detailed?.uptimeMetrics?.uptime ??
+                          'Unknown'}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Last Downtime:</span>
                       <span className="font-medium">
-                        {systemHealth.detailed.uptimeMetrics.lastDowntime
+                        {systemHealth?.detailed?.uptimeMetrics?.lastDowntime
                           ? new Date(
                               systemHealth.detailed.uptimeMetrics.lastDowntime
                             ).toLocaleString()
@@ -539,7 +532,8 @@ export function CancellationMonitoringDashboard() {
                     <div className="flex justify-between">
                       <span>Planned Maintenance:</span>
                       <span className="font-medium">
-                        {systemHealth.detailed.uptimeMetrics.plannedMaintenance
+                        {systemHealth?.detailed?.uptimeMetrics
+                          ?.plannedMaintenance
                           ? new Date(
                               systemHealth.detailed.uptimeMetrics.plannedMaintenance
                             ).toLocaleString()
@@ -589,8 +583,8 @@ export function CancellationMonitoringDashboard() {
                 };
                 methodBreakdown: Record<string, number>;
                 successRates: Record<string, number>;
-                providerAnalytics: any[];
-                insights: any[];
+                providerAnalytics: ProviderStats[];
+                insights: AlertData[];
               };
               return (
                 <>
@@ -739,7 +733,7 @@ export function CancellationMonitoringDashboard() {
                       <CardContent>
                         <div className="space-y-3">
                           {analyticsData.providerAnalytics.map(
-                            (provider: any, index: number) => (
+                            (provider: ProviderStats, index: number) => (
                               <div
                                 key={index}
                                 className="flex items-center justify-between rounded-lg border p-3"
@@ -780,7 +774,7 @@ export function CancellationMonitoringDashboard() {
                         <CardContent>
                           <div className="space-y-3">
                             {analyticsData.insights.map(
-                              (insight: any, index: number) => (
+                              (insight: AlertData, index: number) => (
                                 <Alert
                                   key={index}
                                   variant={
@@ -841,8 +835,8 @@ export function CancellationMonitoringDashboard() {
                       <span>P50 (Median)</span>
                       <span className="font-mono">
                         {formatDuration(
-                          systemHealth.detailed.performanceMetrics
-                            .p50ResponseTime
+                          systemHealth?.detailed?.performanceMetrics
+                            ?.p50ResponseTime ?? 0
                         )}
                       </span>
                     </div>
@@ -850,8 +844,8 @@ export function CancellationMonitoringDashboard() {
                       <span>P95</span>
                       <span className="font-mono">
                         {formatDuration(
-                          systemHealth.detailed.performanceMetrics
-                            .p95ResponseTime
+                          systemHealth?.detailed?.performanceMetrics
+                            ?.p95ResponseTime ?? 0
                         )}
                       </span>
                     </div>
@@ -859,8 +853,8 @@ export function CancellationMonitoringDashboard() {
                       <span>P99</span>
                       <span className="font-mono">
                         {formatDuration(
-                          systemHealth.detailed.performanceMetrics
-                            .p99ResponseTime
+                          systemHealth?.detailed?.performanceMetrics
+                            ?.p99ResponseTime ?? 0
                         )}
                       </span>
                     </div>
@@ -878,11 +872,11 @@ export function CancellationMonitoringDashboard() {
                       <div className="mb-1 flex justify-between">
                         <span className="text-sm">CPU Usage</span>
                         <span className="text-sm font-medium">
-                          {systemHealth.system.cpu}%
+                          {systemHealth?.system?.cpu ?? 0}%
                         </span>
                       </div>
                       <Progress
-                        value={systemHealth.system.cpu}
+                        value={systemHealth?.system?.cpu ?? 0}
                         className="h-2"
                       />
                     </div>
@@ -890,18 +884,18 @@ export function CancellationMonitoringDashboard() {
                       <div className="mb-1 flex justify-between">
                         <span className="text-sm">Memory Usage</span>
                         <span className="text-sm font-medium">
-                          {systemHealth.system.memory}%
+                          {systemHealth?.system?.memory ?? 0}%
                         </span>
                       </div>
                       <Progress
-                        value={systemHealth.system.memory}
+                        value={systemHealth?.system?.memory ?? 0}
                         className="h-2"
                       />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Active Connections</span>
                       <span className="text-sm font-medium">
-                        {systemHealth.system.activeConnections}
+                        {systemHealth?.system?.activeConnections ?? 0}
                       </span>
                     </div>
                   </div>

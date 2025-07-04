@@ -7,12 +7,34 @@ import { emitCancellationEvent } from './event-bus';
  * status changes, and important events.
  */
 
-export interface RealtimeNotification {
+// Define notification priority as a branded type for type safety
+type NotificationPriority = 'low' | 'normal' | 'high';
+
+// Define notification data types for different notification categories
+type CancellationData = {
+  step?: string;
+  progress?: number;
+  status?: string;
+  error?: string;
+  details?: string;
+  [key: string]: unknown;
+};
+
+type SystemData = {
+  status?: string;
+  health?: string;
+  maintenance?: boolean;
+  [key: string]: unknown;
+};
+
+type NotificationData = CancellationData | SystemData | Record<string, unknown>;
+
+export interface RealtimeNotification<TData extends NotificationData = NotificationData> {
   type: string;
   title: string;
   message: string;
-  priority: 'low' | 'normal' | 'high';
-  data?: Record<string, any>;
+  priority: NotificationPriority;
+  data?: TData;
   timestamp?: Date;
 }
 
@@ -33,7 +55,7 @@ export function sendRealtimeNotification(
   // Add timestamp if not provided
   const timestampedNotification: RealtimeNotification = {
     ...notification,
-    timestamp: notification.timestamp || new Date(),
+    timestamp: notification.timestamp ?? new Date(),
   };
 
   // Emit the notification event for real-time delivery
@@ -82,8 +104,8 @@ export function createProgressNotification(
   step: string,
   progress: number,
   message: string,
-  metadata?: Record<string, any>
-): RealtimeNotification {
+  metadata?: Record<string, unknown>
+): RealtimeNotification<CancellationData> {
   return {
     type: 'cancellation.progress',
     title: 'Cancellation Progress',
@@ -104,9 +126,9 @@ export function createStatusNotification(
   status: string,
   title: string,
   message: string,
-  priority: 'low' | 'normal' | 'high' = 'normal',
-  metadata?: Record<string, any>
-): RealtimeNotification {
+  priority: NotificationPriority = 'normal',
+  metadata?: Record<string, unknown>
+): RealtimeNotification<CancellationData> {
   return {
     type: 'cancellation.status',
     title,
@@ -125,8 +147,8 @@ export function createStatusNotification(
 export function createErrorNotification(
   error: string,
   details?: string,
-  metadata?: Record<string, any>
-): RealtimeNotification {
+  metadata?: Record<string, unknown>
+): RealtimeNotification<CancellationData> {
   return {
     type: 'cancellation.error',
     title: 'Cancellation Error',
@@ -146,8 +168,8 @@ export function createErrorNotification(
 export function createSuccessNotification(
   title: string,
   message: string,
-  metadata?: Record<string, any>
-): RealtimeNotification {
+  metadata?: Record<string, unknown>
+): RealtimeNotification<CancellationData> {
   return {
     type: 'cancellation.success',
     title,
@@ -163,8 +185,8 @@ export function createSuccessNotification(
 export function createWarningNotification(
   title: string,
   message: string,
-  metadata?: Record<string, any>
-): RealtimeNotification {
+  metadata?: Record<string, unknown>
+): RealtimeNotification<CancellationData> {
   return {
     type: 'cancellation.warning',
     title,
@@ -180,8 +202,8 @@ export function createWarningNotification(
 export function createInfoNotification(
   title: string,
   message: string,
-  metadata?: Record<string, any>
-): RealtimeNotification {
+  metadata?: Record<string, unknown>
+): RealtimeNotification<CancellationData> {
   return {
     type: 'cancellation.info',
     title,
@@ -218,7 +240,7 @@ class NotificationQueue {
     });
 
     if (!this.processing) {
-      this.processQueue();
+      void this.processQueue();
     }
   }
 
@@ -400,7 +422,7 @@ class SSEManager {
     controller: ReadableStreamDefaultController,
     message: {
       type: string;
-      data: any;
+      data: NotificationData | { status: string; timestamp: string };
     }
   ): void {
     try {

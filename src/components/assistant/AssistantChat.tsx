@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '@/trpc/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,6 @@ import { MessageBubble } from './MessageBubble';
 import { QuickActions } from './QuickActions';
 import { ConversationHistory } from './ConversationHistory';
 import { Loader2, Send, X, Menu, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface AssistantChatProps {
@@ -69,7 +68,8 @@ export function AssistantChat({
     if (isOpen && initialMessage && !conversationId) {
       void startConversation.mutate({ initialMessage });
     }
-  }, [isOpen, initialMessage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialMessage, conversationId]);
 
   // Auto-focus input
   useEffect(() => {
@@ -106,6 +106,10 @@ export function AssistantChat({
     setShowHistory(false);
   };
 
+  const toggleHistory = useCallback(() => {
+    setShowHistory(!showHistory);
+  }, [showHistory]);
+
   const scrollToBottom = () => {
     setTimeout(() => {
       if (scrollAreaRef.current) {
@@ -134,7 +138,7 @@ export function AssistantChat({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setShowHistory(!showHistory)}
+              onClick={toggleHistory}
             >
               <Menu className="h-4 w-4" />
             </Button>
@@ -177,7 +181,7 @@ export function AssistantChat({
                 </div>
               ) : conversation ? (
                 <div className="space-y-4">
-                  {conversation.messages.map(msg => (
+                  {conversation.messages?.map(msg => (
                     <MessageBubble
                       key={msg.id}
                       message={msg}

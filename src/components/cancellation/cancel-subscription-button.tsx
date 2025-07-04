@@ -76,7 +76,7 @@ export function CancelSubscriptionButton({
         onClose={() => setShowModal(false)}
         subscriptionId={subscriptionId}
         subscriptionName={subscriptionName}
-        provider={canCancelData.provider || null}
+        provider={canCancelData.provider ?? null}
         onCancellationStarted={handleCancellationStarted}
       />
     </>

@@ -488,7 +488,7 @@ export const notificationsRouter = createTRPCRouter({
   /**
    * Process scheduled email notifications
    */
-  processScheduledEmails: protectedProcedure.mutation(async ({}) => {
+  processScheduledEmails: protectedProcedure.mutation(async () => {
     // This would typically be called by a cron job or background worker
     // For now, manual trigger for testing
     if (process.env.NODE_ENV !== 'development') {

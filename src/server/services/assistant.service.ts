@@ -1,7 +1,30 @@
 import { type PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { openAIClient, type ChatMessage } from '@/server/lib/openai-client';
-import { z } from 'zod';
+
+// Context types for the assistant
+interface SubscriptionContext {
+  id: string;
+  name: string;
+  amount: number;
+  frequency: string;
+  category: string | null;
+  nextBilling: Date | null;
+  status: string;
+}
+
+interface NotificationContext {
+  type: string;
+  title: string;
+  message: string;
+}
+
+interface AssistantContext {
+  subscriptionCount: number;
+  totalMonthlySpending: number;
+  subscriptions: SubscriptionContext[];
+  recentNotifications: NotificationContext[];
+}
 
 // Assistant action types
 export const ASSISTANT_ACTIONS = {
@@ -186,7 +209,7 @@ export class AssistantService {
     }
 
     // Create user message
-    const userMessage = await this.db.message.create({
+    await this.db.message.create({
       data: {
         conversationId,
         role: 'user',
@@ -237,7 +260,7 @@ export class AssistantService {
         functionCall: response.functionCall
           ? {
               name: response.functionCall.name,
-              arguments: response.functionCall.arguments as any,
+              arguments: response.functionCall.arguments,
             }
           : undefined,
       },
@@ -461,7 +484,7 @@ export class AssistantService {
   /**
    * Build system prompt for the assistant
    */
-  private buildSystemPrompt(context: any) {
+  private buildSystemPrompt(context: AssistantContext) {
     return `You are SubPilot AI, a helpful subscription management assistant. You help users manage, analyze, and optimize their recurring subscriptions.
 
 Current user context:
@@ -470,7 +493,7 @@ Current user context:
 - Recent notifications: ${context.recentNotifications.length}
 
 Available subscriptions:
-${context.subscriptions.map((sub: any) => `- ${sub.name}: $${sub.amount}/${sub.frequency} (${sub.category})`).join('\n')}
+${context.subscriptions.map((sub: SubscriptionContext) => `- ${sub.name}: $${sub.amount}/${sub.frequency} (${sub.category})`).join('\n')}
 
 Your capabilities:
 1. Analyze spending patterns and provide insights
@@ -527,7 +550,7 @@ If you need to take an action, use the appropriate function.`;
   private async createAction(
     conversationId: string,
     type: string,
-    parameters: Record<string, unknown>
+    parameters: AssistantActionParams
   ) {
     // Map function names to action types
     const functionToActionMap: Record<string, AssistantAction> = {
@@ -541,7 +564,7 @@ If you need to take an action, use the appropriate function.`;
       exportData: ASSISTANT_ACTIONS.EXPORT_DATA,
     };
 
-    const actionType = functionToActionMap[type] || type;
+    const actionType = functionToActionMap[type] ?? type;
 
     // Determine if confirmation is required
     const requiresConfirmation = ['cancelSubscription', 'setReminder'].includes(
@@ -564,7 +587,7 @@ If you need to take an action, use the appropriate function.`;
    */
   private generateActionMessage(
     functionName: string,
-    args: Record<string, unknown>,
+    args: AssistantActionParams,
     aiResponse: string
   ): string {
     let actionMessage = '';
@@ -586,7 +609,7 @@ If you need to take an action, use the appropriate function.`;
         actionMessage = `I'll help you with that.`;
     }
 
-    return aiResponse || actionMessage;
+    return aiResponse ?? actionMessage;
   }
 
   /**
@@ -691,12 +714,12 @@ If you need to take an action, use the appropriate function.`;
       (sum, sub) => sum + Number(sub.amount),
       0
     );
-    const avgSpending = totalSpending / subscriptions.length || 0;
+    const avgSpending = subscriptions.length > 0 ? totalSpending / subscriptions.length : 0;
 
     const byCategory = subscriptions.reduce(
       (acc, sub) => {
         const cat = sub.category ?? 'other';
-        if (!acc[cat]) acc[cat] = { count: 0, total: 0 };
+        acc[cat] ??= { count: 0, total: 0 };
         acc[cat].count++;
         acc[cat].total += Number(sub.amount);
         return acc;

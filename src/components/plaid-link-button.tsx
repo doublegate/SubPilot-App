@@ -50,7 +50,7 @@ export function PlaidLinkButton({
       onSuccess?.();
     },
     onError: error => {
-      toast.error(error.message || 'Failed to connect bank account');
+      toast.error(error.message ?? 'Failed to connect bank account');
     },
     onSettled: () => {
       setIsLoading(false);

@@ -3,6 +3,47 @@ import { EmailService } from '../email.service';
 import { emitCancellationEvent } from '@/server/lib/event-bus';
 import type { Job, JobResult } from '@/server/lib/job-queue';
 import { AuditLogger } from '@/server/lib/audit-logger';
+import type { User } from '@prisma/client';
+
+// Notification data types
+type NotificationData = {
+  subscriptionId?: string;
+  subscriptionName?: string;
+  cancellationId?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  retryCount?: number;
+  webhookId?: string;
+  workflowId?: string;
+  progress?: number;
+  metadata?: Record<string, unknown>;
+};
+
+// User notification preferences type
+type NotificationPreferences = {
+  email?: boolean;
+  push?: boolean;
+  in_app?: boolean;
+  types?: Record<string, boolean>;
+};
+
+// Channel send result type
+type ChannelSendResult = {
+  channel: string;
+  success: boolean;
+  messageId?: string;
+  error?: string;
+};
+
+// User with email context
+type UserWithEmail = Pick<User, 'id' | 'email' | 'name'>;
+
+// Notification content type
+type NotificationContent = {
+  title: string;
+  message: string;
+  htmlMessage?: string;
+};
 
 export interface NotificationJobData {
   userId: string;
@@ -16,7 +57,7 @@ export interface NotificationJobData {
     | 'workflow_progress';
   title?: string;
   message?: string;
-  data?: any;
+  data?: NotificationData;
   priority?: 'low' | 'normal' | 'high';
   channels?: ('email' | 'push' | 'in_app')[];
   scheduledFor?: Date;
@@ -68,7 +109,7 @@ export class NotificationJobProcessor {
       }
 
       // Parse notification preferences
-      const preferences = user.notificationPreferences as any;
+      const preferences = user.notificationPreferences as NotificationPreferences;
       const userChannels = this.filterChannelsByPreferences(
         channels,
         preferences
@@ -99,7 +140,7 @@ export class NotificationJobProcessor {
         message
       );
 
-      const results: any[] = [];
+      const results: ChannelSendResult[] = [];
       let hasError = false;
 
       // Send through each enabled channel
@@ -202,7 +243,7 @@ export class NotificationJobProcessor {
    */
   private filterChannelsByPreferences(
     channels: string[],
-    preferences: any
+    preferences: NotificationPreferences
   ): string[] {
     const filtered: string[] = [];
 
@@ -238,8 +279,8 @@ export class NotificationJobProcessor {
    */
   private async generateNotificationContent(
     type: string,
-    user: any,
-    data: any,
+    user: UserWithEmail,
+    data: NotificationData,
     customTitle?: string,
     customMessage?: string
   ): Promise<{
@@ -258,10 +299,10 @@ export class NotificationJobProcessor {
     const templates = {
       cancellation_success: {
         title: 'Subscription Cancelled Successfully',
-        message: `Great news! Your ${data.subscriptionName || 'subscription'} has been cancelled successfully.`,
+        message: `Great news! Your ${data.subscriptionName ?? 'subscription'} has been cancelled successfully.`,
         htmlMessage: `
           <h2>Subscription Cancelled Successfully! 🎉</h2>
-          <p>Great news! Your <strong>${data.subscriptionName || 'subscription'}</strong> has been cancelled successfully.</p>
+          <p>Great news! Your <strong>${data.subscriptionName ?? 'subscription'}</strong> has been cancelled successfully.</p>
           ${data.confirmationCode ? `<p><strong>Confirmation Code:</strong> ${data.confirmationCode}</p>` : ''}
           ${data.effectiveDate ? `<p><strong>Effective Date:</strong> ${new Date(data.effectiveDate).toLocaleDateString()}</p>` : ''}
           ${data.refundAmount ? `<p><strong>Refund Amount:</strong> $${data.refundAmount}</p>` : ''}
@@ -270,10 +311,10 @@ export class NotificationJobProcessor {
       },
       cancellation_manual: {
         title: 'Manual Cancellation Required',
-        message: `We've prepared instructions to cancel your ${data.subscriptionName || 'subscription'}. Please follow the steps in your dashboard.`,
+        message: `We've prepared instructions to cancel your ${data.subscriptionName ?? 'subscription'}. Please follow the steps in your dashboard.`,
         htmlMessage: `
           <h2>Manual Cancellation Instructions Ready</h2>
-          <p>We've prepared step-by-step instructions to cancel your <strong>${data.subscriptionName || 'subscription'}</strong>.</p>
+          <p>We've prepared step-by-step instructions to cancel your <strong>${data.subscriptionName ?? 'subscription'}</strong>.</p>
           <p>Please check your SubPilot dashboard for detailed instructions.</p>
           ${data.estimatedTime ? `<p><strong>Estimated Time:</strong> ${data.estimatedTime}</p>` : ''}
           <p>Once you've completed the cancellation, please confirm it in your dashboard.</p>
@@ -281,10 +322,10 @@ export class NotificationJobProcessor {
       },
       cancellation_error: {
         title: 'Cancellation Issue',
-        message: `We encountered an issue cancelling your ${data.subscriptionName || 'subscription'}. We're working to resolve this.`,
+        message: `We encountered an issue cancelling your ${data.subscriptionName ?? 'subscription'}. We're working to resolve this.`,
         htmlMessage: `
           <h2>Cancellation Issue</h2>
-          <p>We encountered an issue cancelling your <strong>${data.subscriptionName || 'subscription'}</strong>.</p>
+          <p>We encountered an issue cancelling your <strong>${data.subscriptionName ?? 'subscription'}</strong>.</p>
           <p>Our team is working to resolve this. You can also try manual cancellation instructions in your dashboard.</p>
           ${data.error ? `<p><strong>Issue:</strong> ${data.error}</p>` : ''}
           <p>We'll keep you updated on the progress.</p>
@@ -292,40 +333,40 @@ export class NotificationJobProcessor {
       },
       cancellation_retry: {
         title: 'Retrying Cancellation',
-        message: `We're retrying the cancellation of your ${data.subscriptionName || 'subscription'}.`,
+        message: `We're retrying the cancellation of your ${data.subscriptionName ?? 'subscription'}.`,
         htmlMessage: `
           <h2>Retrying Cancellation</h2>
-          <p>We're retrying the cancellation of your <strong>${data.subscriptionName || 'subscription'}</strong>.</p>
+          <p>We're retrying the cancellation of your <strong>${data.subscriptionName ?? 'subscription'}</strong>.</p>
           ${data.nextRetryAt ? `<p><strong>Next Attempt:</strong> ${new Date(data.nextRetryAt).toLocaleString()}</p>` : ''}
           <p>You don't need to do anything - we'll automatically try again.</p>
         `,
       },
       webhook_received: {
         title: 'Cancellation Update',
-        message: `We received an update about your ${data.subscriptionName || 'subscription'} cancellation.`,
+        message: `We received an update about your ${data.subscriptionName ?? 'subscription'} cancellation.`,
         htmlMessage: `
           <h2>Cancellation Update</h2>
-          <p>We received an update about your <strong>${data.subscriptionName || 'subscription'}</strong> cancellation.</p>
+          <p>We received an update about your <strong>${data.subscriptionName ?? 'subscription'}</strong> cancellation.</p>
           <p>Check your dashboard for the latest status.</p>
         `,
       },
       status_update: {
         title: 'Subscription Status Update',
-        message: `Your ${data.subscriptionName || 'subscription'} status has been updated to: ${data.status || 'unknown'}`,
+        message: `Your ${data.subscriptionName ?? 'subscription'} status has been updated to: ${data.status ?? 'unknown'}`,
         htmlMessage: `
           <h2>Subscription Status Update</h2>
-          <p>Your <strong>${data.subscriptionName || 'subscription'}</strong> status has been updated.</p>
-          <p><strong>New Status:</strong> ${data.status || 'unknown'}</p>
+          <p>Your <strong>${data.subscriptionName ?? 'subscription'}</strong> status has been updated.</p>
+          <p><strong>New Status:</strong> ${data.status ?? 'unknown'}</p>
           <p>Check your dashboard for more details.</p>
         `,
       },
       workflow_progress: {
         title: 'Cancellation Progress Update',
-        message: `Your cancellation request is progressing: ${data.currentStep || 'processing'}`,
+        message: `Your cancellation request is progressing: ${data.currentStep ?? 'processing'}`,
         htmlMessage: `
           <h2>Cancellation Progress Update</h2>
           <p>Your cancellation request is progressing through our system.</p>
-          <p><strong>Current Step:</strong> ${data.currentStep || 'processing'}</p>
+          <p><strong>Current Step:</strong> ${data.currentStep ?? 'processing'}</p>
           ${data.estimatedCompletion ? `<p><strong>Estimated Completion:</strong> ${new Date(data.estimatedCompletion).toLocaleString()}</p>` : ''}
           <p>We'll notify you when it's complete.</p>
         `,
@@ -337,9 +378,9 @@ export class NotificationJobProcessor {
     if (!template) {
       return {
         title: 'SubPilot Notification',
-        message: customMessage || 'You have a new notification from SubPilot.',
+        message: customMessage ?? 'You have a new notification from SubPilot.',
         htmlMessage: this.formatHtmlMessage(
-          customMessage || 'You have a new notification from SubPilot.',
+          customMessage ?? 'You have a new notification from SubPilot.',
           data
         ),
       };
@@ -357,9 +398,9 @@ export class NotificationJobProcessor {
    */
   private async sendThroughChannel(
     channel: string,
-    user: any,
-    content: any,
-    data: any
+    user: UserWithEmail,
+    content: NotificationContent,
+    data: NotificationData
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     switch (channel) {
       case 'email':
@@ -378,9 +419,9 @@ export class NotificationJobProcessor {
    * Send email notification
    */
   private async sendEmailNotification(
-    user: any,
-    content: any,
-    data: any
+    user: UserWithEmail,
+    content: NotificationContent,
+    _data: NotificationData
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       // Use sendEmail directly from the email module
@@ -388,7 +429,7 @@ export class NotificationJobProcessor {
       await sendEmail({
         to: user.email,
         subject: content.title,
-        html: content.htmlMessage || content.message,
+        html: content.htmlMessage ?? content.message,
         text: content.message,
       });
 
@@ -407,9 +448,9 @@ export class NotificationJobProcessor {
    * Send push notification (placeholder for future implementation)
    */
   private async sendPushNotification(
-    user: any,
-    content: any,
-    data: any
+    user: UserWithEmail,
+    content: NotificationContent,
+    _data: NotificationData
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     // TODO: Implement push notification service
     console.log(
@@ -432,14 +473,14 @@ export class NotificationJobProcessor {
    */
   private async createInAppNotification(
     userId: string,
-    content: any,
-    data: any,
+    content: NotificationContent,
+    data: NotificationData,
     priority: string
   ): Promise<void> {
     await this.db.notification.create({
       data: {
         userId,
-        type: data.notificationType || 'general',
+        type: data.notificationType ?? 'general',
         title: content.title,
         message: content.message,
         severity: this.mapPriorityToSeverity(priority),
@@ -467,7 +508,7 @@ export class NotificationJobProcessor {
   /**
    * Format HTML message with basic styling
    */
-  private formatHtmlMessage(message: string, data: any): string {
+  private formatHtmlMessage(message: string, _data: NotificationData): string {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #06B6D4, #9333EA); padding: 20px; border-radius: 8px 8px 0 0;">
@@ -478,7 +519,7 @@ export class NotificationJobProcessor {
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e5e5;">
           <p style="color: #666; font-size: 12px; margin: 0;">
             This is an automated message from SubPilot. 
-            <a href="${process.env.NEXTAUTH_URL || 'https://subpilot.app'}" style="color: #06B6D4;">
+            <a href="${process.env.NEXTAUTH_URL ?? 'https://subpilot.app'}" style="color: #06B6D4;">
               Visit your dashboard
             </a> for more details.
           </p>

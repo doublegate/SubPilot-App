@@ -27,7 +27,7 @@ export const systemMonitoringRouter = createTRPCRouter({
           api: 'healthy',
         },
       };
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'System health check failed',
@@ -86,14 +86,27 @@ export const systemMonitoringRouter = createTRPCRouter({
   jobQueueStats: protectedProcedure.query(async () => {
     try {
       const jobQueue = getJobQueue();
-      const stats = await jobQueue.getStats();
-      const failedJobs = (jobQueue as any).getFailedJobs
-        ? await (jobQueue as any).getFailedJobs(5)
-        : [];
+      const stats = jobQueue.getStats();
+
+      interface JobQueueWithFailedJobs {
+        getFailedJobs?: (limit: number) => Promise<unknown[]>;
+      }
+
+      const failedJobsMethod = (jobQueue as JobQueueWithFailedJobs)
+        .getFailedJobs;
+      const failedJobs = failedJobsMethod ? await failedJobsMethod(5) : [];
+
+      interface FailedJob {
+        id: unknown;
+        type: unknown;
+        attempts: unknown;
+        maxAttempts: unknown;
+        createdAt: unknown;
+      }
 
       return {
         stats,
-        failedJobs: failedJobs.map((job: any) => ({
+        failedJobs: (failedJobs as FailedJob[]).map(job => ({
           id: job.id,
           type: job.type,
           attempts: job.attempts,
@@ -102,7 +115,7 @@ export const systemMonitoringRouter = createTRPCRouter({
           error: 'Failed job', // Don't expose sensitive error details
         })),
       };
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to get job queue stats',
@@ -119,7 +132,7 @@ export const systemMonitoringRouter = createTRPCRouter({
       const stats = workflowEngine.getStats();
 
       return stats;
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to get workflow stats',
@@ -133,12 +146,20 @@ export const systemMonitoringRouter = createTRPCRouter({
   realtimeStats: protectedProcedure.query(async () => {
     try {
       const realtimeManager = getRealtimeNotificationManager();
-      const stats = (realtimeManager as any).getStats
-        ? (realtimeManager as any).getStats()
-        : { activeConnections: realtimeManager.getActiveConnections() };
+
+      // Type the manager properly to avoid any usage
+      interface RealtimeManagerWithStats {
+        getStats?: () => Record<string, unknown>;
+        getActiveConnections: () => number;
+      }
+
+      const typedManager = realtimeManager as RealtimeManagerWithStats;
+      const stats = typedManager.getStats
+        ? typedManager.getStats()
+        : { activeConnections: typedManager.getActiveConnections() };
 
       return stats;
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to get realtime stats',
@@ -152,23 +173,35 @@ export const systemMonitoringRouter = createTRPCRouter({
   userConnections: protectedProcedure.query(async ({ ctx }) => {
     try {
       const realtimeManager = getRealtimeNotificationManager();
-      const connections = (realtimeManager as any).getUserConnections
-        ? (realtimeManager as any).getUserConnections(ctx.session.user.id)
+
+      // Type the manager properly to avoid any usage
+      interface RealtimeManagerWithConnections {
+        getUserConnections?: (userId: string) => Array<{
+          id: string;
+          connectionId: string;
+          connectedAt: Date;
+          lastActivity: Date;
+        }>;
+        getUnreadNotifications?: (userId: string) => unknown[];
+      }
+
+      const typedManager = realtimeManager as RealtimeManagerWithConnections;
+      const connections = typedManager.getUserConnections
+        ? typedManager.getUserConnections(ctx.session.user.id)
         : [];
 
       return {
-        connections: connections.map((conn: any) => ({
+        connections: connections.map(conn => ({
           id: conn.id,
           connectionId: conn.connectionId,
           connectedAt: conn.connectedAt,
           lastActivity: conn.lastActivity,
         })),
-        unreadNotifications: (realtimeManager as any).getUnreadNotifications
-          ? (realtimeManager as any).getUnreadNotifications(ctx.session.user.id)
-              .length
+        unreadNotifications: typedManager.getUnreadNotifications
+          ? typedManager.getUnreadNotifications(ctx.session.user.id).length
           : 0,
       };
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to get user connections',
@@ -291,7 +324,7 @@ export const systemMonitoringRouter = createTRPCRouter({
             errorRate,
           },
         };
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to get system metrics',
@@ -307,8 +340,14 @@ export const systemMonitoringRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const jobQueue = getJobQueue();
-        const success = (jobQueue as any).retryFailedJob
-          ? await (jobQueue as any).retryFailedJob(input.jobId)
+        // Type the job queue interface for retry functionality
+        interface JobQueueWithRetry {
+          retryFailedJob?: (jobId: string) => Promise<boolean>;
+        }
+
+        const typedJobQueue = jobQueue as JobQueueWithRetry;
+        const success = typedJobQueue.retryFailedJob
+          ? await typedJobQueue.retryFailedJob(input.jobId)
           : false;
 
         if (!success) {
@@ -354,10 +393,15 @@ export const systemMonitoringRouter = createTRPCRouter({
       const jobQueue = getJobQueue();
 
       // Get failed jobs count before clearing
-      const failedJobs = (jobQueue as any).getFailedJobs
-        ? await (jobQueue as any).getFailedJobs(1000)
+      interface JobQueueWithFailedJobs {
+        getFailedJobs?: (limit: number) => Promise<unknown[]>;
+      }
+
+      const typedJobQueue = jobQueue as JobQueueWithFailedJobs;
+      const failedJobs = typedJobQueue.getFailedJobs
+        ? await typedJobQueue.getFailedJobs(1000)
         : [];
-      const clearedCount = failedJobs.length;
+      const clearedCount = Array.isArray(failedJobs) ? failedJobs.length : 0;
 
       // In the current implementation, there's no direct clear method
       // You would need to implement this in the JobQueue class
@@ -378,7 +422,7 @@ export const systemMonitoringRouter = createTRPCRouter({
       });
 
       return { success: true, clearedCount };
-    } catch (error) {
+    } catch {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to clear failed jobs',
@@ -398,7 +442,13 @@ export const systemMonitoringRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       try {
-        const where: any = {};
+        interface WhereClause {
+          action?: {
+            in: string[];
+          };
+        }
+
+        const where: WhereClause = {};
 
         if (input.actions && input.actions.length > 0) {
           where.action = {
@@ -423,7 +473,7 @@ export const systemMonitoringRouter = createTRPCRouter({
         });
 
         return events;
-      } catch (error) {
+      } catch {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to get recent events',
@@ -434,7 +484,9 @@ export const systemMonitoringRouter = createTRPCRouter({
 
 // Helper functions
 
-async function checkDatabaseHealth(db: any) {
+async function checkDatabaseHealth(db: {
+  $queryRaw: (query: TemplateStringsArray) => Promise<unknown>;
+}): Promise<HealthCheckResult> {
   try {
     await db.$queryRaw`SELECT 1`;
     return { healthy: true };
@@ -447,7 +499,7 @@ async function checkDatabaseHealth(db: any) {
   }
 }
 
-async function checkWorkflowEngineHealth() {
+async function checkWorkflowEngineHealth(): Promise<HealthCheckResult> {
   try {
     const workflowEngine = getWorkflowEngine();
     const stats = workflowEngine.getStats();
@@ -464,12 +516,19 @@ async function checkWorkflowEngineHealth() {
   }
 }
 
-async function checkRealtimeHealth() {
+async function checkRealtimeHealth(): Promise<HealthCheckResult> {
   try {
     const realtimeManager = getRealtimeNotificationManager();
-    const stats = (realtimeManager as any).getStats
-      ? (realtimeManager as any).getStats()
-      : { activeConnections: realtimeManager.getActiveConnections() };
+
+    interface RealtimeManagerWithStats {
+      getStats?: () => Record<string, unknown>;
+      getActiveConnections: () => number;
+    }
+
+    const typedManager = realtimeManager as RealtimeManagerWithStats;
+    const stats = typedManager.getStats
+      ? typedManager.getStats()
+      : { activeConnections: typedManager.getActiveConnections() };
 
     return {
       healthy: true,
@@ -483,13 +542,22 @@ async function checkRealtimeHealth() {
   }
 }
 
-function getCheckResult(settledResult: PromiseSettledResult<any>) {
+interface HealthCheckResult {
+  healthy: boolean;
+  error?: string | null;
+  stats?: Record<string, unknown>;
+  data?: Record<string, unknown>;
+}
+
+function getCheckResult(
+  settledResult: PromiseSettledResult<HealthCheckResult>
+) {
   if (settledResult.status === 'fulfilled') {
     const result = settledResult.value;
     return {
       status: result.healthy ? 'healthy' : 'unhealthy',
-      error: result.error || null,
-      data: result.stats || result.data || null,
+      error: result.error ?? null,
+      data: result.stats ?? result.data ?? null,
     };
   } else {
     return {

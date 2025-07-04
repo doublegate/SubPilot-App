@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Separator } from '@/components/ui/separator';
+// Separator import removed - not used in this component
 import {
   CheckCircle,
   Clock,
@@ -34,12 +34,107 @@ import {
 import { api } from '@/trpc/react';
 import { toast } from 'sonner';
 
+// Interface for manual instructions structure
+interface ManualInstructions {
+  instructions?: {
+    steps?: string[];
+    contactInfo?: {
+      website?: string;
+      phone?: string;
+      email?: string;
+    };
+  };
+}
+
+interface CancellationInitiateResult {
+  requestId: string;
+  orchestrationId: string;
+  subscriptionUrl?: string;
+  success: boolean;
+  method: string;
+}
+
+interface TimelineEvent {
+  status: string;
+  action: string;
+  message: string;
+  timestamp: string | Date;
+  metadata?: Record<string, unknown> | null;
+}
+
+interface RealtimeUpdate {
+  type: string;
+  data: Record<string, unknown>;
+  timestamp: string | Date;
+}
+
+interface CancellationMethod {
+  id: string;
+  name: string;
+  description: string;
+  estimatedTime: string;
+  successRate: number;
+  icon?: string;
+}
+
+interface ManualInstructions {
+  instructions: {
+    steps: string[];
+    contactInfo: {
+      website?: string;
+      phone?: string;
+      email?: string;
+    };
+  };
+}
+
+interface CancellationStatus {
+  status: string;
+  method: string;
+  completedSteps: number;
+  totalSteps: number;
+  progress: number;
+  message?: string;
+  error?: string;
+  confirmationCode?: string;
+  effectiveDate?: string | Date;
+  cancellationUrl?: string;
+  supportUrl?: string;
+  customerServiceNumber?: string;
+  instructions?: string;
+  manualInstructions?: ManualInstructions;
+}
+
+interface NextStep {
+  action: string;
+  instructions: string;
+  url?: string;
+  estimatedTime?: string;
+}
+
+interface AlternativeOption {
+  method: string;
+  instructions: string;
+  estimatedTime?: string;
+}
+
+interface StatusQueryData {
+  status: CancellationStatus;
+  timeline: TimelineEvent[];
+  nextSteps?: NextStep[];
+  alternativeOptions?: AlternativeOption[];
+}
+
 interface UnifiedCancellationModalProps {
   subscriptionId: string;
   subscriptionName: string;
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (result: any) => void;
+  onSuccess?: (result: {
+    success: boolean;
+    requestId: string;
+    method: string;
+  }) => void;
 }
 
 export function UnifiedCancellationModal({
@@ -49,13 +144,12 @@ export function UnifiedCancellationModal({
   onClose,
   onSuccess,
 }: UnifiedCancellationModalProps) {
-  const [selectedMethod, setSelectedMethod] = useState<string>('auto');
+  const [selectedMethod, setSelectedMethod] = useState<'auto' | 'manual' | 'api' | 'automation'>('auto');
   const [priority, setPriority] = useState<'low' | 'normal' | 'high'>('normal');
   const [notes, setNotes] = useState('');
-  const [scheduleDate, setScheduleDate] = useState<Date | undefined>();
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [orchestrationId, setOrchestrationId] = useState<string | null>(null);
-  const [realtimeUpdates, setRealtimeUpdates] = useState<any[]>([]);
+  const [realtimeUpdates, setRealtimeUpdates] = useState<Array<Record<string, unknown>>>([]);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
 
   // API calls
@@ -76,10 +170,10 @@ export function UnifiedCancellationModal({
       { enabled: isOpen }
     );
 
-  const statusQuery: any = api.unifiedCancellation.getStatus.useQuery(
+  const statusQuery = api.unifiedCancellation.getStatus.useQuery(
     {
       requestId: currentRequestId!,
-      orchestrationId: orchestrationId || undefined,
+      orchestrationId: orchestrationId ?? undefined,
     },
     {
       enabled: !!currentRequestId,
@@ -88,19 +182,20 @@ export function UnifiedCancellationModal({
   );
 
   const initiateMutation = api.unifiedCancellation.initiate.useMutation({
-    onSuccess: result => {
+    onSuccess: (result: CancellationInitiateResult) => {
       setCurrentRequestId(result.requestId);
       setOrchestrationId(result.orchestrationId);
 
       // Setup real-time updates
-      if ((result as any).subscriptionUrl) {
-        setupRealtimeUpdates((result as any).subscriptionUrl);
+      if (result.subscriptionUrl) {
+        setupRealtimeUpdates(result.subscriptionUrl);
       }
 
       toast.success('Cancellation request initiated successfully');
     },
-    onError: error => {
-      toast.error(`Failed to initiate cancellation: ${error.message}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to initiate cancellation: ${errorMessage}`);
     },
   });
 
@@ -110,8 +205,9 @@ export function UnifiedCancellationModal({
       setOrchestrationId(result.orchestrationId);
       toast.success('Cancellation retry initiated');
     },
-    onError: error => {
-      toast.error(`Failed to retry cancellation: ${error.message}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to retry cancellation: ${errorMessage}`);
     },
   });
 
@@ -130,7 +226,11 @@ export function UnifiedCancellationModal({
     api.unifiedCancellation.confirmManual.useMutation({
       onSuccess: () => {
         toast.success('Manual cancellation confirmed');
-        onSuccess?.(statusQuery.data);
+        onSuccess?.({
+          success: true,
+          requestId: currentRequestId ?? '',
+          method: statusQuery.data?.method ?? 'manual'
+        });
         cleanup();
         onClose();
       },
@@ -149,7 +249,7 @@ export function UnifiedCancellationModal({
 
     es.onmessage = event => {
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data as string) as Record<string, unknown>;
         setRealtimeUpdates(prev => [
           ...prev,
           { ...data, timestamp: new Date() },
@@ -157,7 +257,7 @@ export function UnifiedCancellationModal({
 
         if (data.type === 'cancellation.orchestration_progress') {
           // Force refetch status on progress updates
-          statusQuery.refetch();
+          void statusQuery.refetch();
         }
       } catch (error) {
         console.error('Error parsing SSE message:', error);
@@ -172,7 +272,7 @@ export function UnifiedCancellationModal({
   };
 
   // Cleanup function
-  const cleanup = () => {
+  const cleanup = useCallback(() => {
     if (eventSource) {
       eventSource.close();
       setEventSource(null);
@@ -180,25 +280,25 @@ export function UnifiedCancellationModal({
     setCurrentRequestId(null);
     setOrchestrationId(null);
     setRealtimeUpdates([]);
-  };
+  }, [eventSource]);
 
   // Cleanup on unmount or close
   useEffect(() => {
     return () => {
       cleanup();
     };
-  }, []);
+  }, [cleanup]);
 
   useEffect(() => {
     if (!isOpen) {
       cleanup();
     }
-  }, [isOpen]);
+  }, [isOpen, cleanup]);
 
   const handleInitiate = () => {
     if (!canCancelQuery.data?.canCancel) {
       toast.error(
-        canCancelQuery.data?.message || 'Cannot cancel this subscription'
+        canCancelQuery.data?.message ?? 'Cannot cancel this subscription'
       );
       return;
     }
@@ -207,13 +307,17 @@ export function UnifiedCancellationModal({
       subscriptionId,
       priority,
       reason: notes,
-      method: selectedMethod as any,
+      method: selectedMethod,
       userPreference: {
-        realtime: true,
-        email: true,
-        sms: false,
+        preferredMethod: selectedMethod,
+        allowFallback: true,
+        notificationPreferences: {
+          realTime: true,
+          email: true,
+          sms: false,
+        },
       },
-    } as any);
+    });
   };
 
   const handleRetry = (escalate = false) => {
@@ -255,8 +359,15 @@ export function UnifiedCancellationModal({
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard');
+    void navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        toast.success('Copied to clipboard');
+      })
+      .catch(err => {
+        console.error('Failed to copy to clipboard:', err);
+        toast.error('Failed to copy');
+      });
   };
 
   const getStatusIcon = (status: string) => {
@@ -320,7 +431,7 @@ export function UnifiedCancellationModal({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              {canCancelQuery.data?.message ||
+              {canCancelQuery.data?.message ??
                 'This subscription cannot be cancelled at this time.'}
             </AlertDescription>
           </Alert>
@@ -334,8 +445,29 @@ export function UnifiedCancellationModal({
 
   // Show status if we have an active request
   if (currentRequestId && statusQuery.data) {
-    const { status, timeline, nextSteps, alternativeOptions } =
-      statusQuery.data;
+    const queryData = statusQuery.data as StatusQueryData;
+    const status = queryData.status as {
+      status: string;
+      method: string;
+      completedSteps: number;
+      totalSteps: number;
+      error?: string;
+      confirmationCode?: string;
+      effectiveDate?: string | Date;
+      manualInstructions?: {
+        instructions: {
+          steps: string[];
+          contactInfo: {
+            website?: string;
+            phone?: string;
+            email?: string;
+          };
+        };
+      };
+    };
+    const timeline = queryData.timeline;
+    const nextSteps = queryData.nextSteps;
+    const alternativeOptions = queryData.alternativeOptions;
 
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -395,7 +527,7 @@ export function UnifiedCancellationModal({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(status.confirmationCode)}
+                      onClick={() => copyToClipboard(status.confirmationCode ?? '')}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -408,7 +540,7 @@ export function UnifiedCancellationModal({
                     <div>
                       <p className="font-medium">Effective Date</p>
                       <p className="text-sm text-gray-600">
-                        {new Date(status.effectiveDate).toLocaleDateString()}
+                        {status.effectiveDate ? new Date(status.effectiveDate).toLocaleDateString() : 'Not specified'}
                       </p>
                     </div>
                   </div>
@@ -417,7 +549,7 @@ export function UnifiedCancellationModal({
             </Card>
 
             {/* Manual Instructions */}
-            {status.manualInstructions && (
+            {status.manualInstructions && typeof status.manualInstructions === 'object' && 'instructions' in status.manualInstructions && (
               <Card>
                 <CardHeader>
                   <CardTitle>Manual Cancellation Instructions</CardTitle>
@@ -426,24 +558,24 @@ export function UnifiedCancellationModal({
                   <div className="space-y-2">
                     <h4 className="font-medium">Steps to Cancel</h4>
                     <ol className="list-inside list-decimal space-y-1 text-sm">
-                      {status.manualInstructions.instructions.steps.map(
+                      {(status.manualInstructions as ManualInstructions)?.instructions?.steps?.map(
                         (step: string, index: number) => (
                           <li key={index}>{step}</li>
                         )
-                      )}
+                      ) ?? <li>No steps available</li>}
                     </ol>
                   </div>
 
-                  {status.manualInstructions.instructions.contactInfo
-                    .website && (
+                  {(status.manualInstructions as ManualInstructions)?.instructions?.contactInfo
+                    ?.website && (
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() =>
                           window.open(
-                            status.manualInstructions.instructions.contactInfo
-                              .website,
+                            (status.manualInstructions as ManualInstructions)?.instructions?.contactInfo
+                              ?.website ?? '',
                             '_blank'
                           )
                         }
@@ -451,14 +583,12 @@ export function UnifiedCancellationModal({
                         <ExternalLink className="mr-1 h-4 w-4" />
                         Go to Website
                       </Button>
-                      {status.manualInstructions.instructions.contactInfo
-                        .phone && (
+                      {(status.manualInstructions as ManualInstructions)?.instructions?.contactInfo
+                        ?.phone && (
                         <Badge variant="outline">
                           📞{' '}
-                          {
-                            status.manualInstructions.instructions.contactInfo
-                              .phone
-                          }
+                          {(status.manualInstructions as ManualInstructions)?.instructions?.contactInfo
+                              ?.phone}
                         </Badge>
                       )}
                     </div>
@@ -522,7 +652,7 @@ export function UnifiedCancellationModal({
               </TabsList>
 
               <TabsContent value="timeline" className="space-y-3">
-                {timeline.map((event: any, index: number) => (
+                {timeline.map((event: TimelineEvent, index: number) => (
                   <div
                     key={index}
                     className="flex items-start gap-3 rounded-lg border p-3"
@@ -582,7 +712,7 @@ export function UnifiedCancellationModal({
                 value="real-time"
                 className="max-h-60 space-y-2 overflow-y-auto"
               >
-                {realtimeUpdates.map((update: any, index: number) => (
+                {realtimeUpdates.map((update: RealtimeUpdate, index: number) => (
                   <div key={index} className="rounded bg-gray-50 p-2 text-sm">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="text-xs">
@@ -592,7 +722,7 @@ export function UnifiedCancellationModal({
                         {new Date(update.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
-                    <p className="mt-1">{update.message || update.title}</p>
+                    <p className="mt-1">{update.message ?? update.title}</p>
                   </div>
                 ))}
                 {realtimeUpdates.length === 0 && (
@@ -686,7 +816,7 @@ export function UnifiedCancellationModal({
                 value={selectedMethod}
                 onValueChange={setSelectedMethod}
               >
-                {availableMethodsQuery.data?.methods.map((method: any) => (
+                {availableMethodsQuery.data?.methods.map((method: CancellationMethod) => (
                   <div
                     key={method.id}
                     className="flex items-start space-x-3 rounded-lg border p-3"
@@ -729,7 +859,7 @@ export function UnifiedCancellationModal({
                 <Label>Priority</Label>
                 <RadioGroup
                   value={priority}
-                  onValueChange={(value: any) => setPriority(value)}
+                  onValueChange={(value: string) => setPriority(value as 'low' | 'normal' | 'high')}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="low" id="low" />

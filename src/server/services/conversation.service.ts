@@ -1,6 +1,12 @@
 import { type PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 
+// Function call structure for messages
+interface FunctionCall {
+  name: string;
+  arguments?: Record<string, unknown>;
+}
+
 export class ConversationService {
   constructor(private db: PrismaClient) {}
 
@@ -227,7 +233,7 @@ export class ConversationService {
           : 0,
       actionStats: actionStats.reduce(
         (acc, stat) => {
-          if (!acc[stat.type]) acc[stat.type] = {};
+          acc[stat.type] ??= {};
           acc[stat.type]![stat.status] = stat._count;
           return acc;
         },
@@ -272,7 +278,8 @@ export class ConversationService {
       markdown += `${message.content}\n\n`;
 
       if (message.functionCall) {
-        markdown += `*[Action: ${(message.functionCall as any).name}]*\n\n`;
+        const functionCall = message.functionCall as FunctionCall;
+        markdown += `*[Action: ${functionCall.name}]*\n\n`;
       }
 
       markdown += '---\n\n';
@@ -331,7 +338,8 @@ export class ConversationService {
         topics.add('subscriptions');
 
       if (message.functionCall) {
-        actions.add((message.functionCall as any).name);
+        const functionCall = message.functionCall as FunctionCall;
+        actions.add(functionCall.name);
       }
     }
 
@@ -343,7 +351,7 @@ export class ConversationService {
     }
 
     const actionCount = (conversation.actions ?? []).filter(
-      (a: any) => a.status === 'completed'
+      (a) => a.status === 'completed'
     ).length;
     if (actionCount > 0) {
       summary += `. Completed ${actionCount} action${actionCount > 1 ? 's' : ''}`;

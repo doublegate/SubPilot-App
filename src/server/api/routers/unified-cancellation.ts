@@ -1,10 +1,14 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
-import {
-  UnifiedCancellationOrchestratorService,
-  UnifiedCancellationRequest,
-} from '@/server/services/unified-cancellation-orchestrator.service';
+import { UnifiedCancellationOrchestratorService } from '@/server/services/unified-cancellation-orchestrator.service';
+
+// Type definitions for return data
+interface MethodHealth {
+  available: boolean;
+  successRate: number;
+  recentRequests: number;
+}
 
 // Create input schema that matches UnifiedCancellationRequest
 const UnifiedCancellationRequestInput = z.object({
@@ -60,11 +64,13 @@ export const unifiedCancellationRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-      return await orchestrator.getCancellationStatus(
+      const statusResult: unknown = await orchestrator.getCancellationStatus(
         ctx.session.user.id,
         input.requestId,
         input.orchestrationId
       );
+      // Return the status data as a generic object
+      return statusResult as Record<string, unknown>;
     }),
 
   /**
@@ -120,10 +126,12 @@ export const unifiedCancellationRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-      return await orchestrator.getUnifiedAnalytics(
+      const analyticsResult: unknown = await orchestrator.getUnifiedAnalytics(
         ctx.session.user.id,
         input.timeframe
       );
+      // Return the analytics data as a generic object
+      return analyticsResult as Record<string, unknown>;
     }),
 
   /**
@@ -185,9 +193,9 @@ export const unifiedCancellationRouter = createTRPCRouter({
         supportsApi: provider.type === 'api' && Boolean(provider.apiEndpoint),
         supportsAutomation: provider.type === 'web_automation',
         estimatedSuccessRate: parseFloat(provider.successRate.toString()),
-        averageTimeMinutes: provider.averageTime || 15,
+        averageTimeMinutes: provider.averageTime ?? 15,
         difficulty: provider.difficulty,
-        requiresInteraction: provider.requires2FA || provider.requiresRetention,
+        requiresInteraction: provider.requires2FA ?? provider.requiresRetention,
       };
 
       // Determine available methods
@@ -344,12 +352,12 @@ export const unifiedCancellationRouter = createTRPCRouter({
           });
         }
 
-        if (provider.type === 'web_automation' || provider.requires2FA) {
+        if (provider.type === 'web_automation' || (provider.requires2FA ?? false)) {
           methods.splice(-1, 0, {
             id: 'event_driven',
             name: 'Smart Automation',
             description: 'Advanced automation with real-time monitoring',
-            estimatedTime: `${provider.averageTime || 15} minutes`,
+            estimatedTime: `${provider.averageTime ?? 15} minutes`,
             successRate: Math.min(
               90,
               parseFloat(provider.successRate.toString()) + 10
@@ -390,7 +398,12 @@ export const unifiedCancellationRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const where: any = {
+      interface WhereClause {
+        userId: string;
+        status?: string | { in: string[] };
+      }
+      
+      const where: WhereClause = {
         userId: ctx.session.user.id,
       };
 
@@ -425,7 +438,6 @@ export const unifiedCancellationRouter = createTRPCRouter({
       });
 
       return requests.map(request => {
-        const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
         const method =
           request.method === 'manual'
             ? 'lightweight'
@@ -480,7 +492,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
       }
 
       // Get recent logs
-      const since = input.since || new Date(Date.now() - 24 * 60 * 60 * 1000); // Last 24 hours
+      const since = input.since ?? new Date(Date.now() - 24 * 60 * 60 * 1000); // Last 24 hours
       const logs = await ctx.db.cancellationLog.findMany({
         where: {
           requestId: input.requestId,
@@ -521,8 +533,6 @@ export const unifiedCancellationRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const orchestrator = new UnifiedCancellationOrchestratorService(ctx.db);
-
       // First, verify this is a manual/lightweight cancellation
       const request = await ctx.db.cancellationRequest.findFirst({
         where: {
@@ -539,19 +549,30 @@ export const unifiedCancellationRouter = createTRPCRouter({
         });
       }
 
-      // Use the lightweight service for confirmation
-      const lightweightService = (orchestrator as any).lightweightService;
+      // Update the cancellation request with manual confirmation
+      const updatedRequest = await ctx.db.cancellationRequest.update({
+        where: {
+          id: input.requestId,
+          userId: ctx.session.user.id,
+        },
+        data: {
+          status: input.wasSuccessful ? 'completed' : 'failed',
+          confirmationCode: input.confirmationCode ?? null,
+          effectiveDate: input.effectiveDate ?? null,
+          userNotes: input.notes ?? null,
+          userConfirmed: true,
+          completedAt: input.wasSuccessful ? new Date() : null,
+          updatedAt: new Date(),
+        },
+      });
 
-      return await lightweightService.confirmCancellation(
-        ctx.session.user.id,
-        input.requestId,
-        {
-          confirmationCode: input.confirmationCode,
-          effectiveDate: input.effectiveDate,
-          notes: input.notes,
-          wasSuccessful: input.wasSuccessful,
-        }
-      );
+      return {
+        id: updatedRequest.id,
+        status: updatedRequest.status,
+        confirmationCode: updatedRequest.confirmationCode,
+        effectiveDate: updatedRequest.effectiveDate,
+        completedAt: updatedRequest.completedAt,
+      };
     }),
 
   /**
@@ -573,7 +594,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
       },
     });
 
-    const methodHealth: Record<string, any> = {
+    const methodHealth: Record<string, MethodHealth> = {
       api: { available: true, successRate: 0, recentRequests: 0 },
       event_driven: { available: true, successRate: 0, recentRequests: 0 },
       lightweight: { available: true, successRate: 100, recentRequests: 0 }, // Always available
@@ -598,11 +619,10 @@ export const unifiedCancellationRouter = createTRPCRouter({
 
     // Convert counts to percentages
     for (const method in methodHealth) {
-      if (methodHealth[method].recentRequests > 0) {
-        methodHealth[method].successRate = Math.round(
-          (methodHealth[method].successRate /
-            methodHealth[method].recentRequests) *
-            100
+      const health = methodHealth[method];
+      if (health && health.recentRequests > 0) {
+        health.successRate = Math.round(
+          (health.successRate / health.recentRequests) * 100
         );
       }
     }
@@ -610,7 +630,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
     // Determine overall system health
     const avgSuccessRate =
       Object.values(methodHealth).reduce(
-        (sum: number, health: any) => sum + health.successRate,
+        (sum: number, health: MethodHealth) => sum + health.successRate,
         0
       ) / Object.keys(methodHealth).length;
 

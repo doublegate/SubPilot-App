@@ -13,6 +13,10 @@ export function ThemeToggleStandalone() {
     setMounted(true);
   }, []);
 
+  const toggleTheme = React.useCallback(() => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  }, [setTheme, theme]);
+
   if (!mounted) {
     return null;
   }
@@ -21,7 +25,7 @@ export function ThemeToggleStandalone() {
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+      onClick={toggleTheme}
       className="absolute right-4 top-4 md:right-8 md:top-8"
     >
       <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

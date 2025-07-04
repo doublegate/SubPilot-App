@@ -43,8 +43,8 @@ async function main() {
   console.log('================================\n');
 
   // Get admin credentials from environment or prompt
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@subpilot.app';
-  const adminName = process.env.ADMIN_NAME || 'Admin';
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@subpilot.app';
+  const adminName = process.env.ADMIN_NAME ?? 'Admin';
   let adminPassword = process.env.ADMIN_PASSWORD;
 
   // Check if admin already exists
@@ -57,7 +57,7 @@ async function main() {
   if (existingAdmin) {
     console.log('⚠️  Admin user already exists:');
     console.log(`   Email: ${existingAdmin.email}`);
-    console.log(`   Name: ${existingAdmin.name || 'Not set'}`);
+    console.log(`   Name: ${existingAdmin.name ?? 'Not set'}`);
     console.log(`   Is Admin: ${existingAdmin.isAdmin ? 'Yes' : 'No'}`);
 
     if (!existingAdmin.isAdmin) {

@@ -712,15 +712,15 @@ export class UnifiedCancellationOrchestratorEnhancedService {
             : 0,
         manualSuccessRate: 0.95, // Manual instructions are generally reliable
         apiEstimatedTime:
-          provider.type === 'api' ? provider.averageTime || 5 : 0,
+          provider.type === 'api' ? provider.averageTime ?? 5 : 0,
         automationEstimatedTime:
-          provider.type === 'web_automation' ? provider.averageTime || 15 : 0,
-        manualEstimatedTime: provider.averageTime || 20,
+          provider.type === 'web_automation' ? provider.averageTime ?? 15 : 0,
+        manualEstimatedTime: provider.averageTime ?? 20,
         difficulty: provider.difficulty as 'easy' | 'medium' | 'hard',
         requires2FA: provider.requires2FA,
         hasRetentionOffers: provider.requiresRetention,
         requiresHumanIntervention:
-          provider.requires2FA || provider.requiresRetention,
+          provider.requires2FA ?? provider.requiresRetention,
         lastAssessed: new Date(),
         dataSource: 'database',
       };
@@ -845,7 +845,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         code: 'CONFLICT',
         message:
           'A cancellation request is already in progress for this subscription',
-        // @ts-ignore - adding custom field for client handling
+        // @ts-expect-error - adding custom field for client handling
         existingRequestId: existingRequest.id,
       });
     }
@@ -862,7 +862,14 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     method: 'api' | 'automation' | 'manual',
     capabilities: ProviderCapability
   ): Promise<UnifiedCancellationResult> {
-    const scheduleFor = input.scheduling!.scheduleFor!;
+    const scheduleFor = input.scheduling?.scheduleFor;
+    
+    if (!scheduleFor) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Schedule time is required',
+      });
+    }
 
     if (scheduleFor <= new Date()) {
       throw new TRPCError({
@@ -877,7 +884,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         userId,
         subscriptionId: input.subscriptionId,
         method,
-        priority: input.priority || 'normal',
+        priority: input.priority ?? 'normal',
         status: 'scheduled',
         attempts: 0,
         userNotes: input.reason,
@@ -972,15 +979,15 @@ export class UnifiedCancellationOrchestratorEnhancedService {
               : 0,
           manualSuccessRate: 0.95,
           apiEstimatedTime:
-            provider.type === 'api' ? provider.averageTime || 5 : 0,
+            provider.type === 'api' ? provider.averageTime ?? 5 : 0,
           automationEstimatedTime:
-            provider.type === 'web_automation' ? provider.averageTime || 15 : 0,
-          manualEstimatedTime: provider.averageTime || 20,
+            provider.type === 'web_automation' ? provider.averageTime ?? 15 : 0,
+          manualEstimatedTime: provider.averageTime ?? 20,
           difficulty: provider.difficulty as 'easy' | 'medium' | 'hard',
           requires2FA: provider.requires2FA,
           hasRetentionOffers: provider.requiresRetention,
           requiresHumanIntervention:
-            provider.requires2FA || provider.requiresRetention,
+            provider.requires2FA ?? provider.requiresRetention,
           lastAssessed: new Date(),
           dataSource: 'database',
         };
@@ -1236,7 +1243,9 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     }
 
     // Return no-op unsubscribe if orchestration not found
-    return () => {};
+    return () => {
+      // No-op: orchestration not found, nothing to unsubscribe
+    };
   }
 
   /**
@@ -1246,11 +1255,36 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     userId: string,
     timeframe: 'day' | 'week' | 'month' = 'month'
   ): Promise<{
-    summary: any;
-    methodBreakdown: any;
-    successRates: any;
-    providerAnalytics: any[];
-    trends: any[];
+    summary: {
+      total: number;
+      successful: number;
+      failed: number;
+      pending: number;
+      successRate: number;
+    };
+    methodBreakdown: {
+      api: number;
+      webhook: number;
+      manual: number;
+    };
+    successRates: {
+      overall: number;
+      byMethod: Record<string, number>;
+      byProvider: Record<string, number>;
+    };
+    providerAnalytics: Array<{
+      provider: string;
+      total: number;
+      successful: number;
+      avgTime: number;
+      successRate: number;
+    }>;
+    trends: Array<{
+      date: string;
+      requests: number;
+      successful: number;
+      successRate: number;
+    }>;
   }> {
     const endDate = new Date();
     const startDate = new Date();
@@ -1300,7 +1334,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
             : r.method === 'web_automation'
               ? 'automation'
               : r.method;
-        acc[method] = (acc[method] || 0) + 1;
+        acc[method] = (acc[method] ?? 0) + 1;
         return acc;
       },
       {} as Record<string, number>
@@ -1337,8 +1371,8 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     >();
 
     for (const request of requests) {
-      const providerName = request.provider?.name || request.subscription.name;
-      const stats = providerStats.get(providerName) || {
+      const providerName = request.provider?.name ?? request.subscription.name;
+      const stats = providerStats.get(providerName) ?? {
         total: 0,
         successful: 0,
         totalTime: 0,

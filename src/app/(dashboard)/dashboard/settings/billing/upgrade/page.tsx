@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PricingTable } from '@/components/billing/pricing-table';
-import { Badge } from '@/components/ui/badge';
 import { Check, Star, Users, Zap, Shield } from 'lucide-react';
 
 export default function UpgradePage() {

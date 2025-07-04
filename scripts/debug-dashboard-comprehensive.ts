@@ -115,7 +115,7 @@ async function debugDashboard() {
     const statusGroups = allSubscriptions.reduce(
       (acc, sub) => {
         const key = `${sub.status}/${sub.isActive ? 'active' : 'inactive'}`;
-        acc[key] = (acc[key] || 0) + 1;
+        acc[key] = (acc[key] ?? 0) + 1;
         return acc;
       },
       {} as Record<string, number>
@@ -236,8 +236,8 @@ async function debugDashboard() {
     const merchantGroups = recentTransactions.reduce<
       Record<string, typeof recentTransactions>
     >((acc, txn) => {
-      const merchant = txn.merchantName || txn.description || 'Unknown';
-      if (!acc[merchant]) acc[merchant] = [];
+      const merchant = txn.merchantName ?? txn.description ?? 'Unknown';
+      acc[merchant] ??= [];
       acc[merchant].push(txn);
       return acc;
     }, {});

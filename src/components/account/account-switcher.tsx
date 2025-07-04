@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { api } from '@/trpc/react';
-import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { CreateAccountDialog } from './create-account-dialog';
 import { PremiumFeatureGate } from '../billing/premium-feature-gate';
@@ -46,7 +45,12 @@ export function AccountSwitcher() {
   };
 
   const currentAccount = accounts?.find(acc => acc.id === selectedAccountId);
-  const personalAccount = { id: null, name: 'Personal', type: 'personal' };
+  // Personal account definition for fallback when no current account
+  const displayAccount = currentAccount ?? {
+    id: null,
+    name: 'Personal',
+    type: 'personal',
+  };
 
   return (
     <>
@@ -59,10 +63,10 @@ export function AccountSwitcher() {
             className="w-[200px] justify-between"
           >
             <div className="flex items-center gap-2">
-              {currentAccount ? (
+              {displayAccount.id ? (
                 <>
                   <Users className="h-4 w-4" />
-                  <span className="truncate">{currentAccount.name}</span>
+                  <span className="truncate">{displayAccount.name}</span>
                 </>
               ) : (
                 <>
@@ -70,7 +74,7 @@ export function AccountSwitcher() {
                     <AvatarImage src="/placeholder-avatar.png" />
                     <AvatarFallback>ME</AvatarFallback>
                   </Avatar>
-                  <span>Personal</span>
+                  <span>{displayAccount.name}</span>
                 </>
               )}
             </div>

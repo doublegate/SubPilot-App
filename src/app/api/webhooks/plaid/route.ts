@@ -81,7 +81,7 @@ async function handleTransactionWebhook(
       console.log(`Transactions available for sync: ${itemId}`);
       break;
 
-    case 'TRANSACTIONS_REMOVED':
+    case 'TRANSACTIONS_REMOVED': {
       // Handle removed transactions
       const removedTransactionIds = data.removed_transactions ?? [];
       if (removedTransactionIds.length > 0) {
@@ -92,6 +92,7 @@ async function handleTransactionWebhook(
         });
       }
       break;
+    }
   }
 }
 

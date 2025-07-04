@@ -1,11 +1,4 @@
 // Test file
-/* eslint-disable @typescript-eslint/unbound-method */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import {
@@ -18,7 +11,8 @@ import {
   createMockTransaction,
   createDecimal,
 } from '@/test/test-utils';
-import type { MockSubscription } from '@/test/test-utils';
+import type { MockSubscription, MockTransaction } from '@/test/test-utils';
+import type { Subscription, Transaction } from '@prisma/client';
 
 // Mock database
 vi.mock('@/server/db', () => {
@@ -210,7 +204,7 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as any
+        mockSubscriptions as Subscription[]
       );
 
       const aggregateResult = {
@@ -278,7 +272,7 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as any
+        mockSubscriptions as Subscription[]
       );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: createDecimal(20) },
@@ -313,7 +307,7 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as any
+        mockSubscriptions as Subscription[]
       );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: null },
@@ -348,7 +342,7 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as any
+        mockSubscriptions as Subscription[]
       );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: null },
@@ -416,7 +410,7 @@ describe('Analytics Router Integration Tests', () => {
       ];
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
-      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as any);
+      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as Transaction[]);
 
       const result = await caller.analytics.getSpendingTrends({
         timeRange: 'month',
@@ -439,7 +433,7 @@ describe('Analytics Router Integration Tests', () => {
       }));
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
-      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as any);
+      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as Transaction[]);
 
       const result = await caller.analytics.getSpendingTrends({
         timeRange: 'week',
@@ -461,7 +455,7 @@ describe('Analytics Router Integration Tests', () => {
       }));
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
-      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as any);
+      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as Transaction[]);
 
       const result = await caller.analytics.getSpendingTrends({
         timeRange: 'year',
@@ -522,7 +516,7 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as any
+        mockSubscriptions as Subscription[]
       );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: createDecimal(100) },
@@ -609,7 +603,7 @@ describe('Analytics Router Integration Tests', () => {
       const mockedTransactionAggregate = vi.mocked(db.transaction.aggregate);
 
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as any
+        mockSubscriptions as Subscription[]
       );
       mockedTransactionAggregate.mockResolvedValueOnce({
         _sum: { amount: createDecimal(100) },
@@ -675,7 +669,7 @@ describe('Analytics Router Integration Tests', () => {
 
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions.slice(0, 2) as any // Only first 2 within 30 days
+        mockSubscriptions.slice(0, 2) as Subscription[] // Only first 2 within 30 days
       );
 
       const result = await caller.analytics.getUpcomingRenewals({});
@@ -710,7 +704,7 @@ describe('Analytics Router Integration Tests', () => {
 
       const mockedSubscriptionFindMany = vi.mocked(db.subscription.findMany);
       mockedSubscriptionFindMany.mockResolvedValueOnce(
-        mockSubscriptions as any
+        mockSubscriptions as Subscription[]
       );
 
       const result = await caller.analytics.getUpcomingRenewals({ days: 5 });

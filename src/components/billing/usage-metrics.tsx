@@ -1,17 +1,11 @@
 'use client';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/trpc/react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CreditCard, Users, TrendingUp } from 'lucide-react';
+import { CreditCard, Users } from 'lucide-react';
 
 export function UsageMetrics() {
   const { data: usage, isLoading } = api.billing.getUsageLimits.useQuery();
@@ -36,6 +30,7 @@ export function UsageMetrics() {
     return 'text-green-600';
   };
 
+  // Helper function for progress bar colors
   const getProgressColor = (used: number, limit: number) => {
     if (limit === -1) return 'bg-green-500'; // unlimited
     const percentage = (used / limit) * 100;
@@ -83,7 +78,7 @@ export function UsageMetrics() {
                 value={
                   (usage.bankAccounts.used / usage.bankAccounts.limit) * 100
                 }
-                className="h-2"
+                className={`h-2 ${getProgressColor(usage.bankAccounts.used, usage.bankAccounts.limit)}`}
               />
             )}
             <p className="text-xs text-muted-foreground">
@@ -138,7 +133,7 @@ export function UsageMetrics() {
                     ? (usage.teamMembers.used / usage.teamMembers.limit) * 100
                     : 0
                 }
-                className="h-2"
+                className={`h-2 ${getProgressColor(usage.teamMembers.used, usage.teamMembers.limit)}`}
               />
             )}
             <p className="text-xs text-muted-foreground">

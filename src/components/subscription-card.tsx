@@ -15,7 +15,6 @@ import {
   DollarSign,
   MoreVertical,
   AlertCircle,
-  XCircle,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import Link from 'next/link';
@@ -54,7 +53,7 @@ export function SubscriptionCard({
       weekly: 'Weekly',
       quarterly: 'Quarterly',
     };
-    return labels[frequency as keyof typeof labels] || frequency;
+    return labels[frequency as keyof typeof labels] ?? frequency;
   };
 
   const getStatusColor = (status: string) => {

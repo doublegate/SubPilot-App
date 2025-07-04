@@ -113,7 +113,7 @@ export function truncateText(
   maxLength: number,
   suffix = '...'
 ): string {
-  if (!text || maxLength < 0) return text || '';
+  if (!text || maxLength < 0) return text ?? '';
   if (text.length <= maxLength) return text;
 
   const truncateLength = Math.max(0, maxLength - suffix.length);
@@ -170,21 +170,9 @@ export function generateId(prefix?: string, length = 12): string {
       }
     }
   } else {
-    // Fallback for older Node.js versions
-    try {
-      const crypto = require('crypto');
-      const bytes = crypto.randomBytes(length);
-      for (let i = 0; i < length; i++) {
-        const value = bytes[i];
-        if (value !== undefined) {
-          result += chars.charAt(value % chars.length);
-        }
-      }
-    } catch {
-      // Last resort fallback
-      for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
+    // Last resort fallback for environments without crypto
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
   }
 

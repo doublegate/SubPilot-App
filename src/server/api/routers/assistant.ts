@@ -78,15 +78,28 @@ export const assistantRouter = createTRPCRouter({
         confirmed: z.boolean().default(false),
       })
     )
+    .output(
+      z.object({
+        success: z.boolean(),
+        actionId: z.string(),
+        result: z.any().optional(),
+        message: z.string().optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const assistantService = new AssistantService(ctx.db);
 
       try {
-        const result = await assistantService.executeAction(
+        const result = (await assistantService.executeAction(
           input.actionId,
           ctx.session.user.id,
           input.confirmed
-        );
+        )) as {
+          success: boolean;
+          actionId: string;
+          result?: unknown;
+          message?: string;
+        };
 
         return result;
       } catch (error) {

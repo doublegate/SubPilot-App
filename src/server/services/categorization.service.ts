@@ -140,8 +140,7 @@ export class CategorizationService {
       ...(transactionIds && { id: { in: transactionIds } }),
       ...((!forceRecategorize && {
         OR: [{ aiCategory: null }, { normalizedMerchantName: null }],
-      }) ||
-        {}),
+      }) ?? {}),
     };
 
     const transactions = await this.db.transaction.findMany({
@@ -371,7 +370,12 @@ export class CategorizationService {
       const normalizedCategory = normalizeCategoryKey(result.category);
       const displayCategory = getCategoryDisplayName(normalizedCategory);
 
-      const updateData: any = {
+      const updateData: {
+        aiCategory: string;
+        aiCategoryConfidence: number;
+        category: string;
+        name?: string;
+      } = {
         aiCategory: normalizedCategory,
         aiCategoryConfidence: result.confidence,
         category: displayCategory, // Store the properly capitalized display name

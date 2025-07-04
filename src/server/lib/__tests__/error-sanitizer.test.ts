@@ -6,7 +6,7 @@ const mockEnv = vi.hoisted(() => ({
   NODE_ENV: 'test' as const,
 }));
 
-vi.mock('@/env.js', () => ({
+vi.mock('@/env', () => ({
   env: mockEnv,
 }));
 

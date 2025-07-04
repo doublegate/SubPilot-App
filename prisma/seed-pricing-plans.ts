@@ -30,7 +30,7 @@ async function main() {
       description: 'Advanced features for power users',
       price: 9.99,
       currency: 'USD',
-      stripePriceId: process.env.STRIPE_PRICE_PRO_MONTHLY || null,
+      stripePriceId: process.env.STRIPE_PRICE_PRO_MONTHLY ?? null,
       features: [
         'basic_subscription_tracking',
         'manual_cancellation',
@@ -54,7 +54,7 @@ async function main() {
       description: 'Perfect for families and small teams',
       price: 24.99,
       currency: 'USD',
-      stripePriceId: process.env.STRIPE_PRICE_TEAM_MONTHLY || null,
+      stripePriceId: process.env.STRIPE_PRICE_TEAM_MONTHLY ?? null,
       features: [
         'basic_subscription_tracking',
         'manual_cancellation',
@@ -84,7 +84,7 @@ async function main() {
       description: 'Custom solutions for large organizations',
       price: 99.99,
       currency: 'USD',
-      stripePriceId: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY || null,
+      stripePriceId: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY ?? null,
       features: [
         'basic_subscription_tracking',
         'manual_cancellation',

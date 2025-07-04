@@ -2,6 +2,15 @@ import { TRPCError } from '@trpc/server';
 import type { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 
+// Interface for manual instructions stored in the database
+interface ManualInstructionsData {
+  providerId: string;
+  providerName: string;
+  generatedAt: string;
+  estimatedTime: number;
+  difficulty: string;
+}
+
 // Simple provider registry - no complex database lookups
 interface ProviderTemplate {
   id: string;
@@ -327,7 +336,7 @@ export class LightweightCancellationService {
           generatedAt: new Date().toISOString(),
           estimatedTime: provider.estimatedTime,
           difficulty: provider.difficulty,
-        } as any,
+        } satisfies ManualInstructionsData,
       },
     });
 
@@ -377,7 +386,7 @@ export class LightweightCancellationService {
     }
 
     const status = validatedConfirmation.wasSuccessful ? 'completed' : 'failed';
-    const effectiveDate = validatedConfirmation.effectiveDate || new Date();
+    const effectiveDate = validatedConfirmation.effectiveDate ?? new Date();
 
     // Update the cancellation request
     await this.db.cancellationRequest.update({
@@ -587,7 +596,7 @@ export class LightweightCancellationService {
     for (const [key, provider] of Object.entries(PROVIDER_REGISTRY)) {
       if (key === 'default') continue;
 
-      if (normalizedName.includes(key) || key.includes(normalizedName)) {
+      if (normalizedName.includes(key) ?? key.includes(normalizedName)) {
         return provider;
       }
     }
@@ -598,15 +607,15 @@ export class LightweightCancellationService {
       ...defaultTemplate!,
       id: 'default',
       name: subscriptionName,
-      category: defaultTemplate?.category || 'other',
-      difficulty: defaultTemplate?.difficulty || 'medium',
-      estimatedTime: defaultTemplate?.estimatedTime || 10,
+      category: defaultTemplate?.category ?? 'other',
+      difficulty: defaultTemplate?.difficulty ?? 'medium',
+      estimatedTime: defaultTemplate?.estimatedTime ?? 10,
       requiresLogin: defaultTemplate?.requiresLogin ?? true,
       hasRetentionOffers: defaultTemplate?.hasRetentionOffers ?? false,
       supportsRefunds: defaultTemplate?.supportsRefunds ?? false,
-      steps: defaultTemplate?.steps || [],
-      tips: defaultTemplate?.tips || [],
-      warnings: defaultTemplate?.warnings || [],
+      steps: defaultTemplate?.steps ?? [],
+      tips: defaultTemplate?.tips ?? [],
+      warnings: defaultTemplate?.warnings ?? [],
     };
   }
 

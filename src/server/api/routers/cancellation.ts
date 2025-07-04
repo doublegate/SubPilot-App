@@ -91,7 +91,16 @@ export const cancellationRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const where: any = {
+      interface WhereClause {
+        isActive: boolean;
+        category?: string;
+        OR?: Array<{
+          name?: { contains: string; mode: 'insensitive' };
+          normalizedName?: { contains: string };
+        }>;
+      }
+
+      const where: WhereClause = {
         isActive: true,
       };
 
@@ -116,7 +125,7 @@ export const cancellationRouter = createTRPCRouter({
       }
 
       const providers = await ctx.db.cancellationProvider.findMany({
-        where,
+        where: where as Record<string, unknown>,
         orderBy: [{ successRate: 'desc' }, { name: 'asc' }],
         select: {
           id: true,

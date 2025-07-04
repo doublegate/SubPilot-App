@@ -175,7 +175,7 @@ export default function AdminDashboard() {
       <Suspense
         fallback={
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
+            {Array.from({ length: 4 }, (_, i: number) => (
               <Skeleton key={i} className="h-32" />
             ))}
           </div>

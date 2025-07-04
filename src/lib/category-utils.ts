@@ -40,7 +40,7 @@ export function getCategoryIcon(categoryKey: string): string {
     SUBSCRIPTION_CATEGORIES[
       categoryKey as keyof typeof SUBSCRIPTION_CATEGORIES
     ];
-  return categoryDef?.icon || '📁';
+  return categoryDef?.icon ?? '📁';
 }
 
 /**
@@ -51,7 +51,7 @@ export function getCategoryDescription(categoryKey: string): string {
     SUBSCRIPTION_CATEGORIES[
       categoryKey as keyof typeof SUBSCRIPTION_CATEGORIES
     ];
-  return categoryDef?.description || 'Other subscription category';
+  return categoryDef?.description ?? 'Other subscription category';
 }
 
 /**

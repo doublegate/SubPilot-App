@@ -436,7 +436,7 @@ export class AnalyticsService {
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
     const unusedSubs = subscriptions.filter(sub => {
-      const lastTransaction = sub.transactions[0];
+      const lastTransaction = sub.transactions?.[0];
       return !lastTransaction || lastTransaction.date < sixtyDaysAgo;
     });
 
@@ -573,10 +573,11 @@ export class AnalyticsService {
     switch (groupBy) {
       case 'day':
         return date.toISOString().split('T')[0] ?? '';
-      case 'week':
+      case 'week': {
         const week = new Date(date);
         week.setDate(week.getDate() - week.getDay());
         return week.toISOString().split('T')[0] ?? '';
+      }
       case 'month':
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     }

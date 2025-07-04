@@ -1,5 +1,5 @@
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
-import { env } from '@/env.js';
+import { env } from '@/env';
 
 // NOTE: The Plaid SDK (v36.0.0) generates Node.js deprecation warnings for url.parse()
 // This is a known issue in the Plaid SDK itself and cannot be fixed in our codebase.
@@ -144,7 +144,8 @@ export const verifyPlaidWebhook = async (
 
       // Verify the JWT signature using jsonwebtoken
       const { verify } = await import('jsonwebtoken');
-      const payload = verify(jwt, key as unknown as string, {
+      // Verify the JWT signature (payload verification only, content not used)
+      verify(jwt, key as unknown as string, {
         algorithms: ['ES256'],
       });
 

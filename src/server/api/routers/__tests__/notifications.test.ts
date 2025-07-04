@@ -1,13 +1,19 @@
-/* eslint-disable @typescript-eslint/unbound-method */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { notificationsRouter } from '../notifications';
 import { TRPCError } from '@trpc/server';
 import { createMockSession } from '@/test/test-utils';
+import type { Session } from 'next-auth';
+import type { Notification, User, Subscription } from '@prisma/client';
+
+// Test types for mocking Prisma relations
+type MockNotificationWithSubscription = Notification & {
+  subscription: Pick<Subscription, 'id' | 'name'>;
+};
+
+type MockNotificationWithOptionalSubscription = Notification & {
+  subscription: Pick<Subscription, 'id' | 'name'> | null;
+};
 
 // Mock database - define inside the factory function to avoid hoisting issues
 vi.mock('@/server/db', () => ({
@@ -136,7 +142,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    ctx = createInnerTRPCContext({ session: mockSession as any });
+    ctx = createInnerTRPCContext({ session: mockSession as Session });
     caller = notificationsRouter.createCaller(ctx);
   });
 
@@ -187,7 +193,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         {
           ...mockNotifications[1]!,
           subscription: { id: 'sub-2', name: 'Test Subscription' },
-        } as any,
+        } as MockNotificationWithSubscription,
       ]);
       vi.mocked(db.notification.count).mockResolvedValue(1);
 
@@ -366,8 +372,8 @@ describe('Notifications Router - Full tRPC Integration', () => {
       const otherUserCtx = createInnerTRPCContext({
         session: {
           ...mockSession,
-          user: { ...(mockSession as any).user, id: 'user-2' },
-        } as any,
+          user: { ...(mockSession as Session).user, id: 'user-2' },
+        } as Session,
       });
       const otherUserCaller = notificationsRouter.createCaller(otherUserCtx);
 
@@ -592,7 +598,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
   describe('data validation', () => {
     it('should validate notification type filter', async () => {
       await expect(
-        caller.getAll({ type: 'invalid_type' as any })
+        caller.getAll({ type: 'invalid_type' as unknown as Parameters<typeof caller.getAll>[0]['type'] })
       ).rejects.toThrow();
     });
 
@@ -646,7 +652,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
         {
           ...malformedNotification,
           subscription: null,
-        } as any,
+        } as MockNotificationWithOptionalSubscription,
       ]);
       vi.mocked(db.notification.count).mockResolvedValue(1);
 
@@ -669,7 +675,7 @@ describe('Notifications Router - Full tRPC Integration', () => {
           subscription: oldNotification.subscriptionId
             ? { id: oldNotification.subscriptionId, name: 'Test Subscription' }
             : null,
-        } as any,
+        } as MockNotificationWithOptionalSubscription,
       ]);
       vi.mocked(db.notification.count).mockResolvedValue(1);
 

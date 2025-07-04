@@ -47,7 +47,7 @@ export const adminRouter = createTRPCRouter({
       },
     });
 
-    return result._sum.amount?.toNumber() || 0;
+    return result._sum.amount?.toNumber() ?? 0;
   }),
 
   getSystemHealth: adminProcedure.query(async ({ ctx }) => {
@@ -79,7 +79,7 @@ export const adminRouter = createTRPCRouter({
       id: event.id,
       type: event.action.split('.')[0] as 'user' | 'billing' | 'system',
       title: event.action,
-      description: `${event.user?.email || 'System'} - ${event.result}`,
+      description: `${event.user?.email ?? 'System'} - ${event.result}`,
       timestamp: event.timestamp,
     }));
   }),
@@ -191,7 +191,7 @@ export const adminRouter = createTRPCRouter({
         createdAt: user.createdAt,
         emailVerified: user.emailVerified,
         lockedUntil: user.lockedUntil,
-        subscriptionPlan: user.userSubscription?.plan.name || 'free',
+        subscriptionPlan: user.userSubscription?.plan.name ?? 'free',
         bankAccounts: user._count.bankAccounts,
         subscriptions: user._count.subscriptions,
       }));
@@ -361,15 +361,15 @@ export const adminRouter = createTRPCRouter({
     ]);
 
     return {
-      totalRevenue: totalRevenue._sum.amount?.toNumber() || 0,
-      monthlyRevenue: monthlyRevenue._sum.amount?.toNumber() || 0,
+      totalRevenue: totalRevenue._sum.amount?.toNumber() ?? 0,
+      monthlyRevenue: monthlyRevenue._sum.amount?.toNumber() ?? 0,
       activeSubscriptions,
       churnRate,
       recentTransactions: recentTransactions.map(tx => ({
         id: tx.id,
         userEmail: tx.user.email,
-        plan: tx.userSubscription?.plan.displayName || 'Unknown',
-        amount: tx.amount?.toNumber() || 0,
+        plan: tx.userSubscription?.plan.displayName ?? 'Unknown',
+        amount: tx.amount?.toNumber() ?? 0,
         date: tx.createdAt,
         status: tx.status,
       })),
@@ -385,7 +385,7 @@ export const adminRouter = createTRPCRouter({
     ]);
 
     return {
-      environment: process.env.PLAID_ENV || 'sandbox',
+      environment: process.env.PLAID_ENV ?? 'sandbox',
       isConnected: !!process.env.PLAID_CLIENT_ID && !!process.env.PLAID_SECRET,
       lastChecked: new Date(),
       connectedItems,

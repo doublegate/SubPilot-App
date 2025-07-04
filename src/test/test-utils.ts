@@ -255,6 +255,12 @@ export interface MockContext {
   db: MockPrismaClient;
 }
 
+// Type for tRPC router caller context
+export interface RouterCallerContext {
+  session: Session | null;
+  db: MockPrismaClient;
+}
+
 // Create a mock context with session
 export function createMockContext(session?: Session | null): MockContext {
   return {

@@ -518,9 +518,7 @@ export class AccountService {
       (acc, sub) => {
         const category =
           sub.categoryOverride ?? sub.aiCategory ?? sub.category ?? 'Other';
-        if (!acc[category]) {
-          acc[category] = { count: 0, amount: 0 };
-        }
+        acc[category] ??= { count: 0, amount: 0 };
         acc[category].count++;
         acc[category].amount += Number(sub.amount);
         return acc;

@@ -8,7 +8,7 @@ const mockEnv = vi.hoisted(() => ({
   API_SECRET: 'test-api-secret',
 }));
 
-vi.mock('@/env.js', () => ({
+vi.mock('@/env', () => ({
   env: mockEnv,
 }));
 

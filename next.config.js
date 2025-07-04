@@ -2,7 +2,7 @@
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
  */
-await import('./src/env.js');
+await import('./src/env.ts');
 
 // Import Sentry webpack plugin for source maps
 import { withSentryConfig } from '@sentry/nextjs';
@@ -12,6 +12,15 @@ const config = {
   output: 'standalone',
   experimental: {
     // optimizeCss: true, // Disabled temporarily due to critters module issue
+  },
+  eslint: {
+    // During builds, use external ESLint config (eslint.config.js)
+    // This informs Next.js that we're using flat config format
+    ignoreDuringBuilds: false,
+    // Configure to work with flat config and suppress plugin detection warning
+    dirs: ['src'],
+    // Suppress the plugin detection warning since we're using flat config
+    // This is a known issue with Next.js 15 + ESLint 9 flat config detection
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

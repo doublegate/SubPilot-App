@@ -68,10 +68,11 @@ export const lightweightCancellationRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const service = new LightweightCancellationService(ctx.db);
-      return await service.getCancellationHistory(
+      const history = await service.getCancellationHistory(
         ctx.session.user.id,
         input.limit
       );
+      return history as Array<Record<string, unknown>>;
     }),
 
   /**
@@ -168,13 +169,18 @@ export const lightweightCancellationRouter = createTRPCRouter({
       const service = new LightweightCancellationService(ctx.db);
 
       // Create a temporary service instance to find provider and generate instructions
-      const providerTemplate = (service as any).findProviderTemplate(
-        subscription.name
-      );
-      const instructions = (service as any).generateInstructions(
-        providerTemplate,
-        subscription.name
-      );
+      const providerTemplate = (
+        service as {
+          findProviderTemplate: (name: string) => unknown;
+          generateInstructions: (template: unknown, name: string) => string[];
+        }
+      ).findProviderTemplate(subscription.name);
+
+      const instructions = (
+        service as {
+          generateInstructions: (template: unknown, name: string) => string[];
+        }
+      ).generateInstructions(providerTemplate, subscription.name);
 
       return {
         subscription: {

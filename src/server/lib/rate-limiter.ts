@@ -1,4 +1,3 @@
-import { env } from '@/env.js';
 import { AuditLogger } from './audit-logger';
 
 // Enhanced rate limiting configuration with different limits per endpoint type
@@ -48,7 +47,6 @@ export const RATE_LIMITS = {
 
 // Legacy constants for backwards compatibility
 const RATE_LIMIT_WINDOW = RATE_LIMITS.api.window;
-const MAX_REQUESTS_PER_WINDOW = RATE_LIMITS.api.max;
 const MAX_FAILED_AUTH_ATTEMPTS = 5;
 const AUTH_LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
 
@@ -75,6 +73,9 @@ interface RedisLike {
     duration?: number
   ): Promise<string | null>;
   del(key: string): Promise<number>;
+  on?(event: string, listener: (error: Error) => void): void;
+  once?(event: string, listener: () => void): void;
+  disconnect?(): void;
 }
 
 // In-memory fallback for development
@@ -150,18 +151,17 @@ async function getRedisClient(): Promise<RedisLike> {
   if (redisClient) return redisClient;
 
   // Use Redis if available
-  if (env.REDIS_URL) {
+  if (process.env.REDIS_URL) {
     try {
       // Dynamic import to avoid build errors if ioredis is not installed
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - ioredis is an optional dependency
+      // @ts-expect-error - ioredis is an optional dependency
       const redisModule = (await import('ioredis')) as {
-        default: any;
+        default: new (url: string, options?: object) => RedisLike;
       };
       const Redis = redisModule.default;
 
       // Create Redis instance with proper error handling
-      const client = new Redis(env.REDIS_URL, {
+      const client = new Redis(process.env.REDIS_URL, {
         // Disable auto-reconnect to prevent connection spam
         retryStrategy: () => null,
         // Don't show connection errors in console
@@ -169,7 +169,7 @@ async function getRedisClient(): Promise<RedisLike> {
       });
 
       // Handle connection errors gracefully
-      client.on('error', (error: Error) => {
+      client.on?.('error', (error: Error) => {
         if (!error.message.includes('ECONNREFUSED')) {
           console.error('Redis error:', error.message);
         }
@@ -178,26 +178,26 @@ async function getRedisClient(): Promise<RedisLike> {
       // Test the connection
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
-          client.disconnect();
+          client.disconnect?.();
           reject(new Error('Redis connection timeout'));
         }, 5000);
 
-        client.once('ready', () => {
+        client.once?.('ready', () => {
           clearTimeout(timeout);
           console.log('✅ Redis rate limiter initialized');
           resolve();
         });
 
-        client.once('error', () => {
+        client.once?.('error', () => {
           clearTimeout(timeout);
-          client.disconnect();
+          client.disconnect?.();
           reject(new Error('Redis connection failed'));
         });
       });
 
-      redisClient = client as RedisLike;
-      return client as RedisLike;
-    } catch (error) {
+      redisClient = client;
+      return client;
+    } catch {
       console.warn(
         '⚠️  Failed to connect to Redis, falling back to in-memory rate limiting'
       );
@@ -205,7 +205,7 @@ async function getRedisClient(): Promise<RedisLike> {
   }
 
   // Fallback to in-memory store
-  if (!env.REDIS_URL) {
+  if (!process.env.REDIS_URL) {
     console.log('📝 Using in-memory rate limiting (Redis not configured)');
   }
   redisClient = new InMemoryStore();
@@ -468,10 +468,20 @@ export function applyRateLimitHeaders(
 /**
  * Create rate limit middleware for tRPC procedures
  */
+interface TRPCContext {
+  session?: {
+    user?: {
+      id: string;
+      subscriptionTier?: string;
+    };
+  };
+  clientIp?: string;
+}
+
 export function createRateLimitMiddleware(
   type: RateLimitType,
   options: {
-    keyGenerator?: (ctx: any) => string;
+    keyGenerator?: (ctx: TRPCContext) => string;
     skipSuccessful?: boolean;
     skipFailed?: boolean;
   } = {}
@@ -479,7 +489,7 @@ export function createRateLimitMiddleware(
   const { keyGenerator, skipSuccessful = false, skipFailed = false } = options;
 
   return async (opts: {
-    ctx: any;
+    ctx: TRPCContext;
     next: () => Promise<unknown>;
     path: string;
   }) => {
@@ -488,10 +498,10 @@ export function createRateLimitMiddleware(
     // Generate client identifier
     const clientId = keyGenerator
       ? keyGenerator(ctx)
-      : ctx.session?.user?.id || ctx.clientIp || 'anonymous';
+      : (ctx.session?.user?.id ?? ctx.clientIp ?? 'anonymous');
 
     // Get user tier for premium rate limits
-    const userTier = ctx.session?.user?.subscriptionTier || 'basic';
+    const userTier = ctx.session?.user?.subscriptionTier ?? 'basic';
 
     // Check rate limit before proceeding
     const rateLimitResult = await checkRateLimit(clientId, {
@@ -506,7 +516,9 @@ export function createRateLimitMiddleware(
       const error = new Error(`Rate limit exceeded for ${type} endpoints`);
 
       // Add rate limit info to error for middleware to use
-      (error as any).rateLimitInfo = rateLimitResult;
+      (
+        error as Error & { rateLimitInfo?: typeof rateLimitResult }
+      ).rateLimitInfo = rateLimitResult;
 
       throw error;
     }
@@ -567,7 +579,7 @@ export async function getRateLimitStatus(
   const key = `rate_limit:${type}:${clientId}`;
 
   try {
-    const current = parseInt((await redis.get(key)) || '0');
+    const current = parseInt((await redis.get(key)) ?? '0');
     const config = RATE_LIMITS[type];
     const limit = config.max;
 

@@ -145,4 +145,55 @@ export const env = createEnv({
    * `SOME_VAR: z.string()` and `SOME_VAR=''` will throw an error.
    */
   emptyStringAsUndefined: true,
-});
+}) as {
+  // Type the environment object explicitly to avoid 'error' type issues
+  NODE_ENV: 'development' | 'test' | 'production';
+  DATABASE_URL: string;
+  NEXTAUTH_SECRET?: string;
+  NEXTAUTH_URL?: string;
+  // OAuth Providers
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
+  // Plaid Configuration
+  PLAID_CLIENT_ID?: string;
+  PLAID_SECRET?: string;
+  PLAID_ENV: 'sandbox' | 'development' | 'production';
+  PLAID_PRODUCTS: string;
+  PLAID_COUNTRY_CODES: string;
+  PLAID_REDIRECT_URI?: string;
+  PLAID_WEBHOOK_URL?: string;
+  // Email Configuration
+  SENDGRID_API_KEY?: string;
+  FROM_EMAIL?: string;
+  SMTP_HOST?: string;
+  SMTP_PORT?: string;
+  SMTP_USER?: string;
+  SMTP_PASS?: string;
+  // External APIs
+  OPENAI_API_KEY?: string;
+  // Monitoring
+  SENTRY_DSN?: string;
+  // Redis
+  REDIS_URL?: string;
+  // Security
+  ENCRYPTION_KEY?: string;
+  API_SECRET?: string;
+  PLAID_WEBHOOK_SECRET?: string;
+  // Stripe
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PRICE_PRO_MONTHLY?: string;
+  STRIPE_PRICE_PRO_YEARLY?: string;
+  STRIPE_PRICE_TEAM_MONTHLY?: string;
+  STRIPE_PRICE_TEAM_YEARLY?: string;
+  STRIPE_PRICE_ENTERPRISE_MONTHLY?: string;
+  STRIPE_PRICE_ENTERPRISE_YEARLY?: string;
+  // Client variables
+  NEXT_PUBLIC_APP_URL?: string;
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?: string;
+};
+
+// Export the type for external use
+export type EnvConfig = typeof env;

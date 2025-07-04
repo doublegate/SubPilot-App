@@ -1,5 +1,4 @@
 import { TRPCError } from '@trpc/server';
-import { env } from '@/env.js';
 import { AuditLogger } from './audit-logger';
 
 /**
@@ -38,9 +37,9 @@ export class ErrorSanitizer {
 
   private static readonly SENSITIVE_PATTERNS = [
     // Database connection strings
-    /postgresql:\/\/[^@]+@[^\/]+\/\w+/gi,
-    /mysql:\/\/[^@]+@[^\/]+\/\w+/gi,
-    /mongodb:\/\/[^@]+@[^\/]+\/\w+/gi,
+    /postgresql:\/\/[^@]+@[^/]+\/\w+/gi,
+    /mysql:\/\/[^@]+@[^/]+\/\w+/gi,
+    /mongodb:\/\/[^@]+@[^/]+\/\w+/gi,
 
     // API keys and tokens
     /sk_[a-zA-Z0-9_]{20,}/gi,
@@ -85,7 +84,7 @@ export class ErrorSanitizer {
     let sanitizedError: TRPCError;
 
     // Log the original error server-side for debugging
-    this.logOriginalError(error, context);
+    void this.logOriginalError(error, context);
 
     if (error instanceof TRPCError) {
       sanitizedError = this.sanitizeTRPCError(error);
@@ -99,7 +98,7 @@ export class ErrorSanitizer {
     }
 
     // Log sanitized error being returned to client
-    this.logSanitizedError(sanitizedError, context);
+    void this.logSanitizedError(sanitizedError, context);
 
     return sanitizedError;
   }
@@ -111,10 +110,12 @@ export class ErrorSanitizer {
     const { code, message, cause } = error;
 
     // In production, use generic messages for internal errors
-    if (env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production') {
       if (
         code === 'INTERNAL_SERVER_ERROR' ||
-        !this.SAFE_ERROR_CODES.includes(code as any)
+        !this.SAFE_ERROR_CODES.includes(
+          code as (typeof this.SAFE_ERROR_CODES)[number]
+        )
       ) {
         return new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -130,7 +131,7 @@ export class ErrorSanitizer {
       code,
       message: sanitizedMessage,
       // Never include cause in production
-      ...(env.NODE_ENV !== 'production' && { cause }),
+      ...(process.env.NODE_ENV !== 'production' && { cause }),
     });
   }
 
@@ -139,7 +140,7 @@ export class ErrorSanitizer {
    */
   private static sanitizeGenericError(error: Error): TRPCError {
     // In production, don't expose generic error messages
-    if (env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production') {
       return new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: this.GENERIC_MESSAGES.INTERNAL_SERVER_ERROR,
@@ -219,7 +220,7 @@ export class ErrorSanitizer {
           userAgent: context?.userAgent,
           inputType: context?.input ? typeof context.input : undefined,
           // Don't log actual input in production to prevent sensitive data leakage
-          ...(env.NODE_ENV !== 'production' && {
+          ...(process.env.NODE_ENV !== 'production' && {
             input: this.sanitizeInputForLogging(context?.input),
           }),
         },
@@ -267,7 +268,7 @@ export class ErrorSanitizer {
       return input;
     }
 
-    const sanitized = { ...input } as any;
+    const sanitized = { ...input } as Record<string, unknown>;
 
     // Remove sensitive fields
     const sensitiveFields = [
@@ -283,7 +284,7 @@ export class ErrorSanitizer {
       'socialSecurityNumber',
     ];
 
-    const sanitizeObject = (obj: any, depth = 0): any => {
+    const sanitizeObject = (obj: unknown, depth = 0): unknown => {
       if (depth > 3) return '[MAX_DEPTH_REACHED]'; // Prevent infinite recursion
 
       if (Array.isArray(obj)) {
@@ -291,7 +292,7 @@ export class ErrorSanitizer {
       }
 
       if (obj && typeof obj === 'object') {
-        const result: any = {};
+        const result: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(obj)) {
           if (
             sensitiveFields.some(field =>

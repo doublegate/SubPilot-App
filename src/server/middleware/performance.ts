@@ -1,6 +1,6 @@
 import { type TRPCLink } from '@trpc/client';
 import { observable } from '@trpc/server/observable';
-import { env } from '@/env.js';
+import { env } from '@/env';
 
 interface PerformanceMetrics {
   procedure: string;
@@ -62,7 +62,6 @@ export const performanceLink: TRPCLink<any> = () => {
           addMetric(metric);
 
           // Log slow queries (> 200ms in production, > 500ms in dev)
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
           const nodeEnv: string = env.NODE_ENV;
           const threshold = nodeEnv === 'production' ? 200 : 500;
           if (duration > threshold) {
@@ -122,7 +121,6 @@ export function getPerformanceStats(minutes = 5): {
 
   const totalDuration = relevantMetrics.reduce((sum, m) => sum + m.duration, 0);
   const errorCount = relevantMetrics.filter(m => m.error).length;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
   const nodeEnv: string = env.NODE_ENV;
   const slowThreshold = nodeEnv === 'production' ? 200 : 500;
   const slowCalls = relevantMetrics.filter(
@@ -190,7 +188,6 @@ export const performanceMiddleware = () => {
       });
 
       // Log slow queries
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const nodeEnv: string = env.NODE_ENV;
       const threshold = nodeEnv === 'production' ? 200 : 500;
       if (duration > threshold) {

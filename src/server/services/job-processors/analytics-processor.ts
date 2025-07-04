@@ -1,6 +1,46 @@
 import type { PrismaClient } from '@prisma/client';
 import type { Job, JobResult } from '@/server/lib/job-queue';
-import { AuditLogger } from '@/server/lib/audit-logger';
+import { AuditLogger, type SecurityAction } from '@/server/lib/audit-logger';
+
+// Generic interfaces for analytics data
+interface AnalyticsProperties extends Record<string, unknown> {
+  requestId?: string;
+  subscriptionId?: string;
+  method?: string;
+  priority?: string;
+}
+
+interface AnalyticsResult {
+  success: boolean;
+  data?: Record<string, unknown>;
+  error?: string;
+}
+
+// Helper function to map analytics events to security actions
+function mapEventToAction(event: string): SecurityAction {
+  switch (event) {
+    case 'cancellation_initiated':
+    case 'cancellation_created':
+      return 'cancellation.initiated';
+    case 'cancellation_completed':
+    case 'cancellation_confirmed':
+      return 'cancellation.manual_confirmed';
+    case 'subscription_created':
+    case 'subscription_detected':
+      return 'subscription.created';
+    case 'subscription_cancelled':
+      return 'subscription.cancelled';
+    case 'bank_connected':
+      return 'bank.connected';
+    case 'bank_sync':
+      return 'bank.sync';
+    case 'user_login':
+      return 'user.login';
+    default:
+      // Default to a generic user action for analytics events
+      return 'user.update';
+  }
+}
 
 /**
  * Job processor for analytics and tracking tasks
@@ -20,22 +60,22 @@ export class AnalyticsJobProcessor {
         return {
           success: false,
           error: 'Invalid event name',
-        } as any;
+        };
       }
 
       // Process different types of analytics events
       const result = await this.processAnalyticsEvent(
-        userId || 'anonymous',
+        userId ?? 'anonymous',
         event,
-        properties || {},
+        properties ?? {},
         timestamp ? new Date(timestamp) : new Date()
       );
 
       if (!result.success) {
         return {
           success: false,
-          error: result.error || 'Analytics processing failed',
-        } as any;
+          error: result.error ?? 'Analytics processing failed',
+        };
       }
 
       return {
@@ -54,7 +94,7 @@ export class AnalyticsJobProcessor {
         success: false,
         error:
           error instanceof Error ? error.message : 'Analytics processing error',
-      } as any;
+      };
     }
   }
 
@@ -81,7 +121,7 @@ export class AnalyticsJobProcessor {
           return {
             success: false,
             error: `Unknown aggregation type: ${type}`,
-          } as any;
+          };
       }
 
       // Store aggregated data
@@ -108,7 +148,7 @@ export class AnalyticsJobProcessor {
           error instanceof Error
             ? error.message
             : 'Aggregation processing error',
-      } as any;
+      };
     }
   }
 
@@ -118,9 +158,9 @@ export class AnalyticsJobProcessor {
   private async processAnalyticsEvent(
     userId: string,
     event: string,
-    properties: any,
+    properties: AnalyticsProperties,
     timestamp: Date
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<AnalyticsResult> {
     try {
       // Process based on event type
       switch (event) {
@@ -197,14 +237,14 @@ export class AnalyticsJobProcessor {
    */
   private async trackCancellationInitiated(
     userId: string,
-    properties: any,
+    properties: AnalyticsProperties,
     timestamp: Date
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<AnalyticsResult> {
     // Log to audit trail
     await AuditLogger.log({
       userId,
-      action: 'create' as any,
-      resource: properties.requestId || 'unknown',
+      action: mapEventToAction(event),
+      resource: properties.requestId ?? 'unknown',
       result: 'success',
       metadata: {
         subscriptionId: properties.subscriptionId,
@@ -231,14 +271,14 @@ export class AnalyticsJobProcessor {
    */
   private async trackCancellationCompleted(
     userId: string,
-    properties: any,
+    properties: AnalyticsProperties,
     timestamp: Date
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<AnalyticsResult> {
     // Update cancellation success metrics
     await AuditLogger.log({
       userId,
       action: 'analytics.cancellation_completed',
-      resource: properties.requestId || 'unknown',
+      resource: properties.requestId ?? 'unknown',
       result: 'success',
       metadata: {
         confirmationCode: properties.confirmationCode,
@@ -265,13 +305,13 @@ export class AnalyticsJobProcessor {
    */
   private async trackCancellationFailed(
     userId: string,
-    properties: any,
+    properties: AnalyticsProperties,
     timestamp: Date
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<AnalyticsResult> {
     await AuditLogger.log({
       userId,
       action: 'analytics.cancellation_failed',
-      resource: properties.requestId || 'unknown',
+      resource: properties.requestId ?? 'unknown',
       result: 'failure',
       error: properties.error,
       metadata: {
@@ -299,13 +339,13 @@ export class AnalyticsJobProcessor {
   private async trackJobEvent(
     userId: string,
     event: string,
-    properties: any,
+    properties: AnalyticsProperties,
     timestamp: Date
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<AnalyticsResult> {
     await AuditLogger.log({
       userId,
-      action: `analytics.${event}` as any,
-      resource: properties.jobId || 'unknown',
+      action: mapEventToAction(event),
+      resource: properties.jobId ?? 'unknown',
       result: event.includes('failed') ? 'failure' : 'success',
       metadata: {
         jobType: properties.jobType,
@@ -331,13 +371,13 @@ export class AnalyticsJobProcessor {
   private async trackWorkflowEvent(
     userId: string,
     event: string,
-    properties: any,
+    properties: AnalyticsProperties,
     timestamp: Date
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<AnalyticsResult> {
     await AuditLogger.log({
       userId,
-      action: `analytics.${event}` as any,
-      resource: properties.instanceId || properties.workflowId || 'unknown',
+      action: mapEventToAction(event),
+      resource: properties.instanceId ?? properties.workflowId ?? 'unknown',
       result: properties.status === 'failed' ? 'failure' : 'success',
       metadata: {
         workflowId: properties.workflowId,
@@ -364,12 +404,12 @@ export class AnalyticsJobProcessor {
   private async trackUserEvent(
     userId: string,
     event: string,
-    properties: any,
+    properties: AnalyticsProperties,
     timestamp: Date
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<AnalyticsResult> {
     await AuditLogger.log({
       userId,
-      action: `analytics.${event}` as any,
+      action: mapEventToAction(event),
       resource: userId,
       result: 'success',
       metadata: {
@@ -392,13 +432,13 @@ export class AnalyticsJobProcessor {
    */
   private async trackNotificationEvent(
     userId: string,
-    properties: any,
+    properties: AnalyticsProperties,
     timestamp: Date
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<AnalyticsResult> {
     await AuditLogger.log({
       userId,
       action: 'analytics.notification_sent',
-      resource: properties.jobId || 'unknown',
+      resource: properties.jobId ?? 'unknown',
       result: properties.success ? 'success' : 'failure',
       metadata: {
         type: properties.type,
@@ -424,14 +464,14 @@ export class AnalyticsJobProcessor {
   private async trackGenericEvent(
     userId: string,
     event: string,
-    properties: any,
+    properties: AnalyticsProperties,
     timestamp: Date
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<AnalyticsResult> {
     // For unknown events, just log them
     await AuditLogger.log({
       userId,
-      action: `analytics.${event}` as any,
-      resource: properties.resourceId || 'unknown',
+      action: mapEventToAction(event),
+      resource: properties.resourceId ?? 'unknown',
       result: 'success',
       metadata: {
         event,
@@ -454,11 +494,11 @@ export class AnalyticsJobProcessor {
    */
   private async aggregateCancellationStats(
     timeframe: string,
-    filters: any = {}
+    filters: Record<string, unknown> = {}
   ): Promise<any> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       createdAt: {
         gte: startDate,
         lte: endDate,
@@ -515,7 +555,7 @@ export class AnalyticsJobProcessor {
    */
   private async aggregateUserActivity(
     timeframe: string,
-    filters: any = {}
+    _filters: Record<string, unknown> = {}
   ): Promise<any> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
 
@@ -565,8 +605,15 @@ export class AnalyticsJobProcessor {
    */
   private async aggregateSystemHealth(
     timeframe: string,
-    filters: any = {}
-  ): Promise<any> {
+    _filters: Record<string, unknown> = {}
+  ): Promise<{
+    timeframe: string;
+    errorRate: number;
+    totalOperations: number;
+    failedOperations: number;
+    systemStatus: 'healthy' | 'degraded' | 'critical';
+    uptime: number;
+  }> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
 
     // Get error rates from audit logs
@@ -634,7 +681,7 @@ export class AnalyticsJobProcessor {
   private async storeAggregatedData(
     type: string,
     timeframe: string,
-    data: any
+    data: Record<string, unknown>
   ): Promise<void> {
     // In a real implementation, you might store this in a dedicated analytics table
     // For now, we'll just log it

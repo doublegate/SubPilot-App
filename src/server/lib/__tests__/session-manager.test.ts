@@ -15,7 +15,7 @@ vi.mock('../audit-logger', () => ({
 }));
 
 // Mock environment variables
-vi.mock('@/env.js', () => ({
+vi.mock('@/env', () => ({
   env: {
     NODE_ENV: 'test',
   },

@@ -7,6 +7,11 @@ import { Loader2 } from 'lucide-react';
 
 interface PremiumFeatureGateProps {
   feature: string;
+  action?:
+    | 'add_bank_account'
+    | 'invite_team_member'
+    | 'use_ai_assistant'
+    | 'export_data';
   requiredPlan?: 'pro' | 'team' | 'enterprise';
   children: React.ReactNode;
   fallback?: React.ReactNode;
@@ -28,7 +33,7 @@ export function PremiumFeatureGate({
 
   const { data: canPerform } = api.billing.canPerformAction.useQuery(
     {
-      action: feature as any,
+      action: feature,
     },
     {
       enabled: hasAccess === false,
@@ -66,7 +71,10 @@ export function PremiumFeatureGate({
           open={showUpgradeModal}
           onOpenChange={setShowUpgradeModal}
           feature={feature}
-          requiredPlan={(canPerform?.upgradeRequired as any) || requiredPlan}
+          requiredPlan={
+            (canPerform?.upgradeRequired as 'pro' | 'team' | 'enterprise') ||
+            requiredPlan
+          }
         />
       </>
     );
@@ -85,7 +93,7 @@ export function useFeatureAccess(feature: string) {
 
   const { data: canPerform } = api.billing.canPerformAction.useQuery(
     {
-      action: feature as any,
+      action: feature,
     },
     {
       enabled: hasAccess === false,

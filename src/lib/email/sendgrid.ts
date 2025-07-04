@@ -1,14 +1,14 @@
 import * as sgMail from '@sendgrid/mail';
-import { env } from '@/env.js';
 import {
   SENDGRID_TEMPLATES,
   HTML_TEMPLATES,
   TEXT_TEMPLATES,
 } from '@/lib/email-templates/production';
 
-// Initialize SendGrid
-if (env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(env.SENDGRID_API_KEY);
+// Initialize SendGrid with type-safe env access
+const sendGridApiKey = process.env.SENDGRID_API_KEY;
+if (sendGridApiKey) {
+  sgMail.setApiKey(sendGridApiKey);
 }
 
 export interface EmailRecipient {
@@ -35,8 +35,8 @@ export class SendGridEmailService {
   private isProduction: boolean;
 
   constructor() {
-    this.fromEmail = env.FROM_EMAIL ?? 'noreply@subpilot.com';
-    this.isProduction = env.NODE_ENV === 'production';
+    this.fromEmail = process.env.FROM_EMAIL ?? 'noreply@subpilot.com';
+    this.isProduction = process.env.NODE_ENV === 'production';
   }
 
   /**
@@ -52,7 +52,7 @@ export class SendGridEmailService {
       customArgs?: Record<string, string>;
     }
   ): Promise<void> {
-    if (!env.SENDGRID_API_KEY) {
+    if (!process.env.SENDGRID_API_KEY) {
       console.warn('SendGrid API key not configured, email not sent');
       return;
     }
@@ -103,7 +103,7 @@ export class SendGridEmailService {
       customArgs?: Record<string, string>;
     }
   ): Promise<void> {
-    if (!env.SENDGRID_API_KEY) {
+    if (!process.env.SENDGRID_API_KEY) {
       console.warn('SendGrid API key not configured, email not sent');
       return;
     }
@@ -153,8 +153,8 @@ export class SendGridEmailService {
 
     const dynamicData = {
       user_name: user.name ?? 'there',
-      login_url: `${env.NEXTAUTH_URL}/login`,
-      dashboard_url: `${env.NEXTAUTH_URL}/dashboard`,
+      login_url: `${process.env.NEXTAUTH_URL ?? 'http://localhost:3000'}/login`,
+      dashboard_url: `${process.env.NEXTAUTH_URL ?? 'http://localhost:3000'}/dashboard`,
     };
 
     try {
@@ -261,7 +261,7 @@ export class SendGridEmailService {
       subscription_name: subscription.name,
       amount: `$${subscription.amount.toFixed(2)}`,
       next_billing: subscription.nextBilling.toLocaleDateString(),
-      cancel_url: `${env.NEXTAUTH_URL}/dashboard/subscriptions?highlight=${encodeURIComponent(subscription.name)}`,
+      cancel_url: `${process.env.NEXTAUTH_URL ?? 'http://localhost:3000'}/dashboard/subscriptions?highlight=${encodeURIComponent(subscription.name)}`,
     };
 
     try {

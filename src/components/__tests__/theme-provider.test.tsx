@@ -178,7 +178,7 @@ describe('ThemeProvider', () => {
         <ThemeProvider>
           <div>String Child</div>
           {123}
-          {true && <span>Conditional Child</span>}
+          {<span>Conditional Child</span>}
           {['a', 'b'].map(item => (
             <div key={item}>{item}</div>
           ))}

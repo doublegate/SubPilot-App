@@ -9,7 +9,7 @@ import {
 } from '../crypto-v2';
 
 // Mock environment variables
-vi.mock('@/env.js', () => ({
+vi.mock('@/env', () => ({
   env: {
     NODE_ENV: 'test',
     NEXTAUTH_SECRET: 'test-secret-for-development-with-sufficient-length',

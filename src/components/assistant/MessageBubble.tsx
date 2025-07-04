@@ -1,6 +1,6 @@
 'use client';
 
-import { type Message, type AssistantAction } from '@prisma/client';
+import { type Message } from '@prisma/client';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,16 @@ import { format } from 'date-fns';
 import { api } from '@/trpc/react';
 import { toast } from 'sonner';
 
+interface FunctionCall {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+interface MessageMetadata {
+  actionId?: string;
+  [key: string]: unknown;
+}
+
 interface MessageBubbleProps {
   message: Message & {
     _count?: {
@@ -30,7 +40,7 @@ interface MessageBubbleProps {
 export function MessageBubble({
   message,
   isLoading = false,
-  onActionConfirm,
+  onActionConfirm: _onActionConfirm,
 }: MessageBubbleProps) {
   const utils = api.useUtils();
 
@@ -46,16 +56,13 @@ export function MessageBubble({
   });
 
   const isUser = message.role === 'user';
-  const functionCall = message.functionCall as {
-    name: string;
-    arguments: any;
-  } | null;
+  const functionCall = message.functionCall as FunctionCall | null;
 
   const handleActionConfirm = (actionId: string) => {
     executeAction.mutate({ actionId, confirmed: true });
   };
 
-  const handleActionReject = (actionId: string) => {
+  const handleActionReject = (_actionId: string) => {
     // You could add a reject endpoint or just update the status
     toast.info('Action cancelled');
   };
@@ -107,8 +114,11 @@ export function MessageBubble({
                     <Button
                       size="sm"
                       onClick={() => {
-                        const actionId = (message.metadata as any)?.actionId;
-                        if (actionId) handleActionConfirm(actionId);
+                        const metadata =
+                          message.metadata as MessageMetadata | null;
+                        const actionId = metadata?.actionId;
+                        if (typeof actionId === 'string')
+                          handleActionConfirm(actionId);
                       }}
                       disabled={executeAction.isPending}
                     >
@@ -123,8 +133,11 @@ export function MessageBubble({
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        const actionId = (message.metadata as any)?.actionId;
-                        if (actionId) handleActionReject(actionId);
+                        const metadata =
+                          message.metadata as MessageMetadata | null;
+                        const actionId = metadata?.actionId;
+                        if (typeof actionId === 'string')
+                          handleActionReject(actionId);
                       }}
                       disabled={executeAction.isPending}
                     >
@@ -142,16 +155,40 @@ export function MessageBubble({
   );
 }
 
-function getActionDescription(actionName: string, args: any): string {
+function getActionDescription(
+  actionName: string,
+  args: Record<string, unknown>
+): string {
   switch (actionName) {
-    case 'cancelSubscription':
-      return `Cancel subscription ${args.subscriptionId}${args.reason ? ` (Reason: ${args.reason})` : ''}`;
-    case 'analyzeSpending':
-      return `Analyze your ${args.timeframe} spending${args.category ? ` for ${args.category}` : ''}`;
-    case 'findSavings':
-      return `Find savings opportunities${args.threshold ? ` above $${args.threshold}` : ''}`;
-    case 'setReminder':
-      return `Set a ${args.reminderType} reminder for ${new Date(args.date).toLocaleDateString()}`;
+    case 'cancelSubscription': {
+      const subscriptionId =
+        typeof args.subscriptionId === 'string'
+          ? args.subscriptionId
+          : 'unknown';
+      const reason =
+        typeof args.reason === 'string' ? ` (Reason: ${args.reason})` : '';
+      return `Cancel subscription ${subscriptionId}${reason}`;
+    }
+    case 'analyzeSpending': {
+      const timeframe =
+        typeof args.timeframe === 'string' ? args.timeframe : 'recent';
+      const category =
+        typeof args.category === 'string' ? ` for ${args.category}` : '';
+      return `Analyze your ${timeframe} spending${category}`;
+    }
+    case 'findSavings': {
+      const threshold =
+        typeof args.threshold === 'number' ? ` above $${args.threshold}` : '';
+      return `Find savings opportunities${threshold}`;
+    }
+    case 'setReminder': {
+      const reminderType =
+        typeof args.reminderType === 'string' ? args.reminderType : 'general';
+      const date = args.date
+        ? new Date(args.date as string | number | Date).toLocaleDateString()
+        : 'unknown date';
+      return `Set a ${reminderType} reminder for ${date}`;
+    }
     case 'getSubscriptionInfo':
       return `Get detailed information about subscription`;
     case 'explainCharge':

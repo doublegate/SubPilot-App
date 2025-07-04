@@ -1,5 +1,4 @@
 import { createHmac } from 'crypto';
-import { env } from '@/env.js';
 
 /**
  * Verify webhook signatures for external services
@@ -16,7 +15,7 @@ export class WebhookSecurity {
     }
   ): boolean {
     // Plaid doesn't use webhook signatures in sandbox mode
-    if (env.PLAID_ENV === 'sandbox') {
+    if (process.env.PLAID_ENV === 'sandbox') {
       console.warn(
         '⚠️  Plaid webhook signature verification skipped in sandbox mode'
       );
@@ -24,7 +23,7 @@ export class WebhookSecurity {
     }
 
     // In production, Plaid will provide webhook verification
-    const secret = env.PLAID_WEBHOOK_SECRET;
+    const secret = process.env.PLAID_WEBHOOK_SECRET;
     if (!secret) {
       console.error('❌ PLAID_WEBHOOK_SECRET not configured');
       return false;
@@ -86,7 +85,7 @@ export class WebhookSecurity {
       return false;
     }
 
-    const secret = env.API_SECRET;
+    const secret = process.env.API_SECRET;
     if (!secret) {
       console.error('❌ API_SECRET not configured');
       return false;
@@ -108,7 +107,7 @@ export class WebhookSecurity {
     signature: string;
     timestamp: number;
   } {
-    const secret = env.API_SECRET;
+    const secret = process.env.API_SECRET;
     if (!secret) {
       throw new Error('API_SECRET not configured');
     }

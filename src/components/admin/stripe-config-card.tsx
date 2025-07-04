@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 export function StripeConfigCard() {
   const [showSecret, setShowSecret] = useState(false);
   const [config, setConfig] = useState({
-    publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
+    publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '',
     secretKey: '',
     webhookSecret: '',
   });

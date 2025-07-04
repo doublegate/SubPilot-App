@@ -14,16 +14,18 @@ export class StartupService {
   public static instance: StartupService | null = null;
   private isInitialized = false;
   private shutdownHandlers: Array<() => Promise<void>> = [];
+  private db: PrismaClient;
 
-  private constructor(private db: PrismaClient) {}
+  private constructor(db: PrismaClient) {
+    // Private constructor for singleton pattern
+    this.db = db;
+  }
 
   /**
    * Get singleton instance
    */
   static getInstance(db: PrismaClient): StartupService {
-    if (!StartupService.instance) {
-      StartupService.instance = new StartupService(db);
-    }
+    StartupService.instance ??= new StartupService(db);
     return StartupService.instance;
   }
 
@@ -67,15 +69,15 @@ export class StartupService {
       // Log successful initialization
       await AuditLogger.log({
         userId: 'system',
-        action: 'create' as any,
+        action: 'create' as const,
         resource: 'event_driven_cancellation_system',
         result: 'success',
         metadata: {
           timestamp: new Date(),
           jobProcessors: jobProcessorRegistry.getStats(),
           workflowEngine: workflowEngine.getStats(),
-          realtimeManager: (realtimeManager as any).getStats
-            ? (realtimeManager as any).getStats()
+          realtimeManager: 'getStats' in realtimeManager && typeof (realtimeManager as { getStats?: () => unknown }).getStats === 'function'
+            ? (realtimeManager as { getStats: () => unknown }).getStats()
             : { activeConnections: realtimeManager.getActiveConnections() },
         },
       });
@@ -89,7 +91,7 @@ export class StartupService {
       // Log initialization failure
       await AuditLogger.log({
         userId: 'system',
-        action: 'delete' as any,
+        action: 'delete' as const,
         resource: 'event_driven_cancellation_system',
         result: 'failure',
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -128,7 +130,7 @@ export class StartupService {
       // Log successful shutdown
       await AuditLogger.log({
         userId: 'system',
-        action: 'update' as any,
+        action: 'update' as const,
         resource: 'event_driven_cancellation_system',
         result: 'success',
         metadata: {
@@ -142,7 +144,7 @@ export class StartupService {
 
       await AuditLogger.log({
         userId: 'system',
-        action: 'delete' as any,
+        action: 'delete' as const,
         resource: 'event_driven_cancellation_system',
         result: 'failure',
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -159,71 +161,78 @@ export class StartupService {
    * Setup graceful shutdown on process signals
    */
   private setupGracefulShutdown(): void {
-    const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT', 'SIGUSR2'];
+    const signals = ['SIGTERM', 'SIGINT', 'SIGUSR2'] as const;
 
     for (const signal of signals) {
-      process.on(signal, async () => {
-        console.log(
-          `[StartupService] Received ${signal}, starting graceful shutdown...`
-        );
-
-        try {
-          await this.shutdown();
-          process.exit(0);
-        } catch (error) {
-          console.error(
-            '[StartupService] Error during graceful shutdown:',
-            error
+      process.on(signal, signal => {
+        // Use void operator to explicitly ignore promise return
+        void (async () => {
+          console.log(
+            `[StartupService] Received ${signal}, starting graceful shutdown...`
           );
-          process.exit(1);
-        }
+
+          try {
+            await this.shutdown();
+            process.exit(0);
+          } catch (error) {
+            console.error(
+              '[StartupService] Error during graceful shutdown:',
+              error
+            );
+            process.exit(1);
+          }
+        })();
       });
     }
 
     // Handle uncaught exceptions
-    process.on('uncaughtException', async error => {
-      console.error('[StartupService] Uncaught exception:', error);
+    process.on('uncaughtException', error => {
+      void (async () => {
+        console.error('[StartupService] Uncaught exception:', error);
 
-      await AuditLogger.log({
-        userId: 'system',
-        action: 'delete' as any,
-        resource: 'event_driven_cancellation_system',
-        result: 'failure',
-        error: error.message,
-        metadata: {
-          stack: error.stack,
-          timestamp: new Date(),
-        },
-      });
+        await AuditLogger.log({
+          userId: 'system',
+          action: 'delete' as const,
+          resource: 'event_driven_cancellation_system',
+          result: 'failure',
+          error: error.message,
+          metadata: {
+            stack: error.stack,
+            timestamp: new Date(),
+          },
+        });
 
-      try {
-        await this.shutdown();
-      } catch (shutdownError) {
-        console.error(
-          '[StartupService] Error during emergency shutdown:',
-          shutdownError
-        );
-      }
+        try {
+          await this.shutdown();
+        } catch (shutdownError) {
+          console.error(
+            '[StartupService] Error during emergency shutdown:',
+            shutdownError
+          );
+        }
 
-      process.exit(1);
+        process.exit(1);
+      })();
     });
 
     // Handle unhandled promise rejections
-    process.on('unhandledRejection', async (reason, promise) => {
-      console.error('[StartupService] Unhandled promise rejection:', reason);
+    process.on('unhandledRejection', (reason, promise) => {
+      void (async () => {
+        console.error('[StartupService] Unhandled promise rejection:', reason);
 
-      await AuditLogger.log({
-        userId: 'system',
-        action: 'delete' as any,
-        resource: 'event_driven_cancellation_system',
-        result: 'failure',
-        error: reason instanceof Error ? reason.message : String(reason),
-        metadata: {
-          reason: String(reason),
-          promise: String(promise),
-          timestamp: new Date(),
-        },
-      });
+        await AuditLogger.log({
+          userId: 'system',
+          action: 'delete' as const,
+          resource: 'event_driven_cancellation_system',
+          result: 'failure',
+          error: reason instanceof Error ? reason.message : String(reason),
+          metadata: {
+            reason: String(reason),
+            promise: `Promise<${promise.constructor.name}>`,
+            timestamp: new Date(),
+          },
+        });
+      })();
     });
 
     console.log('[StartupService] Graceful shutdown handlers registered');
@@ -285,7 +294,8 @@ export class StartupService {
   private async checkJobQueueHealth(): Promise<void> {
     try {
       const { checkJobQueueHealth } = await import('./job-queue');
-      const health = await checkJobQueueHealth();
+      // checkJobQueueHealth is synchronous, but we need async for the import
+      const health = checkJobQueueHealth() as { status: string; stats: unknown; isProcessing: boolean; lastProcessed: Date };
 
       if (health.status === 'degraded') {
         throw new Error(`Job queue health check failed: degraded status`);
@@ -312,7 +322,7 @@ export class StartupService {
       };
 
       cancellationEventBus.once('system.health_check', testListener);
-      cancellationEventBus.emit('system.health_check', { test: true } as any);
+      cancellationEventBus.emit('system.health_check', { test: true });
 
       // Give it a moment to process
       await new Promise(resolve => setTimeout(resolve, 100));

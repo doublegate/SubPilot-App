@@ -1,9 +1,4 @@
 // Test file
-/* eslint-disable @typescript-eslint/unbound-method */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   describe,
   it,
@@ -17,10 +12,26 @@ import { plaidRouter } from '../plaid';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 // PlaidApi import removed as unused - fixes ESLint warning
 import type { Session } from 'next-auth';
+import type { PlaidItem, BankAccount } from '@prisma/client';
 import { plaid } from '@/server/plaid-client';
 
+// Test types for mocking Prisma relations
+type MockPlaidItemWithRelations = PlaidItem & {
+  bankAccounts: Pick<BankAccount, 'id' | 'plaidAccountId' | 'lastSync'>[];
+};
+
+type MockPlaidItemWithFullAccounts = PlaidItem & {
+  bankAccounts: (Pick<BankAccount, 'id' | 'plaidAccountId' | 'name' | 'type' | 'subtype' | 'isoCurrencyCode' | 'isActive' | 'lastSync' | 'createdAt'> & {
+    currentBalance: { toNumber: () => number };
+  })[];
+};
+
+type MockPlaidItemWithEmptyAccounts = PlaidItem & {
+  bankAccounts: BankAccount[];
+};
+
 // Mock environment
-vi.mock('@/env.js', () => ({
+vi.mock('@/env', () => ({
   env: {
     NODE_ENV: 'test',
     PLAID_CLIENT_ID: 'test_client_id',
@@ -381,7 +392,7 @@ describe('Plaid Router', () => {
               lastSync: new Date('2024-01-01'),
             },
           ],
-        } as any,
+        } as MockPlaidItemWithRelations,
       ]);
 
       getMockPlaidClient()!.transactionsSync = vi.fn().mockResolvedValue({
@@ -552,7 +563,7 @@ describe('Plaid Router', () => {
               createdAt: new Date('2024-01-01'),
             },
           ],
-        } as any,
+        } as MockPlaidItemWithFullAccounts,
       ]);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
@@ -602,7 +613,7 @@ describe('Plaid Router', () => {
         syncCursor: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-      } as any);
+      } as PlaidItem);
     });
 
     it('should disconnect account and remove from Plaid', async () => {
@@ -710,7 +721,7 @@ describe('Plaid Router', () => {
           updatedAt: new Date(),
           bankAccounts: [],
         },
-      ] as any);
+      ] as MockPlaidItemWithEmptyAccounts[]);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests

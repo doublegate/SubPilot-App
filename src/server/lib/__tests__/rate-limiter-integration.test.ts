@@ -16,7 +16,7 @@ vi.mock('../audit-logger', () => ({
 }));
 
 // Mock environment variables to use in-memory store
-vi.mock('@/env.js', () => ({
+vi.mock('@/env', () => ({
   env: {
     REDIS_URL: undefined, // Force in-memory store
     NODE_ENV: 'test',

@@ -1,6 +1,9 @@
 import { type NextRequest } from 'next/server';
 import { auth } from '@/server/auth.config';
-import { getRealtimeNotificationManager } from '@/server/lib/realtime-notifications';
+import {
+  getRealtimeNotificationManager,
+  createSSEStream,
+} from '@/server/lib/realtime-notifications';
 import { AuditLogger } from '@/server/lib/audit-logger';
 
 /**
@@ -26,46 +29,17 @@ export async function GET(request: NextRequest) {
     const userId = session.user.id;
     const url = new URL(request.url);
     const connectionId =
-      url.searchParams.get('connectionId') ||
+      url.searchParams.get('connectionId') ??
       `conn_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
 
-    // Get real-time notification manager
-    const realtimeManager = getRealtimeNotificationManager();
+    // Connection management is handled by createSSEStream
 
     console.log(
       `[RealtimeSSE] Client connected: ${connectionId} for user ${userId}`
     );
 
-    // Create the SSE stream
-    const stream = new ReadableStream({
-      start(controller) {
-        // Send initial connection event
-        const sseData = `event: connection\ndata: ${JSON.stringify({
-          status: 'connected',
-          timestamp: new Date().toISOString(),
-          connectionId,
-        })}\n\n`;
-        controller.enqueue(new TextEncoder().encode(sseData));
-
-        // Setup ping interval
-        const pingInterval = setInterval(() => {
-          try {
-            const pingData = `event: ping\ndata: ${JSON.stringify({
-              timestamp: new Date().toISOString(),
-            })}\n\n`;
-            controller.enqueue(new TextEncoder().encode(pingData));
-          } catch (error) {
-            console.error('[RealtimeSSE] Error sending ping:', error);
-            clearInterval(pingInterval);
-          }
-        }, 30000); // 30 seconds
-
-        // Cleanup on close
-        return () => {
-          clearInterval(pingInterval);
-        };
-      },
-    });
+    // Create the SSE stream using the library method
+    const stream = createSSEStream(userId);
 
     // Set up proper SSE headers
     const headers = new Headers({
@@ -94,8 +68,8 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers,
     });
-  } catch (error) {
-    console.error('[RealtimeSSE] Error setting up SSE connection:', error);
+  } catch (_error) {
+    console.error('[RealtimeSSE] Error setting up SSE connection:', _error);
 
     return new Response('Internal Server Error', {
       status: 500,
@@ -109,7 +83,7 @@ export async function GET(request: NextRequest) {
 /**
  * Handle SSE connection options
  */
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS(_request: NextRequest) {
   return new Response(null, {
     status: 200,
     headers: {
@@ -137,7 +111,13 @@ export async function POST(request: NextRequest) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const body = await request.json();
+    const body = (await request.json()) as {
+      type?: string;
+      title?: string;
+      message?: string;
+      priority?: 'low' | 'normal' | 'high';
+      data?: Record<string, unknown>;
+    };
     const { type, title, message, priority = 'normal', data = {} } = body;
 
     if (!type || !title || !message) {
@@ -151,8 +131,8 @@ export async function POST(request: NextRequest) {
     // Send test notification
     realtimeManager.sendToUser(session.user.id, {
       type: type,
-      title,
-      message,
+      title: title,
+      message: message,
       priority: priority,
       data: {
         ...data,
@@ -165,14 +145,14 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Test notification sent',
       notification: {
-        type,
-        title,
-        message,
-        priority,
+        type: type,
+        title: title,
+        message: message,
+        priority: priority,
       },
     });
-  } catch (error) {
-    console.error('[RealtimeSSE] Error sending test notification:', error);
+  } catch (_error) {
+    console.error('[RealtimeSSE] Error sending test notification:', _error);
 
     return new Response('Internal Server Error', { status: 500 });
   }

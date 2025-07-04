@@ -19,10 +19,90 @@ import {
   FileText,
   BarChart3,
   RefreshCw,
-  Settings,
 } from 'lucide-react';
 import { api } from '@/trpc/react';
 import { UnifiedCancellationModal } from './unified-cancellation-modal';
+
+// Type definitions for tRPC return data
+interface MethodHealth {
+  available: boolean;
+  successRate: number;
+  recentRequests: number;
+}
+
+interface SystemHealthData {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  lastChecked: Date;
+  methods: Record<string, MethodHealth>;
+  overall: {
+    averageSuccessRate: number;
+    totalRecentRequests: number;
+  };
+  recommendations: string[];
+}
+
+interface AnalyticsSummary {
+  total: number;
+  successRate: number;
+  completed: number;
+  failed: number;
+  pending: number;
+  averageTime: number;
+}
+
+interface MethodStats {
+  successRate: number;
+  total: number;
+  averageTime: number;
+  completed: number;
+  failed: number;
+  pending: number;
+}
+
+interface AnalyticsData {
+  summary: AnalyticsSummary;
+  methodComparison: Record<string, MethodStats>;
+  recommendations: string[];
+}
+
+interface SubscriptionDetails {
+  id: string;
+  name: string;
+  amount: number;
+}
+
+interface ProviderDetails {
+  name: string;
+  logo: string | null;
+  type: string;
+}
+
+interface HistoryRequest {
+  id: string;
+  subscription: SubscriptionDetails;
+  provider: ProviderDetails | null;
+  status: string;
+  method: string;
+  priority: string;
+  confirmationCode: string | null;
+  effectiveDate: Date | null;
+  createdAt: Date;
+  completedAt: Date | null;
+  error: string | null;
+}
+
+interface Subscription {
+  id: string;
+  name: string;
+  amount: number;
+  frequency: string;
+  status: string;
+  nextBilling: Date | null;
+}
+
+interface SubscriptionsData {
+  subscriptions: Subscription[];
+}
 
 export function UnifiedCancellationDashboard() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<
@@ -33,7 +113,7 @@ export function UnifiedCancellationDashboard() {
     name: string;
   } | null>(null);
 
-  // API queries
+  // API queries with proper typing
   const analyticsQuery = api.unifiedCancellation.getAnalytics.useQuery({
     timeframe: selectedTimeframe,
   });
@@ -42,14 +122,44 @@ export function UnifiedCancellationDashboard() {
     limit: 20,
   });
 
-  const systemHealthQuery = (
-    api.unifiedCancellation.getSystemHealth as any
-  ).useQuery(
+  const systemHealthQuery = api.unifiedCancellation.getSystemHealth.useQuery(
     undefined,
     { refetchInterval: 30000 } // Refresh every 30 seconds
   );
 
-  const subscriptionsQuery = (api.subscriptions.getAll as any).useQuery();
+  const subscriptionsQuery = api.subscriptions.getAll.useQuery();
+
+  // Type guard functions
+  const isSystemHealthData = (data: unknown): data is SystemHealthData => {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'status' in data &&
+      'methods' in data
+    );
+  };
+
+  const isAnalyticsData = (data: unknown): data is AnalyticsData => {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'summary' in data &&
+      'methodComparison' in data
+    );
+  };
+
+  const isHistoryRequestArray = (data: unknown): data is HistoryRequest[] => {
+    return Array.isArray(data) && (data.length === 0 || 'subscription' in data[0]);
+  };
+
+  const isSubscriptionsData = (data: unknown): data is SubscriptionsData => {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'subscriptions' in data &&
+      Array.isArray((data as SubscriptionsData).subscriptions)
+    );
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -109,9 +219,9 @@ export function UnifiedCancellationDashboard() {
             variant="outline"
             size="sm"
             onClick={() => {
-              analyticsQuery.refetch();
-              historyQuery.refetch();
-              systemHealthQuery.refetch();
+              void analyticsQuery.refetch().catch(console.error);
+              void historyQuery.refetch().catch(console.error);
+              void systemHealthQuery.refetch().catch(console.error);
             }}
           >
             <RefreshCw className="mr-1 h-4 w-4" />
@@ -121,7 +231,7 @@ export function UnifiedCancellationDashboard() {
       </div>
 
       {/* System Health */}
-      {systemHealthQuery.data && (
+      {systemHealthQuery.data && isSystemHealthData(systemHealthQuery.data) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -135,7 +245,7 @@ export function UnifiedCancellationDashboard() {
           <CardContent>
             <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
               {Object.entries(systemHealthQuery.data.methods).map(
-                ([method, health]: [string, any]) => (
+                ([method, health]) => (
                   <div
                     key={method}
                     className="rounded-lg border p-3 text-center"
@@ -169,7 +279,7 @@ export function UnifiedCancellationDashboard() {
                 <AlertDescription>
                   <div className="space-y-1">
                     {systemHealthQuery.data.recommendations.map(
-                      (rec: string, index: number) => (
+                      (rec, index) => (
                         <div key={index}>• {rec}</div>
                       )
                     )}
@@ -182,7 +292,7 @@ export function UnifiedCancellationDashboard() {
       )}
 
       {/* Analytics Overview */}
-      {analyticsQuery.data && (
+      {analyticsQuery.data && isAnalyticsData(analyticsQuery.data) && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
@@ -258,13 +368,17 @@ export function UnifiedCancellationDashboard() {
               <CardTitle>Recent Cancellation Requests</CardTitle>
             </CardHeader>
             <CardContent>
-              {historyQuery.data?.length === 0 ? (
+              {historyQuery.data && 
+               isHistoryRequestArray(historyQuery.data) && 
+               historyQuery.data.length === 0 ? (
                 <div className="py-8 text-center text-gray-500">
                   No cancellation requests yet
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {historyQuery.data?.map((request: any) => (
+                  {historyQuery.data && 
+                   isHistoryRequestArray(historyQuery.data) && 
+                   historyQuery.data.map((request) => (
                     <div
                       key={request.id}
                       className="flex items-center justify-between rounded-lg border p-3"
@@ -329,7 +443,7 @@ export function UnifiedCancellationDashboard() {
             ))}
           </div>
 
-          {analyticsQuery.data && (
+          {analyticsQuery.data && isAnalyticsData(analyticsQuery.data) && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -376,7 +490,7 @@ export function UnifiedCancellationDashboard() {
                 <CardContent>
                   <div className="space-y-2">
                     {analyticsQuery.data.recommendations.map(
-                      (rec: string, index: number) => (
+                      (rec, index) => (
                         <div
                           key={index}
                           className="flex items-start gap-2 text-sm"
@@ -394,10 +508,10 @@ export function UnifiedCancellationDashboard() {
         </TabsContent>
 
         <TabsContent value="methods" className="space-y-4">
-          {analyticsQuery.data && (
+          {analyticsQuery.data && isAnalyticsData(analyticsQuery.data) && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {Object.entries(analyticsQuery.data.methodComparison).map(
-                ([method, stats]: [string, any]) => (
+                ([method, stats]) => (
                   <Card key={method}>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -459,15 +573,19 @@ export function UnifiedCancellationDashboard() {
               </p>
             </CardHeader>
             <CardContent>
-              {subscriptionsQuery.data?.subscriptions?.length === 0 ? (
+              {subscriptionsQuery.data && 
+               isSubscriptionsData(subscriptionsQuery.data) && 
+               subscriptionsQuery.data.subscriptions?.length === 0 ? (
                 <div className="py-8 text-center text-gray-500">
                   No active subscriptions found
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {subscriptionsQuery.data?.subscriptions
-                    ?.filter((sub: any) => sub.status === 'active')
-                    .map((subscription: any) => (
+                  {subscriptionsQuery.data && 
+                   isSubscriptionsData(subscriptionsQuery.data) && 
+                   subscriptionsQuery.data.subscriptions
+                    ?.filter((sub) => sub.status === 'active')
+                    .map((subscription) => (
                       <div
                         key={subscription.id}
                         className="cursor-pointer rounded-lg border p-3 transition-colors hover:bg-gray-50"
@@ -516,9 +634,9 @@ export function UnifiedCancellationDashboard() {
           onSuccess={() => {
             setSelectedSubscription(null);
             // Refresh data
-            historyQuery.refetch();
-            analyticsQuery.refetch();
-            subscriptionsQuery.refetch();
+            void historyQuery.refetch().catch(console.error);
+            void analyticsQuery.refetch().catch(console.error);
+            void subscriptionsQuery.refetch().catch(console.error);
           }}
         />
       )}

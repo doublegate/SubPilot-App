@@ -624,9 +624,7 @@ ${results.issues
 function generateIssuesByCategory(issues: AccessibilityIssue[]): string {
   const categories = issues.reduce(
     (acc, issue) => {
-      if (!acc[issue.category]) {
-        acc[issue.category] = { errors: 0, warnings: 0, info: 0 };
-      }
+      acc[issue.category] ??= { errors: 0, warnings: 0, info: 0 };
       const categoryStats = acc[issue.category];
       if (categoryStats) {
         switch (issue.type) {

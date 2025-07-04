@@ -30,9 +30,11 @@ describe('utils', () => {
     });
 
     it('handles conditional classes', () => {
-      expect(cn('base', true && 'conditional', false && 'hidden')).toBe(
-        'base conditional'
-      );
+      const showConditional = true;
+      const showHidden = false;
+      expect(
+        cn('base', showConditional && 'conditional', showHidden && 'hidden')
+      ).toBe('base conditional');
     });
 
     it('handles undefined and null values', () => {

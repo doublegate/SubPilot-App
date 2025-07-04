@@ -45,7 +45,10 @@ export async function GET(
     const metadata = orchestrationLogs[0]?.metadata as {
       userId?: string;
     } | null;
-    const orchestrationUserId = metadata?.userId;
+    const orchestrationUserId =
+      metadata && typeof metadata === 'object' && 'userId' in metadata
+        ? metadata.userId
+        : undefined;
     if (orchestrationUserId !== session.user.id) {
       return new Response('Forbidden', { status: 403 });
     }
@@ -73,13 +76,19 @@ export async function GET(
         // Subscribe to real-time updates
         const unsubscribe = orchestrator.subscribeToUpdates(
           orchestrationId,
-          update => {
+          (update: unknown) => {
             try {
+              // Type guard for update data
+              const updateData = 
+                typeof update === 'object' && update !== null 
+                  ? update as Record<string, unknown>
+                  : {};
+                  
               const eventData = {
-                type: 'orchestration_update',
+                type: 'orchestration_update' as const,
                 orchestrationId,
                 timestamp: new Date().toISOString(),
-                ...update,
+                ...updateData,
               };
 
               controller.enqueue(
@@ -104,7 +113,7 @@ export async function GET(
                 })}\n\n`
               )
             );
-          } catch (error) {
+          } catch {
             // Connection likely closed
             clearInterval(heartbeatInterval);
             unsubscribe();
@@ -112,46 +121,50 @@ export async function GET(
         }, 30000); // Every 30 seconds
 
         // Send status updates every 5 seconds for active orchestrations
-        const statusInterval = setInterval(async () => {
-          try {
-            const status =
-              await orchestrator.getOrchestrationStatus(orchestrationId);
-            if (status) {
-              controller.enqueue(
-                new TextEncoder().encode(
-                  `data: ${JSON.stringify({
-                    type: 'status_sync',
-                    orchestrationId,
-                    timestamp: new Date().toISOString(),
-                    status: status.status,
-                    lastUpdate: status.lastUpdate,
-                  })}\n\n`
-                )
-              );
-
-              // Stop status updates if orchestration is completed
-              if (
-                ['completed', 'failed', 'cancelled'].includes(status.status)
-              ) {
-                clearInterval(statusInterval);
-
-                // Send final completion event
+        const statusInterval = setInterval(() => {
+          void (async () => {
+            try {
+              const status =
+                await orchestrator.getOrchestrationStatus(orchestrationId);
+              if (status) {
                 controller.enqueue(
                   new TextEncoder().encode(
                     `data: ${JSON.stringify({
-                      type: 'orchestration_final',
+                      type: 'status_sync',
                       orchestrationId,
                       timestamp: new Date().toISOString(),
-                      finalStatus: status.status,
-                      message: 'Orchestration completed',
+                      status: status.status,
+                      lastUpdate: status.lastUpdate,
                     })}\n\n`
                   )
                 );
+
+                // Stop status updates if orchestration is completed
+                if (
+                  ['completed', 'failed', 'cancelled'].includes(status.status)
+                ) {
+                  clearInterval(statusInterval);
+
+                  // Send final completion event
+                  controller.enqueue(
+                    new TextEncoder().encode(
+                      `data: ${JSON.stringify({
+                        type: 'orchestration_final',
+                        orchestrationId,
+                        timestamp: new Date().toISOString(),
+                        finalStatus: status.status,
+                        message: 'Orchestration completed',
+                      })}\n\n`
+                    )
+                  );
+                }
               }
+            } catch (error) {
+              console.error('[SSE] Error in status update:', error);
             }
-          } catch (error) {
-            console.error('[SSE] Error in status update:', error);
-          }
+          })().catch(error => {
+            console.error('[SSE] Unhandled error in status interval:', error);
+          });
         }, 5000); // Every 5 seconds
 
         // Clean up when stream is closed
@@ -161,7 +174,7 @@ export async function GET(
           unsubscribe();
           try {
             controller.close();
-          } catch (error) {
+          } catch {
             // Stream already closed
           }
         });
@@ -184,7 +197,7 @@ export async function GET(
                 )
               );
               controller.close();
-            } catch (error) {
+            } catch {
               // Stream already closed
             }
           },

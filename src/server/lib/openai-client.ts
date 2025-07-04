@@ -1,4 +1,3 @@
-import { env } from '@/env.js';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { cacheService, cacheTTL } from '@/server/services/cache.service';
@@ -252,7 +251,7 @@ export class OpenAICategorizationClient {
   constructor(apiKey?: string, model?: string) {
     // During build time, we don't need to validate the API key
     // The validation will happen when the methods are actually called
-    this.apiKey = apiKey ?? env.OPENAI_API_KEY ?? '';
+    this.apiKey = apiKey ?? process.env.OPENAI_API_KEY ?? '';
     this.model = model ?? DEFAULT_MODEL;
   }
 
@@ -814,7 +813,10 @@ export class OpenAICategorizationClient {
         try {
           functionCall = {
             name: message.function_call.name,
-            arguments: JSON.parse(message.function_call.arguments),
+            arguments: JSON.parse(message.function_call.arguments) as Record<
+              string,
+              unknown
+            >,
           };
         } catch {
           console.error('Failed to parse function call arguments');
