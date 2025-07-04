@@ -29,7 +29,9 @@ type SystemData = {
 
 type NotificationData = CancellationData | SystemData | Record<string, unknown>;
 
-export interface RealtimeNotification<TData extends NotificationData = NotificationData> {
+export interface RealtimeNotification<
+  TData extends NotificationData = NotificationData,
+> {
   type: string;
   title: string;
   message: string;

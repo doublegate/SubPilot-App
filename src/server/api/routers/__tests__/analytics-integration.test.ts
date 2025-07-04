@@ -410,7 +410,9 @@ describe('Analytics Router Integration Tests', () => {
       ];
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
-      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as Transaction[]);
+      mockedTransactionFindMany.mockResolvedValueOnce(
+        mockTransactions as Transaction[]
+      );
 
       const result = await caller.analytics.getSpendingTrends({
         timeRange: 'month',
@@ -433,7 +435,9 @@ describe('Analytics Router Integration Tests', () => {
       }));
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
-      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as Transaction[]);
+      mockedTransactionFindMany.mockResolvedValueOnce(
+        mockTransactions as Transaction[]
+      );
 
       const result = await caller.analytics.getSpendingTrends({
         timeRange: 'week',
@@ -455,7 +459,9 @@ describe('Analytics Router Integration Tests', () => {
       }));
 
       const mockedTransactionFindMany = vi.mocked(db.transaction.findMany);
-      mockedTransactionFindMany.mockResolvedValueOnce(mockTransactions as Transaction[]);
+      mockedTransactionFindMany.mockResolvedValueOnce(
+        mockTransactions as Transaction[]
+      );
 
       const result = await caller.analytics.getSpendingTrends({
         timeRange: 'year',

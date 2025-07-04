@@ -158,7 +158,7 @@ async function seedCategories() {
         aliasCount++;
       } catch (error) {
         // Skip if alias already exists
-        if ((error as any).code !== 'P2002') {
+        if ((error as { code?: string }).code !== 'P2002') {
           console.error(
             `Failed to create alias for ${alias.originalName}:`,
             error

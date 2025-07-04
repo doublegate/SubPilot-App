@@ -1,10 +1,7 @@
 import { type PrismaClient } from '@prisma/client';
 import type Stripe from 'stripe';
 import { TRPCError } from '@trpc/server';
-import {
-  getStripe,
-  STRIPE_WEBHOOK_EVENTS,
-} from '../lib/stripe';
+import { getStripe, STRIPE_WEBHOOK_EVENTS } from '../lib/stripe';
 
 export class BillingService {
   constructor(private prisma: PrismaClient) {}
@@ -311,12 +308,8 @@ export class BillingService {
         stripeSubscriptionId: subscription.id,
         stripePriceId: subscription.items.data[0]?.price.id,
         status: subscription.status,
-        currentPeriodStart: new Date(
-          subscription.current_period_start * 1000
-        ),
-        currentPeriodEnd: new Date(
-          subscription.current_period_end * 1000
-        ),
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
         trialStart: subscription.trial_start
           ? new Date(subscription.trial_start * 1000)
           : null,
@@ -330,12 +323,8 @@ export class BillingService {
         stripeSubscriptionId: subscription.id,
         stripePriceId: subscription.items.data[0]?.price.id,
         status: subscription.status,
-        currentPeriodStart: new Date(
-          subscription.current_period_start * 1000
-        ),
-        currentPeriodEnd: new Date(
-          subscription.current_period_end * 1000
-        ),
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
         trialStart: subscription.trial_start
           ? new Date(subscription.trial_start * 1000)
           : null,
@@ -385,12 +374,8 @@ export class BillingService {
       where: { id: userSubscription.id },
       data: {
         status: subscription.status,
-        currentPeriodStart: new Date(
-          subscription.current_period_start * 1000
-        ),
-        currentPeriodEnd: new Date(
-          subscription.current_period_end * 1000
-        ),
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         canceledAt: subscription.canceled_at
           ? new Date(subscription.canceled_at * 1000)

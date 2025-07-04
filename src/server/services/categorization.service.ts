@@ -140,7 +140,8 @@ export class CategorizationService {
       ...(transactionIds && { id: { in: transactionIds } }),
       ...((!forceRecategorize && {
         OR: [{ aiCategory: null }, { normalizedMerchantName: null }],
-      }) ?? {}),
+      }) ??
+        {}),
     };
 
     const transactions = await this.db.transaction.findMany({

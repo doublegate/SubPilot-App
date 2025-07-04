@@ -4,10 +4,19 @@ import { emitCancellationEvent } from '@/server/lib/event-bus';
 import type { Job, JobResult } from '@/server/lib/job-queue';
 import { AuditLogger } from '@/server/lib/audit-logger';
 import { Prisma } from '@prisma/client';
-import type { CancellationRequest, Subscription, CancellationProvider } from '@prisma/client';
+import type {
+  CancellationRequest,
+  Subscription,
+  CancellationProvider,
+} from '@prisma/client';
 
 // Types for cancellation processing
-type CancellationRequestUpdate = Partial<Pick<CancellationRequest, 'status' | 'result' | 'errorMessage' | 'completedAt' | 'metadata'>>;
+type CancellationRequestUpdate = Partial<
+  Pick<
+    CancellationRequest,
+    'status' | 'result' | 'errorMessage' | 'completedAt' | 'metadata'
+  >
+>;
 
 type ProviderApiResponse = {
   success: boolean;
@@ -108,7 +117,7 @@ export class CancellationJobProcessor {
    * Process API cancellation job
    */
   async processApiCancellation(job: Job): Promise<JobResult> {
-    const { requestId, userId, method } = job.data;
+    const { requestId, userId } = job.data;
 
     try {
       const request = await this.db.cancellationRequest.findFirst({
@@ -537,14 +546,16 @@ export class CancellationJobProcessor {
   /**
    * Simulate calling provider API for cancellation
    */
-  private async callProviderApi(request: CancellationRequest): Promise<ProviderApiResponse & {
-    success: boolean;
-    confirmationCode?: string;
-    effectiveDate?: Date;
-    refundAmount?: number;
-    error?: string;
-    retryable?: boolean;
-  }> {
+  private async callProviderApi(request: CancellationRequest): Promise<
+    ProviderApiResponse & {
+      success: boolean;
+      confirmationCode?: string;
+      effectiveDate?: Date;
+      refundAmount?: number;
+      error?: string;
+      retryable?: boolean;
+    }
+  > {
     // Simulate API call delay
     await new Promise(resolve =>
       setTimeout(resolve, 2000 + Math.random() * 3000)
@@ -595,13 +606,17 @@ export class CancellationJobProcessor {
   /**
    * Simulate initiating webhook cancellation
    */
-  private async initiateWebhookCancellation(request: CancellationRequest): Promise<WebhookCancellationResponse & {
-    success: boolean;
-    webhookId?: string;
-    expectedAt?: Date;
-    error?: string;
-    retryable?: boolean;
-  }> {
+  private async initiateWebhookCancellation(
+    request: CancellationRequest
+  ): Promise<
+    WebhookCancellationResponse & {
+      success: boolean;
+      webhookId?: string;
+      expectedAt?: Date;
+      error?: string;
+      retryable?: boolean;
+    }
+  > {
     // Simulate webhook initiation delay
     await new Promise(resolve =>
       setTimeout(resolve, 1000 + Math.random() * 2000)
@@ -642,7 +657,10 @@ export class CancellationJobProcessor {
   /**
    * Generate manual cancellation instructions
    */
-  private generateManualInstructions(subscription: Subscription, provider: CancellationProvider) {
+  private generateManualInstructions(
+    subscription: Subscription,
+    provider: CancellationProvider
+  ) {
     const baseInstructions = {
       type: 'manual',
       service: subscription.name,

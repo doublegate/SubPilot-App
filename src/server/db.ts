@@ -11,8 +11,7 @@ const nodeEnv = process.env.NODE_ENV ?? 'development';
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log:
-      nodeEnv === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    log: nodeEnv === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
 
 // Graceful shutdown handling

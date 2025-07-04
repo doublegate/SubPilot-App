@@ -40,9 +40,7 @@ import { api } from '@/trpc/react';
 import { toast } from 'sonner';
 import type {
   CancellationResult,
-  CancellationModalProps,
   ManualInstructions,
-  ConfirmManualRequest,
 } from '@/types/cancellation';
 
 interface Subscription {
@@ -218,7 +216,8 @@ export function UnifiedCancellationEnhancedModal({
         toast.success('Cancellation initiated successfully');
       },
       onError: (error: unknown) => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error occurred';
         setError(errorMessage);
         setIsProcessing(false);
         toast.error(`Failed to initiate cancellation: ${errorMessage}`);
@@ -243,7 +242,8 @@ export function UnifiedCancellationEnhancedModal({
         onSuccess?.(result);
       },
       onError: (error: unknown) => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error occurred';
         toast.error(`Failed to confirm cancellation: ${errorMessage}`);
       },
     });
@@ -266,7 +266,11 @@ export function UnifiedCancellationEnhancedModal({
       try {
         const eventData = event.data as string;
         const parsedData: unknown = JSON.parse(eventData);
-        if (typeof parsedData === 'object' && parsedData && 'type' in parsedData) {
+        if (
+          typeof parsedData === 'object' &&
+          parsedData &&
+          'type' in parsedData
+        ) {
           const update = parsedData as RealTimeUpdate;
           handleRealTimeUpdate(update);
         }
@@ -788,7 +792,7 @@ export function UnifiedCancellationEnhancedModal({
               <Label htmlFor="reason">Reason for cancelling (optional)</Label>
               <Textarea
                 id="reason"
-                placeholder="Tell us why you&apos;re cancelling..."
+                placeholder="Tell us why you're cancelling..."
                 value={cancellationReason}
                 onChange={e => setCancellationReason(e.target.value)}
                 className="mt-1"

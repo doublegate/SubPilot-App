@@ -2,6 +2,18 @@ import { type PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { openAIClient, type ChatMessage } from '@/server/lib/openai-client';
 
+// OpenAI response types available from openai-client
+
+// Assistant action parameters type
+type AssistantActionParams = Record<string, unknown> & {
+  subscriptionId?: string;
+  timeframe?: string;
+  amount?: number;
+  merchantName?: string;
+  reminderDate?: string;
+  note?: string;
+};
+
 // Context types for the assistant
 interface SubscriptionContext {
   id: string;
@@ -40,6 +52,162 @@ export const ASSISTANT_ACTIONS = {
 
 export type AssistantAction =
   (typeof ASSISTANT_ACTIONS)[keyof typeof ASSISTANT_ACTIONS];
+
+// Parameter types for each action
+interface AnalyzeSpendingParams {
+  timeframe?: 'week' | 'month' | 'quarter' | 'year';
+  category?: string;
+}
+
+interface CancelSubscriptionParams {
+  subscriptionId: string;
+  reason?: string;
+}
+
+interface FindSavingsParams {
+  category?: string;
+  maxAmount?: number;
+}
+
+interface GetSubscriptionInfoParams {
+  subscriptionId: string;
+}
+
+interface SetReminderParams {
+  reminderType: 'billing' | 'review' | 'cancellation';
+  date: string;
+  subscriptionId?: string;
+  message?: string;
+}
+
+interface ExplainChargeParams {
+  transactionId: string;
+}
+
+interface SuggestAlternativesParams {
+  subscriptionId: string;
+}
+
+interface ExportDataParams {
+  format: 'csv' | 'json' | 'pdf';
+  type: 'subscriptions' | 'transactions' | 'analytics';
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+}
+
+// Union type for all action parameters
+export type ActionParameters =
+  | AnalyzeSpendingParams
+  | CancelSubscriptionParams
+  | FindSavingsParams
+  | GetSubscriptionInfoParams
+  | SetReminderParams
+  | ExplainChargeParams
+  | SuggestAlternativesParams
+  | ExportDataParams;
+
+// Action result types
+interface ActionResult {
+  success: boolean;
+  data?: unknown;
+  message?: string;
+  error?: string;
+}
+
+interface SpendingAnalysisResult extends ActionResult {
+  data: {
+    totalSpending: number;
+    subscriptionCount: number;
+    categories: Record<string, number>;
+    trends: Array<{
+      period: string;
+      amount: number;
+      change: number;
+    }>;
+  };
+}
+
+interface CancellationResult extends ActionResult {
+  data: {
+    orchestrationId: string;
+    status: string;
+    method: string;
+  };
+}
+
+interface SavingsResult extends ActionResult {
+  data: {
+    potentialSavings: number;
+    recommendations: Array<{
+      type: string;
+      description: string;
+      amount: number;
+    }>;
+  };
+}
+
+interface SubscriptionInfoResult extends ActionResult {
+  data: {
+    subscription: {
+      id: string;
+      name: string;
+      amount: number;
+      frequency: string;
+      nextBilling: Date | null;
+      status: string;
+    };
+  };
+}
+
+interface ReminderResult extends ActionResult {
+  data: {
+    reminderId: string;
+    scheduledDate: Date;
+  };
+}
+
+interface ChargeExplanationResult extends ActionResult {
+  data: {
+    transaction: {
+      id: string;
+      description: string;
+      amount: number;
+      category: string;
+    };
+    explanation: string;
+  };
+}
+
+interface AlternativesResult extends ActionResult {
+  data: {
+    alternatives: Array<{
+      name: string;
+      price: number;
+      features: string[];
+      savings: number;
+    }>;
+  };
+}
+
+interface ExportResult extends ActionResult {
+  data: {
+    downloadUrl: string;
+    format: string;
+    size: number;
+  };
+}
+
+export type ActionExecutionResult =
+  | SpendingAnalysisResult
+  | CancellationResult
+  | SavingsResult
+  | SubscriptionInfoResult
+  | ReminderResult
+  | ChargeExplanationResult
+  | AlternativesResult
+  | ExportResult;
 
 // Function definitions for OpenAI
 const ASSISTANT_FUNCTIONS = [
@@ -575,9 +743,9 @@ If you need to take an action, use the appropriate function.`;
       data: {
         conversationId,
         type: actionType,
-        parameters: parameters as any,
+        parameters: parameters as Record<string, unknown>,
         requiresConfirmation,
-        targetResource: parameters.subscriptionId as string | undefined,
+        targetResource: parameters.subscriptionId,
       },
     });
   }
@@ -619,7 +787,7 @@ If you need to take an action, use the appropriate function.`;
     type: AssistantAction,
     parameters: Record<string, unknown>,
     userId: string
-  ): Promise<any> {
+  ): Promise<ActionExecutionResult> {
     switch (type) {
       case ASSISTANT_ACTIONS.ANALYZE_SPENDING:
         return this.analyzeSpending(userId, parameters);
@@ -714,7 +882,8 @@ If you need to take an action, use the appropriate function.`;
       (sum, sub) => sum + Number(sub.amount),
       0
     );
-    const avgSpending = subscriptions.length > 0 ? totalSpending / subscriptions.length : 0;
+    const avgSpending =
+      subscriptions.length > 0 ? totalSpending / subscriptions.length : 0;
 
     const byCategory = subscriptions.reduce(
       (acc, sub) => {

@@ -149,7 +149,9 @@ export function UnifiedCancellationDashboard() {
   };
 
   const isHistoryRequestArray = (data: unknown): data is HistoryRequest[] => {
-    return Array.isArray(data) && (data.length === 0 || 'subscription' in data[0]);
+    return (
+      Array.isArray(data) && (data.length === 0 || 'subscription' in data[0])
+    );
   };
 
   const isSubscriptionsData = (data: unknown): data is SubscriptionsData => {
@@ -368,59 +370,61 @@ export function UnifiedCancellationDashboard() {
               <CardTitle>Recent Cancellation Requests</CardTitle>
             </CardHeader>
             <CardContent>
-              {historyQuery.data && 
-               isHistoryRequestArray(historyQuery.data) && 
-               historyQuery.data.length === 0 ? (
+              {historyQuery.data &&
+              isHistoryRequestArray(historyQuery.data) &&
+              historyQuery.data.length === 0 ? (
                 <div className="py-8 text-center text-gray-500">
                   No cancellation requests yet
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {historyQuery.data && 
-                   isHistoryRequestArray(historyQuery.data) && 
-                   historyQuery.data.map((request) => (
-                    <div
-                      key={request.id}
-                      className="flex items-center justify-between rounded-lg border p-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`h-3 w-3 rounded-full ${getStatusColor(request.status)}`}
-                        />
-                        <div>
-                          <p className="font-medium">
-                            {request.subscription.name}
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            {getMethodIcon(request.method)}
-                            <span className="capitalize">
-                              {request.method.replace('_', ' ')}
-                            </span>
-                            <span>•</span>
-                            <span>
-                              {new Date(request.createdAt).toLocaleDateString()}
-                            </span>
+                  {historyQuery.data &&
+                    isHistoryRequestArray(historyQuery.data) &&
+                    historyQuery.data.map(request => (
+                      <div
+                        key={request.id}
+                        className="flex items-center justify-between rounded-lg border p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`h-3 w-3 rounded-full ${getStatusColor(request.status)}`}
+                          />
+                          <div>
+                            <p className="font-medium">
+                              {request.subscription.name}
+                            </p>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              {getMethodIcon(request.method)}
+                              <span className="capitalize">
+                                {request.method.replace('_', ' ')}
+                              </span>
+                              <span>•</span>
+                              <span>
+                                {new Date(
+                                  request.createdAt
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        <div className="text-right">
+                          <Badge
+                            variant={
+                              request.status === 'completed'
+                                ? 'default'
+                                : 'secondary'
+                            }
+                          >
+                            {request.status}
+                          </Badge>
+                          {request.confirmationCode && (
+                            <p className="mt-1 text-xs text-gray-600">
+                              Code: {request.confirmationCode}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <Badge
-                          variant={
-                            request.status === 'completed'
-                              ? 'default'
-                              : 'secondary'
-                          }
-                        >
-                          {request.status}
-                        </Badge>
-                        {request.confirmationCode && (
-                          <p className="mt-1 text-xs text-gray-600">
-                            Code: {request.confirmationCode}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </CardContent>
@@ -489,17 +493,15 @@ export function UnifiedCancellationDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {analyticsQuery.data.recommendations.map(
-                      (rec, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start gap-2 text-sm"
-                        >
-                          <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
-                          <span>{rec}</span>
-                        </div>
-                      )
-                    )}
+                    {analyticsQuery.data.recommendations.map((rec, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-2 text-sm"
+                      >
+                        <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
+                        <span>{rec}</span>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -573,50 +575,51 @@ export function UnifiedCancellationDashboard() {
               </p>
             </CardHeader>
             <CardContent>
-              {subscriptionsQuery.data && 
-               isSubscriptionsData(subscriptionsQuery.data) && 
-               subscriptionsQuery.data.subscriptions?.length === 0 ? (
+              {subscriptionsQuery.data &&
+              isSubscriptionsData(subscriptionsQuery.data) &&
+              subscriptionsQuery.data.subscriptions?.length === 0 ? (
                 <div className="py-8 text-center text-gray-500">
                   No active subscriptions found
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {subscriptionsQuery.data && 
-                   isSubscriptionsData(subscriptionsQuery.data) && 
-                   subscriptionsQuery.data.subscriptions
-                    ?.filter((sub) => sub.status === 'active')
-                    .map((subscription) => (
-                      <div
-                        key={subscription.id}
-                        className="cursor-pointer rounded-lg border p-3 transition-colors hover:bg-gray-50"
-                        onClick={() =>
-                          setSelectedSubscription({
-                            id: subscription.id,
-                            name: subscription.name,
-                          })
-                        }
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{subscription.name}</p>
-                            <p className="text-sm text-gray-600">
-                              ${subscription.amount} / {subscription.frequency}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <Badge variant="outline">Active</Badge>
-                            {subscription.nextBilling && (
-                              <p className="mt-1 text-xs text-gray-600">
-                                Next:{' '}
-                                {new Date(
-                                  subscription.nextBilling
-                                ).toLocaleDateString()}
+                  {subscriptionsQuery.data &&
+                    isSubscriptionsData(subscriptionsQuery.data) &&
+                    subscriptionsQuery.data.subscriptions
+                      ?.filter(sub => sub.status === 'active')
+                      .map(subscription => (
+                        <div
+                          key={subscription.id}
+                          className="cursor-pointer rounded-lg border p-3 transition-colors hover:bg-gray-50"
+                          onClick={() =>
+                            setSelectedSubscription({
+                              id: subscription.id,
+                              name: subscription.name,
+                            })
+                          }
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{subscription.name}</p>
+                              <p className="text-sm text-gray-600">
+                                ${subscription.amount} /{' '}
+                                {subscription.frequency}
                               </p>
-                            )}
+                            </div>
+                            <div className="text-right">
+                              <Badge variant="outline">Active</Badge>
+                              {subscription.nextBilling && (
+                                <p className="mt-1 text-xs text-gray-600">
+                                  Next:{' '}
+                                  {new Date(
+                                    subscription.nextBilling
+                                  ).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                 </div>
               )}
             </CardContent>

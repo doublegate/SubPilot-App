@@ -325,24 +325,26 @@ export function CancellationStatus({ requestId }: CancellationStatusProps) {
       </Card>
 
       {/* Manual Instructions Dialog */}
-      {isValidStatus(status) && status.manualInstructions && (() => {
-        const instructions = getManualInstructions(status.manualInstructions);
-        return instructions ? (
-          <ManualInstructionsDialog
-            isOpen={showInstructions}
-            onClose={() => setShowInstructions(false)}
-            instructions={instructions}
-            requestId={requestId}
-            onConfirmation={(confirmationData: ManualConfirmationData) => {
-              confirmManualMutation.mutate({
-                requestId,
-                confirmation: confirmationData,
-              });
-              setShowInstructions(false);
-            }}
-          />
-        ) : null;
-      })()}
+      {isValidStatus(status) &&
+        status.manualInstructions &&
+        (() => {
+          const instructions = getManualInstructions(status.manualInstructions);
+          return instructions ? (
+            <ManualInstructionsDialog
+              isOpen={showInstructions}
+              onClose={() => setShowInstructions(false)}
+              instructions={instructions}
+              requestId={requestId}
+              onConfirmation={(confirmationData: ManualConfirmationData) => {
+                confirmManualMutation.mutate({
+                  requestId,
+                  confirmation: confirmationData,
+                });
+                setShowInstructions(false);
+              }}
+            />
+          ) : null;
+        })()}
     </div>
   );
 }

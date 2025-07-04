@@ -17,7 +17,13 @@ export interface OpenAIChatCompletionResponse {
 export interface OpenAIChatChoice {
   index: number;
   message: OpenAIChatMessage;
-  finish_reason: 'stop' | 'length' | 'function_call' | 'content_filter' | 'tool_calls' | null;
+  finish_reason:
+    | 'stop'
+    | 'length'
+    | 'function_call'
+    | 'content_filter'
+    | 'tool_calls'
+    | null;
   logprobs?: OpenAILogprobs | null;
 }
 
@@ -72,7 +78,13 @@ export interface OpenAIChatDelta {
     function_call?: Partial<OpenAIFunctionCall>;
     tool_calls?: Partial<OpenAIToolCall>[];
   };
-  finish_reason?: 'stop' | 'length' | 'function_call' | 'content_filter' | 'tool_calls' | null;
+  finish_reason?:
+    | 'stop'
+    | 'length'
+    | 'function_call'
+    | 'content_filter'
+    | 'tool_calls'
+    | null;
 }
 
 // OpenAI Error Types
@@ -126,7 +138,10 @@ export interface OpenAIChatCompletionRequest {
   functions?: OpenAIFunction[];
   function_call?: 'auto' | 'none' | { name: string };
   tools?: OpenAITool[];
-  tool_choice?: 'auto' | 'none' | { type: 'function'; function: { name: string } };
+  tool_choice?:
+    | 'auto'
+    | 'none'
+    | { type: 'function'; function: { name: string } };
   temperature?: number;
   top_p?: number;
   n?: number;
@@ -235,16 +250,32 @@ export function isOpenAIError(obj: unknown): obj is OpenAIError {
   return typeof obj === 'object' && obj !== null && 'error' in obj;
 }
 
-export function isOpenAIRateLimitError(obj: unknown): obj is OpenAIRateLimitError {
+export function isOpenAIRateLimitError(
+  obj: unknown
+): obj is OpenAIRateLimitError {
   return isOpenAIError(obj) && obj.error.code === 'rate_limit_exceeded';
 }
 
-export function isOpenAIChatCompletionResponse(obj: unknown): obj is OpenAIChatCompletionResponse {
-  return typeof obj === 'object' && obj !== null && 'object' in obj && obj.object === 'chat.completion';
+export function isOpenAIChatCompletionResponse(
+  obj: unknown
+): obj is OpenAIChatCompletionResponse {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'object' in obj &&
+    obj.object === 'chat.completion'
+  );
 }
 
-export function isOpenAIChatCompletionChunk(obj: unknown): obj is OpenAIChatCompletionChunk {
-  return typeof obj === 'object' && obj !== null && 'object' in obj && obj.object === 'chat.completion.chunk';
+export function isOpenAIChatCompletionChunk(
+  obj: unknown
+): obj is OpenAIChatCompletionChunk {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'object' in obj &&
+    obj.object === 'chat.completion.chunk'
+  );
 }
 
 // OpenAI Configuration Types

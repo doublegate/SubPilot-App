@@ -352,7 +352,10 @@ export const unifiedCancellationRouter = createTRPCRouter({
           });
         }
 
-        if (provider.type === 'web_automation' || (provider.requires2FA ?? false)) {
+        if (
+          provider.type === 'web_automation' ||
+          (provider.requires2FA ?? false)
+        ) {
           methods.splice(-1, 0, {
             id: 'event_driven',
             name: 'Smart Automation',
@@ -402,7 +405,7 @@ export const unifiedCancellationRouter = createTRPCRouter({
         userId: string;
         status?: string | { in: string[] };
       }
-      
+
       const where: WhereClause = {
         userId: ctx.session.user.id,
       };

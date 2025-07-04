@@ -11,16 +11,30 @@ type JobProcessor<T = unknown> = (job: Job<T>) => Promise<JobResult>;
 
 // Template Literal Types for Job Type Safety
 type JobTypePrefix = 'cancellation' | 'notification' | 'webhook' | 'analytics';
-type JobAction = 'validate' | 'process' | 'send' | 'track' | 'aggregate' | 'api' | 'manual_instructions' | 'confirm' | 'update_status' | 'bulk_send' | 'process_data';
+type JobAction =
+  | 'validate'
+  | 'process'
+  | 'send'
+  | 'track'
+  | 'aggregate'
+  | 'api'
+  | 'manual_instructions'
+  | 'confirm'
+  | 'update_status'
+  | 'bulk_send'
+  | 'process_data';
 type JobType = `${JobTypePrefix}.${JobAction}`;
 
 // Conditional Types for Job Data Validation
-type JobDataFor<T extends JobType> = 
-  T extends `cancellation.${string}` ? CancellationJobData :
-  T extends `notification.${string}` ? NotificationJobData :
-  T extends `webhook.${string}` ? WebhookJobData :
-  T extends `analytics.${string}` ? AnalyticsJobData :
-  Record<string, unknown>;
+type JobDataFor<T extends JobType> = T extends `cancellation.${string}`
+  ? CancellationJobData
+  : T extends `notification.${string}`
+    ? NotificationJobData
+    : T extends `webhook.${string}`
+      ? WebhookJobData
+      : T extends `analytics.${string}`
+        ? AnalyticsJobData
+        : Record<string, unknown>;
 
 // Branded Job Types for Type Safety
 interface CancellationJobData {
@@ -49,10 +63,7 @@ interface AnalyticsJobData {
   properties: Record<string, unknown>;
 }
 
-// Mapped Types for Processor Registry
-type ProcessorRegistry = {
-  [K in JobType]: JobProcessor<JobDataFor<K>>;
-};
+// Mapped Types for Processor Registry (type utility for future use)
 
 /**
  * Central registry for all job processors
@@ -127,7 +138,7 @@ export class JobProcessorRegistry {
    * Register a job processor with type safety
    */
   register<T extends JobType>(
-    jobType: T, 
+    jobType: T,
     processor: JobProcessor<JobDataFor<T>>
   ): void {
     this.processors.set(jobType, processor as JobProcessor);

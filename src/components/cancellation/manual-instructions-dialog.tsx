@@ -331,7 +331,8 @@ export function ManualInstructionsDialog({
                 <Icons.info className="h-4 w-4" />
                 <AlertDescription>
                   This information helps us track your cancellation and improve
-                  our service. Only provide details you&apos;re comfortable sharing.
+                  our service. Only provide details you&apos;re comfortable
+                  sharing.
                 </AlertDescription>
               </Alert>
             </div>

@@ -37,10 +37,7 @@ export type MockTransaction = RequiredFields<
   isSubscription?: boolean;
 };
 
-export type MockAccount = RequiredFields<
-  Partial<Account>,
-  'id' | 'userId'
-> & {
+export type MockAccount = RequiredFields<Partial<Account>, 'id' | 'userId'> & {
   id: AccountId;
   userId: UserId;
 };
@@ -53,10 +50,7 @@ export type MockPlaidItem = RequiredFields<
   userId: UserId;
 };
 
-export type MockUser = RequiredFields<
-  Partial<User>,
-  'id' | 'email'
-> & {
+export type MockUser = RequiredFields<Partial<User>, 'id' | 'email'> & {
   id: UserId;
 };
 
@@ -73,8 +67,8 @@ type AggregateFields<T> = {
   [K in keyof T]?: T[K] extends number | Decimal
     ? T[K] | null
     : T[K] extends Date
-    ? T[K] | null
-    : never;
+      ? T[K] | null
+      : never;
 };
 
 export interface AggregateResult<T = Record<string, unknown>> {
@@ -102,19 +96,21 @@ export type SortableFields<T> = keyof T;
 export type SortExpression<T> = `${string & SortableFields<T>}:${SortOrder}`;
 
 // Utility Types for API Response Normalization
-export type ApiResponse<T> = {
-  success: true;
-  data: T;
-  meta?: {
-    total?: number;
-    page?: number;
-    limit?: number;
-  };
-} | {
-  success: false;
-  error: string;
-  code?: string;
-};
+export type ApiResponse<T> =
+  | {
+      success: true;
+      data: T;
+      meta?: {
+        total?: number;
+        page?: number;
+        limit?: number;
+      };
+    }
+  | {
+      success: false;
+      error: string;
+      code?: string;
+    };
 
 // Mapped Types for Service Layer Composition
 export type ServiceMethods<T> = {
@@ -132,6 +128,8 @@ export type LoadingState<T> =
 
 // Export branded type helpers
 export const createUserId = (id: string): UserId => id as UserId;
-export const createSubscriptionId = (id: string): SubscriptionId => id as SubscriptionId;
-export const createTransactionId = (id: string): TransactionId => id as TransactionId;
+export const createSubscriptionId = (id: string): SubscriptionId =>
+  id as SubscriptionId;
+export const createTransactionId = (id: string): TransactionId =>
+  id as TransactionId;
 export const createAccountId = (id: string): AccountId => id as AccountId;

@@ -25,7 +25,7 @@ export interface DeviceInfo {
 }
 
 // Define security event types as union types for better type safety
-type SessionSecurityEventType = 
+type SessionSecurityEventType =
   | 'created'
   | 'expired'
   | 'revoked'
@@ -33,10 +33,16 @@ type SessionSecurityEventType =
   | 'concurrent_limit';
 
 // Define specific event detail types for different event types
-type SessionEventDetails = 
+type SessionEventDetails =
   | { rememberMe: boolean; deviceInfo: DeviceInfo; expiresAt: Date } // created
   | { reason: string } // revoked
-  | { originalIp: string; originalUserAgent: string; originalFingerprint: string; currentFingerprint: string; timeSinceCreation: number } // suspicious_activity
+  | {
+      originalIp: string;
+      originalUserAgent: string;
+      originalFingerprint: string;
+      currentFingerprint: string;
+      timeSinceCreation: number;
+    } // suspicious_activity
   | { maxSessions: number; activeCount: number } // concurrent_limit
   | Record<string, unknown>; // fallback
 
@@ -283,7 +289,7 @@ export class SessionManager {
       orderBy: { lastActivity: 'desc' },
     });
 
-    return sessions.map((session) => this.mapToSessionInfo(session));
+    return sessions.map(session => this.mapToSessionInfo(session));
   }
 
   /**

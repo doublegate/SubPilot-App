@@ -259,7 +259,6 @@ export class SubscriptionManagerService {
       | 'use_ai_assistant'
       | 'export_data'
   ): Promise<{ allowed: boolean; reason?: string; upgradeRequired?: string }> {
-    const subscription = await this.getUserSubscription(userId);
     const usage = await this.checkUsageLimits(userId);
 
     switch (action) {

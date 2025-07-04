@@ -7,6 +7,8 @@ interface FunctionCall {
   arguments?: Record<string, unknown>;
 }
 
+// Message interface removed - using Prisma types directly
+
 export class ConversationService {
   constructor(private db: PrismaClient) {}
 
@@ -320,7 +322,7 @@ export class ConversationService {
 
     // Get key points from the conversation
     const messages = (conversation.messages ?? [])
-      .filter((m: any) => m.content.length > 50)
+      .filter(m => m.content.length > 50)
       .slice(0, 10);
 
     const topics = new Set<string>();
@@ -351,7 +353,7 @@ export class ConversationService {
     }
 
     const actionCount = (conversation.actions ?? []).filter(
-      (a) => a.status === 'completed'
+      a => a.status === 'completed'
     ).length;
     if (actionCount > 0) {
       summary += `. Completed ${actionCount} action${actionCount > 1 ? 's' : ''}`;

@@ -5,7 +5,12 @@ import { subscriptionsRouter } from '../subscriptions';
 import type { Session } from 'next-auth';
 import { TRPCError } from '@trpc/server';
 import { Decimal } from '@prisma/client/runtime/library';
-import type { Subscription, User, Transaction, Notification } from '@prisma/client';
+import type {
+  Subscription,
+  User,
+  Transaction,
+  Notification,
+} from '@prisma/client';
 
 // Test types for mocking Prisma relations and aggregations
 type MockSubscriptionWithCount = Subscription & {
@@ -541,7 +546,9 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         email: 'test@example.com',
         name: 'Test User',
       };
-      vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as Partial<User> as User);
+      vi.mocked(db.user.findUnique).mockResolvedValue(
+        mockUser as Partial<User> as User
+      );
 
       vi.mocked(db.notification.create).mockResolvedValue(
         // @ts-expect-error - Mock object incomplete for testing
@@ -594,7 +601,9 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         email: 'test@example.com',
         name: 'Test User',
       };
-      vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as Partial<User> as User);
+      vi.mocked(db.user.findUnique).mockResolvedValue(
+        mockUser as Partial<User> as User
+      );
 
       vi.mocked(db.notification.create).mockResolvedValue(
         // @ts-expect-error - Mock object incomplete for testing
@@ -633,16 +642,22 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
       // The router doesn't check if subscription is already cancelled
       // It will just update it again
       const updatedSub = { ...cancelledSubscription };
-      vi.mocked(db.subscription.update).mockResolvedValue(updatedSub as Partial<Subscription> as Subscription);
+      vi.mocked(db.subscription.update).mockResolvedValue(
+        updatedSub as Partial<Subscription> as Subscription
+      );
 
       const mockUser = {
         id: 'user-1',
         email: 'test@example.com',
         name: 'Test User',
       };
-      vi.mocked(db.user.findUnique).mockResolvedValue(mockUser as Partial<User> as User);
+      vi.mocked(db.user.findUnique).mockResolvedValue(
+        mockUser as Partial<User> as User
+      );
 
-      vi.mocked(db.notification.create).mockResolvedValue({} as Partial<Notification> as Notification);
+      vi.mocked(db.notification.create).mockResolvedValue(
+        {} as Partial<Notification> as Notification
+      );
 
       const result = await caller.markCancelled({
         id: 'sub-3',

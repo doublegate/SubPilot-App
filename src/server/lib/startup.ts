@@ -76,9 +76,12 @@ export class StartupService {
           timestamp: new Date(),
           jobProcessors: jobProcessorRegistry.getStats(),
           workflowEngine: workflowEngine.getStats(),
-          realtimeManager: 'getStats' in realtimeManager && typeof (realtimeManager as { getStats?: () => unknown }).getStats === 'function'
-            ? (realtimeManager as { getStats: () => unknown }).getStats()
-            : { activeConnections: realtimeManager.getActiveConnections() },
+          realtimeManager:
+            'getStats' in realtimeManager &&
+            typeof (realtimeManager as { getStats?: () => unknown })
+              .getStats === 'function'
+              ? (realtimeManager as { getStats: () => unknown }).getStats()
+              : { activeConnections: realtimeManager.getActiveConnections() },
         },
       });
 
@@ -295,7 +298,12 @@ export class StartupService {
     try {
       const { checkJobQueueHealth } = await import('./job-queue');
       // checkJobQueueHealth is synchronous, but we need async for the import
-      const health = checkJobQueueHealth() as { status: string; stats: unknown; isProcessing: boolean; lastProcessed: Date };
+      const health = checkJobQueueHealth() as {
+        status: string;
+        stats: unknown;
+        isProcessing: boolean;
+        lastProcessed: Date;
+      };
 
       if (health.status === 'degraded') {
         throw new Error(`Job queue health check failed: degraded status`);

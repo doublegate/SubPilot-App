@@ -20,32 +20,41 @@ export function ProfileForm() {
     email: user?.email ?? '',
   });
 
-  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setIsLoading(true);
 
-    // Simulate API call for now
-    setTimeout(() => {
-      toast.success('Profile updated successfully');
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+      // Simulate API call for now
+      setTimeout(() => {
+        toast.success('Profile updated successfully');
+        setIsLoading(false);
+      }, 1000);
+    },
+    []
+  );
 
-  const handleAvatarChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // TODO: Implement avatar upload
-      toast.info('Avatar upload feature coming soon!');
-    }
-  }, []);
+  const handleAvatarChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        // TODO: Implement avatar upload
+        toast.info('Avatar upload feature coming soon!');
+      }
+    },
+    []
+  );
 
   const handleAvatarClick = useCallback(() => {
     document.getElementById('avatar-upload')?.click();
   }, []);
 
-  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, name: e.target.value }));
-  }, []);
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData(prev => ({ ...prev, name: e.target.value }));
+    },
+    []
+  );
 
   if (!user) {
     return <div>Loading...</div>;

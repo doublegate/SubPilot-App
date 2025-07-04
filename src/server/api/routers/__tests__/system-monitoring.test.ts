@@ -138,7 +138,7 @@ describe('systemMonitoringRouter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockCtx = {
       session: mockSession,
       db: mockDb,
@@ -150,7 +150,7 @@ describe('systemMonitoringRouter', () => {
       const publicCtx = createInnerTRPCContext({ session: null });
       publicCtx.db = mockDb as any;
       const caller = systemMonitoringRouter.createCaller(publicCtx);
-      
+
       const result = await caller.health();
 
       expect(result.status).toBe('healthy');
@@ -161,13 +161,17 @@ describe('systemMonitoringRouter', () => {
     });
 
     it('should throw error when database is inaccessible', async () => {
-      mockDb.$queryRaw.mockRejectedValueOnce(new Error('Database connection failed'));
-      
+      mockDb.$queryRaw.mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
+
       const publicCtx = createInnerTRPCContext({ session: null });
       publicCtx.db = mockDb as any;
       const caller = systemMonitoringRouter.createCaller(publicCtx);
 
-      await expect(caller.health()).rejects.toThrow('System health check failed');
+      await expect(caller.health()).rejects.toThrow(
+        'System health check failed'
+      );
     });
 
     it('should work without authentication', async () => {
@@ -183,7 +187,7 @@ describe('systemMonitoringRouter', () => {
   describe('systemStatus (protected endpoint)', () => {
     it('should return comprehensive system status when all services healthy', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.systemStatus();
 
       expect(result.overall).toBe('healthy');
@@ -198,10 +202,13 @@ describe('systemMonitoringRouter', () => {
     it('should return degraded status when some services fail', async () => {
       // Mock one service failure
       const { checkJobQueueHealth } = await import('@/server/lib/job-queue');
-      vi.mocked(checkJobQueueHealth).mockResolvedValueOnce({ healthy: false, error: 'Redis unavailable' });
+      vi.mocked(checkJobQueueHealth).mockResolvedValueOnce({
+        healthy: false,
+        error: 'Redis unavailable',
+      });
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.systemStatus();
 
       // With 4/5 services healthy (80%), should be degraded (>=70%)
@@ -214,12 +221,20 @@ describe('systemMonitoringRouter', () => {
       // Mock multiple service failures
       mockDb.$queryRaw.mockRejectedValueOnce(new Error('DB failed'));
       const { checkJobQueueHealth } = await import('@/server/lib/job-queue');
-      const { checkJobProcessorHealth } = await import('@/server/services/job-processors');
-      vi.mocked(checkJobQueueHealth).mockResolvedValueOnce({ healthy: false, error: 'Redis down' });
-      vi.mocked(checkJobProcessorHealth).mockResolvedValueOnce({ healthy: false, error: 'Workers down' });
+      const { checkJobProcessorHealth } = await import(
+        '@/server/services/job-processors'
+      );
+      vi.mocked(checkJobQueueHealth).mockResolvedValueOnce({
+        healthy: false,
+        error: 'Redis down',
+      });
+      vi.mocked(checkJobProcessorHealth).mockResolvedValueOnce({
+        healthy: false,
+        error: 'Workers down',
+      });
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.systemStatus();
 
       // With only 2/5 services healthy (40%), should be unhealthy (<70%)
@@ -228,14 +243,18 @@ describe('systemMonitoringRouter', () => {
 
     it('should require authentication', async () => {
       const unauthenticatedCtx = createInnerTRPCContext({ session: null });
-      const unauthenticatedCaller = systemMonitoringRouter.createCaller(unauthenticatedCtx);
+      const unauthenticatedCaller =
+        systemMonitoringRouter.createCaller(unauthenticatedCtx);
 
-      await expect(unauthenticatedCaller.systemStatus()).rejects.toThrow(TRPCError);
+      await expect(unauthenticatedCaller.systemStatus()).rejects.toThrow(
+        TRPCError
+      );
     });
-  });  describe('jobQueueStats', () => {
+  });
+  describe('jobQueueStats', () => {
     it('should return job queue statistics with failed jobs', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.jobQueueStats();
 
       expect(result.stats).toEqual(mockJobQueueStats);
@@ -258,7 +277,7 @@ describe('systemMonitoringRouter', () => {
       } as any);
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.jobQueueStats();
 
       expect(result.stats).toEqual(mockJobQueueStats);
@@ -273,96 +292,115 @@ describe('systemMonitoringRouter', () => {
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
 
-      await expect(caller.jobQueueStats()).rejects.toThrow('Failed to get job queue stats');
+      await expect(caller.jobQueueStats()).rejects.toThrow(
+        'Failed to get job queue stats'
+      );
     });
 
     it('should require authentication', async () => {
       const unauthenticatedCtx = createInnerTRPCContext({ session: null });
-      const unauthenticatedCaller = systemMonitoringRouter.createCaller(unauthenticatedCtx);
+      const unauthenticatedCaller =
+        systemMonitoringRouter.createCaller(unauthenticatedCtx);
 
-      await expect(unauthenticatedCaller.jobQueueStats()).rejects.toThrow(TRPCError);
+      await expect(unauthenticatedCaller.jobQueueStats()).rejects.toThrow(
+        TRPCError
+      );
     });
   });
 
   describe('workflowStats', () => {
     it('should return workflow engine statistics', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.workflowStats();
 
       expect(result).toEqual(mockWorkflowStats);
     });
 
     it('should handle workflow engine errors', async () => {
-      const { getWorkflowEngine } = await import('@/server/lib/workflow-engine');
+      const { getWorkflowEngine } = await import(
+        '@/server/lib/workflow-engine'
+      );
       vi.mocked(getWorkflowEngine).mockImplementationOnce(() => {
         throw new Error('Workflow engine error');
       });
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
 
-      await expect(caller.workflowStats()).rejects.toThrow('Failed to get workflow stats');
+      await expect(caller.workflowStats()).rejects.toThrow(
+        'Failed to get workflow stats'
+      );
     });
   });
 
   describe('realtimeStats', () => {
     it('should return realtime statistics with getStats method', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.realtimeStats();
 
       expect(result).toEqual(mockRealtimeStats);
     });
 
     it('should fallback to getActiveConnections when getStats unavailable', async () => {
-      const { getRealtimeNotificationManager } = await import('@/server/lib/realtime-notifications');
+      const { getRealtimeNotificationManager } = await import(
+        '@/server/lib/realtime-notifications'
+      );
       vi.mocked(getRealtimeNotificationManager).mockReturnValueOnce({
         getActiveConnections: vi.fn().mockReturnValue(25),
         // No getStats method
       } as any);
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.realtimeStats();
 
       expect(result).toEqual({ activeConnections: 25 });
     });
 
     it('should handle realtime manager errors', async () => {
-      const { getRealtimeNotificationManager } = await import('@/server/lib/realtime-notifications');
+      const { getRealtimeNotificationManager } = await import(
+        '@/server/lib/realtime-notifications'
+      );
       vi.mocked(getRealtimeNotificationManager).mockImplementationOnce(() => {
         throw new Error('Realtime manager error');
       });
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
 
-      await expect(caller.realtimeStats()).rejects.toThrow('Failed to get realtime stats');
+      await expect(caller.realtimeStats()).rejects.toThrow(
+        'Failed to get realtime stats'
+      );
     });
   });
 
   describe('userConnections', () => {
     it('should return user connections and unread notifications count', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.userConnections();
 
-      expect(result.connections).toEqual(mockUserConnections.map(conn => ({
-        id: conn.id,
-        connectionId: conn.connectionId,
-        connectedAt: conn.connectedAt,
-        lastActivity: conn.lastActivity,
-      })));
+      expect(result.connections).toEqual(
+        mockUserConnections.map(conn => ({
+          id: conn.id,
+          connectionId: conn.connectionId,
+          connectedAt: conn.connectedAt,
+          lastActivity: conn.lastActivity,
+        }))
+      );
       expect(result.unreadNotifications).toBe(3);
     });
 
     it('should handle manager without getUserConnections method', async () => {
-      const { getRealtimeNotificationManager } = await import('@/server/lib/realtime-notifications');
+      const { getRealtimeNotificationManager } = await import(
+        '@/server/lib/realtime-notifications'
+      );
       vi.mocked(getRealtimeNotificationManager).mockReturnValueOnce({
         // No getUserConnections or getUnreadNotifications methods
       } as any);
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.userConnections();
 
       expect(result.connections).toEqual([]);
@@ -370,14 +408,18 @@ describe('systemMonitoringRouter', () => {
     });
 
     it('should handle errors', async () => {
-      const { getRealtimeNotificationManager } = await import('@/server/lib/realtime-notifications');
+      const { getRealtimeNotificationManager } = await import(
+        '@/server/lib/realtime-notifications'
+      );
       vi.mocked(getRealtimeNotificationManager).mockImplementationOnce(() => {
         throw new Error('Manager error');
       });
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
 
-      await expect(caller.userConnections()).rejects.toThrow('Failed to get user connections');
+      await expect(caller.userConnections()).rejects.toThrow(
+        'Failed to get user connections'
+      );
     });
   });
 
@@ -385,18 +427,18 @@ describe('systemMonitoringRouter', () => {
     beforeEach(() => {
       // Setup mock data for metrics
       mockDb.cancellationRequest.count
-        .mockResolvedValueOnce(50)  // total requests
-        .mockResolvedValueOnce(40)  // completed requests
-        .mockResolvedValueOnce(5);  // failed requests
+        .mockResolvedValueOnce(50) // total requests
+        .mockResolvedValueOnce(40) // completed requests
+        .mockResolvedValueOnce(5); // failed requests
 
       mockDb.auditLog.count
         .mockResolvedValueOnce(1000) // total operations
-        .mockResolvedValueOnce(25);  // failed operations
+        .mockResolvedValueOnce(25); // failed operations
     });
 
     it('should return system metrics for day timeframe (default)', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.systemMetrics({});
 
       expect(result.timeframe).toBe('day');
@@ -414,29 +456,31 @@ describe('systemMonitoringRouter', () => {
 
     it('should return metrics for hour timeframe', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.systemMetrics({ timeframe: 'hour' });
 
       expect(result.timeframe).toBe('hour');
       // Verify date calculations (should be 1 hour ago)
-      const timeDiff = result.period.end.getTime() - result.period.start.getTime();
+      const timeDiff =
+        result.period.end.getTime() - result.period.start.getTime();
       expect(timeDiff).toBeCloseTo(60 * 60 * 1000, -3); // 1 hour in ms
     });
 
     it('should return metrics for week timeframe', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.systemMetrics({ timeframe: 'week' });
 
       expect(result.timeframe).toBe('week');
       // Verify date calculations (should be 7 days ago)
-      const timeDiff = result.period.end.getTime() - result.period.start.getTime();
+      const timeDiff =
+        result.period.end.getTime() - result.period.start.getTime();
       expect(timeDiff).toBeCloseTo(7 * 24 * 60 * 60 * 1000, -3); // 7 days in ms
     });
 
     it('should return metrics for month timeframe', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.systemMetrics({ timeframe: 'month' });
 
       expect(result.timeframe).toBe('month');
@@ -447,16 +491,16 @@ describe('systemMonitoringRouter', () => {
 
     it('should handle zero values gracefully', async () => {
       mockDb.cancellationRequest.count
-        .mockResolvedValueOnce(0)  // total requests
-        .mockResolvedValueOnce(0)  // completed requests
+        .mockResolvedValueOnce(0) // total requests
+        .mockResolvedValueOnce(0) // completed requests
         .mockResolvedValueOnce(0); // failed requests
 
       mockDb.auditLog.count
-        .mockResolvedValueOnce(0)  // total operations
+        .mockResolvedValueOnce(0) // total operations
         .mockResolvedValueOnce(0); // failed operations
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.systemMetrics({});
 
       expect(result.cancellations.successRate).toBe(0);
@@ -464,13 +508,18 @@ describe('systemMonitoringRouter', () => {
     });
 
     it('should handle database errors', async () => {
-      mockDb.cancellationRequest.count.mockRejectedValueOnce(new Error('Database error'));
+      mockDb.cancellationRequest.count.mockRejectedValueOnce(
+        new Error('Database error')
+      );
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
 
-      await expect(caller.systemMetrics({})).rejects.toThrow('Failed to get system metrics');
+      await expect(caller.systemMetrics({})).rejects.toThrow(
+        'Failed to get system metrics'
+      );
     });
-  });  describe('retryFailedJob', () => {
+  });
+  describe('retryFailedJob', () => {
     beforeEach(() => {
       mockDb.auditLog.create.mockResolvedValue({
         id: 'audit_123',
@@ -482,7 +531,7 @@ describe('systemMonitoringRouter', () => {
 
     it('should retry failed job successfully', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.retryFailedJob({ jobId: 'job_123' });
 
       expect(result.success).toBe(true);
@@ -510,9 +559,9 @@ describe('systemMonitoringRouter', () => {
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
 
-      await expect(caller.retryFailedJob({ jobId: 'invalid_job' })).rejects.toThrow(
-        'Job not found or not in failed state'
-      );
+      await expect(
+        caller.retryFailedJob({ jobId: 'invalid_job' })
+      ).rejects.toThrow('Job not found or not in failed state');
     });
 
     it('should handle job queue without retryFailedJob method', async () => {
@@ -560,7 +609,7 @@ describe('systemMonitoringRouter', () => {
       vi.mocked(getJobQueue).mockReturnValueOnce(mockJobQueue as any);
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.clearFailedJobs();
 
       expect(result.success).toBe(true);
@@ -588,7 +637,7 @@ describe('systemMonitoringRouter', () => {
       } as any);
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.clearFailedJobs();
 
       expect(result.success).toBe(true);
@@ -603,15 +652,20 @@ describe('systemMonitoringRouter', () => {
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
 
-      await expect(caller.clearFailedJobs()).rejects.toThrow('Failed to clear failed jobs');
+      await expect(caller.clearFailedJobs()).rejects.toThrow(
+        'Failed to clear failed jobs'
+      );
     });
 
     // Note: In production, this should have admin role checking
     it('should require authentication', async () => {
       const unauthenticatedCtx = createInnerTRPCContext({ session: null });
-      const unauthenticatedCaller = systemMonitoringRouter.createCaller(unauthenticatedCtx);
+      const unauthenticatedCaller =
+        systemMonitoringRouter.createCaller(unauthenticatedCtx);
 
-      await expect(unauthenticatedCaller.clearFailedJobs()).rejects.toThrow(TRPCError);
+      await expect(unauthenticatedCaller.clearFailedJobs()).rejects.toThrow(
+        TRPCError
+      );
     });
   });
 
@@ -622,7 +676,7 @@ describe('systemMonitoringRouter', () => {
 
     it('should return recent events with default limit', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.recentEvents({});
 
       expect(result).toEqual(mockAuditEvents);
@@ -643,7 +697,7 @@ describe('systemMonitoringRouter', () => {
 
     it('should return events with custom limit', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       await caller.recentEvents({ limit: 10 });
 
       expect(mockDb.auditLog.findMany).toHaveBeenCalledWith({
@@ -663,7 +717,7 @@ describe('systemMonitoringRouter', () => {
 
     it('should filter events by actions', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       await caller.recentEvents({
         actions: ['subscription.cancel', 'user.login'],
       });
@@ -696,7 +750,7 @@ describe('systemMonitoringRouter', () => {
 
     it('should handle empty actions array', async () => {
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       await caller.recentEvents({ actions: [] });
 
       expect(mockDb.auditLog.findMany).toHaveBeenCalledWith({
@@ -715,11 +769,15 @@ describe('systemMonitoringRouter', () => {
     });
 
     it('should handle database errors', async () => {
-      mockDb.auditLog.findMany.mockRejectedValueOnce(new Error('Database error'));
+      mockDb.auditLog.findMany.mockRejectedValueOnce(
+        new Error('Database error')
+      );
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
 
-      await expect(caller.recentEvents({})).rejects.toThrow('Failed to get recent events');
+      await expect(caller.recentEvents({})).rejects.toThrow(
+        'Failed to get recent events'
+      );
     });
   });
 
@@ -739,7 +797,9 @@ describe('systemMonitoringRouter', () => {
       await expect(publicCaller.realtimeStats()).rejects.toThrow(TRPCError);
       await expect(publicCaller.userConnections()).rejects.toThrow(TRPCError);
       await expect(publicCaller.systemMetrics({})).rejects.toThrow(TRPCError);
-      await expect(publicCaller.retryFailedJob({ jobId: 'test' })).rejects.toThrow(TRPCError);
+      await expect(
+        publicCaller.retryFailedJob({ jobId: 'test' })
+      ).rejects.toThrow(TRPCError);
       await expect(publicCaller.clearFailedJobs()).rejects.toThrow(TRPCError);
       await expect(publicCaller.recentEvents({})).rejects.toThrow(TRPCError);
     });
@@ -750,12 +810,20 @@ describe('systemMonitoringRouter', () => {
       // Mock all services as unavailable
       mockDb.$queryRaw.mockRejectedValue(new Error('DB down'));
       const { checkJobQueueHealth } = await import('@/server/lib/job-queue');
-      const { checkJobProcessorHealth } = await import('@/server/services/job-processors');
-      vi.mocked(checkJobQueueHealth).mockResolvedValue({ healthy: false, error: 'Queue down' });
-      vi.mocked(checkJobProcessorHealth).mockResolvedValue({ healthy: false, error: 'Processors down' });
+      const { checkJobProcessorHealth } = await import(
+        '@/server/services/job-processors'
+      );
+      vi.mocked(checkJobQueueHealth).mockResolvedValue({
+        healthy: false,
+        error: 'Queue down',
+      });
+      vi.mocked(checkJobProcessorHealth).mockResolvedValue({
+        healthy: false,
+        error: 'Processors down',
+      });
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.systemStatus();
 
       expect(result.overall).toBe('unhealthy');
@@ -784,7 +852,7 @@ describe('systemMonitoringRouter', () => {
       vi.mocked(getJobQueue).mockReturnValueOnce(mockJobQueue as any);
 
       const caller = systemMonitoringRouter.createCaller(mockCtx);
-      
+
       const result = await caller.jobQueueStats();
 
       // Error message should be sanitized

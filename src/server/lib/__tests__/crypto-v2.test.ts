@@ -27,7 +27,9 @@ describe('Enhanced Crypto V2', () => {
     // Reset environment variables
     process.env = { ...originalEnv };
     // Reset global warning flag
-    (global as any).__encryptionWarningShown = false;
+    (
+      global as typeof globalThis & { __encryptionWarningShown?: boolean }
+    ).__encryptionWarningShown = false;
 
     // Mock console methods
     vi.spyOn(console, 'warn').mockImplementation(() => {});

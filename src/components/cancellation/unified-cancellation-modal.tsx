@@ -144,12 +144,16 @@ export function UnifiedCancellationModal({
   onClose,
   onSuccess,
 }: UnifiedCancellationModalProps) {
-  const [selectedMethod, setSelectedMethod] = useState<'auto' | 'manual' | 'api' | 'automation'>('auto');
+  const [selectedMethod, setSelectedMethod] = useState<
+    'auto' | 'manual' | 'api' | 'automation'
+  >('auto');
   const [priority, setPriority] = useState<'low' | 'normal' | 'high'>('normal');
   const [notes, setNotes] = useState('');
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [orchestrationId, setOrchestrationId] = useState<string | null>(null);
-  const [realtimeUpdates, setRealtimeUpdates] = useState<Array<Record<string, unknown>>>([]);
+  const [realtimeUpdates, setRealtimeUpdates] = useState<
+    Array<Record<string, unknown>>
+  >([]);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
 
   // API calls
@@ -194,7 +198,8 @@ export function UnifiedCancellationModal({
       toast.success('Cancellation request initiated successfully');
     },
     onError: (error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred';
       toast.error(`Failed to initiate cancellation: ${errorMessage}`);
     },
   });
@@ -206,7 +211,8 @@ export function UnifiedCancellationModal({
       toast.success('Cancellation retry initiated');
     },
     onError: (error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred';
       toast.error(`Failed to retry cancellation: ${errorMessage}`);
     },
   });
@@ -229,7 +235,7 @@ export function UnifiedCancellationModal({
         onSuccess?.({
           success: true,
           requestId: currentRequestId ?? '',
-          method: statusQuery.data?.method ?? 'manual'
+          method: statusQuery.data?.method ?? 'manual',
         });
         cleanup();
         onClose();
@@ -249,7 +255,10 @@ export function UnifiedCancellationModal({
 
     es.onmessage = event => {
       try {
-        const data = JSON.parse(event.data as string) as Record<string, unknown>;
+        const data = JSON.parse(event.data as string) as Record<
+          string,
+          unknown
+        >;
         setRealtimeUpdates(prev => [
           ...prev,
           { ...data, timestamp: new Date() },
@@ -527,7 +536,9 @@ export function UnifiedCancellationModal({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(status.confirmationCode ?? '')}
+                      onClick={() =>
+                        copyToClipboard(status.confirmationCode ?? '')
+                      }
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -540,7 +551,9 @@ export function UnifiedCancellationModal({
                     <div>
                       <p className="font-medium">Effective Date</p>
                       <p className="text-sm text-gray-600">
-                        {status.effectiveDate ? new Date(status.effectiveDate).toLocaleDateString() : 'Not specified'}
+                        {status.effectiveDate
+                          ? new Date(status.effectiveDate).toLocaleDateString()
+                          : 'Not specified'}
                       </p>
                     </div>
                   </div>
@@ -549,99 +562,107 @@ export function UnifiedCancellationModal({
             </Card>
 
             {/* Manual Instructions */}
-            {status.manualInstructions && typeof status.manualInstructions === 'object' && 'instructions' in status.manualInstructions && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Manual Cancellation Instructions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Steps to Cancel</h4>
-                    <ol className="list-inside list-decimal space-y-1 text-sm">
-                      {(status.manualInstructions as ManualInstructions)?.instructions?.steps?.map(
-                        (step: string, index: number) => (
-                          <li key={index}>{step}</li>
-                        )
-                      ) ?? <li>No steps available</li>}
-                    </ol>
-                  </div>
-
-                  {(status.manualInstructions as ManualInstructions)?.instructions?.contactInfo
-                    ?.website && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          window.open(
-                            (status.manualInstructions as ManualInstructions)?.instructions?.contactInfo
-                              ?.website ?? '',
-                            '_blank'
+            {status.manualInstructions &&
+              typeof status.manualInstructions === 'object' &&
+              'instructions' in status.manualInstructions && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Manual Cancellation Instructions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Steps to Cancel</h4>
+                      <ol className="list-inside list-decimal space-y-1 text-sm">
+                        {(
+                          status.manualInstructions as ManualInstructions
+                        )?.instructions?.steps?.map(
+                          (step: string, index: number) => (
+                            <li key={index}>{step}</li>
                           )
-                        }
-                      >
-                        <ExternalLink className="mr-1 h-4 w-4" />
-                        Go to Website
-                      </Button>
-                      {(status.manualInstructions as ManualInstructions)?.instructions?.contactInfo
-                        ?.phone && (
-                        <Badge variant="outline">
-                          📞{' '}
-                          {(status.manualInstructions as ManualInstructions)?.instructions?.contactInfo
-                              ?.phone}
-                        </Badge>
-                      )}
+                        ) ?? <li>No steps available</li>}
+                      </ol>
                     </div>
-                  )}
 
-                  {status.status === 'pending' &&
-                    status.method === 'lightweight' && (
-                      <div className="border-t pt-4">
-                        <h4 className="mb-3 font-medium">Confirm Completion</h4>
-                        <div className="space-y-3">
-                          <div>
-                            <Label htmlFor="confirmation-code">
-                              Confirmation Code (optional)
-                            </Label>
-                            <input
-                              id="confirmation-code"
-                              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                              placeholder="Enter confirmation code if provided"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="confirmation-notes">
-                              Additional Notes
-                            </Label>
-                            <Textarea
-                              id="confirmation-notes"
-                              className="mt-1"
-                              placeholder="Any additional information about the cancellation"
-                            />
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => handleConfirmManual(true)}
-                              disabled={confirmManualMutation.isPending}
-                            >
-                              <CheckCircle className="mr-1 h-4 w-4" />
-                              Confirm Success
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => handleConfirmManual(false)}
-                              disabled={confirmManualMutation.isPending}
-                            >
-                              <XCircle className="mr-1 h-4 w-4" />
-                              Report Failed
-                            </Button>
-                          </div>
-                        </div>
+                    {(status.manualInstructions as ManualInstructions)
+                      ?.instructions?.contactInfo?.website && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            window.open(
+                              (status.manualInstructions as ManualInstructions)
+                                ?.instructions?.contactInfo?.website ?? '',
+                              '_blank'
+                            )
+                          }
+                        >
+                          <ExternalLink className="mr-1 h-4 w-4" />
+                          Go to Website
+                        </Button>
+                        {(status.manualInstructions as ManualInstructions)
+                          ?.instructions?.contactInfo?.phone && (
+                          <Badge variant="outline">
+                            📞{' '}
+                            {
+                              (status.manualInstructions as ManualInstructions)
+                                ?.instructions?.contactInfo?.phone
+                            }
+                          </Badge>
+                        )}
                       </div>
                     )}
-                </CardContent>
-              </Card>
-            )}
+
+                    {status.status === 'pending' &&
+                      status.method === 'lightweight' && (
+                        <div className="border-t pt-4">
+                          <h4 className="mb-3 font-medium">
+                            Confirm Completion
+                          </h4>
+                          <div className="space-y-3">
+                            <div>
+                              <Label htmlFor="confirmation-code">
+                                Confirmation Code (optional)
+                              </Label>
+                              <input
+                                id="confirmation-code"
+                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                                placeholder="Enter confirmation code if provided"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="confirmation-notes">
+                                Additional Notes
+                              </Label>
+                              <Textarea
+                                id="confirmation-notes"
+                                className="mt-1"
+                                placeholder="Any additional information about the cancellation"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => handleConfirmManual(true)}
+                                disabled={confirmManualMutation.isPending}
+                              >
+                                <CheckCircle className="mr-1 h-4 w-4" />
+                                Confirm Success
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleConfirmManual(false)}
+                                disabled={confirmManualMutation.isPending}
+                              >
+                                <XCircle className="mr-1 h-4 w-4" />
+                                Report Failed
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                  </CardContent>
+                </Card>
+              )}
 
             <Tabs defaultValue="timeline" className="w-full">
               <TabsList>
@@ -712,19 +733,21 @@ export function UnifiedCancellationModal({
                 value="real-time"
                 className="max-h-60 space-y-2 overflow-y-auto"
               >
-                {realtimeUpdates.map((update: RealtimeUpdate, index: number) => (
-                  <div key={index} className="rounded bg-gray-50 p-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {update.type}
-                      </Badge>
-                      <span className="text-xs text-gray-500">
-                        {new Date(update.timestamp).toLocaleTimeString()}
-                      </span>
+                {realtimeUpdates.map(
+                  (update: RealtimeUpdate, index: number) => (
+                    <div key={index} className="rounded bg-gray-50 p-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {update.type}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {new Date(update.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <p className="mt-1">{update.message ?? update.title}</p>
                     </div>
-                    <p className="mt-1">{update.message ?? update.title}</p>
-                  </div>
-                ))}
+                  )
+                )}
                 {realtimeUpdates.length === 0 && (
                   <p className="py-4 text-center text-gray-500">
                     No real-time updates yet
@@ -816,35 +839,37 @@ export function UnifiedCancellationModal({
                 value={selectedMethod}
                 onValueChange={setSelectedMethod}
               >
-                {availableMethodsQuery.data?.methods.map((method: CancellationMethod) => (
-                  <div
-                    key={method.id}
-                    className="flex items-start space-x-3 rounded-lg border p-3"
-                  >
-                    <RadioGroupItem value={method.id} className="mt-1" />
-                    <div className="flex-1">
-                      <div className="mb-1 flex items-center gap-2">
-                        {getMethodIcon(method.id)}
-                        <span className="font-medium">{method.name}</span>
-                        {method.isRecommended && (
-                          <Badge variant="default" className="text-xs">
-                            Recommended
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="mb-2 text-sm text-gray-600">
-                        {method.description}
-                      </p>
-                      <div className="flex gap-4 text-xs text-gray-500">
-                        <span>⏱️ {method.estimatedTime}</span>
-                        <span>✅ {method.successRate}% success</span>
-                        {method.requiresInteraction && (
-                          <span>👤 Interaction required</span>
-                        )}
+                {availableMethodsQuery.data?.methods.map(
+                  (method: CancellationMethod) => (
+                    <div
+                      key={method.id}
+                      className="flex items-start space-x-3 rounded-lg border p-3"
+                    >
+                      <RadioGroupItem value={method.id} className="mt-1" />
+                      <div className="flex-1">
+                        <div className="mb-1 flex items-center gap-2">
+                          {getMethodIcon(method.id)}
+                          <span className="font-medium">{method.name}</span>
+                          {method.isRecommended && (
+                            <Badge variant="default" className="text-xs">
+                              Recommended
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="mb-2 text-sm text-gray-600">
+                          {method.description}
+                        </p>
+                        <div className="flex gap-4 text-xs text-gray-500">
+                          <span>⏱️ {method.estimatedTime}</span>
+                          <span>✅ {method.successRate}% success</span>
+                          {method.requiresInteraction && (
+                            <span>👤 Interaction required</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </RadioGroup>
             </CardContent>
           </Card>
@@ -859,7 +884,9 @@ export function UnifiedCancellationModal({
                 <Label>Priority</Label>
                 <RadioGroup
                   value={priority}
-                  onValueChange={(value: string) => setPriority(value as 'low' | 'normal' | 'high')}
+                  onValueChange={(value: string) =>
+                    setPriority(value as 'low' | 'normal' | 'high')
+                  }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="low" id="low" />

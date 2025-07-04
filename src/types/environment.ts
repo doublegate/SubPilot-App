@@ -3,8 +3,6 @@
  * Provides type-safe access to environment variables with validation
  */
 
-import type { z } from 'zod';
-
 // Template Literal Types for Environment Variable Keys
 type EnvKey<T extends string> = `${Uppercase<T>}`;
 type DatabaseEnvKey = EnvKey<'database_url'>;
@@ -12,35 +10,30 @@ type AuthEnvKey = EnvKey<'nextauth_secret'> | EnvKey<'nextauth_url'>;
 type PlaidEnvKey = EnvKey<`plaid_${string}`>;
 type StripeEnvKey = EnvKey<`stripe_${string}`>;
 
-// Conditional Types for Environment Values
-type EnvValue<T extends string> = 
-  T extends DatabaseEnvKey ? string :
-  T extends AuthEnvKey ? string :
-  T extends PlaidEnvKey ? string :
-  T extends StripeEnvKey ? string :
-  string | undefined;
-
 // Branded Types for Configuration Values
 type Brand<T, B> = T & { readonly __brand: B };
 type DatabaseUrl = Brand<string, 'DatabaseUrl'>;
 type SecretKey = Brand<string, 'SecretKey'>;
-type PlaidEnvironment = Brand<'sandbox' | 'development' | 'production', 'PlaidEnvironment'>;
+type PlaidEnvironment = Brand<
+  'sandbox' | 'development' | 'production',
+  'PlaidEnvironment'
+>;
 
 // Advanced Environment Configuration Interface
 export interface TypedEnvironment {
   // Database
   DATABASE_URL: DatabaseUrl;
-  
+
   // Authentication
   NEXTAUTH_SECRET: SecretKey;
   NEXTAUTH_URL: string;
-  
+
   // OAuth Providers
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: SecretKey;
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: SecretKey;
-  
+
   // Plaid Configuration with Type Safety
   PLAID_CLIENT_ID?: string;
   PLAID_SECRET?: SecretKey;
@@ -50,7 +43,7 @@ export interface TypedEnvironment {
   PLAID_REDIRECT_URI?: string;
   PLAID_WEBHOOK_URL?: string;
   PLAID_WEBHOOK_SECRET?: SecretKey;
-  
+
   // Email Configuration
   SENDGRID_API_KEY?: SecretKey;
   FROM_EMAIL?: string;
@@ -58,14 +51,14 @@ export interface TypedEnvironment {
   SMTP_PORT?: string;
   SMTP_USER?: string;
   SMTP_PASS?: SecretKey;
-  
+
   // External APIs
   OPENAI_API_KEY?: SecretKey;
-  
+
   // Security
   ENCRYPTION_KEY?: SecretKey;
   API_SECRET?: SecretKey;
-  
+
   // Stripe Configuration
   STRIPE_SECRET_KEY?: SecretKey;
   STRIPE_WEBHOOK_SECRET?: SecretKey;
@@ -75,15 +68,21 @@ export interface TypedEnvironment {
   STRIPE_PRICE_TEAM_YEARLY?: string;
   STRIPE_PRICE_ENTERPRISE_MONTHLY?: string;
   STRIPE_PRICE_ENTERPRISE_YEARLY?: string;
-  
+
   // Client-side
   NEXT_PUBLIC_APP_URL?: string;
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?: string;
 }
 
 // Utility Types for Environment Validation
-export type RequiredEnvKeys = keyof Pick<TypedEnvironment, 
-  'DATABASE_URL' | 'NEXTAUTH_SECRET' | 'NEXTAUTH_URL' | 'PLAID_ENV' | 'PLAID_PRODUCTS' | 'PLAID_COUNTRY_CODES'
+export type RequiredEnvKeys = keyof Pick<
+  TypedEnvironment,
+  | 'DATABASE_URL'
+  | 'NEXTAUTH_SECRET'
+  | 'NEXTAUTH_URL'
+  | 'PLAID_ENV'
+  | 'PLAID_PRODUCTS'
+  | 'PLAID_COUNTRY_CODES'
 >;
 
 export type OptionalEnvKeys = keyof Omit<TypedEnvironment, RequiredEnvKeys>;
@@ -96,15 +95,17 @@ export type EnvAccessor<T extends keyof TypedEnvironment> = {
 };
 
 // Configuration Validation Result
-export type ConfigValidationResult<T> = {
-  success: true;
-  data: T;
-  warnings?: string[];
-} | {
-  success: false;
-  errors: string[];
-  warnings?: string[];
-};
+export type ConfigValidationResult<T> =
+  | {
+      success: true;
+      data: T;
+      warnings?: string[];
+    }
+  | {
+      success: false;
+      errors: string[];
+      warnings?: string[];
+    };
 
 // Environment-specific Configuration Types
 export interface DatabaseConfig {
@@ -162,10 +163,12 @@ export interface StripeConfig {
 }
 
 // Mapped Type for Configuration Factories
-export type ConfigFactory<T> = (env: TypedEnvironment) => ConfigValidationResult<T>;
+export type ConfigFactory<T> = (
+  env: TypedEnvironment
+) => ConfigValidationResult<T>;
 
 // Advanced Configuration Builders
-export const createDatabaseConfig: ConfigFactory<DatabaseConfig> = (env) => {
+export const createDatabaseConfig: ConfigFactory<DatabaseConfig> = env => {
   if (!env.DATABASE_URL) {
     return {
       success: false,
@@ -179,12 +182,13 @@ export const createDatabaseConfig: ConfigFactory<DatabaseConfig> = (env) => {
       success: true,
       data: {
         url: env.DATABASE_URL,
-        ssl: url.protocol === 'postgres:' && !url.hostname.includes('localhost'),
+        ssl:
+          url.protocol === 'postgres:' && !url.hostname.includes('localhost'),
         poolSize: 10,
         maxConnections: 20,
       },
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
       errors: ['Invalid DATABASE_URL format'],
@@ -192,13 +196,13 @@ export const createDatabaseConfig: ConfigFactory<DatabaseConfig> = (env) => {
   }
 };
 
-export const createAuthConfig: ConfigFactory<AuthConfig> = (env) => {
+export const createAuthConfig: ConfigFactory<AuthConfig> = env => {
   const errors: string[] = [];
-  
+
   if (!env.NEXTAUTH_SECRET) {
     errors.push('NEXTAUTH_SECRET is required');
   }
-  
+
   if (!env.NEXTAUTH_URL) {
     errors.push('NEXTAUTH_URL is required');
   }
@@ -240,13 +244,13 @@ export const createAuthConfig: ConfigFactory<AuthConfig> = (env) => {
   };
 };
 
-export const createPlaidConfig: ConfigFactory<PlaidConfig> = (env) => {
+export const createPlaidConfig: ConfigFactory<PlaidConfig> = env => {
   const errors: string[] = [];
-  
+
   if (!env.PLAID_CLIENT_ID) {
     errors.push('PLAID_CLIENT_ID is required for Plaid integration');
   }
-  
+
   if (!env.PLAID_SECRET) {
     errors.push('PLAID_SECRET is required for Plaid integration');
   }
@@ -284,7 +288,9 @@ export const isValidSecretKey = (key: string): key is SecretKey => {
   return key.length >= 32 && /^[A-Za-z0-9+/=]+$/.test(key);
 };
 
-export const isValidPlaidEnvironment = (env: string): env is PlaidEnvironment => {
+export const isValidPlaidEnvironment = (
+  env: string
+): env is PlaidEnvironment => {
   return ['sandbox', 'development', 'production'].includes(env);
 };
 
@@ -296,26 +302,26 @@ export const assertEnvironmentType = <T extends keyof TypedEnvironment>(
   if (value === undefined || value === null) {
     throw new Error(`Environment variable ${key} is required but not provided`);
   }
-  
+
   if (typeof value !== 'string') {
     throw new Error(`Environment variable ${key} must be a string`);
   }
-  
+
   // Additional type-specific validations
   if (key === 'DATABASE_URL' && !isValidDatabaseUrl(value)) {
     throw new Error(`Invalid DATABASE_URL format: ${value}`);
   }
-  
+
   if (key.includes('SECRET') || key.includes('KEY')) {
     if (!isValidSecretKey(value)) {
       throw new Error(`Invalid secret key format for ${key}`);
     }
   }
-  
+
   if (key === 'PLAID_ENV' && !isValidPlaidEnvironment(value)) {
     throw new Error(`Invalid PLAID_ENV value: ${value}`);
   }
-  
+
   return value as TypedEnvironment[T];
 };
 

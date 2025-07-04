@@ -1,6 +1,7 @@
 import { type PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import { type UnifiedCancellationResult } from '@/types/cancellation';
 
 // Import existing services
 import { CancellationService } from './cancellation.service';
@@ -14,103 +15,79 @@ import {
   onCancellationEvent,
 } from '@/server/lib/event-bus';
 
-// Enhanced input validation schema
-export const UnifiedCancellationRequestInput = z.object({
-  subscriptionId: z.string(),
-  reason: z.string().optional(),
-  priority: z.enum(['low', 'normal', 'high']).optional().default('normal'),
-  preferredMethod: z
-    .enum(['auto', 'api', 'automation', 'manual'])
-    .optional()
-    .default('auto'),
-  userPreferences: z
-    .object({
-      allowFallback: z.boolean().optional().default(true),
-      maxRetries: z.number().min(1).max(5).optional().default(3),
-      timeoutMinutes: z.number().min(5).max(60).optional().default(30),
-      notificationPreferences: z
-        .object({
-          realTime: z.boolean().optional().default(true),
-          email: z.boolean().optional().default(true),
-          sms: z.boolean().optional().default(false),
-        })
-        .optional(),
-    })
-    .optional(),
-  scheduling: z
-    .object({
-      scheduleFor: z.date().optional(),
-      timezone: z.string().optional(),
-    })
-    .optional(),
-});
+// Enhanced input validation schema with improved validation
+export const UnifiedCancellationRequestInput = z
+  .object({
+    subscriptionId: z
+      .string()
+      .min(1, 'Subscription ID is required')
+      .max(50, 'Subscription ID too long'),
+    reason: z.string().trim().max(500, 'Reason too long').optional(),
+    priority: z.enum(['low', 'normal', 'high']).optional().default('normal'),
+    preferredMethod: z
+      .enum(['auto', 'api', 'automation', 'manual'])
+      .optional()
+      .default('auto'),
+    userPreferences: z
+      .object({
+        allowFallback: z.boolean().optional().default(true),
+        maxRetries: z
+          .number()
+          .int()
+          .min(1, 'Must have at least 1 retry')
+          .max(5, 'Too many retries')
+          .optional()
+          .default(3),
+        timeoutMinutes: z
+          .number()
+          .int()
+          .min(5, 'Timeout too short')
+          .max(60, 'Timeout too long')
+          .optional()
+          .default(30),
+        notificationPreferences: z
+          .object({
+            realTime: z.boolean().optional().default(true),
+            email: z.boolean().optional().default(true),
+            sms: z.boolean().optional().default(false),
+          })
+          .optional(),
+      })
+      .optional(),
+    scheduling: z
+      .object({
+        scheduleFor: z
+          .date()
+          .refine(
+            date => date > new Date(),
+            'Scheduled time must be in the future'
+          )
+          .optional(),
+        timezone: z
+          .string()
+          .regex(/^[A-Za-z_]+\/[A-Za-z_]+$/, 'Invalid timezone format')
+          .optional(),
+      })
+      .optional(),
+  })
+  .strict()
+  .refine(
+    data => {
+      // Custom validation: if scheduling is provided, scheduleFor is required
+      if (data.scheduling && !data.scheduling.scheduleFor) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'scheduleFor is required when scheduling is provided',
+      path: ['scheduling', 'scheduleFor'],
+    }
+  );
 
 export type UnifiedCancellationRequest = z.infer<
   typeof UnifiedCancellationRequestInput
 >;
-
-// Enhanced result interface
-export interface UnifiedCancellationResult {
-  success: boolean;
-  orchestrationId: string;
-  requestId: string;
-  status:
-    | 'initiated'
-    | 'routing'
-    | 'processing'
-    | 'completed'
-    | 'failed'
-    | 'requires_manual'
-    | 'scheduled';
-  method: 'api' | 'automation' | 'manual';
-  message: string;
-
-  // Timing information
-  estimatedCompletion?: Date;
-  actualCompletion?: Date;
-  processingStarted?: Date;
-
-  // Results
-  confirmationCode?: string;
-  effectiveDate?: Date;
-  refundAmount?: number;
-
-  // Instructions (for manual method)
-  manualInstructions?: {
-    provider: {
-      name: string;
-      logo?: string;
-      difficulty: 'easy' | 'medium' | 'hard';
-      estimatedTime: number;
-    };
-    steps: string[];
-    tips: string[];
-    warnings: string[];
-    contactInfo: {
-      website?: string;
-      phone?: string;
-      email?: string;
-      chat?: string;
-    };
-  };
-
-  // Metadata
-  metadata: {
-    originalMethod?: string;
-    fallbackReason?: string;
-    attemptsUsed: number;
-    providerInfo?: any;
-    workflowId?: string;
-    realTimeUpdatesEnabled: boolean;
-  };
-
-  // Real-time tracking
-  tracking: {
-    sseEndpoint: string;
-    websocketEndpoint?: string;
-    statusCheckUrl: string;
-  };
-}
 
 // Provider capability assessment
 interface ProviderCapability {
@@ -142,6 +119,27 @@ interface ProviderCapability {
   lastAssessed: Date;
   dataSource: 'database' | 'heuristic' | 'default';
 }
+
+// Provider capability validation schema
+export const ProviderCapabilitySchema = z.object({
+  providerId: z.string().optional(),
+  providerName: z.string().min(1, 'Provider name is required'),
+  supportsApi: z.boolean(),
+  supportsAutomation: z.boolean(),
+  supportsManual: z.boolean(),
+  apiSuccessRate: z.number().min(0).max(1),
+  automationSuccessRate: z.number().min(0).max(1),
+  manualSuccessRate: z.number().min(0).max(1),
+  apiEstimatedTime: z.number().int().min(0),
+  automationEstimatedTime: z.number().int().min(0),
+  manualEstimatedTime: z.number().int().min(0),
+  difficulty: z.enum(['easy', 'medium', 'hard']),
+  requires2FA: z.boolean(),
+  hasRetentionOffers: z.boolean(),
+  requiresHumanIntervention: z.boolean(),
+  lastAssessed: z.date(),
+  dataSource: z.enum(['database', 'heuristic', 'default']),
+});
 
 /**
  * Enhanced Unified Cancellation Orchestrator Service
@@ -195,25 +193,55 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     const startTime = new Date();
 
     try {
+      // Validate input with enhanced schema
+      const validationResult = UnifiedCancellationRequestInput.safeParse(input);
+      if (!validationResult.success) {
+        return {
+          success: false,
+          orchestrationId,
+          requestId: this.generateRequestId(),
+          status: 'failed',
+          method: 'manual',
+          message: `Invalid input: ${validationResult.error.issues.map(i => i.message).join(', ')}`,
+          metadata: {
+            attemptsUsed: 0,
+            realTimeUpdatesEnabled: true,
+          },
+          tracking: {
+            sseEndpoint: `/api/sse/cancellation/${orchestrationId}`,
+            statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ orchestrationId }))}`,
+          },
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Input validation failed',
+            details: validationResult.error.issues,
+          },
+        };
+      }
+      const validatedInput = validationResult.data;
       // Log orchestration start
       await this.logOrchestrationActivity(
         orchestrationId,
         'orchestration_initiated',
         'info',
         'Enhanced unified cancellation orchestration started',
-        { userId, subscriptionId: input.subscriptionId, input }
+        {
+          userId,
+          subscriptionId: validatedInput.subscriptionId,
+          input: validatedInput,
+        }
       );
 
       // Validate subscription ownership
       const subscription = await this.validateSubscriptionOwnership(
         userId,
-        input.subscriptionId
+        validatedInput.subscriptionId
       );
 
       // Check if cancellation is allowed
       await this.validateCancellationEligibility(
         userId,
-        input.subscriptionId,
+        validatedInput.subscriptionId,
         subscription
       );
 
@@ -225,16 +253,16 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       // Determine optimal method using consensus logic
       const optimalMethod = this.determineOptimalMethod(
         capabilities,
-        input.preferredMethod,
-        input.userPreferences
+        validatedInput.preferredMethod,
+        validatedInput.userPreferences
       );
 
       // Handle scheduling if requested
-      if (input.scheduling?.scheduleFor) {
+      if (validatedInput.scheduling?.scheduleFor) {
         return await this.handleScheduledCancellation(
           userId,
           subscription,
-          input,
+          validatedInput,
           orchestrationId,
           optimalMethod,
           capabilities
@@ -255,7 +283,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       const result = await this.executeWithFallback(
         userId,
         subscription,
-        input,
+        validatedInput,
         orchestrationId,
         optimalMethod,
         capabilities
@@ -270,14 +298,39 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       await this.handleOrchestrationFailure(
         orchestrationId,
         userId,
-        input.subscriptionId,
+        validatedInput.subscriptionId,
         error
       );
 
       // Clean up active orchestration
       this.activeOrchestrations.delete(orchestrationId);
 
-      throw error;
+      // Return status object instead of throwing
+      return {
+        success: false,
+        orchestrationId,
+        requestId: this.generateRequestId(),
+        status: 'failed',
+        method: 'manual', // Default fallback method
+        message:
+          error instanceof Error ? error.message : 'Unknown error occurred',
+        metadata: {
+          attemptsUsed: 1,
+          realTimeUpdatesEnabled:
+            validatedInput.userPreferences?.notificationPreferences?.realTime ??
+            true,
+        },
+        tracking: {
+          sseEndpoint: `/api/sse/cancellation/${orchestrationId}`,
+          statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ orchestrationId }))}`,
+        },
+        error: {
+          code: 'ORCHESTRATION_FAILED',
+          message:
+            error instanceof Error ? error.message : 'Unknown error occurred',
+          details: error,
+        },
+      };
     }
   }
 
@@ -354,22 +407,60 @@ export class UnifiedCancellationOrchestratorEnhancedService {
           willRetry: i < fallbackChain.length - 1,
         });
 
-        // If this was the last method in the chain, throw the error
+        // If this was the last method in the chain, return failure status
         if (i === fallbackChain.length - 1) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
+          return {
+            success: false,
+            orchestrationId,
+            requestId: this.generateRequestId(),
+            status: 'failed',
+            method: method!,
             message: `All cancellation methods failed. Last error: ${lastError.message}`,
-            cause: lastError,
-          });
+            metadata: {
+              attemptsUsed: fallbackChain.length,
+              fallbackReason: 'All methods exhausted',
+              realTimeUpdatesEnabled:
+                input.userPreferences?.notificationPreferences?.realTime ??
+                true,
+            },
+            tracking: {
+              sseEndpoint: `/api/sse/cancellation/${orchestrationId}`,
+              statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ orchestrationId }))}`,
+            },
+            error: {
+              code: 'ALL_METHODS_FAILED',
+              message: `All cancellation methods failed. Last error: ${lastError.message}`,
+              details: lastError,
+            },
+          };
         }
 
         // Check if user preferences allow fallback
         if (!input.userPreferences?.allowFallback) {
-          throw new TRPCError({
-            code: 'PRECONDITION_FAILED',
+          return {
+            success: false,
+            orchestrationId,
+            requestId: this.generateRequestId(),
+            status: 'failed',
+            method: method!,
             message: `${method} cancellation failed and fallback is disabled`,
-            cause: lastError,
-          });
+            metadata: {
+              attemptsUsed: i + 1,
+              fallbackReason: 'Fallback disabled by user',
+              realTimeUpdatesEnabled:
+                input.userPreferences?.notificationPreferences?.realTime ??
+                true,
+            },
+            tracking: {
+              sseEndpoint: `/api/sse/cancellation/${orchestrationId}`,
+              statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ orchestrationId }))}`,
+            },
+            error: {
+              code: 'FALLBACK_DISABLED',
+              message: `${method} cancellation failed and fallback is disabled`,
+              details: lastError,
+            },
+          };
         }
 
         // Small delay before trying next method
@@ -378,10 +469,29 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     }
 
     // This should never be reached, but just in case
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
+    return {
+      success: false,
+      orchestrationId,
+      requestId: this.generateRequestId(),
+      status: 'failed',
+      method: 'manual',
       message: 'Unexpected error in fallback chain execution',
-    });
+      metadata: {
+        attemptsUsed: fallbackChain.length,
+        fallbackReason: 'Unexpected error',
+        realTimeUpdatesEnabled:
+          input.userPreferences?.notificationPreferences?.realTime ?? true,
+      },
+      tracking: {
+        sseEndpoint: `/api/sse/cancellation/${orchestrationId}`,
+        statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ orchestrationId }))}`,
+      },
+      error: {
+        code: 'UNEXPECTED_ERROR',
+        message: 'Unexpected error in fallback chain execution',
+        details: null,
+      },
+    };
   }
 
   /**
@@ -439,7 +549,28 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         );
 
       default:
-        throw new Error(`Unsupported cancellation method: ${method}`);
+        // Return failure status instead of throwing
+        return {
+          success: false,
+          orchestrationId,
+          requestId: this.generateRequestId(),
+          status: 'failed',
+          method: 'manual', // Default fallback
+          message: `Unsupported cancellation method: ${method}`,
+          metadata: {
+            attemptsUsed: 1,
+            realTimeUpdatesEnabled: true,
+          },
+          tracking: {
+            sseEndpoint: `/api/sse/cancellation/${orchestrationId}`,
+            statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ orchestrationId }))}`,
+          },
+          error: {
+            code: 'UNSUPPORTED_METHOD',
+            message: `Unsupported cancellation method: ${method}`,
+            details: { attemptedMethod: method },
+          },
+        };
     }
   }
 
@@ -467,6 +598,19 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         Date.now() + capabilities.apiEstimatedTime * 60 * 1000
       );
 
+      // Log successful API execution
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.api_method_success',
+        resource: input.subscriptionId,
+        result: 'success',
+        metadata: {
+          requestId: apiResult.requestId,
+          status: apiResult.status,
+          estimatedCompletion,
+        },
+      });
+
       return {
         success: true,
         requestId: apiResult.requestId,
@@ -480,9 +624,21 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         ...baseResult,
       };
     } catch (error) {
-      throw new Error(
-        `API cancellation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown API error';
+
+      // Log API method failure
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.api_method_failed',
+        resource: input.subscriptionId,
+        result: 'failure',
+        error: errorMessage,
+        metadata: { capabilities, input },
+      });
+
+      // Throw to trigger fallback in the parent method
+      throw new Error(`API cancellation failed: ${errorMessage}`);
     }
   }
 
@@ -512,6 +668,19 @@ export class UnifiedCancellationOrchestratorEnhancedService {
           },
         });
 
+      // Log successful automation execution
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.automation_method_success',
+        resource: input.subscriptionId,
+        result: 'success',
+        metadata: {
+          requestId: automationResult.requestId,
+          workflowId: automationResult.workflowId,
+          estimatedCompletion: automationResult.estimatedCompletion,
+        },
+      });
+
       return {
         success: true,
         requestId: automationResult.requestId,
@@ -526,9 +695,21 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         },
       };
     } catch (error) {
-      throw new Error(
-        `Automation cancellation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown automation error';
+
+      // Log automation method failure
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.automation_method_failed',
+        resource: input.subscriptionId,
+        result: 'failure',
+        error: errorMessage,
+        metadata: { capabilities, input },
+      });
+
+      // Throw to trigger fallback in the parent method
+      throw new Error(`Automation cancellation failed: ${errorMessage}`);
     }
   }
 
@@ -548,6 +729,19 @@ export class UnifiedCancellationOrchestratorEnhancedService {
           subscriptionId: input.subscriptionId,
           notes: input.reason,
         });
+
+      // Log successful manual execution
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.manual_method_success',
+        resource: input.subscriptionId,
+        result: 'success',
+        metadata: {
+          requestId: manualResult.requestId,
+          hasInstructions: Boolean(manualResult.instructions),
+          estimatedTime: capabilities.manualEstimatedTime,
+        },
+      });
 
       return {
         success: true,
@@ -574,9 +768,21 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         ...baseResult,
       };
     } catch (error) {
-      throw new Error(
-        `Manual cancellation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown manual error';
+
+      // Log manual method failure
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.manual_method_failed',
+        resource: input.subscriptionId,
+        result: 'failure',
+        error: errorMessage,
+        metadata: { capabilities, input },
+      });
+
+      // Throw to trigger fallback in the parent method
+      throw new Error(`Manual cancellation failed: ${errorMessage}`);
     }
   }
 
@@ -669,11 +875,19 @@ export class UnifiedCancellationOrchestratorEnhancedService {
   }
 
   /**
-   * Assess provider capabilities for a subscription
+   * Assess provider capabilities for a subscription (PUBLIC METHOD for router access)
    */
-  private async assessProviderCapabilities(
+  async assessProviderCapabilities(
     subscriptionName: string
   ): Promise<ProviderCapability> {
+    // Validate input
+    if (!subscriptionName || typeof subscriptionName !== 'string') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Invalid subscription name for capability assessment',
+      });
+    }
+
     const normalizedName = subscriptionName
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '');
@@ -681,16 +895,34 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     // Check cache first
     const cached = this.providerCapabilities.get(normalizedName);
     if (cached && cached.expires > new Date()) {
-      return cached.capability;
+      // Validate cached capability against schema
+      const validationResult = ProviderCapabilitySchema.safeParse(
+        cached.capability
+      );
+      if (validationResult.success) {
+        return cached.capability;
+      } else {
+        // Remove invalid cached data
+        this.providerCapabilities.delete(normalizedName);
+      }
     }
 
     // Look up provider in database
-    const provider = await this.db.cancellationProvider.findFirst({
-      where: {
-        normalizedName,
-        isActive: true,
-      },
-    });
+    let provider = null;
+    try {
+      provider = await this.db.cancellationProvider.findFirst({
+        where: {
+          normalizedName,
+          isActive: true,
+        },
+      });
+    } catch (error) {
+      console.error(
+        '[UnifiedCancellationOrchestratorEnhanced] Database query failed:',
+        error
+      );
+      // Continue with heuristic approach if database fails
+    }
 
     let capability: ProviderCapability;
 
@@ -712,9 +944,9 @@ export class UnifiedCancellationOrchestratorEnhancedService {
             : 0,
         manualSuccessRate: 0.95, // Manual instructions are generally reliable
         apiEstimatedTime:
-          provider.type === 'api' ? provider.averageTime ?? 5 : 0,
+          provider.type === 'api' ? (provider.averageTime ?? 5) : 0,
         automationEstimatedTime:
-          provider.type === 'web_automation' ? provider.averageTime ?? 15 : 0,
+          provider.type === 'web_automation' ? (provider.averageTime ?? 15) : 0,
         manualEstimatedTime: provider.averageTime ?? 20,
         difficulty: provider.difficulty as 'easy' | 'medium' | 'hard',
         requires2FA: provider.requires2FA,
@@ -726,6 +958,17 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       };
     } else {
       // Generate heuristic-based capability for unknown providers
+      capability = this.generateHeuristicCapability(subscriptionName);
+    }
+
+    // Validate capability before caching
+    const validationResult = ProviderCapabilitySchema.safeParse(capability);
+    if (!validationResult.success) {
+      console.error(
+        `[Enhanced Orchestrator] Invalid capability generated for ${subscriptionName}:`,
+        validationResult.error
+      );
+      // Return a default manual-only capability if validation fails
       capability = this.generateHeuristicCapability(subscriptionName);
     }
 
@@ -797,22 +1040,32 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     userId: string,
     subscriptionId: string
   ) {
-    const subscription = await this.db.subscription.findFirst({
-      where: {
-        id: subscriptionId,
-        userId,
-      },
-    });
-
-    if (!subscription) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message:
-          'Subscription not found or you do not have permission to cancel it',
+    try {
+      const subscription = await this.db.subscription.findFirst({
+        where: {
+          id: subscriptionId,
+          userId,
+        },
       });
-    }
 
-    return subscription;
+      if (!subscription) {
+        await AuditLogger.log({
+          userId,
+          action: 'subscription.access_denied',
+          resource: subscriptionId,
+          result: 'failure',
+          error: 'Subscription not found or access denied',
+        });
+        throw new Error(
+          'Subscription not found or you do not have permission to access it'
+        );
+      }
+
+      return subscription;
+    } catch (error) {
+      // Re-throw the error to maintain status-object pattern at caller level
+      throw error;
+    }
   }
 
   /**
@@ -823,31 +1076,44 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     subscriptionId: string,
     subscription: any
   ) {
-    // Check if already cancelled
-    if (subscription.status === 'cancelled') {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'This subscription is already cancelled',
-      });
-    }
+    try {
+      // Check if already cancelled
+      if (subscription.status === 'cancelled') {
+        await AuditLogger.log({
+          userId,
+          action: 'cancellation.already_cancelled',
+          resource: subscriptionId,
+          result: 'failure',
+          error: 'Subscription is already cancelled',
+        });
+        throw new Error('This subscription is already cancelled');
+      }
 
-    // Check for existing active cancellation requests
-    const existingRequest = await this.db.cancellationRequest.findFirst({
-      where: {
-        subscriptionId,
-        userId,
-        status: { in: ['pending', 'processing', 'scheduled'] },
-      },
-    });
-
-    if (existingRequest) {
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message:
-          'A cancellation request is already in progress for this subscription',
-        // @ts-expect-error - adding custom field for client handling
-        existingRequestId: existingRequest.id,
+      // Check for existing active cancellation requests
+      const existingRequest = await this.db.cancellationRequest.findFirst({
+        where: {
+          subscriptionId,
+          userId,
+          status: { in: ['pending', 'processing', 'scheduled'] },
+        },
       });
+
+      if (existingRequest) {
+        await AuditLogger.log({
+          userId,
+          action: 'cancellation.already_in_progress',
+          resource: subscriptionId,
+          result: 'failure',
+          error: 'Cancellation already in progress',
+          metadata: { existingRequestId: existingRequest.id },
+        });
+        throw new Error(
+          'A cancellation request is already in progress for this subscription'
+        );
+      }
+    } catch (error) {
+      // Re-throw the error to maintain status-object pattern at caller level
+      throw error;
     }
   }
 
@@ -863,50 +1129,97 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     capabilities: ProviderCapability
   ): Promise<UnifiedCancellationResult> {
     const scheduleFor = input.scheduling?.scheduleFor;
-    
+
     if (!scheduleFor) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Schedule time is required',
+      const errorMessage =
+        'Schedule time is required for scheduled cancellation';
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.scheduling_validation_failed',
+        resource: input.subscriptionId,
+        result: 'failure',
+        error: errorMessage,
       });
+      throw new Error(errorMessage);
     }
 
     if (scheduleFor <= new Date()) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Scheduled time must be in the future',
+      const errorMessage = 'Scheduled time must be in the future';
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.scheduling_validation_failed',
+        resource: input.subscriptionId,
+        result: 'failure',
+        error: errorMessage,
+        metadata: {
+          scheduleFor: scheduleFor.toISOString(),
+          currentTime: new Date().toISOString(),
+        },
       });
+      throw new Error(errorMessage);
     }
 
-    // Create scheduled cancellation request
-    const request = await this.db.cancellationRequest.create({
-      data: {
-        userId,
-        subscriptionId: input.subscriptionId,
-        method,
-        priority: input.priority ?? 'normal',
-        status: 'scheduled',
-        attempts: 0,
-        userNotes: input.reason,
-        errorDetails: JSON.parse(
-          JSON.stringify({
-            orchestrationId,
-            scheduleFor: scheduleFor.toISOString(),
-            preferredMethod: method,
-            timezone: input.scheduling?.timezone,
-            capabilities,
-          })
-        ),
-      },
-    });
+    // Create scheduled cancellation request with transaction
+    let request;
+    try {
+      request = await this.db.$transaction(async tx => {
+        const newRequest = await tx.cancellationRequest.create({
+          data: {
+            userId,
+            subscriptionId: input.subscriptionId,
+            method,
+            priority: input.priority ?? 'normal',
+            status: 'scheduled',
+            attempts: 0,
+            userNotes: input.reason,
+            errorDetails: JSON.parse(
+              JSON.stringify({
+                orchestrationId,
+                scheduleFor: scheduleFor.toISOString(),
+                preferredMethod: method,
+                timezone: input.scheduling?.timezone,
+                capabilities,
+              })
+            ),
+          },
+        });
 
-    await this.logOrchestrationActivity(
-      orchestrationId,
-      'cancellation_scheduled',
-      'info',
-      `Cancellation scheduled for ${scheduleFor.toISOString()}`,
-      { requestId: request.id, scheduleFor, method }
-    );
+        // Log the scheduling within the transaction
+        await tx.cancellationLog.create({
+          data: {
+            requestId: newRequest.id,
+            action: 'cancellation_scheduled',
+            status: 'info',
+            message: `Cancellation scheduled for ${scheduleFor.toISOString()}`,
+            metadata: {
+              orchestrationId,
+              scheduleFor: scheduleFor.toISOString(),
+              method,
+            },
+          },
+        });
+
+        return newRequest;
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to schedule cancellation';
+      await AuditLogger.log({
+        userId,
+        action: 'cancellation.scheduling_failed',
+        resource: input.subscriptionId,
+        result: 'failure',
+        error: errorMessage,
+        metadata: {
+          orchestrationId,
+          scheduleFor: scheduleFor.toISOString(),
+          method,
+        },
+      });
+      throw new Error(`Failed to schedule cancellation: ${errorMessage}`);
+    }
 
     return {
       success: true,
@@ -960,6 +1273,18 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     try {
       const providers = await this.db.cancellationProvider.findMany({
         where: { isActive: true },
+        select: {
+          id: true,
+          name: true,
+          normalizedName: true,
+          type: true,
+          apiEndpoint: true,
+          successRate: true,
+          averageTime: true,
+          difficulty: true,
+          requires2FA: true,
+          requiresRetention: true,
+        },
       });
 
       for (const provider of providers) {
@@ -979,9 +1304,11 @@ export class UnifiedCancellationOrchestratorEnhancedService {
               : 0,
           manualSuccessRate: 0.95,
           apiEstimatedTime:
-            provider.type === 'api' ? provider.averageTime ?? 5 : 0,
+            provider.type === 'api' ? (provider.averageTime ?? 5) : 0,
           automationEstimatedTime:
-            provider.type === 'web_automation' ? provider.averageTime ?? 15 : 0,
+            provider.type === 'web_automation'
+              ? (provider.averageTime ?? 15)
+              : 0,
           manualEstimatedTime: provider.averageTime ?? 20,
           difficulty: provider.difficulty as 'easy' | 'medium' | 'hard',
           requires2FA: provider.requires2FA,
@@ -1016,6 +1343,15 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 15);
     return `orch_${timestamp}_${random}`;
+  }
+
+  /**
+   * Generate unique request ID
+   */
+  private generateRequestId(): string {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 15);
+    return `req_${timestamp}_${random}`;
   }
 
   /**
@@ -1159,9 +1495,13 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     metadata: any = {}
   ): Promise<void> {
     try {
+      // Use orchestrationId as requestId for orchestration logs
+      // Create a synthetic request ID if none exists
+      const logRequestId = metadata?.requestId ?? `${orchestrationId}_log`;
+
       await this.db.cancellationLog.create({
         data: {
-          requestId: orchestrationId, // Using requestId for orchestration logs
+          requestId: logRequestId,
           action,
           status: level,
           message,
@@ -1177,6 +1517,87 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         '[UnifiedCancellationOrchestratorEnhanced] Failed to log activity:',
         error
       );
+    }
+  }
+
+  /**
+   * Get cancellation request status (legacy interface compatibility)
+   */
+  async getCancellationStatus(
+    userId: string,
+    requestId: string,
+    orchestrationId?: string
+  ): Promise<any> {
+    try {
+      const request = await this.db.cancellationRequest.findUnique({
+        where: { id: requestId },
+        include: {
+          subscription: true,
+          provider: true,
+          logs: {
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+          },
+        },
+      });
+
+      if (!request) {
+        return {
+          success: false,
+          message: 'Cancellation request not found',
+          error: {
+            code: 'REQUEST_NOT_FOUND',
+            message: 'Cancellation request not found',
+          },
+        };
+      }
+
+      return {
+        success: true,
+        status: {
+          requestId: request.id,
+          status: request.status,
+          method: request.method,
+          attempts: request.attempts,
+          createdAt: request.createdAt,
+          updatedAt: request.updatedAt,
+          completedAt: request.completedAt,
+          confirmationCode: request.confirmationCode,
+          effectiveDate: request.effectiveDate,
+          subscription: {
+            id: request.subscription.id,
+            name: request.subscription.name,
+            amount: request.subscription.amount,
+          },
+          provider: request.provider
+            ? {
+                name: request.provider.name,
+                type: request.provider.type,
+              }
+            : null,
+        },
+        timeline: request.logs.map(log => ({
+          action: log.action,
+          status: log.status,
+          message: log.message,
+          createdAt: log.createdAt,
+        })),
+        nextSteps:
+          request.status === 'completed'
+            ? ['Cancellation completed successfully']
+            : request.status === 'failed'
+              ? ['Review failure reason and retry if needed']
+              : ['Cancellation in progress'],
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error retrieving cancellation status',
+        error: {
+          code: 'STATUS_RETRIEVAL_ERROR',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
     }
   }
 
@@ -1198,16 +1619,25 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     }
 
     // Get logs for this orchestration
-    const logs = await this.db.cancellationLog.findMany({
-      where: {
-        metadata: {
-          path: ['orchestrationId'],
-          equals: orchestrationId,
+    let logs = [];
+    try {
+      logs = await this.db.cancellationLog.findMany({
+        where: {
+          metadata: {
+            path: ['orchestrationId'],
+            equals: orchestrationId,
+          },
         },
-      },
-      orderBy: { createdAt: 'asc' },
-      take: 50,
-    });
+        orderBy: { createdAt: 'asc' },
+        take: 50,
+      });
+    } catch (error) {
+      console.error(
+        '[UnifiedCancellationOrchestratorEnhanced] Failed to get logs:',
+        error
+      );
+      // Continue with empty logs array
+    }
 
     return {
       orchestrationId,
@@ -1223,6 +1653,313 @@ export class UnifiedCancellationOrchestratorEnhancedService {
         metadata: log.metadata,
       })),
     };
+  }
+
+  /**
+   * Retry a failed cancellation request
+   */
+  async retryCancellation(
+    userId: string,
+    requestId: string,
+    options?: {
+      forceMethod?: 'api' | 'automation' | 'manual';
+      escalate?: boolean;
+    }
+  ): Promise<UnifiedCancellationResult> {
+    try {
+      // Get the existing request
+      const request = await this.db.cancellationRequest.findFirst({
+        where: {
+          id: requestId,
+          userId,
+          status: { in: ['failed', 'cancelled'] },
+        },
+        include: {
+          subscription: true,
+        },
+      });
+
+      if (!request) {
+        return {
+          success: false,
+          requestId,
+          orchestrationId: `retry_${requestId}`,
+          method: 'manual',
+          status: 'failed',
+          message: 'Failed cancellation request not found',
+          metadata: {
+            attemptsUsed: 0,
+            realTimeUpdatesEnabled: true,
+          },
+          tracking: {
+            sseEndpoint: `/api/sse/cancellation/retry_${requestId}`,
+            statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ requestId }))}`,
+          },
+          error: {
+            code: 'REQUEST_NOT_FOUND',
+            message: 'Failed cancellation request not found',
+          },
+        };
+      }
+
+      // Reset the request for retry
+      await this.db.cancellationRequest.update({
+        where: { id: requestId },
+        data: {
+          status: 'pending',
+          attempts: request.attempts,
+          errorCode: null,
+          errorMessage: null,
+          lastAttemptAt: new Date(),
+        },
+      });
+
+      // Re-orchestrate the cancellation with the preferred method from options or escalated method
+      const retryMethod =
+        options?.forceMethod ??
+        (options?.escalate
+          ? 'automation'
+          : (request.method as 'api' | 'automation' | 'manual'));
+
+      // Re-orchestrate the cancellation
+      return this.initiateCancellation(userId, {
+        subscriptionId: request.subscription.id,
+        reason: 'Retry of failed cancellation',
+        preferredMethod: retryMethod as any,
+        priority: options?.escalate ? 'high' : 'normal',
+        userPreferences: {
+          allowFallback: !options?.forceMethod, // Don't allow fallback if method is forced
+          maxRetries: options?.escalate ? 5 : 3,
+        },
+      });
+    } catch (error) {
+      return {
+        success: false,
+        requestId,
+        orchestrationId: `retry_${requestId}`,
+        method: 'manual',
+        status: 'failed',
+        message: error instanceof Error ? error.message : 'Unknown retry error',
+        metadata: {
+          attemptsUsed: 0,
+          realTimeUpdatesEnabled: true,
+        },
+        tracking: {
+          sseEndpoint: `/api/sse/cancellation/retry_${requestId}`,
+          statusCheckUrl: `/api/trpc/unifiedCancellation.getStatus?input=${encodeURIComponent(JSON.stringify({ requestId }))}`,
+        },
+        error: {
+          code: 'RETRY_FAILED',
+          message:
+            error instanceof Error ? error.message : 'Unknown retry error',
+        },
+      };
+    }
+  }
+
+  /**
+   * Cancel a cancellation request
+   */
+  async cancelCancellationRequest(
+    userId: string,
+    requestId: string,
+    reason?: string
+  ): Promise<any> {
+    try {
+      const request = await this.db.cancellationRequest.findFirst({
+        where: {
+          id: requestId,
+          userId,
+          status: { in: ['pending', 'processing'] },
+        },
+      });
+
+      if (!request) {
+        return {
+          success: false,
+          message: 'Cancellation request not found or not cancellable',
+          error: {
+            code: 'REQUEST_NOT_FOUND',
+            message: 'Cancellation request not found or not cancellable',
+          },
+        };
+      }
+
+      await this.db.cancellationRequest.update({
+        where: { id: requestId },
+        data: {
+          status: 'cancelled',
+          updatedAt: new Date(),
+        },
+      });
+
+      await this.db.cancellationLog.create({
+        data: {
+          requestId,
+          action: 'user_cancelled',
+          status: 'info',
+          message: 'Cancellation request cancelled by user',
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Cancellation request cancelled successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error cancelling request',
+        error: {
+          code: 'CANCELLATION_ERROR',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
+    }
+  }
+
+  /**
+   * Manual confirmation for lightweight cancellations
+   */
+  async confirmManual(
+    userId: string,
+    requestId: string,
+    confirmationData: {
+      confirmationCode?: string;
+      effectiveDate?: Date;
+      refundAmount?: number;
+      notes?: string;
+      wasSuccessful: boolean;
+    }
+  ): Promise<any> {
+    try {
+      // Verify this is a manual cancellation request
+      const request = await this.db.cancellationRequest.findFirst({
+        where: {
+          id: requestId,
+          userId,
+          method: 'manual',
+          status: { in: ['pending', 'processing', 'requires_manual'] },
+        },
+        include: {
+          subscription: true,
+        },
+      });
+
+      if (!request) {
+        return {
+          success: false,
+          message:
+            'Manual cancellation request not found or not eligible for confirmation',
+          error: {
+            code: 'REQUEST_NOT_FOUND',
+            message:
+              'Manual cancellation request not found or not eligible for confirmation',
+          },
+        };
+      }
+
+      const status = confirmationData.wasSuccessful ? 'completed' : 'failed';
+      const effectiveDate = confirmationData.effectiveDate ?? new Date();
+
+      // Update the cancellation request
+      await this.db.cancellationRequest.update({
+        where: { id: requestId },
+        data: {
+          status,
+          confirmationCode: confirmationData.confirmationCode,
+          effectiveDate,
+          refundAmount: confirmationData.refundAmount ?? null,
+          userConfirmed: confirmationData.wasSuccessful,
+          userNotes: confirmationData.notes,
+          completedAt: new Date(),
+        },
+      });
+
+      // Update subscription if successful
+      if (confirmationData.wasSuccessful) {
+        await this.db.subscription.update({
+          where: { id: request.subscriptionId },
+          data: {
+            status: 'cancelled',
+            isActive: false,
+            cancellationInfo: {
+              requestId,
+              confirmationCode: confirmationData.confirmationCode,
+              effectiveDate,
+              method: 'manual',
+              confirmedAt: new Date(),
+              userConfirmed: true,
+            },
+          },
+        });
+      }
+
+      // Log the confirmation
+      await this.db.cancellationLog.create({
+        data: {
+          requestId,
+          action: confirmationData.wasSuccessful
+            ? 'manual_confirmation_success'
+            : 'manual_confirmation_failed',
+          status: confirmationData.wasSuccessful ? 'success' : 'failure',
+          message: confirmationData.wasSuccessful
+            ? `Manual cancellation confirmed successfully. Code: ${confirmationData.confirmationCode}`
+            : `Manual cancellation failed: ${confirmationData.notes}`,
+          metadata: {
+            confirmedAt: new Date(),
+            confirmationCode: confirmationData.confirmationCode,
+            effectiveDate,
+            refundAmount: confirmationData.refundAmount,
+          },
+        },
+      });
+
+      return {
+        success: true,
+        requestId,
+        status,
+        confirmationCode: confirmationData.confirmationCode,
+        effectiveDate,
+        refundAmount: confirmationData.refundAmount,
+        subscription: {
+          id: request.subscription.id,
+          name: request.subscription.name,
+          status: confirmationData.wasSuccessful
+            ? 'cancelled'
+            : request.subscription.status,
+        },
+        message: confirmationData.wasSuccessful
+          ? 'Manual cancellation confirmed successfully'
+          : 'Manual cancellation failure recorded',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error confirming manual cancellation',
+        error: {
+          code: 'CONFIRMATION_ERROR',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        },
+      };
+    }
+  }
+
+  /**
+   * Get provider capabilities (public method for router access)
+   */
+  getProviderCapabilities(
+    provider?: string
+  ): Map<string, ProviderCapability> | ProviderCapability | null {
+    if (provider) {
+      return this.providerCapabilities.get(provider)?.capability ?? null;
+    }
+    // Return a map of all capabilities
+    const capabilities = new Map<string, ProviderCapability>();
+    for (const [key, value] of this.providerCapabilities) {
+      capabilities.set(key, value.capability);
+    }
+    return capabilities;
   }
 
   /**
@@ -1286,6 +2023,21 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       successRate: number;
     }>;
   }> {
+    // Validate input parameters
+    if (!userId || typeof userId !== 'string') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Invalid user ID for analytics',
+      });
+    }
+
+    if (!['day', 'week', 'month'].includes(timeframe)) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Invalid timeframe. Must be day, week, or month',
+      });
+    }
+
     const endDate = new Date();
     const startDate = new Date();
 
@@ -1302,20 +2054,46 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     }
 
     // Get all cancellation requests for the user in the timeframe
-    const requests = await this.db.cancellationRequest.findMany({
-      where: {
-        userId,
-        createdAt: { gte: startDate, lte: endDate },
-      },
-      include: {
-        subscription: {
-          select: { name: true, amount: true },
+    let requests;
+    try {
+      requests = await this.db.cancellationRequest.findMany({
+        where: {
+          userId,
+          createdAt: { gte: startDate, lte: endDate },
         },
-        provider: {
-          select: { name: true, type: true },
+        include: {
+          subscription: {
+            select: { name: true, amount: true },
+          },
+          provider: {
+            select: { name: true, type: true },
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      // Return empty analytics on database error
+      return {
+        summary: {
+          total: 0,
+          successful: 0,
+          failed: 0,
+          pending: 0,
+          successRate: 0,
+        },
+        methodBreakdown: {
+          api: 0,
+          webhook: 0,
+          manual: 0,
+        },
+        successRates: {
+          overall: 0,
+          byMethod: {},
+          byProvider: {},
+        },
+        providerAnalytics: [],
+        trends: [],
+      };
+    }
 
     // Calculate summary statistics
     const total = requests.length;
@@ -1394,15 +2172,16 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     const providerAnalytics = Array.from(providerStats.entries()).map(
       ([provider, stats]) => ({
         provider,
-        totalAttempts: stats.total,
+        total: stats.total,
+        successful: stats.successful,
+        avgTime:
+          stats.successful > 0
+            ? Math.round(stats.totalTime / stats.successful / 1000 / 60)
+            : 0, // minutes
         successRate:
           stats.total > 0
             ? Math.round((stats.successful / stats.total) * 100)
             : 0,
-        averageCompletionTime:
-          stats.successful > 0
-            ? Math.round(stats.totalTime / stats.successful / 1000 / 60)
-            : 0, // minutes
       })
     );
 
@@ -1424,15 +2203,33 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     return {
       summary: {
         total,
-        completed,
+        successful: completed,
         failed,
         pending,
         successRate: total > 0 ? Math.round((completed / total) * 100) : 0,
       },
-      methodBreakdown: methodCounts,
-      successRates,
+      methodBreakdown: {
+        api: methodCounts.api ?? 0,
+        webhook: methodCounts.webhook ?? methodCounts.automation ?? 0,
+        manual: methodCounts.manual ?? 0,
+      },
+      successRates: {
+        overall: total > 0 ? Math.round((completed / total) * 100) : 0,
+        byMethod: successRates,
+        byProvider: Object.fromEntries(
+          providerAnalytics.map(p => [p.provider, p.successRate])
+        ),
+      },
       providerAnalytics,
-      trends,
+      trends: trends.map(trend => ({
+        date: trend.date,
+        requests: trend.total,
+        successful: trend.completed,
+        successRate:
+          trend.total > 0
+            ? Math.round((trend.completed / trend.total) * 100)
+            : 0,
+      })),
     };
   }
 }

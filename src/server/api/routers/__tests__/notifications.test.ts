@@ -598,7 +598,11 @@ describe('Notifications Router - Full tRPC Integration', () => {
   describe('data validation', () => {
     it('should validate notification type filter', async () => {
       await expect(
-        caller.getAll({ type: 'invalid_type' as unknown as Parameters<typeof caller.getAll>[0]['type'] })
+        caller.getAll({
+          type: 'invalid_type' as unknown as Parameters<
+            typeof caller.getAll
+          >[0]['type'],
+        })
       ).rejects.toThrow();
     });
 

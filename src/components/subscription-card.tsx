@@ -10,12 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Calendar,
-  DollarSign,
-  MoreVertical,
-  AlertCircle,
-} from 'lucide-react';
+import { Calendar, DollarSign, MoreVertical, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import Link from 'next/link';
 import { ProviderLogo } from '@/components/ui/provider-logo';

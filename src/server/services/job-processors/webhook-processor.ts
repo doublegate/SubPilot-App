@@ -37,7 +37,11 @@ interface AdobeWebhookPayload {
 }
 
 interface StripeWebhookPayload {
-  type: 'customer.subscription.deleted' | 'customer.subscription.updated' | 'invoice.payment_succeeded' | 'invoice.payment_failed';
+  type:
+    | 'customer.subscription.deleted'
+    | 'customer.subscription.updated'
+    | 'invoice.payment_succeeded'
+    | 'invoice.payment_failed';
   data: {
     object: {
       id?: string;
@@ -51,7 +55,12 @@ interface StripeWebhookPayload {
   timestamp?: string;
 }
 
-type WebhookPayload = NetflixWebhookPayload | SpotifyWebhookPayload | AdobeWebhookPayload | StripeWebhookPayload | Record<string, unknown>;
+type WebhookPayload =
+  | NetflixWebhookPayload
+  | SpotifyWebhookPayload
+  | AdobeWebhookPayload
+  | StripeWebhookPayload
+  | Record<string, unknown>;
 
 interface WebhookHeaders {
   'x-timestamp'?: string | string[];
@@ -390,9 +399,15 @@ export class WebhookJobProcessor {
   /**
    * Provider-specific webhook validators
    */
-  private validateNetflixWebhook(payload: WebhookPayload): WebhookValidationResult {
+  private validateNetflixWebhook(
+    payload: WebhookPayload
+  ): WebhookValidationResult {
     const netflixPayload = payload as NetflixWebhookPayload;
-    const requiredFields: (keyof NetflixWebhookPayload)[] = ['event_type', 'subscription_id', 'user_id'];
+    const requiredFields: (keyof NetflixWebhookPayload)[] = [
+      'event_type',
+      'subscription_id',
+      'user_id',
+    ];
 
     for (const field of requiredFields) {
       if (!netflixPayload[field]) {
@@ -420,7 +435,9 @@ export class WebhookJobProcessor {
     };
   }
 
-  private validateSpotifyWebhook(payload: WebhookPayload): WebhookValidationResult {
+  private validateSpotifyWebhook(
+    payload: WebhookPayload
+  ): WebhookValidationResult {
     const spotifyPayload = payload as SpotifyWebhookPayload;
     if (!spotifyPayload.type || !spotifyPayload.data) {
       return { valid: false, error: 'Missing type or data field' };
@@ -441,7 +458,9 @@ export class WebhookJobProcessor {
     };
   }
 
-  private validateAdobeWebhook(payload: WebhookPayload): WebhookValidationResult {
+  private validateAdobeWebhook(
+    payload: WebhookPayload
+  ): WebhookValidationResult {
     const adobePayload = payload as AdobeWebhookPayload;
     if (!adobePayload.event?.type) {
       return { valid: false, error: 'Missing event type' };
@@ -458,7 +477,9 @@ export class WebhookJobProcessor {
     };
   }
 
-  private validateStripeWebhook(payload: WebhookPayload): WebhookValidationResult {
+  private validateStripeWebhook(
+    payload: WebhookPayload
+  ): WebhookValidationResult {
     const stripePayload = payload as StripeWebhookPayload;
     if (!stripePayload.type || !stripePayload.data) {
       return { valid: false, error: 'Missing type or data field' };
@@ -481,7 +502,9 @@ export class WebhookJobProcessor {
     };
   }
 
-  private validateGenericWebhook(payload: WebhookPayload): WebhookValidationResult {
+  private validateGenericWebhook(
+    payload: WebhookPayload
+  ): WebhookValidationResult {
     // Basic validation for unknown providers
     const genericPayload = payload as Record<string, unknown>;
     if (!genericPayload.event_type && !genericPayload.type) {
@@ -494,7 +517,9 @@ export class WebhookJobProcessor {
   /**
    * Provider-specific data extractors
    */
-  private extractNetflixData(payload: WebhookPayload): WebhookDataExtractionResult {
+  private extractNetflixData(
+    payload: WebhookPayload
+  ): WebhookDataExtractionResult {
     const netflixPayload = payload as Record<string, unknown>;
     return {
       success: true,
@@ -518,7 +543,9 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractSpotifyData(payload: WebhookPayload): WebhookDataExtractionResult {
+  private extractSpotifyData(
+    payload: WebhookPayload
+  ): WebhookDataExtractionResult {
     const spotifyPayload = payload as Record<string, unknown>;
     return {
       success: true,
@@ -538,7 +565,9 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractAdobeData(payload: WebhookPayload): WebhookDataExtractionResult {
+  private extractAdobeData(
+    payload: WebhookPayload
+  ): WebhookDataExtractionResult {
     const adobePayload = payload as Record<string, unknown>;
     return {
       success: true,
@@ -547,7 +576,9 @@ export class WebhookJobProcessor {
         eventType: adobePayload.eventType as string,
         subscriptionId: adobePayload.subscriptionId as string,
         customerId: adobePayload.customerId as string,
-        status: (adobePayload.eventType as string).includes('cancel') ? 'cancelled' : 'updated',
+        status: (adobePayload.eventType as string).includes('cancel')
+          ? 'cancelled'
+          : 'updated',
         effectiveDate: adobePayload.timestamp
           ? new Date(adobePayload.timestamp as string)
           : new Date(),
@@ -558,7 +589,9 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractStripeData(payload: WebhookPayload): WebhookDataExtractionResult {
+  private extractStripeData(
+    payload: WebhookPayload
+  ): WebhookDataExtractionResult {
     const stripePayload = payload as StripeWebhookPayload;
     const subscription = stripePayload.data?.object;
 
@@ -580,13 +613,17 @@ export class WebhookJobProcessor {
     };
   }
 
-  private extractGenericData(payload: WebhookPayload): WebhookDataExtractionResult {
+  private extractGenericData(
+    payload: WebhookPayload
+  ): WebhookDataExtractionResult {
     const genericPayload = payload as Record<string, unknown>;
     return {
       success: true,
       data: {
         provider: 'generic',
-        eventType: (genericPayload.event_type ?? genericPayload.type ?? 'unknown') as string,
+        eventType: (genericPayload.event_type ??
+          genericPayload.type ??
+          'unknown') as string,
         status: 'unknown',
         effectiveDate: new Date(),
         metadata: {
@@ -617,16 +654,13 @@ export class WebhookJobProcessor {
   }
 
   private simulateSignatureVerification(
-    provider: string,
-    payload: WebhookPayload,
-    headers: WebhookHeaders
+    _provider: string,
+    _payload: WebhookPayload,
+    _headers: WebhookHeaders
   ): { valid: boolean; error?: string } {
     // Simulate signature verification for demo providers
-    const signature =
-      headers?.['x-signature'] ?? headers?.['x-webhook-signature'];
-
+    // In production, you'd verify the signature from headers
     // For demo purposes, we'll accept webhooks with any signature or no signature
-    // In production, you'd implement proper signature verification
     return { valid: true };
   }
 
@@ -645,7 +679,7 @@ export class WebhookJobProcessor {
         action: mapWebhookActionToSecurityAction(action),
         resource: webhookId,
         result:
-          action.includes('error') ?? action.includes('failed')
+          (action.includes('error') ?? action.includes('failed'))
             ? 'failure'
             : 'success',
         metadata: {

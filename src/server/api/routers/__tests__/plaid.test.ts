@@ -21,7 +21,18 @@ type MockPlaidItemWithRelations = PlaidItem & {
 };
 
 type MockPlaidItemWithFullAccounts = PlaidItem & {
-  bankAccounts: (Pick<BankAccount, 'id' | 'plaidAccountId' | 'name' | 'type' | 'subtype' | 'isoCurrencyCode' | 'isActive' | 'lastSync' | 'createdAt'> & {
+  bankAccounts: (Pick<
+    BankAccount,
+    | 'id'
+    | 'plaidAccountId'
+    | 'name'
+    | 'type'
+    | 'subtype'
+    | 'isoCurrencyCode'
+    | 'isActive'
+    | 'lastSync'
+    | 'createdAt'
+  > & {
     currentBalance: { toNumber: () => number };
   })[];
 };

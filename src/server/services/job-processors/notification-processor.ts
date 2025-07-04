@@ -109,7 +109,8 @@ export class NotificationJobProcessor {
       }
 
       // Parse notification preferences
-      const preferences = user.notificationPreferences as NotificationPreferences;
+      const preferences =
+        user.notificationPreferences as NotificationPreferences;
       const userChannels = this.filterChannelsByPreferences(
         channels,
         preferences

@@ -42,7 +42,14 @@ export interface StripeSubscription {
   id: string;
   object: 'subscription';
   customer: string;
-  status: 'active' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'trialing' | 'unpaid';
+  status:
+    | 'active'
+    | 'canceled'
+    | 'incomplete'
+    | 'incomplete_expired'
+    | 'past_due'
+    | 'trialing'
+    | 'unpaid';
   current_period_end: number;
   current_period_start: number;
   items: {
@@ -92,7 +99,14 @@ export interface StripePaymentIntent {
   object: 'payment_intent';
   amount: number;
   currency: string;
-  status: 'requires_payment_method' | 'requires_confirmation' | 'requires_action' | 'processing' | 'requires_capture' | 'canceled' | 'succeeded';
+  status:
+    | 'requires_payment_method'
+    | 'requires_confirmation'
+    | 'requires_action'
+    | 'processing'
+    | 'requires_capture'
+    | 'canceled'
+    | 'succeeded';
   client_secret: string;
   metadata: Record<string, string>;
 }
@@ -122,15 +136,30 @@ export interface StripeInvoiceLineItem {
 
 // Type guards for Stripe objects
 export function isStripeCustomer(obj: unknown): obj is StripeCustomer {
-  return typeof obj === 'object' && obj !== null && 'object' in obj && obj.object === 'customer';
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'object' in obj &&
+    obj.object === 'customer'
+  );
 }
 
 export function isStripeSubscription(obj: unknown): obj is StripeSubscription {
-  return typeof obj === 'object' && obj !== null && 'object' in obj && obj.object === 'subscription';
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'object' in obj &&
+    obj.object === 'subscription'
+  );
 }
 
 export function isStripeInvoice(obj: unknown): obj is StripeInvoice {
-  return typeof obj === 'object' && obj !== null && 'object' in obj && obj.object === 'invoice';
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'object' in obj &&
+    obj.object === 'invoice'
+  );
 }
 
 // Stripe webhook signature verification types

@@ -17,7 +17,7 @@ const MAX_METRICS = 1000;
  * TRPC Performance Monitoring Link
  * Tracks API call performance and logs slow queries
  */
-export const performanceLink: TRPCLink<any> = () => {
+export const performanceLink: TRPCLink<Record<string, unknown>> = () => {
   return ({ next, op }) => {
     return observable(observer => {
       const start = Date.now();

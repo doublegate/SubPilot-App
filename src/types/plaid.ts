@@ -12,7 +12,13 @@ export interface PlaidAccount {
   official_name: string | null;
   subtype: PlaidAccountSubtype | null;
   type: PlaidAccountType;
-  verification_status?: 'pending_automatic_verification' | 'pending_manual_verification' | 'manually_verified' | 'verification_expired' | 'verification_failed' | null;
+  verification_status?:
+    | 'pending_automatic_verification'
+    | 'pending_manual_verification'
+    | 'manually_verified'
+    | 'verification_expired'
+    | 'verification_failed'
+    | null;
 }
 
 export interface PlaidAccountBalance {
@@ -23,24 +29,24 @@ export interface PlaidAccountBalance {
   unofficial_currency_code: string | null;
 }
 
-export type PlaidAccountType = 
-  | 'investment' 
-  | 'credit' 
-  | 'depository' 
-  | 'loan' 
-  | 'brokerage' 
+export type PlaidAccountType =
+  | 'investment'
+  | 'credit'
+  | 'depository'
+  | 'loan'
+  | 'brokerage'
   | 'other';
 
-export type PlaidAccountSubtype = 
-  | 'checking' 
-  | 'savings' 
-  | 'hsa' 
-  | 'cd' 
-  | 'money market' 
-  | 'ira' 
-  | '401k' 
-  | 'student' 
-  | 'mortgage' 
+export type PlaidAccountSubtype =
+  | 'checking'
+  | 'savings'
+  | 'hsa'
+  | 'cd'
+  | 'money market'
+  | 'ira'
+  | '401k'
+  | 'student'
+  | 'mortgage'
   | 'credit card';
 
 // Plaid Transaction Types
@@ -74,7 +80,13 @@ export interface PlaidTransaction {
 
 export interface PlaidCounterparty {
   name: string;
-  type: 'merchant' | 'financial_institution' | 'payment_app' | 'marketplace' | 'payment_terminal' | 'other';
+  type:
+    | 'merchant'
+    | 'financial_institution'
+    | 'payment_app'
+    | 'marketplace'
+    | 'payment_terminal'
+    | 'other';
   logo_url: string | null;
   website: string | null;
   entity_id: string | null;
@@ -92,10 +104,7 @@ export interface PlaidLocation {
   store_number: string | null;
 }
 
-export type PlaidPaymentChannel = 
-  | 'online' 
-  | 'in store' 
-  | 'other';
+export type PlaidPaymentChannel = 'online' | 'in store' | 'other';
 
 export interface PlaidPaymentMeta {
   by_order_of: string | null;
@@ -114,19 +123,19 @@ export interface PlaidPersonalFinanceCategory {
   confidence_level: 'very_high' | 'high' | 'medium' | 'low' | null;
 }
 
-export type PlaidTransactionType = 
-  | 'adjustment' 
-  | 'atm' 
-  | 'bank charge' 
-  | 'bill payment' 
-  | 'cash' 
-  | 'cashback' 
-  | 'cheque' 
-  | 'direct debit' 
-  | 'interest' 
-  | 'purchase' 
-  | 'standingorder' 
-  | 'transfer' 
+export type PlaidTransactionType =
+  | 'adjustment'
+  | 'atm'
+  | 'bank charge'
+  | 'bill payment'
+  | 'cash'
+  | 'cashback'
+  | 'cheque'
+  | 'direct debit'
+  | 'interest'
+  | 'purchase'
+  | 'standingorder'
+  | 'transfer'
   | 'null';
 
 // Plaid Institution Types
@@ -143,21 +152,21 @@ export interface PlaidInstitution {
   status: PlaidInstitutionStatus | null;
 }
 
-export type PlaidProduct = 
-  | 'assets' 
-  | 'auth' 
-  | 'identity' 
-  | 'investments' 
-  | 'liabilities' 
-  | 'payment_initiation' 
-  | 'transactions' 
-  | 'credit_details' 
-  | 'income' 
-  | 'income_verification' 
-  | 'deposit_switch' 
-  | 'standing_orders' 
-  | 'transfer' 
-  | 'employment' 
+export type PlaidProduct =
+  | 'assets'
+  | 'auth'
+  | 'identity'
+  | 'investments'
+  | 'liabilities'
+  | 'payment_initiation'
+  | 'transactions'
+  | 'credit_details'
+  | 'income'
+  | 'income_verification'
+  | 'deposit_switch'
+  | 'standing_orders'
+  | 'transfer'
+  | 'employment'
   | 'recurring_transactions';
 
 export interface PlaidInstitutionStatus {
@@ -219,27 +228,32 @@ export interface PlaidError {
   suggested_action: string | null;
 }
 
-export type PlaidErrorType = 
-  | 'INVALID_REQUEST' 
-  | 'INVALID_RESULT' 
-  | 'INVALID_INPUT' 
-  | 'INSTITUTION_ERROR' 
-  | 'RATE_LIMIT_EXCEEDED' 
-  | 'API_ERROR' 
-  | 'ITEM_ERROR' 
-  | 'ASSET_REPORT_ERROR' 
-  | 'RECAPTCHA_ERROR' 
-  | 'OAUTH_ERROR' 
-  | 'PAYMENT_ERROR' 
-  | 'BANK_TRANSFER_ERROR' 
-  | 'INCOME_VERIFICATION_ERROR' 
-  | 'MICRODEPOSITS_ERROR' 
+export type PlaidErrorType =
+  | 'INVALID_REQUEST'
+  | 'INVALID_RESULT'
+  | 'INVALID_INPUT'
+  | 'INSTITUTION_ERROR'
+  | 'RATE_LIMIT_EXCEEDED'
+  | 'API_ERROR'
+  | 'ITEM_ERROR'
+  | 'ASSET_REPORT_ERROR'
+  | 'RECAPTCHA_ERROR'
+  | 'OAUTH_ERROR'
+  | 'PAYMENT_ERROR'
+  | 'BANK_TRANSFER_ERROR'
+  | 'INCOME_VERIFICATION_ERROR'
+  | 'MICRODEPOSITS_ERROR'
   | 'SANDBOX_ERROR';
 
 // Plaid Webhook Types
 export interface PlaidWebhookTransaction {
   webhook_type: 'TRANSACTIONS';
-  webhook_code: 'SYNC_UPDATES_AVAILABLE' | 'DEFAULT_UPDATE' | 'HISTORICAL_UPDATE' | 'INITIAL_UPDATE' | 'TRANSACTIONS_REMOVED';
+  webhook_code:
+    | 'SYNC_UPDATES_AVAILABLE'
+    | 'DEFAULT_UPDATE'
+    | 'HISTORICAL_UPDATE'
+    | 'INITIAL_UPDATE'
+    | 'TRANSACTIONS_REMOVED';
   item_id: string;
   error: PlaidError | null;
   new_transactions: number;
@@ -248,7 +262,12 @@ export interface PlaidWebhookTransaction {
 
 export interface PlaidWebhookItem {
   webhook_type: 'ITEM';
-  webhook_code: 'ERROR' | 'NEW_ACCOUNTS_AVAILABLE' | 'PENDING_EXPIRATION' | 'USER_PERMISSION_REVOKED' | 'WEBHOOK_UPDATE_ACKNOWLEDGED';
+  webhook_code:
+    | 'ERROR'
+    | 'NEW_ACCOUNTS_AVAILABLE'
+    | 'PENDING_EXPIRATION'
+    | 'USER_PERMISSION_REVOKED'
+    | 'WEBHOOK_UPDATE_ACKNOWLEDGED';
   item_id: string;
   error: PlaidError | null;
   environment: 'sandbox' | 'development' | 'production';
@@ -258,15 +277,32 @@ export type PlaidWebhook = PlaidWebhookTransaction | PlaidWebhookItem;
 
 // Type guards for Plaid objects
 export function isPlaidError(obj: unknown): obj is PlaidError {
-  return typeof obj === 'object' && obj !== null && 'error_type' in obj && 'error_code' in obj;
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'error_type' in obj &&
+    'error_code' in obj
+  );
 }
 
-export function isPlaidTransactionWebhook(obj: unknown): obj is PlaidWebhookTransaction {
-  return typeof obj === 'object' && obj !== null && 'webhook_type' in obj && obj.webhook_type === 'TRANSACTIONS';
+export function isPlaidTransactionWebhook(
+  obj: unknown
+): obj is PlaidWebhookTransaction {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'webhook_type' in obj &&
+    obj.webhook_type === 'TRANSACTIONS'
+  );
 }
 
 export function isPlaidItemWebhook(obj: unknown): obj is PlaidWebhookItem {
-  return typeof obj === 'object' && obj !== null && 'webhook_type' in obj && obj.webhook_type === 'ITEM';
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'webhook_type' in obj &&
+    obj.webhook_type === 'ITEM'
+  );
 }
 
 // Plaid API Response Types

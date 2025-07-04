@@ -16,6 +16,37 @@ interface AnalyticsResult {
   error?: string;
 }
 
+// Cancellation statistics result
+interface CancellationStats {
+  totalRequests: number;
+  successful: number;
+  failed: number;
+  pending: number;
+  successRate: number;
+  averageTime: number;
+  byMethod: Record<string, number>;
+  byStatus: Record<string, number>;
+  byPriority: Record<string, number>;
+}
+
+// User activity statistics result
+interface UserActivityStats {
+  totalActiveUsers: number;
+  newUsers: number;
+  returningUsers: number;
+  averageRequestsPerUser: number;
+  topUsers: Array<{
+    userId: string;
+    requestCount: number;
+    successRate: number;
+  }>;
+  activityByDay: Array<{
+    date: string;
+    userCount: number;
+    requestCount: number;
+  }>;
+}
+
 // Helper function to map analytics events to security actions
 function mapEventToAction(event: string): SecurityAction {
   switch (event) {
@@ -495,7 +526,7 @@ export class AnalyticsJobProcessor {
   private async aggregateCancellationStats(
     timeframe: string,
     filters: Record<string, unknown> = {}
-  ): Promise<any> {
+  ): Promise<CancellationStats> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
 
     const where: Record<string, unknown> = {
@@ -556,7 +587,7 @@ export class AnalyticsJobProcessor {
   private async aggregateUserActivity(
     timeframe: string,
     _filters: Record<string, unknown> = {}
-  ): Promise<any> {
+  ): Promise<UserActivityStats> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
 
     // Get active users (users who made cancellation requests)

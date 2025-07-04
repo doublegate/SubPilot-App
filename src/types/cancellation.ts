@@ -4,11 +4,11 @@
  */
 
 // Base cancellation status types
-export type CancellationStatus = 
-  | 'pending' 
-  | 'processing' 
-  | 'completed' 
-  | 'failed' 
+export type CancellationStatus =
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'failed'
   | 'cancelled'
   | 'requires_manual';
 
@@ -148,7 +148,7 @@ export interface CancellationError {
   details?: Record<string, unknown>;
 }
 
-// Analytics interfaces  
+// Analytics interfaces
 export interface CancellationAnalytics {
   timeframe: 'day' | 'week' | 'month' | 'year';
   totalRequests: number;
@@ -188,4 +188,74 @@ export function isCancellationError(obj: unknown): obj is CancellationError {
     typeof (obj as CancellationError).code === 'string' &&
     typeof (obj as CancellationError).message === 'string'
   );
+}
+
+// Enhanced Unified Cancellation Result - Status Object Pattern (never throws exceptions)
+export interface UnifiedCancellationResult {
+  success: boolean;
+  orchestrationId: string;
+  requestId: string;
+  status:
+    | 'initiated'
+    | 'routing'
+    | 'processing'
+    | 'completed'
+    | 'failed'
+    | 'requires_manual'
+    | 'scheduled';
+  method: 'api' | 'event_driven' | 'lightweight';
+  message: string;
+
+  // Timing information
+  estimatedCompletion?: Date;
+  actualCompletion?: Date;
+  processingStarted?: Date;
+
+  // Results
+  confirmationCode?: string;
+  effectiveDate?: Date;
+  refundAmount?: number;
+
+  // Instructions (for manual/lightweight methods)
+  manualInstructions?: {
+    provider: {
+      name: string;
+      logo?: string;
+      difficulty: 'easy' | 'medium' | 'hard';
+      estimatedTime: number;
+    };
+    steps: string[];
+    tips: string[];
+    warnings: string[];
+    contactInfo: {
+      website?: string;
+      phone?: string;
+      email?: string;
+      chat?: string;
+    };
+  };
+
+  // Metadata
+  metadata: {
+    originalMethod?: string;
+    fallbackReason?: string;
+    attemptsUsed: number;
+    providerInfo?: Record<string, unknown>;
+    workflowId?: string;
+    realTimeUpdatesEnabled: boolean;
+  };
+
+  // Real-time tracking
+  tracking: {
+    sseEndpoint: string;
+    websocketEndpoint?: string;
+    statusCheckUrl: string;
+  };
+
+  // Error information (when success: false)
+  error?: {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
+  };
 }

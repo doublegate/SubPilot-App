@@ -26,17 +26,21 @@ export function PullToRefresh({
     if (!container) return;
 
     let touchStartY = 0;
+    let currentIsPulling = false;
+    let currentPullDistance = 0;
+    let currentIsRefreshing = false;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (container.scrollTop === 0) {
         touchStartY = e.touches[0]?.clientY ?? 0;
         startY.current = touchStartY;
+        currentIsPulling = true;
         setIsPulling(true);
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isPulling || isRefreshing) return;
+      if (!currentIsPulling || currentIsRefreshing) return;
 
       const touchY = e.touches[0]?.clientY ?? 0;
       const distance = touchY - startY.current;
@@ -45,16 +49,19 @@ export function PullToRefresh({
         e.preventDefault();
         // Apply resistance for more natural feel
         const adjustedDistance = Math.min(distance * 0.5, threshold * 2);
+        currentPullDistance = adjustedDistance;
         setPullDistance(adjustedDistance);
       }
     };
 
     const handleTouchEnd = () => {
-      if (!isPulling) return;
+      if (!currentIsPulling) return;
 
+      currentIsPulling = false;
       setIsPulling(false);
 
-      if (pullDistance > threshold && !isRefreshing) {
+      if (currentPullDistance > threshold && !currentIsRefreshing) {
+        currentIsRefreshing = true;
         setIsRefreshing(true);
         setPullDistance(threshold);
 
@@ -62,6 +69,7 @@ export function PullToRefresh({
           try {
             await onRefresh();
           } finally {
+            currentIsRefreshing = false;
             setIsRefreshing(false);
             setPullDistance(0);
           }
@@ -70,6 +78,15 @@ export function PullToRefresh({
         setPullDistance(0);
       }
     };
+
+    // Sync local state with React state
+    const syncState = () => {
+      currentIsPulling = isPulling;
+      currentPullDistance = pullDistance;
+      currentIsRefreshing = isRefreshing;
+    };
+
+    syncState();
 
     container.addEventListener('touchstart', handleTouchStart, {
       passive: false,
@@ -84,7 +101,7 @@ export function PullToRefresh({
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isPulling, isRefreshing, pullDistance, threshold, onRefresh]);
+  }, [threshold, onRefresh]); // Remove state dependencies to avoid recreating handlers
 
   const progress = Math.min(pullDistance / threshold, 1);
   const rotation = progress * 180;

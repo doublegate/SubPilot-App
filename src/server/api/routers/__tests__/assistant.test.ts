@@ -91,9 +91,15 @@ vi.mock('@/server/services/conversation.service', () => ({
       total: 1,
     }),
     getStats: vi.fn().mockResolvedValue(mockStats),
-    exportConversation: vi.fn().mockResolvedValue('# Conversation Export\n\nMarkdown content here'),
+    exportConversation: vi
+      .fn()
+      .mockResolvedValue('# Conversation Export\n\nMarkdown content here'),
     getConversation: vi.fn().mockResolvedValue(mockConversation),
-    generateSummary: vi.fn().mockResolvedValue('This conversation covers subscription management topics.'),
+    generateSummary: vi
+      .fn()
+      .mockResolvedValue(
+        'This conversation covers subscription management topics.'
+      ),
     deleteAll: vi.fn().mockResolvedValue({ deletedCount: 5 }),
   })),
 }));
@@ -122,7 +128,7 @@ describe('assistantRouter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockCtx = {
       session: {
         user: mockUser,
@@ -135,14 +141,16 @@ describe('assistantRouter', () => {
   describe('startConversation', () => {
     it('should start a new conversation with initial message', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.startConversation({
         initialMessage: 'Hello, I need help with my subscriptions',
       });
 
       expect(result).toEqual(mockConversation);
-      
-      const { AssistantService } = await import('@/server/services/assistant.service');
+
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
       expect(mockInstance.startConversation).toHaveBeenCalledWith(
         'user_123',
@@ -152,12 +160,14 @@ describe('assistantRouter', () => {
 
     it('should start a conversation without initial message', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.startConversation({});
 
       expect(result).toEqual(mockConversation);
-      
-      const { AssistantService } = await import('@/server/services/assistant.service');
+
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
       expect(mockInstance.startConversation).toHaveBeenCalledWith(
         'user_123',
@@ -166,20 +176,26 @@ describe('assistantRouter', () => {
     });
 
     it('should handle service failure', async () => {
-      const { AssistantService } = await import('@/server/services/assistant.service');
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
-      vi.mocked(mockInstance.startConversation).mockRejectedValueOnce(new Error('Service failed'));
+      vi.mocked(mockInstance.startConversation).mockRejectedValueOnce(
+        new Error('Service failed')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.startConversation({})).rejects.toThrow('Failed to start conversation');
+      await expect(caller.startConversation({})).rejects.toThrow(
+        'Failed to start conversation'
+      );
     });
   });
 
   describe('sendMessage', () => {
     it('should send message and get AI response', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.sendMessage({
         conversationId: 'conv_123',
         message: 'Cancel my Netflix subscription',
@@ -187,8 +203,10 @@ describe('assistantRouter', () => {
 
       expect(result.message.content).toBe('AI response');
       expect(result.conversation).toEqual(mockConversation);
-      
-      const { AssistantService } = await import('@/server/services/assistant.service');
+
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
       expect(mockInstance.sendMessage).toHaveBeenCalledWith(
         'conv_123',
@@ -201,21 +219,27 @@ describe('assistantRouter', () => {
       const caller = assistantRouter.createCaller(mockCtx);
 
       // Test empty message
-      await expect(caller.sendMessage({
-        conversationId: 'conv_123',
-        message: '',
-      })).rejects.toThrow();
+      await expect(
+        caller.sendMessage({
+          conversationId: 'conv_123',
+          message: '',
+        })
+      ).rejects.toThrow();
 
       // Test message too long
       const longMessage = 'a'.repeat(2001);
-      await expect(caller.sendMessage({
-        conversationId: 'conv_123',
-        message: longMessage,
-      })).rejects.toThrow();
+      await expect(
+        caller.sendMessage({
+          conversationId: 'conv_123',
+          message: longMessage,
+        })
+      ).rejects.toThrow();
     });
 
     it('should handle TRPC errors from service', async () => {
-      const { AssistantService } = await import('@/server/services/assistant.service');
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
       const tRPCError = new TRPCError({
         code: 'NOT_FOUND',
@@ -225,38 +249,48 @@ describe('assistantRouter', () => {
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.sendMessage({
-        conversationId: 'invalid_id',
-        message: 'Test message',
-      })).rejects.toThrow('Conversation not found');
+      await expect(
+        caller.sendMessage({
+          conversationId: 'invalid_id',
+          message: 'Test message',
+        })
+      ).rejects.toThrow('Conversation not found');
     });
 
     it('should handle general service errors', async () => {
-      const { AssistantService } = await import('@/server/services/assistant.service');
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
-      vi.mocked(mockInstance.sendMessage).mockRejectedValueOnce(new Error('Network error'));
+      vi.mocked(mockInstance.sendMessage).mockRejectedValueOnce(
+        new Error('Network error')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.sendMessage({
-        conversationId: 'conv_123',
-        message: 'Test message',
-      })).rejects.toThrow('Failed to send message');
+      await expect(
+        caller.sendMessage({
+          conversationId: 'conv_123',
+          message: 'Test message',
+        })
+      ).rejects.toThrow('Failed to send message');
     });
   });
 
   describe('executeAction', () => {
     it('should execute action with confirmation', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.executeAction({
         actionId: 'action_123',
         confirmed: true,
       });
 
       expect(result).toEqual(mockActionResult);
-      
-      const { AssistantService } = await import('@/server/services/assistant.service');
+
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
       expect(mockInstance.executeAction).toHaveBeenCalledWith(
         'action_123',
@@ -267,14 +301,16 @@ describe('assistantRouter', () => {
 
     it('should execute action without confirmation (default false)', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.executeAction({
         actionId: 'action_123',
       });
 
       expect(result).toEqual(mockActionResult);
-      
-      const { AssistantService } = await import('@/server/services/assistant.service');
+
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
       expect(mockInstance.executeAction).toHaveBeenCalledWith(
         'action_123',
@@ -284,67 +320,82 @@ describe('assistantRouter', () => {
     });
 
     it('should handle action execution failure', async () => {
-      const { AssistantService } = await import('@/server/services/assistant.service');
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
-      vi.mocked(mockInstance.executeAction).mockRejectedValueOnce(new Error('Action failed'));
+      vi.mocked(mockInstance.executeAction).mockRejectedValueOnce(
+        new Error('Action failed')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.executeAction({
-        actionId: 'invalid_action',
-      })).rejects.toThrow('Failed to execute action');
+      await expect(
+        caller.executeAction({
+          actionId: 'invalid_action',
+        })
+      ).rejects.toThrow('Failed to execute action');
     });
 
     it('should validate output format with any type', async () => {
-      const { AssistantService } = await import('@/server/services/assistant.service');
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
       const complexResult = {
         success: true,
         actionId: 'action_123',
-        result: { 
-          complexData: { nested: true }, 
+        result: {
+          complexData: { nested: true },
           array: [1, 2, 3],
-          nullValue: null 
+          nullValue: null,
         },
         message: 'Complex action completed',
       };
-      vi.mocked(mockInstance.executeAction).mockResolvedValueOnce(complexResult);
+      vi.mocked(mockInstance.executeAction).mockResolvedValueOnce(
+        complexResult
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.executeAction({
         actionId: 'action_123',
       });
 
       expect(result).toEqual(complexResult);
     });
-  });  describe('getConversations', () => {
+  });
+  describe('getConversations', () => {
     it('should get user conversations with default pagination', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.getConversations({});
 
       expect(result.conversations).toEqual(mockConversationList);
       expect(result.total).toBe(2);
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.getUserConversations).toHaveBeenCalledWith(
         'user_123',
         20, // default limit
-        0   // default offset
+        0 // default offset
       );
     });
 
     it('should get conversations with custom pagination', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       await caller.getConversations({
         limit: 10,
         offset: 5,
       });
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.getUserConversations).toHaveBeenCalledWith(
         'user_123',
@@ -365,27 +416,35 @@ describe('assistantRouter', () => {
     });
 
     it('should handle service errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.getUserConversations).mockRejectedValueOnce(new Error('DB error'));
+      vi.mocked(mockInstance.getUserConversations).mockRejectedValueOnce(
+        new Error('DB error')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.getConversations({})).rejects.toThrow('Failed to fetch conversations');
+      await expect(caller.getConversations({})).rejects.toThrow(
+        'Failed to fetch conversations'
+      );
     });
   });
 
   describe('getConversation', () => {
     it('should get specific conversation with messages', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.getConversation({
         conversationId: 'conv_123',
       });
 
       expect(result).toEqual(mockConversation);
-      
-      const { AssistantService } = await import('@/server/services/assistant.service');
+
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
       expect(mockInstance.getConversation).toHaveBeenCalledWith(
         'conv_123',
@@ -394,7 +453,9 @@ describe('assistantRouter', () => {
     });
 
     it('should handle TRPC errors', async () => {
-      const { AssistantService } = await import('@/server/services/assistant.service');
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
       const tRPCError = new TRPCError({
         code: 'NOT_FOUND',
@@ -404,44 +465,53 @@ describe('assistantRouter', () => {
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.getConversation({
-        conversationId: 'invalid_id',
-      })).rejects.toThrow('Conversation not found');
+      await expect(
+        caller.getConversation({
+          conversationId: 'invalid_id',
+        })
+      ).rejects.toThrow('Conversation not found');
     });
 
     it('should handle general errors', async () => {
-      const { AssistantService } = await import('@/server/services/assistant.service');
+      const { AssistantService } = await import(
+        '@/server/services/assistant.service'
+      );
       const mockInstance = new AssistantService(mockCtx.db);
-      vi.mocked(mockInstance.getConversation).mockRejectedValueOnce(new Error('Service error'));
+      vi.mocked(mockInstance.getConversation).mockRejectedValueOnce(
+        new Error('Service error')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.getConversation({
-        conversationId: 'conv_123',
-      })).rejects.toThrow('Failed to fetch conversation');
+      await expect(
+        caller.getConversation({
+          conversationId: 'conv_123',
+        })
+      ).rejects.toThrow('Failed to fetch conversation');
     });
   });
 
   describe('deleteConversation', () => {
     it('should delete conversation successfully', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.deleteConversation({
         conversationId: 'conv_123',
       });
 
       expect(result.success).toBe(true);
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
-      const mockInstance = new ConversationService(mockCtx.db);
-      expect(mockInstance.delete).toHaveBeenCalledWith(
-        'conv_123',
-        'user_123'
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
       );
+      const mockInstance = new ConversationService(mockCtx.db);
+      expect(mockInstance.delete).toHaveBeenCalledWith('conv_123', 'user_123');
     });
 
     it('should handle TRPC errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       const tRPCError = new TRPCError({
         code: 'FORBIDDEN',
@@ -451,36 +521,46 @@ describe('assistantRouter', () => {
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.deleteConversation({
-        conversationId: 'conv_123',
-      })).rejects.toThrow('Not authorized to delete this conversation');
+      await expect(
+        caller.deleteConversation({
+          conversationId: 'conv_123',
+        })
+      ).rejects.toThrow('Not authorized to delete this conversation');
     });
 
     it('should handle general errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.delete).mockRejectedValueOnce(new Error('Database error'));
+      vi.mocked(mockInstance.delete).mockRejectedValueOnce(
+        new Error('Database error')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.deleteConversation({
-        conversationId: 'conv_123',
-      })).rejects.toThrow('Failed to delete conversation');
+      await expect(
+        caller.deleteConversation({
+          conversationId: 'conv_123',
+        })
+      ).rejects.toThrow('Failed to delete conversation');
     });
   });
 
   describe('updateTitle', () => {
     it('should update conversation title', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.updateTitle({
         conversationId: 'conv_123',
         title: 'Updated Title',
       });
 
       expect(result.title).toBe('Updated Title');
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.updateTitle).toHaveBeenCalledWith(
         'conv_123',
@@ -493,45 +573,57 @@ describe('assistantRouter', () => {
       const caller = assistantRouter.createCaller(mockCtx);
 
       // Test empty title
-      await expect(caller.updateTitle({
-        conversationId: 'conv_123',
-        title: '',
-      })).rejects.toThrow();
+      await expect(
+        caller.updateTitle({
+          conversationId: 'conv_123',
+          title: '',
+        })
+      ).rejects.toThrow();
 
       // Test title too long
       const longTitle = 'a'.repeat(101);
-      await expect(caller.updateTitle({
-        conversationId: 'conv_123',
-        title: longTitle,
-      })).rejects.toThrow();
+      await expect(
+        caller.updateTitle({
+          conversationId: 'conv_123',
+          title: longTitle,
+        })
+      ).rejects.toThrow();
     });
 
     it('should handle errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.updateTitle).mockRejectedValueOnce(new Error('Update failed'));
+      vi.mocked(mockInstance.updateTitle).mockRejectedValueOnce(
+        new Error('Update failed')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.updateTitle({
-        conversationId: 'conv_123',
-        title: 'New Title',
-      })).rejects.toThrow('Failed to update title');
+      await expect(
+        caller.updateTitle({
+          conversationId: 'conv_123',
+          title: 'New Title',
+        })
+      ).rejects.toThrow('Failed to update title');
     });
   });
 
   describe('searchConversations', () => {
     it('should search conversations with default limit', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.searchConversations({
         query: 'subscription',
       });
 
       expect(result.conversations).toEqual([mockConversationList[0]]);
       expect(result.total).toBe(1);
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.search).toHaveBeenCalledWith(
         'user_123',
@@ -542,13 +634,15 @@ describe('assistantRouter', () => {
 
     it('should search with custom limit', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       await caller.searchConversations({
         query: 'netflix',
         limit: 10,
       });
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.search).toHaveBeenCalledWith(
         'user_123',
@@ -565,66 +659,91 @@ describe('assistantRouter', () => {
 
       // Test query too long
       const longQuery = 'a'.repeat(101);
-      await expect(caller.searchConversations({ query: longQuery })).rejects.toThrow();
+      await expect(
+        caller.searchConversations({ query: longQuery })
+      ).rejects.toThrow();
 
       // Test limit bounds
-      await expect(caller.searchConversations({
-        query: 'test',
-        limit: 0,
-      })).rejects.toThrow();
-      await expect(caller.searchConversations({
-        query: 'test',
-        limit: 51,
-      })).rejects.toThrow();
+      await expect(
+        caller.searchConversations({
+          query: 'test',
+          limit: 0,
+        })
+      ).rejects.toThrow();
+      await expect(
+        caller.searchConversations({
+          query: 'test',
+          limit: 51,
+        })
+      ).rejects.toThrow();
     });
 
     it('should handle search errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.search).mockRejectedValueOnce(new Error('Search failed'));
+      vi.mocked(mockInstance.search).mockRejectedValueOnce(
+        new Error('Search failed')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.searchConversations({
-        query: 'test',
-      })).rejects.toThrow('Failed to search conversations');
+      await expect(
+        caller.searchConversations({
+          query: 'test',
+        })
+      ).rejects.toThrow('Failed to search conversations');
     });
-  });  describe('getStats', () => {
+  });
+  describe('getStats', () => {
     it('should get conversation statistics', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.getStats();
 
       expect(result).toEqual(mockStats);
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.getStats).toHaveBeenCalledWith('user_123');
     });
 
     it('should handle stats errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.getStats).mockRejectedValueOnce(new Error('Stats error'));
+      vi.mocked(mockInstance.getStats).mockRejectedValueOnce(
+        new Error('Stats error')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.getStats()).rejects.toThrow('Failed to fetch statistics');
+      await expect(caller.getStats()).rejects.toThrow(
+        'Failed to fetch statistics'
+      );
     });
   });
 
   describe('exportConversation', () => {
     it('should export conversation as markdown by default', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.exportConversation({
         conversationId: 'conv_123',
       });
 
       expect(result.format).toBe('markdown');
-      expect(result.content).toBe('# Conversation Export\n\nMarkdown content here');
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      expect(result.content).toBe(
+        '# Conversation Export\n\nMarkdown content here'
+      );
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.exportConversation).toHaveBeenCalledWith(
         'conv_123',
@@ -634,19 +753,21 @@ describe('assistantRouter', () => {
 
     it('should export conversation as markdown when specified', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.exportConversation({
         conversationId: 'conv_123',
         format: 'markdown',
       });
 
       expect(result.format).toBe('markdown');
-      expect(result.content).toBe('# Conversation Export\n\nMarkdown content here');
+      expect(result.content).toBe(
+        '# Conversation Export\n\nMarkdown content here'
+      );
     });
 
     it('should export conversation as JSON when specified', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.exportConversation({
         conversationId: 'conv_123',
         format: 'json',
@@ -654,8 +775,10 @@ describe('assistantRouter', () => {
 
       expect(result.format).toBe('json');
       expect(result.content).toBe(JSON.stringify(mockConversation, null, 2));
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.getConversation).toHaveBeenCalledWith(
         'conv_123',
@@ -664,45 +787,61 @@ describe('assistantRouter', () => {
     });
 
     it('should handle TRPC errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       const tRPCError = new TRPCError({
         code: 'NOT_FOUND',
         message: 'Conversation not found',
       });
-      vi.mocked(mockInstance.exportConversation).mockRejectedValueOnce(tRPCError);
+      vi.mocked(mockInstance.exportConversation).mockRejectedValueOnce(
+        tRPCError
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.exportConversation({
-        conversationId: 'invalid_id',
-      })).rejects.toThrow('Conversation not found');
+      await expect(
+        caller.exportConversation({
+          conversationId: 'invalid_id',
+        })
+      ).rejects.toThrow('Conversation not found');
     });
 
     it('should handle general errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.exportConversation).mockRejectedValueOnce(new Error('Export failed'));
+      vi.mocked(mockInstance.exportConversation).mockRejectedValueOnce(
+        new Error('Export failed')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.exportConversation({
-        conversationId: 'conv_123',
-      })).rejects.toThrow('Failed to export conversation');
+      await expect(
+        caller.exportConversation({
+          conversationId: 'conv_123',
+        })
+      ).rejects.toThrow('Failed to export conversation');
     });
   });
 
   describe('generateSummary', () => {
     it('should generate and save conversation summary', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.generateSummary({
         conversationId: 'conv_123',
       });
 
-      expect(result.summary).toBe('This conversation covers subscription management topics.');
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      expect(result.summary).toBe(
+        'This conversation covers subscription management topics.'
+      );
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.generateSummary).toHaveBeenCalledWith(
         'conv_123',
@@ -712,12 +851,16 @@ describe('assistantRouter', () => {
       // Verify the summary was saved to the database
       expect(mockCtx.db.conversation.update).toHaveBeenCalledWith({
         where: { id: 'conv_123' },
-        data: { summary: 'This conversation covers subscription management topics.' },
+        data: {
+          summary: 'This conversation covers subscription management topics.',
+        },
       });
     });
 
     it('should handle TRPC errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       const tRPCError = new TRPCError({
         code: 'FORBIDDEN',
@@ -727,58 +870,81 @@ describe('assistantRouter', () => {
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.generateSummary({
-        conversationId: 'conv_123',
-      })).rejects.toThrow('Access denied');
+      await expect(
+        caller.generateSummary({
+          conversationId: 'conv_123',
+        })
+      ).rejects.toThrow('Access denied');
     });
 
     it('should handle general errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.generateSummary).mockRejectedValueOnce(new Error('AI service failed'));
+      vi.mocked(mockInstance.generateSummary).mockRejectedValueOnce(
+        new Error('AI service failed')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.generateSummary({
-        conversationId: 'conv_123',
-      })).rejects.toThrow('Failed to generate summary');
+      await expect(
+        caller.generateSummary({
+          conversationId: 'conv_123',
+        })
+      ).rejects.toThrow('Failed to generate summary');
     });
   });
 
   describe('clearAllConversations', () => {
     it('should clear all user conversations', async () => {
       const caller = assistantRouter.createCaller(mockCtx);
-      
+
       const result = await caller.clearAllConversations();
 
       expect(result.deletedCount).toBe(5);
-      
-      const { ConversationService } = await import('@/server/services/conversation.service');
+
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
       expect(mockInstance.deleteAll).toHaveBeenCalledWith('user_123');
     });
 
     it('should handle clear operation errors', async () => {
-      const { ConversationService } = await import('@/server/services/conversation.service');
+      const { ConversationService } = await import(
+        '@/server/services/conversation.service'
+      );
       const mockInstance = new ConversationService(mockCtx.db);
-      vi.mocked(mockInstance.deleteAll).mockRejectedValueOnce(new Error('Delete failed'));
+      vi.mocked(mockInstance.deleteAll).mockRejectedValueOnce(
+        new Error('Delete failed')
+      );
 
       const caller = assistantRouter.createCaller(mockCtx);
 
-      await expect(caller.clearAllConversations()).rejects.toThrow('Failed to clear conversations');
+      await expect(caller.clearAllConversations()).rejects.toThrow(
+        'Failed to clear conversations'
+      );
     });
   });
 
   describe('authentication', () => {
     it('should require authentication for all endpoints', async () => {
       const unauthenticatedCtx = createInnerTRPCContext({ session: null });
-      const unauthenticatedCaller = assistantRouter.createCaller(unauthenticatedCtx);
+      const unauthenticatedCaller =
+        assistantRouter.createCaller(unauthenticatedCtx);
 
       // Test various endpoints require authentication
-      await expect(unauthenticatedCaller.startConversation({})).rejects.toThrow(TRPCError);
-      await expect(unauthenticatedCaller.getConversations({})).rejects.toThrow(TRPCError);
+      await expect(unauthenticatedCaller.startConversation({})).rejects.toThrow(
+        TRPCError
+      );
+      await expect(unauthenticatedCaller.getConversations({})).rejects.toThrow(
+        TRPCError
+      );
       await expect(unauthenticatedCaller.getStats()).rejects.toThrow(TRPCError);
-      await expect(unauthenticatedCaller.clearAllConversations()).rejects.toThrow(TRPCError);
+      await expect(
+        unauthenticatedCaller.clearAllConversations()
+      ).rejects.toThrow(TRPCError);
     });
   });
 
@@ -788,15 +954,21 @@ describe('assistantRouter', () => {
 
       // These tests depend on the actual validation schema
       // The current schema uses z.string() which accepts any string
-      const validIds = ['conv_123', 'short', 'very-long-conversation-id-with-special-chars-123'];
-      
+      const validIds = [
+        'conv_123',
+        'short',
+        'very-long-conversation-id-with-special-chars-123',
+      ];
+
       for (const id of validIds) {
         // Should not throw validation errors for valid string IDs
         try {
           await caller.getConversation({ conversationId: id });
         } catch (error) {
           // Expect service errors, not validation errors
-          expect((error as Error).message).toContain('Failed to fetch conversation');
+          expect((error as Error).message).toContain(
+            'Failed to fetch conversation'
+          );
         }
       }
     });

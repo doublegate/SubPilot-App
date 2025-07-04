@@ -251,6 +251,93 @@ export const cancellationRequestSchema = z.object({
     .optional(),
 });
 
+// Enhanced cancellation request schema for unified orchestrator
+export const enhancedCancellationRequestSchema = z
+  .object({
+    subscriptionId: idSchema,
+    reason: textFieldSchema(500).optional(),
+    priority: cancellationPrioritySchema.default('normal'),
+    preferredMethod: z
+      .enum(['auto', 'api', 'automation', 'manual'])
+      .default('auto'),
+    userPreferences: z
+      .object({
+        allowFallback: z.boolean().default(true),
+        maxRetries: z.number().int().min(1).max(5).default(3),
+        timeoutMinutes: z.number().int().min(5).max(60).default(30),
+        notificationPreferences: z
+          .object({
+            realTime: z.boolean().default(true),
+            email: z.boolean().default(true),
+            sms: z.boolean().default(false),
+          })
+          .optional(),
+      })
+      .optional(),
+    scheduling: z
+      .object({
+        scheduleFor: dateSchema
+          .refine(
+            date => date > new Date(),
+            'Scheduled time must be in the future'
+          )
+          .optional(),
+        timezone: z
+          .string()
+          .regex(/^[A-Za-z_]+\/[A-Za-z_]+$/, 'Invalid timezone format')
+          .optional(),
+      })
+      .optional(),
+  })
+  .strict()
+  .refine(
+    data => {
+      if (data.scheduling && !data.scheduling.scheduleFor) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'scheduleFor is required when scheduling is provided',
+      path: ['scheduling', 'scheduleFor'],
+    }
+  );
+
+// Provider capability validation schema
+export const providerCapabilitySchema = z
+  .object({
+    providerId: z.string().optional(),
+    providerName: nameSchema,
+    supportsApi: z.boolean(),
+    supportsAutomation: z.boolean(),
+    supportsManual: z.boolean(),
+    apiSuccessRate: z.number().min(0).max(1),
+    automationSuccessRate: z.number().min(0).max(1),
+    manualSuccessRate: z.number().min(0).max(1),
+    apiEstimatedTime: z.number().int().min(0),
+    automationEstimatedTime: z.number().int().min(0),
+    manualEstimatedTime: z.number().int().min(0),
+    difficulty: z.enum(['easy', 'medium', 'hard']),
+    requires2FA: z.boolean(),
+    hasRetentionOffers: z.boolean(),
+    requiresHumanIntervention: z.boolean(),
+    lastAssessed: dateSchema,
+    dataSource: z.enum(['database', 'heuristic', 'default']),
+  })
+  .strict();
+
+// Analytics query validation schema
+export const analyticsQuerySchema = z
+  .object({
+    timeframe: z
+      .enum(['day', 'week', 'month', 'quarter', 'year'])
+      .default('month'),
+    includeProviderBreakdown: z.boolean().default(true),
+    includeTrends: z.boolean().default(true),
+    userId: idSchema,
+  })
+  .strict();
+
 // ============================================================================
 // BILLING/STRIPE VALIDATION
 // ============================================================================
@@ -400,9 +487,9 @@ export type ValidationResult<T> =
   | { success: false; errors: string[] };
 
 // Advanced Schema Factory with Generic Constraints
-export const createEntitySchema = <T extends Record<string, unknown>>(
-  fields: { [K in keyof T]: z.ZodType<T[K]> }
-) => z.object(fields);
+export const createEntitySchema = <T extends Record<string, unknown>>(fields: {
+  [K in keyof T]: z.ZodType<T[K]>;
+}) => z.object(fields);
 
 // Conditional Schema Builder for Update Operations
 export const createUpdateSchema = <T extends z.ZodObject<z.ZodRawShape>>(
@@ -411,13 +498,13 @@ export const createUpdateSchema = <T extends z.ZodObject<z.ZodRawShape>>(
 ) => {
   const shape = baseSchema.shape;
   const updateShape: Record<string, z.ZodTypeAny> = {};
-  
+
   for (const [key, schema] of Object.entries(shape)) {
     updateShape[key] = requiredFields.includes(key)
       ? schema
       : schema.optional();
   }
-  
+
   return z.object(updateShape);
 };
 
@@ -441,7 +528,10 @@ export const validationUtils = {
       if (size <= maxSizeKB * 1024) {
         return { success: true, data };
       }
-      return { success: false, errors: [`Request too large (max ${maxSizeKB}KB)`] };
+      return {
+        success: false,
+        errors: [`Request too large (max ${maxSizeKB}KB)`],
+      };
     } catch {
       return { success: false, errors: ['Invalid data format'] };
     }
@@ -465,19 +555,19 @@ export const validationUtils = {
     } = options;
 
     let sanitized = str.trim();
-    
+
     if (!preserveCase) {
       sanitized = sanitized.toLowerCase();
     }
-    
+
     // Remove dangerous characters
     sanitized = sanitized.replace(/[<>'"&]/g, '');
-    
+
     // Apply character whitelist if provided
     if (!allowedChars.test(sanitized)) {
       sanitized = sanitized.replace(/[^a-zA-Z0-9\s.-_']/g, '');
     }
-    
+
     return sanitized.substring(0, maxLength);
   },
 
@@ -516,7 +606,9 @@ export const validationUtils = {
     if (allowedExtensions.length > 0) {
       const ext = file.name.split('.').pop()?.toLowerCase();
       if (!ext || !allowedExtensions.includes(ext)) {
-        errors.push(`File extension not allowed. Allowed: ${allowedExtensions.join(', ')}`);
+        errors.push(
+          `File extension not allowed. Allowed: ${allowedExtensions.join(', ')}`
+        );
       }
     }
 
@@ -536,29 +628,34 @@ export const validationUtils = {
   /**
    * Type-safe pagination validator with generic constraints
    */
-  validatePagination: <T extends { page?: number; limit?: number; sortBy?: string }>(
+  validatePagination: <
+    T extends { page?: number; limit?: number; sortBy?: string },
+  >(
     params: T
-  ): ValidationResult<Required<Pick<T, 'page' | 'limit'>> & Omit<T, 'page' | 'limit'>> => {
+  ): ValidationResult<
+    Required<Pick<T, 'page' | 'limit'>> & Omit<T, 'page' | 'limit'>
+  > => {
     const errors: string[] = [];
-    
+
     const page = params.page ?? 1;
     const limit = params.limit ?? 20;
-    
+
     if (page < 1 || page > 1000) {
       errors.push('Page must be between 1 and 1000');
     }
-    
+
     if (limit < 1 || limit > 100) {
       errors.push('Limit must be between 1 and 100');
     }
-    
+
     if (errors.length > 0) {
       return { success: false, errors };
     }
-    
+
     return {
       success: true,
-      data: { ...params, page, limit } as Required<Pick<T, 'page' | 'limit'>> & Omit<T, 'page' | 'limit'>
+      data: { ...params, page, limit } as Required<Pick<T, 'page' | 'limit'>> &
+        Omit<T, 'page' | 'limit'>,
     };
   },
 
@@ -574,21 +671,25 @@ export const validationUtils = {
     }>
   ): ValidationResult<T> => {
     const errors: string[] = [];
-    
+
     for (const { condition, requiredFields, message } of conditions) {
       if (condition(data)) {
-        const missing = requiredFields.filter(field => 
-          data[field] === undefined || data[field] === null || data[field] === ''
+        const missing = requiredFields.filter(
+          field =>
+            data[field] === undefined ||
+            data[field] === null ||
+            data[field] === ''
         );
-        
+
         if (missing.length > 0) {
           errors.push(
-            message ?? `Required fields when condition met: ${missing.join(', ')}`
+            message ??
+              `Required fields when condition met: ${missing.join(', ')}`
           );
         }
       }
     }
-    
+
     return errors.length > 0
       ? { success: false, errors }
       : { success: true, data };

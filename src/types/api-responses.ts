@@ -71,19 +71,25 @@ export interface ValidationError {
 // Conditional Types for Response Data Based on Operation
 type OperationType = 'create' | 'read' | 'update' | 'delete' | 'list';
 
-type ResponseDataFor<T, Op extends OperationType> =
-  Op extends 'create' ? T & { id: string; createdAt: Date } :
-  Op extends 'read' ? T :
-  Op extends 'update' ? T & { updatedAt: Date } :
-  Op extends 'delete' ? { id: string; deletedAt: Date } :
-  Op extends 'list' ? T[] :
-  T;
+type ResponseDataFor<T, Op extends OperationType> = Op extends 'create'
+  ? T & { id: string; createdAt: Date }
+  : Op extends 'read'
+    ? T
+    : Op extends 'update'
+      ? T & { updatedAt: Date }
+      : Op extends 'delete'
+        ? { id: string; deletedAt: Date }
+        : Op extends 'list'
+          ? T[]
+          : T;
 
 // Generic CRUD Response Types
 export type CreateResponse<T> = ApiResponse<ResponseDataFor<T, 'create'>>;
 export type ReadResponse<T> = ApiResponse<ResponseDataFor<T, 'read'>>;
 export type UpdateResponse<T> = ApiResponse<ResponseDataFor<T, 'update'>>;
-export type DeleteResponse = ApiResponse<ResponseDataFor<{ id: string }, 'delete'>>;
+export type DeleteResponse = ApiResponse<
+  ResponseDataFor<{ id: string }, 'delete'>
+>;
 export type ListResponse<T> = ApiResponse<ResponseDataFor<T, 'list'>>;
 
 // Paginated Response with Advanced Metadata
@@ -108,18 +114,31 @@ export interface PaginatedResponse<T> extends SuccessResponse<T[]> {
 // Branded Types for Different Response Categories
 type Brand<T, B> = T & { readonly __brand: B };
 
-export type SubscriptionResponse<T> = Brand<ApiResponse<T>, 'SubscriptionResponse'>;
-export type TransactionResponse<T> = Brand<ApiResponse<T>, 'TransactionResponse'>;
+export type SubscriptionResponse<T> = Brand<
+  ApiResponse<T>,
+  'SubscriptionResponse'
+>;
+export type TransactionResponse<T> = Brand<
+  ApiResponse<T>,
+  'TransactionResponse'
+>;
 export type AccountResponse<T> = Brand<ApiResponse<T>, 'AccountResponse'>;
-export type NotificationResponse<T> = Brand<ApiResponse<T>, 'NotificationResponse'>;
-export type CancellationResponse<T> = Brand<ApiResponse<T>, 'CancellationResponse'>;
+export type NotificationResponse<T> = Brand<
+  ApiResponse<T>,
+  'NotificationResponse'
+>;
+export type CancellationResponse<T> = Brand<
+  ApiResponse<T>,
+  'CancellationResponse'
+>;
 
 // Mapped Types for Batch Operations
 export type BatchResponse<T> = {
   [K in keyof T]: ApiResponse<T[K]>;
 };
 
-export interface BulkOperationResponse<T> extends SuccessResponse<BulkOperationResult<T>> {
+export interface BulkOperationResponse<T>
+  extends SuccessResponse<BulkOperationResult<T>> {
   data: BulkOperationResult<T>;
 }
 
@@ -151,16 +170,25 @@ export interface DetailedError {
 }
 
 // Conditional Error Types Based on Status
-export type ErrorFor<S extends HttpStatus> =
-  S extends '400' ? ValidationError[] :
-  S extends '401' ? { reason: 'unauthorized' | 'invalid_token' | 'expired_token' } :
-  S extends '403' ? { reason: 'forbidden' | 'insufficient_permissions' } :
-  S extends '404' ? { resource: string; id?: string } :
-  S extends '409' ? { conflictType: 'duplicate' | 'version_mismatch' | 'state_conflict' } :
-  S extends '422' ? ValidationError[] :
-  S extends '429' ? { retryAfter: number; limit: number; remaining: number } :
-  S extends '500' ? { internal: true; reference?: string } :
-  DetailedError;
+export type ErrorFor<S extends HttpStatus> = S extends '400'
+  ? ValidationError[]
+  : S extends '401'
+    ? { reason: 'unauthorized' | 'invalid_token' | 'expired_token' }
+    : S extends '403'
+      ? { reason: 'forbidden' | 'insufficient_permissions' }
+      : S extends '404'
+        ? { resource: string; id?: string }
+        : S extends '409'
+          ? {
+              conflictType: 'duplicate' | 'version_mismatch' | 'state_conflict';
+            }
+          : S extends '422'
+            ? ValidationError[]
+            : S extends '429'
+              ? { retryAfter: number; limit: number; remaining: number }
+              : S extends '500'
+                ? { internal: true; reference?: string }
+                : DetailedError;
 
 // Type-safe Error Response Factory
 export const createErrorResponse = <S extends HttpStatus>(
@@ -219,7 +247,7 @@ export const createPaginatedResponse = <T>(
   const hasPreviousPage = page > 1;
 
   const baseUrl = options?.baseUrl ?? '';
-  const buildUrl = (pageNum: number) => 
+  const buildUrl = (pageNum: number) =>
     `${baseUrl}?page=${pageNum}&limit=${limit}`;
 
   return {
@@ -262,9 +290,11 @@ export const isErrorResponse = <T, E>(
 export const isPaginatedResponse = <T>(
   response: SuccessResponse<T[] | T>
 ): response is PaginatedResponse<T extends (infer U)[] ? U : T> => {
-  return Array.isArray(response.data) && 
-         response.meta?.total !== undefined &&
-         response.links?.first !== undefined;
+  return (
+    Array.isArray(response.data) &&
+    response.meta?.total !== undefined &&
+    response.links?.first !== undefined
+  );
 };
 
 // Utility Types for Response Transformation
@@ -289,7 +319,10 @@ export const flattenPaginatedResponse = <T>(
   responses: PaginatedResponse<T>[]
 ): SuccessResponse<T[]> => {
   const allData = responses.flatMap(response => response.data);
-  const totalItems = responses.reduce((sum, response) => sum + response.meta.total, 0);
+  const totalItems = responses.reduce(
+    (sum, response) => sum + response.meta.total,
+    0
+  );
 
   return createSuccessResponse(allData, {
     meta: {

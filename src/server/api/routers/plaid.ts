@@ -33,48 +33,35 @@ interface TypedPlaidTransaction {
   transaction_type: string | null;
 }
 
-interface TypedPlaidAccount {
-  account_id: string;
-  balances: {
-    available: number | null;
-    current: number | null;
-    iso_currency_code: string | null;
-    limit: number | null;
-  };
-  mask: string | null;
-  name: string;
-  official_name: string | null;
-  type: string;
-  subtype: string | null;
-}
-
 // Type definitions for Plaid operations (for future use)
 // type PlaidOperation = 'linkTokenCreate' | 'itemPublicTokenExchange' | 'accountsGet' | 'transactionsGet' | 'transactionsSync' | 'itemRemove';
 // type TransactionState = 'added' | 'modified' | 'removed';
 
-// Type Guards for Safe Type Narrowing (for future use)
-// const isTypedPlaidTransaction = (obj: unknown): obj is TypedPlaidTransaction => {
-//   return (
-//     typeof obj === 'object' &&
-//     obj !== null &&
-//     'transaction_id' in obj &&
-//     'account_id' in obj &&
-//     'amount' in obj &&
-//     'name' in obj &&
-//     'date' in obj
-//   );
-// };
+// Type Guards for Safe Type Narrowing
+const isTypedPlaidTransaction = (
+  obj: unknown
+): obj is TypedPlaidTransaction => {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'transaction_id' in obj &&
+    'account_id' in obj &&
+    'amount' in obj &&
+    'name' in obj &&
+    'date' in obj
+  );
+};
 
-// const isTypedPlaidAccount = (obj: unknown): obj is TypedPlaidAccount => {
-//   return (
-//     typeof obj === 'object' &&
-//     obj !== null &&
-//     'account_id' in obj &&
-//     'balances' in obj &&
-//     'name' in obj &&
-//     'type' in obj
-//   );
-// };
+const isTypedPlaidAccount = (obj: unknown): obj is TypedPlaidAccount => {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'account_id' in obj &&
+    'balances' in obj &&
+    'name' in obj &&
+    'type' in obj
+  );
+};
 
 export const plaidRouter = createTRPCRouter({
   /**
@@ -146,12 +133,12 @@ export const plaidRouter = createTRPCRouter({
           client_user_id: ctx.session.user.id,
         },
         client_name: 'SubPilot',
-        products: ((process.env.PLAID_PRODUCTS)?.split(',') ?? [
+        products: (process.env.PLAID_PRODUCTS?.split(',') ?? [
           'transactions',
         ]) as Products[],
-        country_codes: ((process.env.PLAID_COUNTRY_CODES)?.split(
-          ','
-        ) ?? ['US']) as CountryCode[],
+        country_codes: (process.env.PLAID_COUNTRY_CODES?.split(',') ?? [
+          'US',
+        ]) as CountryCode[],
         language: 'en',
         redirect_uri: process.env.PLAID_REDIRECT_URI ?? undefined,
       };
@@ -543,20 +530,28 @@ export const plaidRouter = createTRPCRouter({
             const addedTransactions = Array.isArray(syncResponse.data.added)
               ? syncResponse.data.added.filter(isTypedPlaidTransaction)
               : [];
-            
-            const modifiedTransactions = Array.isArray(syncResponse.data.modified)
+
+            const modifiedTransactions = Array.isArray(
+              syncResponse.data.modified
+            )
               ? syncResponse.data.modified.filter(isTypedPlaidTransaction)
               : [];
-            
+
             const removedTransactions = Array.isArray(syncResponse.data.removed)
               ? syncResponse.data.removed
                   .map((txn: unknown) => {
-                    if (typeof txn === 'object' && txn !== null && 'transaction_id' in txn) {
+                    if (
+                      typeof txn === 'object' &&
+                      txn !== null &&
+                      'transaction_id' in txn
+                    ) {
                       return { transaction_id: String(txn.transaction_id) };
                     }
                     return null;
                   })
-                  .filter((txn): txn is { transaction_id: string } => txn !== null)
+                  .filter(
+                    (txn): txn is { transaction_id: string } => txn !== null
+                  )
               : [];
 
             added = [...added, ...addedTransactions];

@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LightweightCancellationService } from '../lightweight-cancellation.service';
-import { type PrismaClient } from '@prisma/client';
+import {
+  type PrismaClient,
+  type Subscription,
+  type CancellationRequest,
+  type CancellationLog,
+} from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 
 // Mock Prisma client
@@ -43,7 +48,7 @@ const mockSubscription = {
   cancellationInfo: {},
   detectionConfidence: 0.85,
   detectedAt: new Date(),
-} as any;
+} as Subscription;
 
 describe('LightweightCancellationService', () => {
   let service: LightweightCancellationService;
@@ -72,11 +77,13 @@ describe('LightweightCancellationService', () => {
         status: 'pending',
       };
       vi.mocked(mockDb.cancellationRequest.create).mockResolvedValue(
-        mockRequest as any
+        mockRequest as CancellationRequest
       );
 
       // Mock log creation
-      vi.mocked(mockDb.cancellationLog.create).mockResolvedValue({} as any);
+      vi.mocked(mockDb.cancellationLog.create).mockResolvedValue(
+        {} as CancellationLog
+      );
 
       const result = await service.provideCancellationInstructions('user_123', {
         subscriptionId: 'sub_123',
@@ -108,7 +115,9 @@ describe('LightweightCancellationService', () => {
         method: 'manual',
         status: 'pending',
       } as any);
-      vi.mocked(mockDb.cancellationLog.create).mockResolvedValue({} as any);
+      vi.mocked(mockDb.cancellationLog.create).mockResolvedValue(
+        {} as CancellationLog
+      );
 
       const result = await service.provideCancellationInstructions('user_123', {
         subscriptionId: 'sub_123',
@@ -181,7 +190,9 @@ describe('LightweightCancellationService', () => {
       );
       vi.mocked(mockDb.cancellationRequest.update).mockResolvedValue({} as any);
       vi.mocked(mockDb.subscription.update).mockResolvedValue({} as any);
-      vi.mocked(mockDb.cancellationLog.create).mockResolvedValue({} as any);
+      vi.mocked(mockDb.cancellationLog.create).mockResolvedValue(
+        {} as CancellationLog
+      );
 
       const result = await service.confirmCancellation('user_123', 'req_123', {
         wasSuccessful: true,
@@ -205,7 +216,9 @@ describe('LightweightCancellationService', () => {
         mockRequest as any
       );
       vi.mocked(mockDb.cancellationRequest.update).mockResolvedValue({} as any);
-      vi.mocked(mockDb.cancellationLog.create).mockResolvedValue({} as any);
+      vi.mocked(mockDb.cancellationLog.create).mockResolvedValue(
+        {} as CancellationLog
+      );
 
       const result = await service.confirmCancellation('user_123', 'req_123', {
         wasSuccessful: false,

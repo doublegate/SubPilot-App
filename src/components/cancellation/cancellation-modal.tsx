@@ -89,7 +89,7 @@ export function CancellationModal({
       case 'completed':
         return 'Your subscription has been cancelled successfully!';
       case 'processing':
-        return "Cancellation is being processed. You&apos;ll be notified when complete.";
+        return 'Cancellation is being processed. You&apos;ll be notified when complete.';
       case 'pending':
         return 'Manual cancellation instructions have been generated.';
       default:

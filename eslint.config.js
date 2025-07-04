@@ -35,20 +35,22 @@ const eslintConfig = [
   // Next.js configurations - using the approach that should work with flat config
   ...compat.extends('eslint-config-next'),
   // TypeScript configuration for TypeScript files
-  ...compat.config({
-    extends: [
-      'plugin:@typescript-eslint/recommended-type-checked',
-      'plugin:@typescript-eslint/stylistic-type-checked',
-    ],
-    parser: '@typescript-eslint/parser',
-    parserOptions: {
-      project: true,
-      tsconfigRootDir: __dirname,
-    },
-  }).map(config => ({
-    ...config,
-    files: ['**/*.ts', '**/*.tsx'],
-  })),
+  ...compat
+    .config({
+      extends: [
+        'plugin:@typescript-eslint/recommended-type-checked',
+        'plugin:@typescript-eslint/stylistic-type-checked',
+      ],
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: __dirname,
+      },
+    })
+    .map(config => ({
+      ...config,
+      files: ['**/*.ts', '**/*.tsx'],
+    })),
   // Additional TypeScript rule overrides
   {
     files: ['**/*.ts', '**/*.tsx'],

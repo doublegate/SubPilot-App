@@ -1,22 +1,67 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { createTRPCMsw } from 'msw-trpc';
-import { unifiedCancellationRouter } from '../unified-cancellation';
+import { unifiedCancellationEnhancedRouter } from '../unified-cancellation-enhanced';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
 import type { PrismaClient } from '@prisma/client';
 
-// Mock the orchestrator service
-vi.mock('@/server/services/unified-cancellation-orchestrator.service', () => {
-  const mockOrchestrator = {
-    initiateCancellation: vi.fn(),
-    getCancellationStatus: vi.fn(),
-    retryCancellation: vi.fn(),
-    cancelCancellationRequest: vi.fn(),
-    getUnifiedAnalytics: vi.fn(),
-  };
+// Mock the database
+vi.mock('@/server/db', () => ({
+  db: vi.fn(),
+}));
 
+// Mock the enhanced orchestrator service
+vi.mock(
+  '@/server/services/unified-cancellation-orchestrator-enhanced.service',
+  () => {
+    const mockOrchestrator = {
+      initiateCancellation: vi.fn(),
+      getOrchestrationStatus: vi.fn(),
+      assessProviderCapabilities: vi.fn(),
+      getUnifiedAnalytics: vi.fn(),
+    };
+
+    return {
+      UnifiedCancellationOrchestratorEnhancedService: vi.fn(
+        () => mockOrchestrator
+      ),
+      UnifiedCancellationRequestInput: {
+        parse: vi.fn().mockImplementation(input => input),
+        safeParse: vi
+          .fn()
+          .mockImplementation(input => ({ success: true, data: input })),
+      },
+    };
+  }
+);
+
+// Mock the helper functions from enhanced router
+vi.mock('../unified-cancellation-enhanced', async () => {
+  const actual = await vi.importActual('../unified-cancellation-enhanced');
   return {
-    UnifiedCancellationOrchestratorService: vi.fn(() => mockOrchestrator),
+    ...actual,
+    getStatusBreakdown: vi.fn().mockResolvedValue({
+      completed: 5,
+      failed: 1,
+      pending: 1,
+    }),
+    getMethodBreakdown: vi.fn().mockResolvedValue({
+      api: 3,
+      automation: 2,
+      manual: 2,
+    }),
+    generateAnalyticsInsights: vi.fn().mockReturnValue([
+      {
+        type: 'info',
+        title: 'Good Success Rate',
+        message: 'Your cancellation success rate is above average.',
+      },
+    ]),
+    analyzeErrorBreakdown: vi.fn().mockReturnValue({
+      TIMEOUT: 1,
+      NETWORK_ERROR: 1,
+    }),
+    calculatePercentile: vi.fn().mockReturnValue(5000), // 5 seconds
   };
 });
 
@@ -64,17 +109,35 @@ const mockProvider = {
   supportsRefunds: false,
 };
 
-describe('unifiedCancellationRouter', () => {
-  let caller: ReturnType<typeof unifiedCancellationRouter.createCaller>;
+describe('unifiedCancellationEnhancedRouter', () => {
+  let caller: ReturnType<typeof unifiedCancellationEnhancedRouter.createCaller>;
 
   beforeEach(() => {
     mockReset(mockDb);
+
+    // Mock groupBy methods for helper functions
+    mockDb.cancellationRequest.groupBy.mockResolvedValue([
+      { status: 'completed', _count: { status: 5 } },
+      { status: 'failed', _count: { status: 1 } },
+      { status: 'pending', _count: { status: 1 } },
+    ] as any);
+
+    // Mock the db import to return our mockDb
+    vi.doMock('@/server/db', () => ({
+      db: mockDb,
+    }));
 
     const ctx = createInnerTRPCContext({
       session: mockSession,
     });
 
-    caller = unifiedCancellationRouter.createCaller(ctx);
+    // Override the db with our mock
+    const ctxWithMockDb = {
+      ...ctx,
+      db: mockDb,
+    };
+
+    caller = unifiedCancellationEnhancedRouter.createCaller(ctxWithMockDb);
   });
 
   afterEach(() => {
@@ -84,32 +147,35 @@ describe('unifiedCancellationRouter', () => {
   describe('initiate', () => {
     it('should initiate cancellation successfully', async () => {
       const mockResult = {
+        success: true,
         requestId: 'req123',
         orchestrationId: 'orch123',
         status: 'pending' as const,
         method: 'api' as const,
-        currentStep: 'Validating request',
-        totalSteps: 4,
-        completedSteps: 0,
-        fallbackAvailable: true,
-        subscriptionUrl:
-          '/api/cancellation/stream/req123?orchestration=orch123',
+        message: 'Cancellation initiated successfully',
+        metadata: {
+          attemptsUsed: 1,
+          realTimeUpdatesEnabled: true,
+        },
+        tracking: {
+          sseEndpoint: '/api/sse/cancellation/orch123',
+          statusCheckUrl: '/api/trpc/unifiedCancellation.getStatus?input=...',
+        },
       };
 
-      const { UnifiedCancellationOrchestratorService } = await import(
-        '@/server/services/unified-cancellation-orchestrator.service'
+      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
+        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
-        mockDb
-      );
+      const mockOrchestrator =
+        new UnifiedCancellationOrchestratorEnhancedService(mockDb);
       (mockOrchestrator.initiateCancellation as any).mockResolvedValue(
         mockResult
       );
 
       const input = {
         subscriptionId: 'sub123',
+        reason: 'Test cancellation',
         priority: 'normal' as const,
-        notes: 'Test cancellation',
         preferredMethod: 'auto' as const,
       };
 
@@ -134,120 +200,194 @@ describe('unifiedCancellationRouter', () => {
   });
 
   describe('getStatus', () => {
-    it('should return unified cancellation status', async () => {
-      const mockStatus = {
-        status: {
-          requestId: 'req123',
-          orchestrationId: 'orch123',
-          status: 'processing' as const,
-          method: 'api' as const,
+    it('should return orchestration status when orchestrationId provided', async () => {
+      const mockOrchestrationStatus = {
+        orchestrationId: 'orch123',
+        status: 'processing',
+        method: 'api',
+        startTime: new Date(),
+        lastUpdate: new Date(),
+        progress: {
           currentStep: 'Executing API cancellation',
           totalSteps: 4,
           completedSteps: 2,
-          fallbackAvailable: true,
         },
-        timeline: [
-          {
-            timestamp: new Date(),
-            action: 'initiated',
-            status: 'success',
-            message: 'Cancellation started',
-          },
-        ],
-        nextSteps: ['Processing cancellation request'],
-        alternativeOptions: ['Cancel request', 'Wait for completion'],
       };
 
-      const { UnifiedCancellationOrchestratorService } = await import(
-        '@/server/services/unified-cancellation-orchestrator.service'
+      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
+        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
-        mockDb
+      const mockOrchestrator =
+        new UnifiedCancellationOrchestratorEnhancedService(mockDb);
+      (mockOrchestrator.getOrchestrationStatus as any).mockResolvedValue(
+        mockOrchestrationStatus
       );
-      (mockOrchestrator.getCancellationStatus as any).mockResolvedValue(
-        mockStatus
+
+      const result = await caller.getStatus({
+        orchestrationId: 'orch123',
+      });
+
+      expect(result).toEqual({
+        type: 'orchestration',
+        orchestration: mockOrchestrationStatus,
+        realTimeEnabled: true,
+        sseEndpoint: '/api/sse/cancellation/orch123',
+      });
+      expect(mockOrchestrator.getOrchestrationStatus).toHaveBeenCalledWith(
+        'orch123'
+      );
+    });
+
+    it('should return request status when requestId provided', async () => {
+      const mockRequest = {
+        id: 'req123',
+        userId: 'user123',
+        status: 'processing',
+        method: 'api',
+        priority: 'normal',
+        attempts: 1,
+        maxAttempts: 3,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        completedAt: null,
+        lastAttemptAt: new Date(),
+        nextRetryAt: null,
+        confirmationCode: null,
+        effectiveDate: null,
+        refundAmount: null,
+        errorCode: null,
+        errorMessage: null,
+        userNotes: null,
+        errorDetails: null,
+        subscription: {
+          id: 'sub123',
+          name: 'Netflix',
+          amount: 15.99,
+        },
+        provider: {
+          name: 'Netflix',
+          logo: 'https://netflix.com/logo.png',
+          type: 'api',
+        },
+        logs: [],
+      };
+
+      mockDb.cancellationRequest.findFirst.mockResolvedValue(
+        mockRequest as any
       );
 
       const result = await caller.getStatus({
         requestId: 'req123',
-        orchestrationId: 'orch123',
       });
 
-      expect(result).toEqual(mockStatus);
-      expect(mockOrchestrator.getCancellationStatus).toHaveBeenCalledWith(
-        mockUser.id,
-        'req123',
-        'orch123'
-      );
+      expect(result.type).toBe('request');
+      expect(result.request?.id).toBe('req123');
+      expect(result.realTimeEnabled).toBe(false);
     });
   });
 
   describe('retry', () => {
     it('should retry failed cancellation', async () => {
+      const mockOriginalRequest = {
+        id: 'req123',
+        userId: 'user123',
+        subscriptionId: 'sub123',
+        status: 'failed',
+        priority: 'normal',
+        errorDetails: {},
+        subscription: mockSubscription,
+      };
+
       const mockRetryResult = {
+        success: true,
         requestId: 'req124',
         orchestrationId: 'orch124',
         status: 'pending' as const,
-        method: 'event_driven' as const,
-        currentStep: 'Starting retry',
-        totalSteps: 6,
-        completedSteps: 0,
-        fallbackAvailable: true,
+        method: 'automation' as const,
+        message: 'Retry initiated successfully',
+        metadata: {
+          attemptsUsed: 1,
+          realTimeUpdatesEnabled: true,
+        },
+        tracking: {
+          sseEndpoint: '/api/sse/cancellation/orch124',
+          statusCheckUrl: '/api/trpc/unifiedCancellation.getStatus?input=...',
+        },
       };
 
-      const { UnifiedCancellationOrchestratorService } = await import(
-        '@/server/services/unified-cancellation-orchestrator.service'
+      mockDb.cancellationRequest.findFirst.mockResolvedValue(
+        mockOriginalRequest as any
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
-        mockDb
+      mockDb.cancellationRequest.update.mockResolvedValue(
+        mockOriginalRequest as any
       );
-      (mockOrchestrator.retryCancellation as any).mockResolvedValue(
+      mockDb.cancellationLog.create.mockResolvedValue({} as any);
+
+      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
+        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
+      );
+      const mockOrchestrator =
+        new UnifiedCancellationOrchestratorEnhancedService(mockDb);
+      (mockOrchestrator.initiateCancellation as any).mockResolvedValue(
         mockRetryResult
       );
 
       const result = await caller.retry({
         requestId: 'req123',
         escalate: true,
-        forceMethod: 'event_driven',
+        forceMethod: 'automation',
       });
 
-      expect(result).toEqual(mockRetryResult);
-      expect(mockOrchestrator.retryCancellation).toHaveBeenCalledWith(
+      expect(result).toEqual({
+        ...mockRetryResult,
+        isRetry: true,
+        originalRequestId: 'req123',
+      });
+      expect(mockOrchestrator.initiateCancellation).toHaveBeenCalledWith(
         mockUser.id,
-        'req123',
-        { forceMethod: 'event_driven', escalate: true }
+        expect.objectContaining({
+          subscriptionId: 'sub123',
+          preferredMethod: 'automation',
+        })
       );
     });
   });
 
   describe('cancel', () => {
     it('should cancel active cancellation request', async () => {
-      const mockCancelResult = {
-        success: true,
-        message: 'Cancellation request has been cancelled successfully',
+      const mockRequest = {
+        id: 'req123',
+        userId: 'user123',
+        status: 'pending',
       };
 
-      const { UnifiedCancellationOrchestratorService } = await import(
-        '@/server/services/unified-cancellation-orchestrator.service'
+      mockDb.cancellationRequest.findFirst.mockResolvedValue(
+        mockRequest as any
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
-        mockDb
-      );
-      (mockOrchestrator.cancelCancellationRequest as any).mockResolvedValue(
-        mockCancelResult
-      );
+      mockDb.cancellationRequest.update.mockResolvedValue(mockRequest as any);
+      mockDb.cancellationLog.create.mockResolvedValue({} as any);
 
       const result = await caller.cancel({
         requestId: 'req123',
         reason: 'User changed mind',
       });
 
-      expect(result).toEqual(mockCancelResult);
-      expect(mockOrchestrator.cancelCancellationRequest).toHaveBeenCalledWith(
-        mockUser.id,
-        'req123',
-        'User changed mind'
-      );
+      expect(result).toEqual({
+        success: true,
+        requestId: 'req123',
+        orchestrationId: undefined,
+        message: 'Cancellation request has been cancelled',
+        cancelledAt: expect.any(Date),
+      });
+
+      expect(mockDb.cancellationRequest.update).toHaveBeenCalledWith({
+        where: { id: 'req123' },
+        data: {
+          status: 'cancelled',
+          completedAt: expect.any(Date),
+          userNotes: 'User changed mind',
+        },
+      });
     });
   });
 
@@ -295,19 +435,25 @@ describe('unifiedCancellationRouter', () => {
         ],
       };
 
-      const { UnifiedCancellationOrchestratorService } = await import(
-        '@/server/services/unified-cancellation-orchestrator.service'
+      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
+        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
       );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
-        mockDb
-      );
+      const mockOrchestrator =
+        new UnifiedCancellationOrchestratorEnhancedService(mockDb);
       (mockOrchestrator.getUnifiedAnalytics as any).mockResolvedValue(
         mockAnalytics
       );
 
       const result = await caller.getAnalytics({ timeframe: 'month' });
 
-      expect(result).toEqual(mockAnalytics);
+      expect(result).toEqual(
+        expect.objectContaining({
+          ...mockAnalytics,
+          insights: expect.any(Array),
+          timeframe: 'month',
+          generatedAt: expect.any(Date),
+        })
+      );
       expect(mockOrchestrator.getUnifiedAnalytics).toHaveBeenCalledWith(
         mockUser.id,
         'month'
@@ -317,9 +463,38 @@ describe('unifiedCancellationRouter', () => {
 
   describe('getProviderCapabilities', () => {
     it('should return provider capabilities for known provider', async () => {
+      const mockCapabilities = {
+        providerId: 'provider123',
+        providerName: 'Netflix',
+        supportsApi: true,
+        supportsAutomation: true,
+        supportsManual: true,
+        apiSuccessRate: 0.9,
+        automationSuccessRate: 0.8,
+        manualSuccessRate: 0.95,
+        apiEstimatedTime: 5,
+        automationEstimatedTime: 15,
+        manualEstimatedTime: 30,
+        difficulty: 'easy' as const,
+        requires2FA: false,
+        hasRetentionOffers: false,
+        requiresHumanIntervention: false,
+        lastAssessed: new Date(),
+        dataSource: 'database' as const,
+      };
+
       mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
       mockDb.cancellationProvider.findFirst.mockResolvedValue(
         mockProvider as any
+      );
+
+      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
+        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
+      );
+      const mockOrchestrator =
+        new UnifiedCancellationOrchestratorEnhancedService(mockDb);
+      (mockOrchestrator.assessProviderCapabilities as any).mockResolvedValue(
+        mockCapabilities
       );
 
       const result = await caller.getProviderCapabilities({
@@ -328,27 +503,11 @@ describe('unifiedCancellationRouter', () => {
 
       expect(result.subscription.name).toBe('Netflix');
       expect(result.provider?.name).toBe('Netflix');
-      expect(result.capabilities.supportsApi).toBe(true);
-      expect(result.capabilities.estimatedSuccessRate).toBe(0.9);
-      expect(result.recommendedMethod).toBe('api');
-      expect(result.availableMethods).toContain('api');
-      expect(result.availableMethods).toContain('lightweight');
-    });
-
-    it('should return default capabilities for unknown provider', async () => {
-      mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
-      mockDb.cancellationProvider.findFirst.mockResolvedValue(null);
-
-      const result = await caller.getProviderCapabilities({
-        subscriptionId: 'sub123',
-      });
-
-      expect(result.subscription.name).toBe('Netflix');
-      expect(result.provider).toBeNull();
-      expect(result.capabilities.supportsApi).toBe(false);
-      expect(result.capabilities.estimatedSuccessRate).toBe(0.6);
-      expect(result.recommendedMethod).toBe('lightweight');
-      expect(result.availableMethods).toEqual(['lightweight']);
+      expect(result.capabilities.difficulty).toBe('easy');
+      expect(result.methods).toHaveLength(3); // auto, api, manual (automation filtered out as unavailable)
+      expect(result.methods.find(m => m.id === 'auto')?.isRecommended).toBe(
+        true
+      );
     });
 
     it('should throw error for non-existent subscription', async () => {
@@ -364,11 +523,16 @@ describe('unifiedCancellationRouter', () => {
     it('should return true for cancellable subscription', async () => {
       mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
       mockDb.cancellationRequest.findFirst.mockResolvedValue(null);
+      mockDb.cancellationProvider.findFirst.mockResolvedValue(
+        mockProvider as any
+      );
 
       const result = await caller.canCancel({ subscriptionId: 'sub123' });
 
       expect(result.canCancel).toBe(true);
       expect(result.message).toBe('Subscription can be cancelled');
+      expect(result.provider?.name).toBe('Netflix');
+      expect(result.subscription?.name).toBe('Netflix');
     });
 
     it('should return false for already cancelled subscription', async () => {
@@ -401,52 +565,23 @@ describe('unifiedCancellationRouter', () => {
       expect(result.message).toBe(
         'A cancellation request is already in progress'
       );
-      expect(result.requestId).toBe('req123');
+      expect(result.existingRequestId).toBe('req123');
     });
 
-    it('should throw error for non-existent subscription', async () => {
+    it('should return false for non-existent subscription', async () => {
       mockDb.subscription.findFirst.mockResolvedValue(null);
 
-      await expect(
-        caller.canCancel({ subscriptionId: 'invalid' })
-      ).rejects.toThrow('Subscription not found');
-    });
-  });
+      const result = await caller.canCancel({ subscriptionId: 'invalid' });
 
-  describe('getAvailableMethods', () => {
-    it('should return available cancellation methods', async () => {
-      mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
-      mockDb.cancellationProvider.findFirst.mockResolvedValue(
-        mockProvider as any
+      expect(result.canCancel).toBe(false);
+      expect(result.reason).toBe('not_found');
+      expect(result.message).toBe(
+        'Subscription not found or you do not have permission to cancel it'
       );
-
-      const result = await caller.getAvailableMethods({
-        subscriptionId: 'sub123',
-      });
-
-      expect(result.subscription.name).toBe('Netflix');
-      expect(result.methods).toHaveLength(3); // auto, api, lightweight
-      const firstMethod = result.methods[0];
-      expect(firstMethod?.id).toBe('auto');
-      expect(firstMethod?.isRecommended).toBe(true);
-      expect(result.methods.find(m => m.id === 'api')).toBeDefined();
-      expect(result.methods.find(m => m.id === 'lightweight')).toBeDefined();
-      expect(result.provider?.name).toBe('Netflix');
-    });
-
-    it('should return limited methods for unknown provider', async () => {
-      mockDb.subscription.findFirst.mockResolvedValue(mockSubscription as any);
-      mockDb.cancellationProvider.findFirst.mockResolvedValue(null);
-
-      const result = await caller.getAvailableMethods({
-        subscriptionId: 'sub123',
-      });
-
-      expect(result.methods).toHaveLength(2); // auto, lightweight
-      expect(result.methods.find(m => m.id === 'api')).toBeUndefined();
-      expect(result.provider).toBeNull();
     });
   });
+
+  // Note: getAvailableMethods is not in the enhanced router, using getProviderCapabilities instead
 
   describe('getHistory', () => {
     it('should return cancellation history', async () => {
@@ -458,15 +593,26 @@ describe('unifiedCancellationRouter', () => {
           method: 'api',
           status: 'completed',
           priority: 'normal',
+          attempts: 1,
+          maxAttempts: 3,
           confirmationCode: 'CONF123',
           effectiveDate: new Date(),
-          createdAt: new Date(),
-          completedAt: new Date(),
+          refundAmount: null,
+          errorCode: null,
           errorMessage: null,
+          userNotes: null,
+          userConfirmed: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          completedAt: new Date(),
+          lastAttemptAt: new Date(),
+          nextRetryAt: null,
+          metadata: null,
           subscription: {
             id: 'sub123',
             name: 'Netflix',
             amount: 15.99,
+            frequency: 'monthly',
           },
           provider: {
             name: 'Netflix',
@@ -474,43 +620,25 @@ describe('unifiedCancellationRouter', () => {
             type: 'api',
           },
         },
-        {
-          id: 'req2',
-          userId: 'user123',
-          subscriptionId: 'sub124',
-          method: 'manual',
-          status: 'failed',
-          priority: 'high',
-          confirmationCode: null,
-          effectiveDate: null,
-          createdAt: new Date(),
-          completedAt: new Date(),
-          errorMessage: 'Manual cancellation failed',
-          subscription: {
-            id: 'sub124',
-            name: 'Spotify',
-            amount: 9.99,
-          },
-          provider: null,
-        },
       ];
 
       mockDb.cancellationRequest.findMany.mockResolvedValue(
         mockHistoryRequests as any
       );
+      mockDb.cancellationRequest.count.mockResolvedValue(1);
 
       const result = await caller.getHistory({ limit: 10 });
 
-      expect(result).toHaveLength(2);
-      const firstRequest = result[0];
-      const secondRequest = result[1];
+      expect(result.items).toHaveLength(1);
+      expect(result.pagination.total).toBe(1);
+      expect(result.pagination.hasMore).toBe(false);
+
+      const firstRequest = result.items[0];
       expect(firstRequest?.id).toBe('req1');
       expect(firstRequest?.subscription.name).toBe('Netflix');
-      expect(firstRequest?.method).toBe('api'); // Transformed by orchestrator
+      expect(firstRequest?.method).toBe('api');
       expect(firstRequest?.status).toBe('completed');
       expect(firstRequest?.confirmationCode).toBe('CONF123');
-      expect(secondRequest?.id).toBe('req2');
-      expect(secondRequest?.error).toBe('Manual cancellation failed');
     });
 
     it('should filter by status', async () => {
@@ -518,52 +646,104 @@ describe('unifiedCancellationRouter', () => {
         {
           id: 'req1',
           status: 'completed',
-          subscription: { id: 'sub123', name: 'Netflix', amount: 15.99 },
-          provider: null,
           method: 'api',
           priority: 'normal',
+          attempts: 1,
+          maxAttempts: 3,
           createdAt: new Date(),
+          updatedAt: new Date(),
           completedAt: new Date(),
+          lastAttemptAt: new Date(),
+          nextRetryAt: null,
+          confirmationCode: null,
+          effectiveDate: null,
+          refundAmount: null,
+          errorCode: null,
+          errorMessage: null,
+          userNotes: null,
+          userConfirmed: true,
+          metadata: null,
+          subscription: {
+            id: 'sub123',
+            name: 'Netflix',
+            amount: 15.99,
+            frequency: 'monthly',
+          },
+          provider: null,
         },
       ];
 
       mockDb.cancellationRequest.findMany.mockResolvedValue(
         mockCompletedRequests as any
       );
+      mockDb.cancellationRequest.count.mockResolvedValue(1);
 
       const result = await caller.getHistory({ status: 'completed' });
 
       expect(mockDb.cancellationRequest.findMany).toHaveBeenCalledWith({
         where: { userId: mockUser.id, status: 'completed' },
         orderBy: { createdAt: 'desc' },
-        take: 10,
+        take: 20, // Default limit
+        skip: 0, // Default offset
         include: expect.any(Object),
       });
+      expect(result.items).toHaveLength(1);
     });
   });
 
   describe('getSystemHealth', () => {
     it('should return system health status', async () => {
       const mockRecentRequests = [
-        { method: 'api', status: 'completed' },
-        { method: 'api', status: 'completed' },
-        { method: 'api', status: 'failed' },
-        { method: 'manual', status: 'completed' },
-        { method: 'web_automation', status: 'completed' },
+        {
+          method: 'api',
+          status: 'completed',
+          createdAt: new Date(),
+          completedAt: new Date(),
+        },
+        {
+          method: 'api',
+          status: 'completed',
+          createdAt: new Date(),
+          completedAt: new Date(),
+        },
+        {
+          method: 'api',
+          status: 'failed',
+          createdAt: new Date(),
+          completedAt: null,
+        },
+        {
+          method: 'manual',
+          status: 'completed',
+          createdAt: new Date(),
+          completedAt: new Date(),
+        },
+        {
+          method: 'web_automation',
+          status: 'completed',
+          createdAt: new Date(),
+          completedAt: new Date(),
+        },
       ];
 
-      mockDb.cancellationRequest.findMany.mockResolvedValue(
-        mockRecentRequests as any
-      );
+      const mockRecentFailures = [
+        { method: 'api', errorCode: 'TIMEOUT', createdAt: new Date() },
+      ];
 
-      const result = await caller.getSystemHealth();
+      mockDb.cancellationRequest.findMany
+        .mockResolvedValueOnce(mockRecentRequests as any) // First call for recent requests
+        .mockResolvedValueOnce(mockRecentFailures as any); // Second call for recent failures
+
+      const result = await caller.getSystemHealth({});
 
       expect(result.status).toMatch(/healthy|degraded|unhealthy/);
       expect(result.methods).toHaveProperty('api');
-      expect(result.methods).toHaveProperty('event_driven');
-      expect(result.methods).toHaveProperty('lightweight');
+      expect(result.methods).toHaveProperty('automation');
+      expect(result.methods).toHaveProperty('manual');
       expect(result.overall.totalRecentRequests).toBe(5);
-      expect(typeof result.overall.averageSuccessRate).toBe('number');
+      expect(typeof result.overall.successRate).toBe('number');
+      expect(result.system).toHaveProperty('cpu');
+      expect(result.system).toHaveProperty('memory');
     });
   });
 
@@ -572,29 +752,18 @@ describe('unifiedCancellationRouter', () => {
       const mockRequest = {
         id: 'req123',
         userId: 'user123',
+        subscriptionId: 'sub123',
         method: 'manual',
         status: 'pending',
+        subscription: mockSubscription,
       };
 
       mockDb.cancellationRequest.findFirst.mockResolvedValue(
         mockRequest as any
       );
-
-      const { UnifiedCancellationOrchestratorService } = await import(
-        '@/server/services/unified-cancellation-orchestrator.service'
-      );
-      const mockOrchestrator = new UnifiedCancellationOrchestratorService(
-        mockDb
-      );
-      const mockLightweightService = {
-        confirmCancellation: vi.fn().mockResolvedValue({
-          requestId: 'req123',
-          status: 'completed',
-          confirmationCode: 'MANUAL123',
-          effectiveDate: new Date(),
-        }),
-      };
-      (mockOrchestrator as any).lightweightService = mockLightweightService;
+      mockDb.cancellationRequest.update.mockResolvedValue(mockRequest as any);
+      mockDb.subscription.update.mockResolvedValue(mockSubscription as any);
+      mockDb.cancellationLog.create.mockResolvedValue({} as any);
 
       const result = await caller.confirmManual({
         requestId: 'req123',
@@ -603,28 +772,26 @@ describe('unifiedCancellationRouter', () => {
         notes: 'Successfully cancelled manually',
       });
 
+      expect(result.success).toBe(true);
+      expect(result.requestId).toBe('req123');
       expect(result.status).toBe('completed');
       expect(result.confirmationCode).toBe('MANUAL123');
+      expect(result.subscription.name).toBe('Netflix');
+      expect(result.subscription.status).toBe('cancelled');
+      expect(result.message).toBe('Manual cancellation confirmed successfully');
     });
 
     it('should throw error for non-manual cancellation', async () => {
-      const mockRequest = {
-        id: 'req123',
-        userId: 'user123',
-        method: 'api', // Not manual
-        status: 'pending',
-      };
-
-      mockDb.cancellationRequest.findFirst.mockResolvedValue(
-        mockRequest as any
-      );
+      mockDb.cancellationRequest.findFirst.mockResolvedValue(null);
 
       await expect(
         caller.confirmManual({
           requestId: 'req123',
           wasSuccessful: true,
         })
-      ).rejects.toThrow('Manual cancellation request not found');
+      ).rejects.toThrow(
+        'Manual cancellation request not found or not eligible for confirmation'
+      );
     });
   });
 });

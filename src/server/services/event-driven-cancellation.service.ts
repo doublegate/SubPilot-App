@@ -281,7 +281,7 @@ export class EventDrivenCancellationService {
     // Log the cancellation
     await AuditLogger.log({
       userId,
-      action: 'delete' as any,
+      action: 'cancellation.confirmed',
       resource: requestId,
       result: 'success',
       metadata: {
@@ -763,11 +763,11 @@ export class EventDrivenCancellationService {
 
     for (const stat of stats) {
       methodData[stat.method] ??= {
-          total: 0,
-          completed: 0,
-          failed: 0,
-          pending: 0,
-        };
+        total: 0,
+        completed: 0,
+        failed: 0,
+        pending: 0,
+      };
 
       methodData[stat.method].total += stat._count.method;
       methodData[stat.method][stat.status] += stat._count.method;

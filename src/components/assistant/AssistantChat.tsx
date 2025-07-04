@@ -135,11 +135,7 @@ export function AssistantChat({
         {/* Header */}
         <div className="flex items-center justify-between border-b p-4">
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleHistory}
-            >
+            <Button variant="ghost" size="icon" onClick={toggleHistory}>
               <Menu className="h-4 w-4" />
             </Button>
             <h2 className="text-lg font-semibold">SubPilot AI Assistant</h2>

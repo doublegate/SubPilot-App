@@ -79,11 +79,11 @@ export async function GET(
           (update: unknown) => {
             try {
               // Type guard for update data
-              const updateData = 
-                typeof update === 'object' && update !== null 
-                  ? update as Record<string, unknown>
+              const updateData =
+                typeof update === 'object' && update !== null
+                  ? (update as Record<string, unknown>)
                   : {};
-                  
+
               const eventData = {
                 type: 'orchestration_update' as const,
                 orchestrationId,

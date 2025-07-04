@@ -6,7 +6,12 @@ import { db } from '@/server/db';
 import type { Session } from 'next-auth';
 import { TRPCError } from '@trpc/server';
 import { Decimal } from '@prisma/client/runtime/library';
-import type { Transaction, BankAccount, Prisma, PrismaClient } from '@prisma/client';
+import type {
+  Transaction,
+  BankAccount,
+  Prisma,
+  PrismaClient,
+} from '@prisma/client';
 
 // Type for mocked database
 type MockedDb = {
@@ -528,7 +533,9 @@ describe('Transactions Router - Full tRPC Integration', () => {
       });
 
       expect(result.transactions).toHaveLength(2);
-      expect(result.transactions.every((t: TransactionWithPending) => !t.pending)).toBe(true);
+      expect(
+        result.transactions.every((t: TransactionWithPending) => !t.pending)
+      ).toBe(true);
 
       expect(db.transaction.findMany).toHaveBeenCalledWith({
         where: {

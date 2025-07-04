@@ -40,14 +40,7 @@ interface SubscriptionWithProvider {
   };
 }
 
-interface CancellationProvider {
-  name: string;
-  type: string;
-  apiEndpoint?: string;
-  websiteUrl?: string;
-  supportUrl?: string;
-  phone?: string;
-}
+// CancellationProvider type is now using Prisma.CancellationProviderGetPayload<object>
 
 // Input schemas for validation
 export const CancellationRequestInput = z.object({
@@ -452,8 +445,8 @@ export class CancellationService {
    * Generate manual cancellation instructions
    */
   private generateManualInstructions(
-    subscription: SubscriptionWithProvider, 
-    provider: CancellationProvider
+    subscription: SubscriptionWithProvider,
+    provider: Prisma.CancellationProviderGetPayload<object>
   ) {
     const baseInstructions = {
       service: subscription.name,
@@ -520,7 +513,7 @@ export class CancellationService {
     }
 
     // Update the cancellation request
-    const _updatedRequest = await this.db.cancellationRequest.update({
+    await this.db.cancellationRequest.update({
       where: { id: requestId },
       data: {
         status: 'completed',
@@ -603,7 +596,12 @@ export class CancellationService {
 
     return {
       requestId: request.id,
-      status: request.status as 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled',
+      status: request.status as
+        | 'pending'
+        | 'processing'
+        | 'completed'
+        | 'failed'
+        | 'cancelled',
       confirmationCode: request.confirmationCode,
       effectiveDate: request.effectiveDate,
       refundAmount: request.refundAmount
@@ -727,7 +725,9 @@ export class CancellationService {
   /**
    * Determine the best cancellation method for a provider
    */
-  private determineCancellationMethod(provider: CancellationProvider): string {
+  private determineCancellationMethod(
+    provider: Prisma.CancellationProviderGetPayload<object>
+  ): string {
     if (provider.type === 'api' && provider.apiEndpoint) {
       return 'api';
     }
