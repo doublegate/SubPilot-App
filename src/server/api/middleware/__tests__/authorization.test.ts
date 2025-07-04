@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { AuthorizationMiddleware, type ResourceType } from '../authorization';
-import { type PrismaClient, type Subscription, type User, type BankAccount } from '@prisma/client';
+import {
+  type PrismaClient,
+  type Subscription,
+  type User,
+  type BankAccount,
+} from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 
 // Mock AuditLogger
@@ -12,7 +17,9 @@ vi.mock('@/server/lib/audit-logger', () => ({
 }));
 
 // Helper to create a mock subscription
-const createMockSubscription = (overrides: Partial<Subscription> = {}): Subscription => ({
+const createMockSubscription = (
+  overrides: Partial<Subscription> = {}
+): Subscription => ({
   id: 'sub_123',
   userId: 'user_123',
   name: 'Test Subscription',
@@ -56,7 +63,9 @@ const createMockUser = (overrides: Partial<User> = {}): User => ({
 });
 
 // Helper to create a mock bank account
-const createMockBankAccount = (overrides: Partial<BankAccount> = {}): BankAccount => ({
+const createMockBankAccount = (
+  overrides: Partial<BankAccount> = {}
+): BankAccount => ({
   id: 'acc_123',
   userId: 'user_123',
   plaidItemId: 'item_123',
@@ -66,8 +75,8 @@ const createMockBankAccount = (overrides: Partial<BankAccount> = {}): BankAccoun
   type: 'depository',
   subtype: 'checking',
   mask: '1234',
-  availableBalance: new Decimal(900.00),
-  currentBalance: new Decimal(1000.00),
+  availableBalance: new Decimal(900.0),
+  currentBalance: new Decimal(1000.0),
   isoCurrencyCode: 'USD',
   isActive: true,
   createdAt: new Date(),
@@ -80,7 +89,7 @@ const createMockBankAccount = (overrides: Partial<BankAccount> = {}): BankAccoun
 const createMockTransaction = (overrides: any = {}): any => ({
   id: 'txn_123',
   bankAccountId: 'acc_123',
-  amount: new Decimal(50.00),
+  amount: new Decimal(50.0),
   currency: 'USD',
   date: new Date(),
   name: 'Test Transaction',
@@ -175,20 +184,32 @@ describe('AuthorizationMiddleware', () => {
       vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(null);
 
       try {
-        await authz.requireResourceOwnership('subscription', resourceId, userId);
+        await authz.requireResourceOwnership(
+          'subscription',
+          resourceId,
+          userId
+        );
         expect.fail('Should have thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(TRPCError);
         expect((error as TRPCError).code).toBe('NOT_FOUND');
-        expect((error as TRPCError).message).toBe('Resource not found or access denied');
+        expect((error as TRPCError).message).toBe(
+          'Resource not found or access denied'
+        );
       }
     });
 
     it('should handle database errors gracefully', async () => {
-      vi.mocked(mockDb.subscription.findFirst).mockRejectedValue(new Error('DB Error'));
+      vi.mocked(mockDb.subscription.findFirst).mockRejectedValue(
+        new Error('DB Error')
+      );
 
       try {
-        await authz.requireResourceOwnership('subscription', resourceId, userId);
+        await authz.requireResourceOwnership(
+          'subscription',
+          resourceId,
+          userId
+        );
         expect.fail('Should have thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(TRPCError);
@@ -326,7 +347,9 @@ describe('AuthorizationMiddleware', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(TRPCError);
         expect((error as TRPCError).code).toBe('FORBIDDEN');
-        expect((error as TRPCError).message).toBe('Administrator access required');
+        expect((error as TRPCError).message).toBe(
+          'Administrator access required'
+        );
       }
     });
 
@@ -408,12 +431,18 @@ describe('AuthorizationMiddleware', () => {
       vi.mocked(mockDb.subscription.findFirst).mockResolvedValue(null);
 
       try {
-        await authz.requireResourceOwnership('subscription', resourceId, userId);
+        await authz.requireResourceOwnership(
+          'subscription',
+          resourceId,
+          userId
+        );
         expect.fail('Should have thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(TRPCError);
         // Should not reveal whether resource exists or user lacks permission
-        expect((error as TRPCError).message).toBe('Resource not found or access denied');
+        expect((error as TRPCError).message).toBe(
+          'Resource not found or access denied'
+        );
       }
     });
 

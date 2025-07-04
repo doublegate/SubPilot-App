@@ -24,10 +24,10 @@
 
 SubPilot is a modern, intelligent subscription management platform that automatically detects and helps you manage recurring payments by securely connecting to your bank accounts. Built with privacy and security at its core, SubPilot empowers you to take control of your financial subscriptions.
 
-> **🔐 Version 1.6.0**: Enterprise Security & Compliance Release (July 3, 2025)
+> **🔐 Version 1.6.0**: Enterprise Security & Compliance Release (July 4, 2025)
 > **Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)
 > **Project Status**: Phase 3 Complete ✅ | Security Hardened ✅ | Production Ready
-> **Latest Release**: [View Changelog](./CHANGELOG.md) | **Security Audit**: 4 Critical Issues Fixed
+> **Latest Release**: [View Changelog](./CHANGELOG.md) | **Security Audit**: All Critical Issues Fixed
 
 ## 🎯 Key Features
 

@@ -38,7 +38,8 @@ const getEncryptionKey = async (): Promise<Buffer> => {
 
   // Use a deterministic salt based on the key for consistency
   // This ensures the same key always produces the same derived key
-  const salt = Buffer.from('subpilot-encryption-v1').toString('hex') + secret.slice(0, 8);
+  const salt =
+    Buffer.from('subpilot-encryption-v1').toString('hex') + secret.slice(0, 8);
   const key = (await scryptAsync(secret, salt, 32)) as Buffer;
   return key;
 };

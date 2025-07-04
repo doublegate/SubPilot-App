@@ -288,7 +288,10 @@ export class OpenAICategorizationClient {
 
     // Rate limiting check
     if (userId) {
-      const rateLimit = await checkRateLimit(userId, { type: 'ai', endpoint: 'openai-categorize' });
+      const rateLimit = await checkRateLimit(userId, {
+        type: 'ai',
+        endpoint: 'openai-categorize',
+      });
       if (!rateLimit.allowed) {
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',
@@ -362,7 +365,10 @@ export class OpenAICategorizationClient {
 
     // Rate limiting check
     if (userId) {
-      const rateLimit = await checkRateLimit(userId, { type: 'ai', endpoint: 'openai-bulk-categorize' });
+      const rateLimit = await checkRateLimit(userId, {
+        type: 'ai',
+        endpoint: 'openai-bulk-categorize',
+      });
       if (!rateLimit.allowed) {
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',
@@ -731,7 +737,10 @@ export class OpenAICategorizationClient {
 
     // Rate limiting check
     if (userId) {
-      const rateLimit = await checkRateLimit(userId, { type: 'ai', endpoint: 'openai-assistant' });
+      const rateLimit = await checkRateLimit(userId, {
+        type: 'ai',
+        endpoint: 'openai-assistant',
+      });
       if (!rateLimit.allowed) {
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',

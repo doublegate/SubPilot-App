@@ -14,7 +14,7 @@ async function main() {
   if (!adminEmail || !adminPassword) {
     throw new Error(
       'ADMIN_EMAIL and ADMIN_PASSWORD environment variables must be set. ' +
-      'Please set these in your .env file before running seed.'
+        'Please set these in your .env file before running seed.'
     );
   }
 
@@ -22,7 +22,7 @@ async function main() {
   if (adminPassword === 'admin123456' || adminPassword.length < 12) {
     throw new Error(
       'ADMIN_PASSWORD must be at least 12 characters and cannot be a default value. ' +
-      'Please use a strong, unique password.'
+        'Please use a strong, unique password.'
     );
   }
 
@@ -65,7 +65,9 @@ async function main() {
 
   // Warn about test user in development
   if (!process.env.TEST_USER_PASSWORD) {
-    console.log('⚠️ Using default test user password. Set TEST_USER_PASSWORD for custom password.');
+    console.log(
+      '⚠️ Using default test user password. Set TEST_USER_PASSWORD for custom password.'
+    );
   }
 
   // Check if user already exists
@@ -149,12 +151,14 @@ async function main() {
   console.log('   Admin User:');
   console.log('     Email:', adminEmail);
   console.log('     [Password from ADMIN_PASSWORD env var]');
-  
+
   const nodeEnv = process.env.NODE_ENV || 'development';
   if (nodeEnv === 'development' || nodeEnv === 'test') {
     console.log('\n   Test User:');
     console.log('     Email:', email);
-    console.log('     [Password from TEST_USER_PASSWORD env var or default in dev]');
+    console.log(
+      '     [Password from TEST_USER_PASSWORD env var or default in dev]'
+    );
   }
 }
 

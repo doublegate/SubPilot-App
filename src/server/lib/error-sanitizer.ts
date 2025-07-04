@@ -10,7 +10,7 @@ export class ErrorSanitizer {
   private static readonly SAFE_ERROR_CODES = [
     'BAD_REQUEST',
     'UNAUTHORIZED',
-    'FORBIDDEN', 
+    'FORBIDDEN',
     'NOT_FOUND',
     'METHOD_NOT_SUPPORTED',
     'TIMEOUT',
@@ -41,30 +41,30 @@ export class ErrorSanitizer {
     /postgresql:\/\/[^@]+@[^\/]+\/\w+/gi,
     /mysql:\/\/[^@]+@[^\/]+\/\w+/gi,
     /mongodb:\/\/[^@]+@[^\/]+\/\w+/gi,
-    
+
     // API keys and tokens
     /sk_[a-zA-Z0-9_]{20,}/gi,
     /pk_[a-zA-Z0-9_]{20,}/gi,
     /xoxb-[0-9]{11}-[0-9]{11}-[a-zA-Z0-9]{24}/gi,
     /AKIA[0-9A-Z]{16}/gi,
-    
+
     // JWT tokens
     /eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*/gi,
-    
+
     // Email addresses (in error contexts)
     /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi,
-    
+
     // File paths that might reveal system structure
     /\/(?:home|Users|var|opt|usr)\/[^\s"']+/gi,
     /[C-Z]:\\(?:Users|Program Files|Windows)[^\s"']*/gi,
-    
+
     // IP addresses (internal ones)
     /\b(?:10\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.168\.)\d+\.\d+\b/gi,
     /\b127\.0\.0\.\d+\b/gi,
-    
+
     // Version numbers that might help attackers
     /version\s+\d+\.\d+\.\d+/gi,
-    
+
     // Stack trace file paths
     /at\s+[^\s]+\s+\([^)]+\)/gi,
   ];
@@ -112,7 +112,10 @@ export class ErrorSanitizer {
 
     // In production, use generic messages for internal errors
     if (env.NODE_ENV === 'production') {
-      if (code === 'INTERNAL_SERVER_ERROR' || !this.SAFE_ERROR_CODES.includes(code as any)) {
+      if (
+        code === 'INTERNAL_SERVER_ERROR' ||
+        !this.SAFE_ERROR_CODES.includes(code as any)
+      ) {
         return new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: this.GENERIC_MESSAGES.INTERNAL_SERVER_ERROR,
@@ -159,7 +162,7 @@ export class ErrorSanitizer {
     let sanitized = message;
 
     // Remove sensitive patterns
-    this.SENSITIVE_PATTERNS.forEach((pattern) => {
+    this.SENSITIVE_PATTERNS.forEach(pattern => {
       sanitized = sanitized.replace(pattern, '[REDACTED]');
     });
 
@@ -191,7 +194,8 @@ export class ErrorSanitizer {
     }
   ): Promise<void> {
     try {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
 
       // Log to console for immediate debugging
@@ -283,13 +287,17 @@ export class ErrorSanitizer {
       if (depth > 3) return '[MAX_DEPTH_REACHED]'; // Prevent infinite recursion
 
       if (Array.isArray(obj)) {
-        return obj.map((item) => sanitizeObject(item, depth + 1));
+        return obj.map(item => sanitizeObject(item, depth + 1));
       }
 
       if (obj && typeof obj === 'object') {
         const result: any = {};
         for (const [key, value] of Object.entries(obj)) {
-          if (sensitiveFields.some((field) => key.toLowerCase().includes(field.toLowerCase()))) {
+          if (
+            sensitiveFields.some(field =>
+              key.toLowerCase().includes(field.toLowerCase())
+            )
+          ) {
             result[key] = '[REDACTED]';
           } else {
             result[key] = sanitizeObject(value, depth + 1);
@@ -333,7 +341,10 @@ export class ErrorSanitizer {
   /**
    * Check if an error should trigger security alerts
    */
-  static shouldAlertSecurity(error: unknown, context?: { procedure?: string; userId?: string }): boolean {
+  static shouldAlertSecurity(
+    error: unknown,
+    context?: { procedure?: string; userId?: string }
+  ): boolean {
     if (!(error instanceof Error)) return false;
 
     const securityIndicators = [
@@ -349,7 +360,7 @@ export class ErrorSanitizer {
     ];
 
     const message = error.message.toLowerCase();
-    const hasSecurityKeyword = securityIndicators.some((indicator) =>
+    const hasSecurityKeyword = securityIndicators.some(indicator =>
       message.includes(indicator)
     );
 
@@ -362,7 +373,7 @@ export class ErrorSanitizer {
       'plaid.exchange',
     ];
 
-    const isSensitiveProcedure = sensitiveProcedures.some((proc) =>
+    const isSensitiveProcedure = sensitiveProcedures.some(proc =>
       context?.procedure?.startsWith(proc)
     );
 

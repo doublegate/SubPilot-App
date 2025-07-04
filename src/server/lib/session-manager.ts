@@ -26,7 +26,12 @@ export interface DeviceInfo {
 }
 
 export interface SessionSecurityEvent {
-  type: 'created' | 'expired' | 'revoked' | 'suspicious_activity' | 'concurrent_limit';
+  type:
+    | 'created'
+    | 'expired'
+    | 'revoked'
+    | 'suspicious_activity'
+    | 'concurrent_limit';
   sessionId: string;
   userId: string;
   ip: string;
@@ -62,12 +67,14 @@ export class SessionManager {
 
     // Generate session fingerprint
     const fingerprint = this.generateFingerprint(ip, userAgent);
-    
+
     // Parse device information
     const parsedDeviceInfo = this.parseDeviceInfo(userAgent, deviceInfo);
-    
+
     // Calculate expiration time
-    const timeout = rememberMe ? SessionManager.REMEMBER_ME_TIMEOUT : SessionManager.SESSION_TIMEOUT;
+    const timeout = rememberMe
+      ? SessionManager.REMEMBER_ME_TIMEOUT
+      : SessionManager.SESSION_TIMEOUT;
     const expiresAt = new Date(Date.now() + timeout);
 
     // Check for concurrent session limit
@@ -124,7 +131,7 @@ export class SessionManager {
       where: { id: sessionToken },
     });
 
-    if (!session || !session.isActive) {
+    if (!session?.isActive) {
       return null;
     }
 
@@ -177,7 +184,11 @@ export class SessionManager {
    */
   async revokeSession(
     sessionToken: string,
-    reason: 'user_logout' | 'expired' | 'suspicious_activity' | 'admin_action' = 'user_logout'
+    reason:
+      | 'user_logout'
+      | 'expired'
+      | 'suspicious_activity'
+      | 'admin_action' = 'user_logout'
   ): Promise<void> {
     const session = await this.db.userSession.findUnique({
       where: { id: sessionToken },
@@ -269,11 +280,11 @@ export class SessionManager {
       where: {
         OR: [
           { expiresAt: { lt: new Date() } },
-          { 
+          {
             isActive: true,
-            lastActivity: { 
-              lt: new Date(Date.now() - SessionManager.SESSION_TIMEOUT * 2) 
-            }
+            lastActivity: {
+              lt: new Date(Date.now() - SessionManager.SESSION_TIMEOUT * 2),
+            },
           },
         ],
       },
@@ -303,25 +314,29 @@ export class SessionManager {
   /**
    * Parse device information from User-Agent
    */
-  private parseDeviceInfo(userAgent: string, deviceInfo?: Partial<DeviceInfo>): DeviceInfo {
+  private parseDeviceInfo(
+    userAgent: string,
+    deviceInfo?: Partial<DeviceInfo>
+  ): DeviceInfo {
     // Simple User-Agent parsing (in production, use a library like ua-parser-js)
     const ua = userAgent.toLowerCase();
-    
+
     const mobile = /mobile|android|iphone|ipad|phone/i.test(userAgent);
-    
+
     let os = 'Unknown';
     if (ua.includes('windows')) os = 'Windows';
     else if (ua.includes('mac')) os = 'macOS';
     else if (ua.includes('linux')) os = 'Linux';
     else if (ua.includes('android')) os = 'Android';
-    else if (ua.includes('ios') || ua.includes('iphone') || ua.includes('ipad')) os = 'iOS';
-    
+    else if (ua.includes('ios') || ua.includes('iphone') || ua.includes('ipad'))
+      os = 'iOS';
+
     let browser = 'Unknown';
     if (ua.includes('chrome')) browser = 'Chrome';
     else if (ua.includes('firefox')) browser = 'Firefox';
     else if (ua.includes('safari')) browser = 'Safari';
     else if (ua.includes('edge')) browser = 'Edge';
-    
+
     let device = mobile ? 'Mobile' : 'Desktop';
     if (ua.includes('tablet') || ua.includes('ipad')) device = 'Tablet';
 
@@ -360,7 +375,7 @@ export class SessionManager {
 
       if (oldestSession) {
         await this.revokeSession(oldestSession.id, 'admin_action');
-        
+
         await this.logSecurityEvent({
           type: 'concurrent_limit',
           sessionId: oldestSession.id,
@@ -414,10 +429,10 @@ export class SessionManager {
     // 1. Session is recent (within 1 hour)
     // 2. This is a trusted device
     // 3. User has explicitly allowed flexible sessions
-    
+
     const sessionAge = Date.now() - session.createdAt.getTime();
     const oneHour = 60 * 60 * 1000;
-    
+
     return (
       sessionAge < oneHour ||
       session.deviceInfo.trusted ||

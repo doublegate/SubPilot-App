@@ -8,37 +8,37 @@ export const RATE_LIMITS = {
     window: 15 * 60 * 1000, // 15 minutes
     max: 5, // 5 attempts per 15 minutes
   },
-  
+
   // General API endpoints
   api: {
     window: 60 * 1000, // 1 minute
     max: 100, // 100 requests per minute
   },
-  
+
   // AI assistant endpoints - more restrictive due to cost
   ai: {
     window: 60 * 60 * 1000, // 1 hour
     max: 50, // 50 AI requests per hour
   },
-  
+
   // Data export endpoints - very restrictive
   export: {
     window: 60 * 60 * 1000, // 1 hour
     max: 10, // 10 exports per hour
   },
-  
+
   // Admin endpoints - very strict
   admin: {
     window: 60 * 1000, // 1 minute
     max: 10, // 10 admin actions per minute
   },
-  
+
   // Billing/payment endpoints - strict
   billing: {
     window: 60 * 1000, // 1 minute
     max: 20, // 20 billing requests per minute
   },
-  
+
   // Bank/Plaid endpoints - moderate
   banking: {
     window: 60 * 1000, // 1 minute
@@ -241,16 +241,16 @@ export async function checkRateLimit(
 }> {
   const { type = 'api', endpoint, userTier = 'basic', userId, ip } = options;
   const redis = await getRedisClient();
-  
+
   // Get rate limit configuration for this type
   const config = RATE_LIMITS[type];
   const baseLimit = config.max;
   const window = config.window;
-  
+
   // Apply premium multiplier
   const premiumMultiplier = PREMIUM_MULTIPLIERS[userTier];
   const effectiveLimit = Math.floor(baseLimit * premiumMultiplier);
-  
+
   // Create rate limit key
   const key = endpoint
     ? `rate_limit:${type}:${clientId}:${endpoint}`
@@ -284,7 +284,9 @@ export async function checkRateLimit(
         },
       });
 
-      console.warn(`🚨 Rate limit exceeded: ${clientId} (${type}) - ${current}/${effectiveLimit}`);
+      console.warn(
+        `🚨 Rate limit exceeded: ${clientId} (${type}) - ${current}/${effectiveLimit}`
+      );
     }
 
     return {
@@ -296,7 +298,7 @@ export async function checkRateLimit(
     };
   } catch (error) {
     console.error('Rate limit check failed:', error);
-    
+
     // Log the error
     await AuditLogger.log({
       userId,
@@ -329,11 +331,11 @@ export async function checkRateLimitLegacy(
   remaining: number;
   reset: number;
 }> {
-  const result = await checkRateLimit(clientId, { 
-    type: 'api', 
-    endpoint 
+  const result = await checkRateLimit(clientId, {
+    type: 'api',
+    endpoint,
   });
-  
+
   return {
     allowed: result.allowed,
     limit: result.limit,
@@ -451,7 +453,7 @@ export function applyRateLimitHeaders(
   headers.set('X-RateLimit-Limit', rateLimitInfo.limit.toString());
   headers.set('X-RateLimit-Remaining', rateLimitInfo.remaining.toString());
   headers.set('X-RateLimit-Reset', rateLimitInfo.reset.toString());
-  
+
   // Add rate limit type for debugging
   if (rateLimitInfo.type) {
     headers.set('X-RateLimit-Type', rateLimitInfo.type);
@@ -482,15 +484,15 @@ export function createRateLimitMiddleware(
     path: string;
   }) => {
     const { ctx, next, path } = opts;
-    
+
     // Generate client identifier
-    const clientId = keyGenerator 
+    const clientId = keyGenerator
       ? keyGenerator(ctx)
       : ctx.session?.user?.id || ctx.clientIp || 'anonymous';
-    
+
     // Get user tier for premium rate limits
     const userTier = ctx.session?.user?.subscriptionTier || 'basic';
-    
+
     // Check rate limit before proceeding
     const rateLimitResult = await checkRateLimit(clientId, {
       type,
@@ -502,16 +504,16 @@ export function createRateLimitMiddleware(
 
     if (!rateLimitResult.allowed) {
       const error = new Error(`Rate limit exceeded for ${type} endpoints`);
-      
+
       // Add rate limit info to error for middleware to use
       (error as any).rateLimitInfo = rateLimitResult;
-      
+
       throw error;
     }
 
     try {
       const result = await next();
-      
+
       // Track successful requests if not skipping
       if (!skipSuccessful) {
         await AuditLogger.log({
@@ -525,7 +527,7 @@ export function createRateLimitMiddleware(
           },
         });
       }
-      
+
       return result;
     } catch (error) {
       // Track failed requests if not skipping
@@ -542,7 +544,7 @@ export function createRateLimitMiddleware(
           },
         });
       }
-      
+
       throw error;
     }
   };
@@ -563,12 +565,12 @@ export async function getRateLimitStatus(
 }> {
   const redis = await getRedisClient();
   const key = `rate_limit:${type}:${clientId}`;
-  
+
   try {
     const current = parseInt((await redis.get(key)) || '0');
     const config = RATE_LIMITS[type];
     const limit = config.max;
-    
+
     return {
       current,
       limit,
@@ -596,7 +598,7 @@ export async function clearRateLimit(
   type?: RateLimitType
 ): Promise<void> {
   const redis = await getRedisClient();
-  
+
   try {
     if (type) {
       await redis.del(`rate_limit:${type}:${clientId}`);
@@ -606,8 +608,10 @@ export async function clearRateLimit(
         await redis.del(`rate_limit:${rateLimitType}:${clientId}`);
       }
     }
-    
-    console.log(`✅ Rate limit cleared for ${clientId}${type ? ` (${type})` : ''}`);
+
+    console.log(
+      `✅ Rate limit cleared for ${clientId}${type ? ` (${type})` : ''}`
+    );
   } catch (error) {
     console.error('Failed to clear rate limit:', error);
   }

@@ -87,22 +87,31 @@ export const encryptWithSalt = async (text: string): Promise<string> => {
  * @param encryptedText - The encrypted string in format: salt:iv:authTag:encrypted
  * @returns Decrypted plain text
  */
-export const decryptWithSalt = async (encryptedText: string): Promise<string> => {
+export const decryptWithSalt = async (
+  encryptedText: string
+): Promise<string> => {
   const parts = encryptedText.split(':');
-  
+
   // Handle both old format (3 parts) and new format (4 parts)
   if (parts.length === 3) {
     // Legacy format without salt - use old decrypt function
-    throw new Error('Legacy encryption format detected. Please re-encrypt data.');
+    throw new Error(
+      'Legacy encryption format detected. Please re-encrypt data.'
+    );
   }
-  
+
   if (parts.length !== 4) {
     throw new Error('Invalid encrypted format');
   }
 
   const [saltBase64, ivBase64, authTagBase64, encryptedBase64] = parts;
 
-  if (!saltBase64 || !ivBase64 || !authTagBase64 || encryptedBase64 === undefined) {
+  if (
+    !saltBase64 ||
+    !ivBase64 ||
+    !authTagBase64 ||
+    encryptedBase64 === undefined
+  ) {
     throw new Error('Invalid encrypted format');
   }
 

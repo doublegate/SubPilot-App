@@ -5,10 +5,12 @@ import { SubscriptionCard } from '@/components/subscription-card';
 import { mockSubscription } from '@/test/utils';
 
 // Mock tRPC api
-const mockInitiateMutation = vi.hoisted(() => vi.fn(() => ({
-  mutate: vi.fn(),
-  isLoading: false,
-})));
+const mockInitiateMutation = vi.hoisted(() =>
+  vi.fn(() => ({
+    mutate: vi.fn(),
+    isLoading: false,
+  }))
+);
 
 vi.mock('@/trpc/react', () => ({
   api: {
@@ -71,11 +73,11 @@ describe('SubscriptionCard', () => {
   it('calls onCancel when cancel menu item is clicked', async () => {
     const user = userEvent.setup();
     const handleCancel = vi.fn();
-    
+
     // Mock the mutation to call onSuccess callback
     let mockOnSuccess: ((result: any) => void) | undefined;
-    
-    const mockUseMutation = vi.fn((options) => {
+
+    const mockUseMutation = vi.fn(options => {
       mockOnSuccess = options?.onSuccess;
       return {
         mutate: vi.fn(),
@@ -88,7 +90,7 @@ describe('SubscriptionCard', () => {
         isLoading: false,
       };
     });
-    
+
     mockInitiateMutation.mockImplementation(mockUseMutation);
 
     render(

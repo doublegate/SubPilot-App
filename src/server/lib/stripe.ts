@@ -70,7 +70,7 @@ export async function verifyWebhookSignature(
   }
 
   // Validate signature format
-  if (!signature || !signature.includes('=')) {
+  if (!signature?.includes('=')) {
     console.error('❌ Invalid Stripe signature format');
     throw new Error('Invalid signature format');
   }
@@ -82,21 +82,25 @@ export async function verifyWebhookSignature(
       signature,
       webhookSecret
     );
-    
+
     console.log(`✅ Stripe webhook verified: ${event.type}`);
     return event;
   } catch (err) {
     const error = err as Error;
-    
+
     // Log specific error types for debugging
     if (error.message.includes('timestamp')) {
-      console.error('❌ Stripe webhook timestamp validation failed - possible replay attack');
+      console.error(
+        '❌ Stripe webhook timestamp validation failed - possible replay attack'
+      );
     } else if (error.message.includes('signature')) {
-      console.error('❌ Stripe webhook signature validation failed - possible tampering');
+      console.error(
+        '❌ Stripe webhook signature validation failed - possible tampering'
+      );
     } else {
       console.error('❌ Stripe webhook verification failed:', error.message);
     }
-    
+
     throw new Error(`Webhook signature verification failed: ${error.message}`);
   }
 }

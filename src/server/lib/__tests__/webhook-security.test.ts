@@ -24,16 +24,16 @@ describe('WebhookSecurity', () => {
       const result = WebhookSecurity.verifyPlaidWebhook(testPayload, {
         'plaid-signature': 'invalid-signature',
       });
-      
+
       expect(result).toBe(true);
     });
 
     it('should validate signature format in production', () => {
       // Mock production environment
       mockEnv.PLAID_ENV = 'production';
-      
+
       const result = WebhookSecurity.verifyPlaidWebhook(testPayload, {});
-      
+
       expect(result).toBe(false);
     });
   });
@@ -108,8 +108,11 @@ describe('WebhookSecurity', () => {
     });
 
     it('should handle string payloads', () => {
-      const signature = WebhookSecurity.generateSignature(testPayload, testSecret);
-      
+      const signature = WebhookSecurity.generateSignature(
+        testPayload,
+        testSecret
+      );
+
       expect(signature).toBeTruthy();
       expect(typeof signature).toBe('string');
     });
@@ -230,13 +233,17 @@ describe('WebhookSecurity', () => {
       const time2 = process.hrtime.bigint() - start2;
 
       // Both should return false
-      expect(WebhookSecurity.verifyWebhook(testPayload, shortWrong, testSecret)).toBe(false);
-      expect(WebhookSecurity.verifyWebhook(testPayload, longWrong, testSecret)).toBe(false);
+      expect(
+        WebhookSecurity.verifyWebhook(testPayload, shortWrong, testSecret)
+      ).toBe(false);
+      expect(
+        WebhookSecurity.verifyWebhook(testPayload, longWrong, testSecret)
+      ).toBe(false);
 
       // Time difference should be minimal (within an order of magnitude)
       const timeDiff = Math.abs(Number(time1 - time2));
       const maxTime = Math.max(Number(time1), Number(time2));
-      
+
       // Allow for some variance but not excessive timing differences
       expect(timeDiff).toBeLessThan(maxTime * 10);
     });

@@ -222,8 +222,8 @@ export default function HelpPage() {
             Contact Support
           </CardTitle>
           <CardDescription>
-            Can&apos;t find what you&apos;re looking for? Send us a message and we&apos;ll help
-            you out.
+            Can&apos;t find what you&apos;re looking for? Send us a message and
+            we&apos;ll help you out.
           </CardDescription>
         </CardHeader>
         <CardContent>

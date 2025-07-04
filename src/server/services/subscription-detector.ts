@@ -338,7 +338,6 @@ export class SubscriptionDetector {
       .filter(group => group.transactions.length >= this.MIN_TRANSACTIONS);
   }
 
-
   /**
    * Analyze a group of transactions from the same merchant
    */

@@ -57,7 +57,9 @@ describe('Validation Schemas', () => {
         expect(() => passwordSchema.parse('nouppercase123!')).toThrow(ZodError);
         expect(() => passwordSchema.parse('NOLOWERCASE123!')).toThrow(ZodError);
         expect(() => passwordSchema.parse('NoNumbers!')).toThrow(ZodError);
-        expect(() => passwordSchema.parse('NoSpecialChars123')).toThrow(ZodError);
+        expect(() => passwordSchema.parse('NoSpecialChars123')).toThrow(
+          ZodError
+        );
       });
     });
 
@@ -68,9 +70,15 @@ describe('Validation Schemas', () => {
       });
 
       it('should reject potentially dangerous text', () => {
-        expect(() => textFieldSchema().parse('<script>alert("xss")</script>')).toThrow(ZodError);
-        expect(() => textFieldSchema().parse('Text with "quotes"')).toThrow(ZodError);
-        expect(() => textFieldSchema().parse("Text with 'quotes'")).toThrow(ZodError);
+        expect(() =>
+          textFieldSchema().parse('<script>alert("xss")</script>')
+        ).toThrow(ZodError);
+        expect(() => textFieldSchema().parse('Text with "quotes"')).toThrow(
+          ZodError
+        );
+        expect(() => textFieldSchema().parse("Text with 'quotes'")).toThrow(
+          ZodError
+        );
       });
 
       it('should respect length limits', () => {
@@ -122,8 +130,12 @@ describe('Validation Schemas', () => {
 
     describe('urlSchema', () => {
       it('should accept valid URLs', () => {
-        expect(urlSchema.parse('https://example.com')).toBe('https://example.com');
-        expect(urlSchema.parse('http://localhost:3000')).toBe('http://localhost:3000');
+        expect(urlSchema.parse('https://example.com')).toBe(
+          'https://example.com'
+        );
+        expect(urlSchema.parse('http://localhost:3000')).toBe(
+          'http://localhost:3000'
+        );
       });
 
       it('should reject invalid URLs', () => {
@@ -362,7 +374,7 @@ describe('Validation Schemas', () => {
         '\'"<script>alert(String.fromCharCode(88,83,83))</script>',
       ];
 
-      xssAttempts.forEach((xss) => {
+      xssAttempts.forEach(xss => {
         expect(() => textFieldSchema().parse(xss)).toThrow(ZodError);
       });
     });
@@ -374,7 +386,7 @@ describe('Validation Schemas', () => {
         'UNION SELECT * FROM users',
       ];
 
-      sqlInjections.forEach((sql) => {
+      sqlInjections.forEach(sql => {
         expect(() => nameSchema.parse(sql)).toThrow(ZodError);
       });
     });
@@ -389,7 +401,9 @@ describe('Validation Schemas', () => {
 
       expect(() => nameSchema.parse(oversizedInputs.name)).toThrow(ZodError);
       expect(() => emailSchema.parse(oversizedInputs.email)).toThrow(ZodError);
-      expect(() => amountSchema.parse(oversizedInputs.amount)).toThrow(ZodError);
+      expect(() => amountSchema.parse(oversizedInputs.amount)).toThrow(
+        ZodError
+      );
       expect(() => urlSchema.parse(oversizedInputs.url)).toThrow(ZodError);
     });
   });

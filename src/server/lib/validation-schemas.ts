@@ -54,18 +54,21 @@ export const nameSchema = z
 export const amountSchema = z
   .number()
   .or(z.string().transform(Number))
-  .refine((val) => !isNaN(val) && val >= 0, 'Invalid amount')
-  .refine((val) => val <= 1000000, 'Amount too large')
-  .transform((val) => Number(val));
+  .refine(val => !isNaN(val) && val >= 0, 'Invalid amount')
+  .refine(val => val <= 1000000, 'Amount too large')
+  .transform(val => Number(val));
 
 // Date validation
 export const dateSchema = z
   .string()
   .or(z.date())
-  .transform((val) => (typeof val === 'string' ? new Date(val) : val))
-  .refine((date) => date instanceof Date && !isNaN(date.getTime()), 'Invalid date')
+  .transform(val => (typeof val === 'string' ? new Date(val) : val))
   .refine(
-    (date) => date >= new Date('2000-01-01') && date <= new Date('2100-01-01'),
+    date => date instanceof Date && !isNaN(date.getTime()),
+    'Invalid date'
+  )
+  .refine(
+    date => date >= new Date('2000-01-01') && date <= new Date('2100-01-01'),
     'Date out of valid range'
   );
 
@@ -75,7 +78,7 @@ export const urlSchema = z
   .url('Invalid URL format')
   .max(2048, 'URL too long')
   .refine(
-    (url) => ['http:', 'https:'].includes(new URL(url).protocol),
+    url => ['http:', 'https:'].includes(new URL(url).protocol),
     'Only HTTP/HTTPS URLs allowed'
   );
 
@@ -83,7 +86,7 @@ export const urlSchema = z
 export const phoneSchema = z
   .string()
   .regex(/^\+?[\d\s\-\(\)]{10,20}$/, 'Invalid phone number format')
-  .transform((val) => val.replace(/\s/g, ''));
+  .transform(val => val.replace(/\s/g, ''));
 
 // ============================================================================
 // BUSINESS LOGIC VALIDATION
@@ -149,7 +152,10 @@ export const plaidAccountSchema = z.object({
     .string()
     .min(1, 'Account subtype required')
     .max(50, 'Subtype too long'),
-  mask: z.string().regex(/^\d{2,4}$/, 'Invalid account mask').optional(),
+  mask: z
+    .string()
+    .regex(/^\d{2,4}$/, 'Invalid account mask')
+    .optional(),
 });
 
 export const plaidTransactionSchema = z.object({
@@ -216,7 +222,12 @@ export const subscriptionUpdateSchema = subscriptionCreateSchema
 // CANCELLATION REQUEST VALIDATION
 // ============================================================================
 
-export const cancellationMethodSchema = z.enum(['auto', 'api', 'automation', 'manual']);
+export const cancellationMethodSchema = z.enum([
+  'auto',
+  'api',
+  'automation',
+  'manual',
+]);
 
 export const cancellationPrioritySchema = z.enum(['low', 'normal', 'high']);
 
@@ -405,7 +416,11 @@ export const validationUtils = {
       allowedExtensions?: string[];
     } = {}
   ): { valid: boolean; error?: string } => {
-    const { maxSizeKB = 1024, allowedTypes = [], allowedExtensions = [] } = options;
+    const {
+      maxSizeKB = 1024,
+      allowedTypes = [],
+      allowedExtensions = [],
+    } = options;
 
     if (file.size > maxSizeKB * 1024) {
       return { valid: false, error: `File too large (max ${maxSizeKB}KB)` };

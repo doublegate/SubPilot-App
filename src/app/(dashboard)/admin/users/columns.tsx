@@ -39,7 +39,9 @@ export const columns: ColumnDef<User>[] = [
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.image || ''} />
             <AvatarFallback>
-              {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
+              {user.name?.[0]?.toUpperCase() ||
+                user.email?.[0]?.toUpperCase() ||
+                '?'}
             </AvatarFallback>
           </Avatar>
           <div>
@@ -72,7 +74,7 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: 'subscriptionPlan',
     header: 'Plan',
     cell: ({ row }) => {
-      const plan = row.getValue('subscriptionPlan') as string;
+      const plan = row.getValue('subscriptionPlan');
       const variant =
         plan === 'pro' || plan === 'team' ? 'default' : 'secondary';
       return <Badge variant={variant}>{plan}</Badge>;

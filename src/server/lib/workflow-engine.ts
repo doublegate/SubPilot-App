@@ -431,11 +431,11 @@ class SimpleWorkflowEngine extends EventEmitter {
     try {
       // Use safe expression parser instead of eval
       const parser = new Parser();
-      
+
       // Parse the expression and evaluate with variables
       const expr = parser.parse(expression);
       const result = expr.evaluate(variables);
-      
+
       return Boolean(result);
     } catch (error) {
       console.error('[WorkflowEngine] Error evaluating condition:', error);

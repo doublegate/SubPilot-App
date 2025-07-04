@@ -5,14 +5,17 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { encrypt as oldEncrypt, decrypt as oldDecrypt } from '../src/server/lib/crypto';
+import {
+  encrypt as oldEncrypt,
+  decrypt as oldDecrypt,
+} from '../src/server/lib/crypto';
 import { encrypt as newEncrypt } from '../src/server/lib/crypto-v2';
 
 const prisma = new PrismaClient();
 
 async function migrateEncryptedData() {
   console.log('🔐 Starting encryption migration...');
-  
+
   try {
     // Find all PlaidItems with access tokens
     const plaidItems = await prisma.plaidItem.findMany({
@@ -41,7 +44,7 @@ async function migrateEncryptedData() {
 
         // Decrypt with old method
         const plainToken = await oldDecrypt(item.accessToken);
-        
+
         // Re-encrypt with new method (includes random salt)
         const newEncryptedToken = await newEncrypt(plainToken);
 
@@ -65,7 +68,9 @@ async function migrateEncryptedData() {
     console.log(`   Failed: ${failed}`);
 
     if (failed > 0) {
-      console.warn('\n⚠️  Some items failed to migrate. Please check the errors above.');
+      console.warn(
+        '\n⚠️  Some items failed to migrate. Please check the errors above.'
+      );
       process.exit(1);
     }
 

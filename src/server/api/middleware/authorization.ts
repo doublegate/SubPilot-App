@@ -2,10 +2,10 @@ import { TRPCError } from '@trpc/server';
 import { type PrismaClient } from '@prisma/client';
 import { AuditLogger } from '@/server/lib/audit-logger';
 
-export type ResourceType = 
-  | 'subscription' 
-  | 'account' 
-  | 'transaction' 
+export type ResourceType =
+  | 'subscription'
+  | 'account'
+  | 'transaction'
   | 'notification'
   | 'cancellation_request'
   | 'conversation'
@@ -81,7 +81,6 @@ export class AuthorizationMiddleware {
 
       // Log successful access if audit action is specified
       // Note: auditAction should be a valid SecurityAction
-
     } catch (error) {
       if (error instanceof TRPCError) {
         throw error;
@@ -95,9 +94,9 @@ export class AuthorizationMiddleware {
         resource: resourceId,
         result: 'failure',
         error: error instanceof Error ? error.message : 'Unknown error',
-        metadata: { 
+        metadata: {
           resourceType,
-          errorType: 'authorization_system_error'
+          errorType: 'authorization_system_error',
         },
       });
 
@@ -120,29 +119,33 @@ export class AuthorizationMiddleware {
   ): Promise<boolean> {
     switch (resourceType) {
       case 'subscription':
-        return this.verifySubscriptionOwnership(resourceId, userId, requireActive);
-      
+        return this.verifySubscriptionOwnership(
+          resourceId,
+          userId,
+          requireActive
+        );
+
       case 'account':
         return this.verifyAccountOwnership(resourceId, userId, requireActive);
-      
+
       case 'transaction':
         return this.verifyTransactionOwnership(resourceId, userId);
-      
+
       case 'notification':
         return this.verifyNotificationOwnership(resourceId, userId);
-      
+
       case 'cancellation_request':
         return this.verifyCancellationRequestOwnership(resourceId, userId);
-      
+
       case 'conversation':
         return this.verifyConversationOwnership(resourceId, userId);
-      
+
       case 'billing_subscription':
         return this.verifyBillingSubscriptionOwnership(resourceId, userId);
-      
+
       case 'plaid_item':
         return this.verifyPlaidItemOwnership(resourceId, userId, requireActive);
-      
+
       default:
         console.error(`Unknown resource type: ${resourceType}`);
         return false;
@@ -286,15 +289,15 @@ export class AuthorizationMiddleware {
       select: { isAdmin: true },
     });
 
-    if (!user || !user.isAdmin) {
+    if (!user?.isAdmin) {
       await AuditLogger.log({
         userId,
         action: 'security.suspicious_activity',
         result: 'failure',
-        metadata: { 
-          requiredRole: 'admin', 
+        metadata: {
+          requiredRole: 'admin',
           userIsAdmin: user?.isAdmin || false,
-          attemptType: 'unauthorized_admin_access' 
+          attemptType: 'unauthorized_admin_access',
         },
       });
 
@@ -352,5 +355,10 @@ export async function requireOwnership(
   }
 ) {
   const authz = new AuthorizationMiddleware(db);
-  await authz.requireResourceOwnership(resourceType, resourceId, userId, options);
+  await authz.requireResourceOwnership(
+    resourceType,
+    resourceId,
+    userId,
+    options
+  );
 }

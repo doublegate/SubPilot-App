@@ -33,7 +33,8 @@ describe('ErrorSanitizer', () => {
     it('should sanitize TRPCError with sensitive information', () => {
       const sensitiveError = new TRPCError({
         code: 'BAD_REQUEST',
-        message: 'Database error: postgresql://user:password@localhost:5432/db failed',
+        message:
+          'Database error: postgresql://user:password@localhost:5432/db failed',
       });
 
       const sanitized = ErrorSanitizer.sanitizeError(sensitiveError);
@@ -44,7 +45,9 @@ describe('ErrorSanitizer', () => {
     });
 
     it('should sanitize generic Error objects', () => {
-      const error = new Error('Connection failed to postgresql://admin:secret@db.example.com/app');
+      const error = new Error(
+        'Connection failed to postgresql://admin:secret@db.example.com/app'
+      );
 
       const sanitized = ErrorSanitizer.sanitizeError(error);
 
@@ -106,8 +109,10 @@ describe('ErrorSanitizer', () => {
       },
       {
         name: 'JWT tokens',
-        input: 'Invalid token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
-        shouldRedact: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+        input:
+          'Invalid token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+        shouldRedact:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
       },
       {
         name: 'Email addresses',
@@ -161,7 +166,8 @@ describe('ErrorSanitizer', () => {
       },
       {
         code: 'TOO_MANY_REQUESTS' as const,
-        expected: 'Too many requests. Please wait a moment before trying again.',
+        expected:
+          'Too many requests. Please wait a moment before trying again.',
       },
     ];
 
@@ -192,7 +198,7 @@ describe('ErrorSanitizer', () => {
         new Error('CSRF token validation failed'),
       ];
 
-      securityErrors.forEach((error) => {
+      securityErrors.forEach(error => {
         expect(ErrorSanitizer.shouldAlertSecurity(error)).toBe(true);
       });
     });
@@ -207,10 +213,10 @@ describe('ErrorSanitizer', () => {
         'plaid.exchange',
       ];
 
-      sensitiveProcedures.forEach((procedure) => {
-        expect(
-          ErrorSanitizer.shouldAlertSecurity(error, { procedure })
-        ).toBe(true);
+      sensitiveProcedures.forEach(procedure => {
+        expect(ErrorSanitizer.shouldAlertSecurity(error, { procedure })).toBe(
+          true
+        );
       });
     });
 
@@ -259,7 +265,9 @@ describe('ErrorSanitizer', () => {
     it('should be more permissive in development', () => {
       mockEnv.NODE_ENV = 'development';
 
-      const error = new Error('Detailed development error with some specific info');
+      const error = new Error(
+        'Detailed development error with some specific info'
+      );
 
       const sanitized = ErrorSanitizer.sanitizeError(error);
 

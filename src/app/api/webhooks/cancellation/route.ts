@@ -55,7 +55,10 @@ export async function POST(request: NextRequest) {
           action: 'webhook.configuration_error',
           resource: providerId,
           result: 'failure',
-          metadata: { error: 'webhook_secret_not_configured', provider: provider.name },
+          metadata: {
+            error: 'webhook_secret_not_configured',
+            provider: provider.name,
+          },
         });
 
         return NextResponse.json(
@@ -76,10 +79,12 @@ export async function POST(request: NextRequest) {
           action: 'webhook.signature_verification_failed',
           resource: providerId,
           result: 'failure',
-          metadata: { 
+          metadata: {
             signature: signature.substring(0, 10) + '...', // Log only partial signature for security
             provider: provider.name,
-            ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+            ip:
+              request.headers.get('x-forwarded-for') ||
+              request.headers.get('x-real-ip'),
           },
         });
 
@@ -89,7 +94,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log(`✅ Internal webhook signature verified for provider: ${provider.name}`);
+      console.log(
+        `✅ Internal webhook signature verified for provider: ${provider.name}`
+      );
     }
 
     // Find the cancellation request
@@ -278,7 +285,6 @@ export async function GET(request: NextRequest) {
     timestamp: new Date().toISOString(),
   });
 }
-
 
 /**
  * Rate limiting for webhook endpoints
