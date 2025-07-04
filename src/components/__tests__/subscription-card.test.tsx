@@ -4,6 +4,33 @@ import userEvent from '@testing-library/user-event';
 import { SubscriptionCard } from '@/components/subscription-card';
 import { mockSubscription } from '@/test/utils';
 
+// Mock tRPC api
+const mockInitiateMutation = vi.hoisted(() => vi.fn(() => ({
+  mutate: vi.fn(),
+  isLoading: false,
+})));
+
+vi.mock('@/trpc/react', () => ({
+  api: {
+    cancellation: {
+      canCancel: {
+        useQuery: vi.fn(() => ({
+          data: { canCancel: true, reason: null },
+          isLoading: false,
+        })),
+      },
+      initiate: {
+        useMutation: mockInitiateMutation,
+      },
+    },
+  },
+}));
+
+// Mock toast
+vi.mock('@/components/ui/use-toast', () => ({
+  toast: vi.fn(),
+}));
+
 describe('SubscriptionCard', () => {
   it('renders subscription information correctly', () => {
     render(<SubscriptionCard subscription={mockSubscription} />);
@@ -44,6 +71,26 @@ describe('SubscriptionCard', () => {
   it('calls onCancel when cancel menu item is clicked', async () => {
     const user = userEvent.setup();
     const handleCancel = vi.fn();
+    
+    // Mock the mutation to call onSuccess callback
+    let mockOnSuccess: ((result: any) => void) | undefined;
+    
+    const mockUseMutation = vi.fn((options) => {
+      mockOnSuccess = options?.onSuccess;
+      return {
+        mutate: vi.fn(),
+        mutateAsync: vi.fn(async () => {
+          const result = { id: 'cancellation-1', status: 'pending' };
+          // Trigger the onSuccess callback
+          mockOnSuccess?.(result);
+          return result;
+        }),
+        isLoading: false,
+      };
+    });
+    
+    mockInitiateMutation.mockImplementation(mockUseMutation);
+
     render(
       <SubscriptionCard
         subscription={mockSubscription}
@@ -51,7 +98,7 @@ describe('SubscriptionCard', () => {
       />
     );
 
-    // Open dropdown menu - find button by class since it has no aria-label
+    // Open dropdown menu
     const menuButtons = screen.getAllByRole('button');
     const menuButton = menuButtons.find(btn =>
       btn.className.includes('h-8 w-8')
@@ -59,9 +106,13 @@ describe('SubscriptionCard', () => {
     expect(menuButton).toBeDefined();
     await user.click(menuButton!);
 
-    // Wait for dropdown content to appear and click cancel option
+    // Click cancel option to open modal
     const cancelButton = await screen.findByText('Cancel Subscription');
     await user.click(cancelButton);
+
+    // The modal should now be open - find and click the confirm button
+    const confirmButton = await screen.findByText('Start Cancellation');
+    await user.click(confirmButton);
 
     expect(handleCancel).toHaveBeenCalledWith(mockSubscription.id);
   });

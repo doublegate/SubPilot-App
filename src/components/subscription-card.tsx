@@ -137,6 +137,7 @@ export function SubscriptionCard({
                   <CancelSubscriptionButton
                     subscriptionId={subscription.id}
                     subscriptionName={subscription.name}
+                    onCancellationStarted={() => onCancel?.(subscription.id)}
                   />
                 </div>
               )}
