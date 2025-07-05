@@ -41,7 +41,7 @@ export default function ParticleBackground({
   particleCount = 500, // Increased to match Universal-Blue
   opacity = 0.4,
   useImageSeeding = false,
-  seedUrl = 'https://Universal-Blue.org/image_list.json',
+  seedUrl = 'https://universal-blue.org/image_list.json',
   stopOnScroll = true,
 }: ParticleBackgroundProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -107,6 +107,9 @@ export default function ParticleBackground({
     // Get seed value
     const seed = await fetchSeedData();
 
+    // Store current theme for use in p5 sketch
+    const currentTheme = theme;
+
     try {
       p5InstanceRef.current = new window.p5((p: any) => {
         let particles: Particle[] = [];
@@ -130,8 +133,9 @@ export default function ParticleBackground({
             });
           }
 
-          // Match Universal-Blue styling
-          p.stroke(100); // Gray particles like original
+          // Theme-aware colors for better visibility on gradient backgrounds
+          const strokeColor = currentTheme === 'dark' ? [255, 255, 255, 60] : [50, 50, 50, 80];
+          p.stroke(...strokeColor);
           p.strokeWeight(1);
           p.clear();
         };
@@ -142,8 +146,10 @@ export default function ParticleBackground({
             return;
           }
 
-          // Create trailing effect with semi-transparent background
-          p.background(0, 10); // Matches Universal-Blue trail effect
+          // Theme-aware trailing effect
+          const bgColor = currentTheme === 'dark' ? 0 : 255; // Black for dark mode, white for light mode
+          const bgAlpha = currentTheme === 'dark' ? 10 : 15; // Adjust trail length based on theme
+          p.background(bgColor, bgAlpha);
 
           for (let i = 0; i < particles.length; i++) {
             const pt = particles[i];
@@ -188,7 +194,7 @@ export default function ParticleBackground({
     } catch (error) {
       console.error('Error initializing p5.js:', error);
     }
-  }, [particleCount, fetchSeedData, p5Loaded, stopOnScroll]);
+  }, [theme, particleCount, fetchSeedData, p5Loaded, stopOnScroll]);
 
   // Check for reduced motion preference
   useEffect(() => {
@@ -248,14 +254,14 @@ export default function ParticleBackground({
     }
   }, [p5Loaded, initializeP5]);
 
-  // Reinitialize when theme changes (removed to match Universal-Blue style)
+  // Reinitialize when theme changes
   useEffect(() => {
-    if (p5Loaded) {
+    if (p5Loaded && p5InstanceRef.current) {
       cleanupP5();
       const timeoutId = setTimeout(initializeP5, 100);
       return () => clearTimeout(timeoutId);
     }
-  }, [cleanupP5, initializeP5]);
+  }, [theme, cleanupP5, initializeP5, p5Loaded]);
 
   return (
     <>
