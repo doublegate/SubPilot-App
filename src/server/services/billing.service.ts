@@ -4,13 +4,17 @@ import { TRPCError } from '@trpc/server';
 import { getStripe, STRIPE_WEBHOOK_EVENTS } from '../lib/stripe';
 
 // Extended Stripe interfaces for proper typing
-interface StripeSubscriptionWithPeriods extends Stripe.Subscription {
+interface StripeSubscriptionWithPeriods
+  extends Omit<
+    Stripe.Subscription,
+    'canceled_at' | 'trial_start' | 'trial_end'
+  > {
   current_period_start: number;
   current_period_end: number;
-  trial_start?: number;
-  trial_end?: number;
+  trial_start: number | null;
+  trial_end: number | null;
   cancel_at_period_end: boolean;
-  canceled_at?: number;
+  canceled_at: number | null; // Match Stripe's actual type
 }
 
 interface StripeInvoiceWithDetails extends Stripe.Invoice {
@@ -314,9 +318,13 @@ export class BillingService {
       throw new Error('Invalid session metadata');
     }
 
-    const subscription = (await getStripe().subscriptions.retrieve(
+    const stripeSubscription = await getStripe().subscriptions.retrieve(
       session.subscription as string
-    )) as StripeSubscriptionWithPeriods;
+    );
+
+    // Safely convert to our extended interface
+    const subscription =
+      stripeSubscription as unknown as StripeSubscriptionWithPeriods;
 
     // Create or update user subscription
     await this.prisma.userSubscription.upsert({
@@ -503,7 +511,10 @@ export class BillingService {
         amount: invoice.amount_paid / 100,
         currency: invoice.currency,
         stripeInvoiceId: invoice.id,
-        stripePaymentIntentId: invoice.payment_intent,
+        stripePaymentIntentId:
+          typeof invoice.payment_intent === 'string'
+            ? invoice.payment_intent
+            : (invoice.payment_intent?.id ?? null),
         status: 'completed',
         metadata: {
           invoiceNumber: invoice.number,
@@ -540,9 +551,12 @@ export class BillingService {
 
     // Update subscription status if needed
     if (invoice.subscription) {
-      const subscription = await getStripe().subscriptions.retrieve(
-        invoice.subscription
-      );
+      const subscriptionId =
+        typeof invoice.subscription === 'string'
+          ? invoice.subscription
+          : invoice.subscription.id;
+      const subscription =
+        await getStripe().subscriptions.retrieve(subscriptionId);
       await this.prisma.userSubscription.update({
         where: { id: userSubscription.id },
         data: {

@@ -603,7 +603,11 @@ export function CancellationMonitoringDashboard() {
                     successRate: provider.successRate,
                   })
                 ),
-                insights: (analytics.insights ?? []) as AlertData[],
+                insights: (analytics.insights ?? []).map((insight: string) => ({
+                  type: 'info' as const,
+                  title: 'Insight',
+                  message: insight,
+                })),
               };
               return (
                 <>

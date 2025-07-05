@@ -424,7 +424,10 @@ class SSEManager {
     controller: ReadableStreamDefaultController,
     message: {
       type: string;
-      data: NotificationData | { status: string; timestamp: string };
+      data:
+        | NotificationData
+        | { status: string; timestamp: string }
+        | RealtimeNotification;
     }
   ): void {
     try {

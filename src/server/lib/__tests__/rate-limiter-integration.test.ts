@@ -6,6 +6,14 @@ import {
   PREMIUM_MULTIPLIERS,
   type RateLimitType,
 } from '../rate-limiter';
+
+type RateLimitResult = {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+  type: RateLimitType;
+};
 import { AuditLogger } from '../audit-logger';
 
 // Mock the AuditLogger
@@ -125,7 +133,7 @@ describe('Rate Limiter Integration Tests', () => {
       const clientId = 'test-client-block';
       const type: RateLimitType = 'auth'; // Lower limit for faster testing
 
-      let lastResult;
+      let lastResult: RateLimitResult | undefined;
 
       // Make requests up to the limit
       for (let i = 0; i < RATE_LIMITS.auth.max + 5; i++) {
@@ -133,8 +141,9 @@ describe('Rate Limiter Integration Tests', () => {
       }
 
       // Last result should be blocked
-      expect(lastResult.allowed).toBe(false);
-      expect(lastResult.remaining).toBe(0);
+      expect(lastResult).toBeDefined();
+      expect(lastResult!.allowed).toBe(false);
+      expect(lastResult!.remaining).toBe(0);
 
       // Should have logged rate limit violation
       expect(AuditLogger.log).toHaveBeenCalledWith(
@@ -153,9 +162,12 @@ describe('Rate Limiter Integration Tests', () => {
         results.push(await checkRateLimit(clientId, { type: 'auth' }));
       }
 
-      expect(results[0].remaining).toBe(4);
-      expect(results[1].remaining).toBe(3);
-      expect(results[2].remaining).toBe(2);
+      expect(results[0]).toBeDefined();
+      expect(results[1]).toBeDefined();
+      expect(results[2]).toBeDefined();
+      expect(results[0]!.remaining).toBe(4);
+      expect(results[1]!.remaining).toBe(3);
+      expect(results[2]!.remaining).toBe(2);
     });
   });
 
@@ -253,7 +265,8 @@ describe('Rate Limiter Integration Tests', () => {
 
       // Total remaining should reflect all requests
       const lastResult = results[results.length - 1];
-      expect(lastResult.remaining).toBeLessThan(100);
+      expect(lastResult).toBeDefined();
+      expect(lastResult!.remaining).toBeLessThan(100);
     });
 
     it('should handle multiple clients concurrently', async () => {

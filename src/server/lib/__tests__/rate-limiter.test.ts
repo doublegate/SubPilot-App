@@ -221,8 +221,9 @@ describe('Rate Limiter', () => {
 
       // The last requests should be rejected
       const lastResult = results[results.length - 1];
-      expect(lastResult.allowed).toBe(false);
-      expect(lastResult.remaining).toBe(0);
+      expect(lastResult).toBeDefined();
+      expect(lastResult!.allowed).toBe(false);
+      expect(lastResult!.remaining).toBe(0);
       expect(AuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
           action: 'rate_limit.violation',
@@ -519,7 +520,7 @@ describe('Rate Limiter', () => {
 
       const mockCtx = {
         customId: 'custom-123',
-        session: null,
+        session: undefined,
       };
 
       const mockNext = vi.fn().mockResolvedValue('success');
@@ -762,7 +763,7 @@ describe('Rate Limiter', () => {
       const middleware = createRateLimitMiddleware('api');
 
       const mockCtx = {
-        session: null,
+        session: undefined,
         clientIp: '192.168.1.1',
       };
 
@@ -782,8 +783,8 @@ describe('Rate Limiter', () => {
       const middleware = createRateLimitMiddleware('api');
 
       const mockCtx = {
-        session: null,
-        clientIp: null,
+        session: undefined,
+        clientIp: undefined,
       };
 
       const mockNext = vi.fn().mockResolvedValue('success');

@@ -47,7 +47,7 @@ const mockSubscription = {
   lastBilling: null,
   provider: {},
   cancellationInfo: {},
-  detectionConfidence: 0.85,
+  detectionConfidence: new Decimal(0.85),
   detectedAt: new Date(),
 } as Subscription;
 

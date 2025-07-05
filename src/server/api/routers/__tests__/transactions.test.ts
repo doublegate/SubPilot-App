@@ -116,7 +116,7 @@ vi.mock('@/server/services/subscription-detector', () => ({
 
 // Helper to get mocked db - with explicit return type to fix ESLint
 const getMockDb = (): MockedDb => {
-  return db as MockedDb;
+  return db as unknown as MockedDb;
 };
 
 describe('Transactions Router - Full tRPC Integration', () => {
@@ -364,7 +364,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
       // All transactions from acc-1 should have the same account name
       expect(
         result.transactions.every(
-          (t: TransactionWithAccount) => t.account.name === 'Checking Account'
+          (t: any) => t.account.name === 'Checking Account'
         )
       ).toBe(true);
 
@@ -533,9 +533,7 @@ describe('Transactions Router - Full tRPC Integration', () => {
       });
 
       expect(result.transactions).toHaveLength(2);
-      expect(
-        result.transactions.every((t: TransactionWithPending) => !t.pending)
-      ).toBe(true);
+      expect(result.transactions.every((t: any) => !t.pending)).toBe(true);
 
       expect(db.transaction.findMany).toHaveBeenCalledWith({
         where: {

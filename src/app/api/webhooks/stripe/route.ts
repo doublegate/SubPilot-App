@@ -8,6 +8,26 @@ import { BillingService } from '@/server/services/billing.service';
 import { db } from '@/server/db';
 import type Stripe from 'stripe';
 
+// Extended Stripe interfaces for proper typing
+interface StripeSubscriptionWithPeriods
+  extends Omit<
+    Stripe.Subscription,
+    'canceled_at' | 'trial_start' | 'trial_end'
+  > {
+  current_period_start: number;
+  current_period_end: number;
+  trial_start: number | null;
+  trial_end: number | null;
+  cancel_at_period_end: boolean;
+  canceled_at: number | null;
+}
+
+interface StripeInvoiceWithDetails extends Stripe.Invoice {
+  subscription: string | Stripe.Subscription | null;
+  customer: string | Stripe.Customer | null;
+  payment_intent: string | Stripe.PaymentIntent | null;
+}
+
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
@@ -46,25 +66,24 @@ export async function POST(req: Request) {
 
       case STRIPE_WEBHOOK_EVENTS.CUSTOMER_SUBSCRIPTION_CREATED:
       case STRIPE_WEBHOOK_EVENTS.CUSTOMER_SUBSCRIPTION_UPDATED: {
-        const subscription = event.data.object;
+        const subscription = event.data.object as StripeSubscriptionWithPeriods;
         await billingService.handleSubscriptionUpdated(subscription);
         break;
       }
 
       case STRIPE_WEBHOOK_EVENTS.CUSTOMER_SUBSCRIPTION_DELETED: {
-        const subscription = event.data.object;
-        await billingService.handleSubscriptionDeleted(subscription);
+        await billingService.handleSubscriptionDeleted(event.data.object);
         break;
       }
 
       case STRIPE_WEBHOOK_EVENTS.INVOICE_PAYMENT_SUCCEEDED: {
-        const invoice = event.data.object;
+        const invoice = event.data.object as StripeInvoiceWithDetails;
         await billingService.handlePaymentSucceeded(invoice);
         break;
       }
 
       case STRIPE_WEBHOOK_EVENTS.INVOICE_PAYMENT_FAILED: {
-        const invoice = event.data.object;
+        const invoice = event.data.object as StripeInvoiceWithDetails;
         await billingService.handlePaymentFailed(invoice);
         break;
       }

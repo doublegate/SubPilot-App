@@ -492,13 +492,32 @@ export class LightweightCancellationService {
     return {
       request: {
         ...request,
+        // Convert JsonValue automationLog to expected array format
+        automationLog: Array.isArray(request.automationLog)
+          ? (request.automationLog as unknown[]).map(item => {
+              const logItem = item as Record<string, unknown>;
+              return {
+                step: typeof logItem?.step === 'string' ? logItem.step : '',
+                timestamp: new Date(
+                  (logItem?.timestamp as string | Date | number) ?? new Date()
+                ),
+                status:
+                  (logItem?.status as 'success' | 'failed' | 'pending') ??
+                  'pending',
+                details:
+                  logItem?.details && typeof logItem.details === 'string'
+                    ? logItem.details
+                    : undefined,
+              };
+            })
+          : [],
         subscription: {
           id: request.subscription.id,
           name: request.subscription.name,
           status: 'active',
           provider: {},
         },
-      } as CancellationRequestWithSubscription,
+      } as unknown as CancellationRequestWithSubscription,
       instructions,
     };
   }
@@ -527,6 +546,25 @@ export class LightweightCancellationService {
 
     return requests.map(request => ({
       ...request,
+      // Convert JsonValue automationLog to expected array format
+      automationLog: Array.isArray(request.automationLog)
+        ? (request.automationLog as unknown[]).map(item => {
+            const logItem = item as Record<string, unknown>;
+            return {
+              step: typeof logItem?.step === 'string' ? logItem.step : '',
+              timestamp: new Date(
+                (logItem?.timestamp as string | Date | number) ?? new Date()
+              ),
+              status:
+                (logItem?.status as 'success' | 'failed' | 'pending') ??
+                'pending',
+              details:
+                logItem?.details && typeof logItem.details === 'string'
+                  ? logItem.details
+                  : undefined,
+            };
+          })
+        : [],
       subscription: {
         id: request.subscription.id,
         name: request.subscription.name,
@@ -534,7 +572,7 @@ export class LightweightCancellationService {
         status: 'active',
         provider: {},
       },
-    })) as CancellationRequestWithSubscription[];
+    })) as unknown as CancellationRequestWithSubscription[];
   }
 
   /**

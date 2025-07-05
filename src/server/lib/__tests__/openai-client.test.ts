@@ -39,6 +39,7 @@ describe('OpenAICategorizationClient', () => {
       limit: 100,
       remaining: 99,
       reset: Date.now() + 60000,
+      type: 'ai' as const,
     });
 
     // Set environment variable for API key

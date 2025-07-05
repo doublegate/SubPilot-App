@@ -69,6 +69,8 @@ interface RealtimeUpdate {
   action: string;
   message: string;
   timestamp: string;
+  type?: string;
+  title?: string; // Optional title property
   metadata?: Record<string, unknown> | null;
 }
 
@@ -743,11 +745,11 @@ export function UnifiedCancellationModal({
                 className="max-h-60 space-y-2 overflow-y-auto"
               >
                 {realtimeUpdates.map(
-                  (update: Record<string, unknown>, index: number) => (
+                  (update: RealtimeUpdate, index: number) => (
                     <div key={index} className="rounded bg-gray-50 p-2 text-sm">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">
-                          {update.type as string}
+                          {update.type ?? update.action}
                         </Badge>
                         <span className="text-xs text-gray-500">
                           {new Date(
@@ -755,9 +757,7 @@ export function UnifiedCancellationModal({
                           ).toLocaleTimeString()}
                         </span>
                       </div>
-                      <p className="mt-1">
-                        {(update.message as string) ?? (update.title as string)}
-                      </p>
+                      <p className="mt-1">{update.message ?? update.title}</p>
                     </div>
                   )
                 )}

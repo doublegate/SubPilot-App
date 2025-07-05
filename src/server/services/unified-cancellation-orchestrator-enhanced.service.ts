@@ -1,4 +1,5 @@
-import { type PrismaClient } from '@prisma/client';
+import { type PrismaClient, type Prisma } from '@prisma/client';
+type InputJsonValue = Prisma.InputJsonValue;
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import {
@@ -371,7 +372,23 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       await this.validateCancellationEligibility(
         userId,
         validatedInput.subscriptionId,
-        subscription
+        {
+          ...subscription,
+          amount:
+            typeof subscription.amount === 'object' &&
+            subscription.amount !== null &&
+            'toNumber' in subscription.amount
+              ? (subscription.amount as { toNumber(): number }).toNumber()
+              : Number(subscription.amount),
+          detectionConfidence:
+            typeof subscription.detectionConfidence === 'object' &&
+            subscription.detectionConfidence !== null &&
+            'toNumber' in subscription.detectionConfidence
+              ? (
+                  subscription.detectionConfidence as { toNumber(): number }
+                ).toNumber()
+              : Number(subscription.detectionConfidence ?? 0),
+        } as SubscriptionForCancellation
       );
 
       // Assess provider capabilities
@@ -662,9 +679,12 @@ export class UnifiedCancellationOrchestratorEnhancedService {
     orchestrationId: string,
     capabilities: ProviderCapability
   ): Promise<UnifiedCancellationResult> {
-    const baseResult = {
+    const baseResult: Partial<UnifiedCancellationResult> = {
       orchestrationId,
-      method: method === 'automation' ? 'event_driven' : method,
+      method:
+        method === 'automation'
+          ? 'event_driven'
+          : (method as 'api' | 'event_driven' | 'lightweight'),
       metadata: {
         attemptsUsed: 1,
         providerInfo: capabilities as unknown as Record<string, unknown>,
@@ -713,7 +733,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
           requestId: this.generateRequestId(),
           status: 'failed',
           method: 'lightweight' as const, // Default fallback
-          message: `Unsupported cancellation method: ${method}`,
+          message: `Unsupported cancellation method: ${String(method)}`,
           metadata: {
             attemptsUsed: 1,
             realTimeUpdatesEnabled: true,
@@ -724,7 +744,7 @@ export class UnifiedCancellationOrchestratorEnhancedService {
           },
           error: {
             code: 'UNSUPPORTED_METHOD',
-            message: `Unsupported cancellation method: ${method}`,
+            message: `Unsupported cancellation method: ${String(method)}`,
             details: { attemptedMethod: method },
           },
         };
@@ -1342,8 +1362,8 @@ export class UnifiedCancellationOrchestratorEnhancedService {
               scheduleFor: scheduleFor.toISOString(),
               preferredMethod: method,
               timezone: input.scheduling?.timezone,
-              capabilities,
-            } as Record<string, unknown>,
+              capabilities: capabilities as unknown as Record<string, unknown>,
+            } as InputJsonValue,
           },
         });
 
@@ -1411,17 +1431,17 @@ export class UnifiedCancellationOrchestratorEnhancedService {
   private setupEventListeners(): void {
     // Listen for service completion events
     onCancellationEvent('service.completed', data => {
-      this.handleServiceCompletion(data);
+      void this.handleServiceCompletion(data);
     });
 
     // Listen for service progress events
     onCancellationEvent('service.progress', data => {
-      this.handleServiceProgress(data);
+      void this.handleServiceProgress(data);
     });
 
     // Listen for service failure events
     onCancellationEvent('service.failed', data => {
-      this.handleServiceFailure(data);
+      void this.handleServiceFailure(data);
     });
 
     console.log(
@@ -1926,11 +1946,11 @@ export class UnifiedCancellationOrchestratorEnhancedService {
       return this.initiateCancellation(userId, {
         subscriptionId: request.subscription.id,
         reason: 'Retry of failed cancellation',
-        preferredMethod: (['auto', 'api', 'automation', 'lightweight'].includes(
-          retryMethod
-        )
-          ? retryMethod
-          : 'auto') as 'auto' | 'api' | 'automation' | 'lightweight',
+        preferredMethod: (
+          ['auto', 'api', 'automation', 'lightweight'] as const
+        ).includes(retryMethod as 'auto' | 'api' | 'automation' | 'lightweight')
+          ? (retryMethod as 'auto' | 'api' | 'automation' | 'lightweight')
+          : 'auto',
         priority: options?.escalate ? 'high' : 'normal',
         userPreferences: {
           allowFallback: !options?.forceMethod, // Don't allow fallback if method is forced

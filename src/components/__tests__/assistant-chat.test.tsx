@@ -309,9 +309,12 @@ describe('AssistantChat', () => {
     // Find menu button by its position - first button in header
     const buttons = screen.getAllByRole('button');
     const menuButton = buttons[0]; // Menu button is first in the header
-    fireEvent.click(menuButton);
+    if (menuButton) {
+      fireEvent.click(menuButton);
+    }
 
-    expect(screen.getByTestId('conversation-history')).toBeInTheDocument();
+    const conversationHistory = screen.getByTestId('conversation-history');
+    expect(conversationHistory).toBeInTheDocument();
   });
 
   it('starts new conversation when new conversation button is clicked', () => {
@@ -346,7 +349,8 @@ describe('AssistantChat', () => {
   it('uses quick actions to set message', () => {
     render(<AssistantChat isOpen={true} onClose={() => {}} />);
 
-    fireEvent.click(screen.getByText('Analyze spending'));
+    const analyzeButton = screen.getByText('Analyze spending');
+    fireEvent.click(analyzeButton);
 
     const input = screen.getByPlaceholderText(
       'Ask me anything about your subscriptions...'
@@ -360,10 +364,13 @@ describe('AssistantChat', () => {
     // Open history - first button is menu button
     const buttons = screen.getAllByRole('button');
     const menuButton = buttons[0];
-    fireEvent.click(menuButton);
+    if (menuButton) {
+      fireEvent.click(menuButton);
+    }
 
     // Select a conversation
-    fireEvent.click(screen.getByText('Conversation 1'));
+    const conversationItem = screen.getByText('Conversation 1');
+    fireEvent.click(conversationItem);
 
     // History should close
     expect(

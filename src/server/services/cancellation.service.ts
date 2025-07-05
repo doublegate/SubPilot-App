@@ -1,9 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import type {
-  PrismaClient,
-  Subscription,
-  CancellationProvider,
-} from '@prisma/client';
+import type { PrismaClient, CancellationProvider } from '@prisma/client';
 import { AuditLogger } from '@/server/lib/audit-logger';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
@@ -22,7 +18,7 @@ interface CancellationRequestWithRelations {
   };
   subscription?: {
     name: string;
-    amount: number;
+    amount: Prisma.Decimal;
     frequency: string;
   };
   userNotes?: string;
@@ -33,7 +29,7 @@ interface CancellationRequestWithRelations {
 interface SubscriptionWithProvider {
   id: string;
   name: string;
-  amount: number;
+  amount: Prisma.Decimal;
   frequency: string;
   provider?: {
     name: string;
@@ -236,18 +232,18 @@ export class CancellationService {
       switch (request.method) {
         case 'api':
           result = await this.processApiCancellation(
-            request as CancellationRequestWithRelations
+            this.transformToCancellationRequestWithRelations(request)
           );
           break;
         case 'webhook':
           result = await this.processWebhookCancellation(
-            request as CancellationRequestWithRelations
+            this.transformToCancellationRequestWithRelations(request)
           );
           break;
         case 'manual':
         default:
           result = await this.processManualCancellation(
-            request as CancellationRequestWithRelations
+            this.transformToCancellationRequestWithRelations(request)
           );
           break;
       }
@@ -262,7 +258,8 @@ export class CancellationService {
           refundAmount: result.refundAmount
             ? new Prisma.Decimal(result.refundAmount)
             : null,
-          manualInstructions: result.manualInstructions ?? {},
+          manualInstructions:
+            (result.manualInstructions as Prisma.InputJsonValue) ?? {},
           completedAt: result.status === 'completed' ? new Date() : null,
           errorCode: result.error ? 'PROCESSING_ERROR' : null,
           errorMessage: result.error,
@@ -429,7 +426,7 @@ export class CancellationService {
     const subscription = request.subscription;
 
     const instructions = this.generateManualInstructions(
-      subscription as Subscription,
+      this.transformToSubscriptionWithProvider(subscription ?? {}),
       provider as CancellationProvider
     );
 
@@ -703,7 +700,9 @@ export class CancellationService {
       subscription: {
         id: request.subscription.id,
         name: request.subscription.name,
-        amount: parseFloat(request.subscription.amount.toString()),
+        amount: request.subscription.amount
+          ? parseFloat(request.subscription.amount.toString())
+          : 0,
       },
       provider: request.provider,
       status: request.status,
@@ -716,6 +715,83 @@ export class CancellationService {
   }
 
   // Helper methods
+
+  /**
+   * Transform Prisma result to CancellationRequestWithRelations
+   */
+  private transformToCancellationRequestWithRelations(
+    request: Record<string, unknown>
+  ): CancellationRequestWithRelations {
+    return {
+      id: request.id as string,
+      userId: request.userId as string,
+      subscriptionId: request.subscriptionId as string,
+      method: request.method as string,
+      status: request.status as string,
+      provider: request.provider
+        ? {
+            name: (request.provider as Record<string, unknown>).name as string,
+            type: (request.provider as Record<string, unknown>).type as string,
+            apiEndpoint: (request.provider as Record<string, unknown>)
+              .apiEndpoint as string | undefined,
+          }
+        : undefined,
+      subscription: request.subscription
+        ? {
+            name: (request.subscription as Record<string, unknown>)
+              .name as string,
+            amount: new Prisma.Decimal(
+              (request.subscription as Record<string, unknown>).amount as number
+            ),
+            frequency: (request.subscription as Record<string, unknown>)
+              .frequency as string,
+          }
+        : undefined,
+      userNotes: request.userNotes as string | undefined,
+      attempts: request.attempts as number,
+      createdAt: request.createdAt as Date,
+    };
+  }
+
+  /**
+   * Transform Prisma subscription to SubscriptionWithProvider
+   */
+  private transformToSubscriptionWithProvider(
+    subscription:
+      | {
+          name?: string;
+          amount?: Prisma.Decimal | number;
+          frequency?: string;
+          id?: string;
+          provider?: unknown;
+        }
+      | Record<string, unknown>
+  ): SubscriptionWithProvider {
+    return {
+      id: subscription.id as string,
+      name: subscription.name as string,
+      amount:
+        subscription.amount instanceof Prisma.Decimal
+          ? subscription.amount
+          : new Prisma.Decimal(subscription.amount as number),
+      frequency: subscription.frequency as string,
+      provider: subscription.provider
+        ? {
+            name: (subscription.provider as Record<string, unknown>)
+              .name as string,
+            type: (subscription.provider as Record<string, unknown>)
+              .type as string,
+            websiteUrl: (subscription.provider as Record<string, unknown>)
+              .websiteUrl as string | undefined,
+            supportUrl: (subscription.provider as Record<string, unknown>)
+              .supportUrl as string | undefined,
+            phone: (subscription.provider as Record<string, unknown>).phone as
+              | string
+              | undefined,
+          }
+        : undefined,
+    };
+  }
 
   /**
    * Find the best cancellation provider for a subscription
@@ -766,7 +842,7 @@ export class CancellationService {
         action,
         status,
         message,
-        metadata: metadata ?? {},
+        metadata: (metadata as Prisma.InputJsonValue) ?? {},
       },
     });
   }

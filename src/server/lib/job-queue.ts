@@ -50,7 +50,7 @@ export interface JobResult {
  * Mock Job Queue Implementation
  */
 class MockJobQueue {
-  private jobs = new Map<string, Job>();
+  private jobs = new Map<string, Job<unknown>>();
   private processors = new Map<string, (job: Job) => Promise<JobResult>>();
   public isProcessing = false;
   private processingInterval?: NodeJS.Timeout;
@@ -123,22 +123,26 @@ class MockJobQueue {
   /**
    * Get job by ID
    */
-  getJob(jobId: string): Job | undefined {
-    return this.jobs.get(jobId);
+  getJob(jobId: string): Job<JobData> | undefined {
+    return this.jobs.get(jobId) as Job<JobData> | undefined;
   }
 
   /**
    * Get jobs by status
    */
-  getJobsByStatus(status: Job['status']): Job[] {
-    return Array.from(this.jobs.values()).filter(job => job.status === status);
+  getJobsByStatus(status: Job['status']): Job<JobData>[] {
+    return Array.from(this.jobs.values()).filter(
+      job => job.status === status
+    ) as Job<JobData>[];
   }
 
   /**
    * Get jobs by type
    */
-  getJobsByType(type: string): Job[] {
-    return Array.from(this.jobs.values()).filter(job => job.type === type);
+  getJobsByType(type: string): Job<JobData>[] {
+    return Array.from(this.jobs.values()).filter(
+      job => job.type === type
+    ) as Job<JobData>[];
   }
 
   /**

@@ -142,7 +142,9 @@ describe('Notifications Router - Full tRPC Integration', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    ctx = createInnerTRPCContext({ session: mockSession as Session });
+    ctx = createInnerTRPCContext({
+      session: mockSession as unknown as Session,
+    });
     caller = notificationsRouter.createCaller(ctx);
   });
 
@@ -372,8 +374,8 @@ describe('Notifications Router - Full tRPC Integration', () => {
       const otherUserCtx = createInnerTRPCContext({
         session: {
           ...mockSession,
-          user: { ...(mockSession as Session).user, id: 'user-2' },
-        } as Session,
+          user: { ...(mockSession as unknown as Session).user, id: 'user-2' },
+        } as unknown as Session,
       });
       const otherUserCaller = notificationsRouter.createCaller(otherUserCtx);
 

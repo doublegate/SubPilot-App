@@ -1,32 +1,57 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { BillingService } from '../billing.service';
+import type { PrismaClient } from '@prisma/client';
+import type Stripe from 'stripe';
+
+// Mock Stripe functions
+const mockStripeCustomersCreate = vi.fn();
+const mockStripeCustomersRetrieve = vi.fn();
+const mockStripeSubscriptionsRetrieve = vi.fn();
+const mockStripeSubscriptionsUpdate = vi.fn();
+const mockStripeCheckoutSessionsCreate = vi.fn();
+const mockStripeBillingPortalSessionsCreate = vi.fn();
+const mockStripeInvoicesList = vi.fn();
+
+// Mock Prisma functions
+const mockUserFindUnique = vi.fn();
+const mockPricingPlanFindUnique = vi.fn();
+const mockUserSubscriptionFindUnique = vi.fn();
+const mockUserSubscriptionUpdate = vi.fn();
+const mockBillingEventCreate = vi.fn();
 
 // Mock dependencies
 const mockDb = {
   user: {
-    findUnique: vi.fn(),
+    findUnique: mockUserFindUnique,
     update: vi.fn(),
   },
-  billingPlan: {
+  pricingPlan: {
     findMany: vi.fn(),
-    findUnique: vi.fn(),
+    findUnique: mockPricingPlanFindUnique,
   },
-  subscription: {
+  userSubscription: {
+    findUnique: mockUserSubscriptionFindUnique,
+    create: vi.fn(),
+    update: mockUserSubscriptionUpdate,
+    upsert: vi.fn(),
     count: vi.fn(),
   },
+  billingEvent: {
+    create: mockBillingEventCreate,
+  },
   $transaction: vi.fn(),
-};
+} as unknown as PrismaClient;
 
 const mockStripe = {
   customers: {
-    create: vi.fn(),
-    retrieve: vi.fn(),
+    create: mockStripeCustomersCreate,
+    retrieve: mockStripeCustomersRetrieve,
     update: vi.fn(),
   },
   subscriptions: {
     create: vi.fn(),
-    retrieve: vi.fn(),
-    update: vi.fn(),
+    retrieve: mockStripeSubscriptionsRetrieve,
+    update: mockStripeSubscriptionsUpdate,
     cancel: vi.fn(),
     list: vi.fn(),
   },
@@ -35,17 +60,32 @@ const mockStripe = {
   },
   checkout: {
     sessions: {
-      create: vi.fn(),
+      create: mockStripeCheckoutSessionsCreate,
     },
   },
-};
+  billingPortal: {
+    sessions: {
+      create: mockStripeBillingPortalSessionsCreate,
+    },
+  },
+  invoices: {
+    list: mockStripeInvoicesList,
+  },
+} as unknown as Stripe;
 
 vi.mock('@/server/db', () => ({
   db: mockDb,
 }));
 
 vi.mock('@/server/lib/stripe', () => ({
-  stripe: mockStripe,
+  getStripe: vi.fn(() => mockStripe),
+  STRIPE_WEBHOOK_EVENTS: {
+    CHECKOUT_SESSION_COMPLETED: 'checkout.session.completed',
+    CUSTOMER_SUBSCRIPTION_UPDATED: 'customer.subscription.updated',
+    CUSTOMER_SUBSCRIPTION_DELETED: 'customer.subscription.deleted',
+    INVOICE_PAYMENT_SUCCEEDED: 'invoice.payment_succeeded',
+    INVOICE_PAYMENT_FAILED: 'invoice.payment_failed',
+  },
 }));
 
 describe('BillingService', () => {
@@ -53,183 +93,257 @@ describe('BillingService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    billingService = new BillingService();
+    billingService = new BillingService(mockDb);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('getUserBillingInfo', () => {
-    it('returns user billing information', async () => {
+  describe('getOrCreateStripeCustomer', () => {
+    it('returns existing customer when stripeCustomerId exists', async () => {
       const mockUser = {
         id: 'user1',
         email: 'test@example.com',
-        stripeCustomerId: 'cus_123',
-        currentPlan: 'premium',
-        billingCycle: 'monthly',
+        name: 'Test User',
+        userSubscription: {
+          stripeCustomerId: 'cus_123',
+        },
       };
-
-      mockDb.user.findUnique.mockResolvedValue(mockUser);
-
-      const result = await billingService.getUserBillingInfo('user1');
-
-      expect(result).toEqual(mockUser);
-      expect(mockDb.user.findUnique).toHaveBeenCalledWith({
-        where: { id: 'user1' },
-        select: {
-          id: true,
-          email: true,
-          stripeCustomerId: true,
-          currentPlan: true,
-          billingCycle: true,
-          planExpiresAt: true,
-          createdAt: true,
-        },
-      });
-    });
-
-    it('returns null when user not found', async () => {
-      mockDb.user.findUnique.mockResolvedValue(null);
-
-      const result = await billingService.getUserBillingInfo('nonexistent');
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('getAvailablePlans', () => {
-    it('returns all available billing plans', async () => {
-      const mockPlans = [
-        {
-          id: 'free',
-          name: 'Free',
-          price: 0,
-          features: ['feature1'],
-        },
-        {
-          id: 'premium',
-          name: 'Premium',
-          price: 999,
-          features: ['feature1', 'feature2'],
-        },
-      ];
-
-      mockDb.billingPlan.findMany.mockResolvedValue(mockPlans);
-
-      const result = await billingService.getAvailablePlans();
-
-      expect(result).toEqual(mockPlans);
-      expect(mockDb.billingPlan.findMany).toHaveBeenCalledWith({
-        orderBy: { price: 'asc' },
-      });
-    });
-  });
-
-  describe('createStripeCustomer', () => {
-    it('creates a new Stripe customer', async () => {
       const mockCustomer = {
         id: 'cus_123',
         email: 'test@example.com',
+        deleted: false,
       };
 
-      mockStripe.customers.create.mockResolvedValue(mockCustomer);
+      mockUserFindUnique.mockResolvedValue(mockUser);
+      mockStripeCustomersRetrieve.mockResolvedValue(mockCustomer);
 
-      const result = await billingService.createStripeCustomer(
-        'user1',
-        'test@example.com'
-      );
+      const result = await billingService.getOrCreateStripeCustomer('user1');
 
       expect(result).toEqual(mockCustomer);
-      expect(mockStripe.customers.create).toHaveBeenCalledWith({
+      expect(mockUserFindUnique).toHaveBeenCalledWith({
+        where: { id: 'user1' },
+        include: { userSubscription: true },
+      });
+    });
+
+    it('creates new customer when none exists', async () => {
+      const mockUser = {
+        id: 'user1',
         email: 'test@example.com',
+        name: 'Test User',
+        userSubscription: null,
+      };
+      const mockCustomer = {
+        id: 'cus_new123',
+        email: 'test@example.com',
+      };
+
+      mockUserFindUnique.mockResolvedValue(mockUser);
+      mockStripeCustomersCreate.mockResolvedValue(mockCustomer);
+
+      const result = await billingService.getOrCreateStripeCustomer('user1');
+
+      expect(result).toEqual(mockCustomer);
+      expect(mockStripeCustomersCreate).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        name: 'Test User',
         metadata: {
           userId: 'user1',
         },
       });
     });
+
+    it('throws error when user not found', async () => {
+      mockUserFindUnique.mockResolvedValue(null);
+
+      await expect(
+        billingService.getOrCreateStripeCustomer('nonexistent')
+      ).rejects.toThrow('User not found');
+    });
   });
 
-  describe('canPerformAction', () => {
-    it('returns true for free plan features', async () => {
-      mockDb.user.findUnique.mockResolvedValue({
-        currentPlan: 'free',
+  describe('getInvoices', () => {
+    it('returns invoices for user with subscription', async () => {
+      const mockUserSubscription = {
+        stripeCustomerId: 'cus_123',
+      };
+      const mockInvoices = {
+        data: [
+          {
+            id: 'in_123',
+            number: 'INV-001',
+            status: 'paid',
+            amount_paid: 999,
+            currency: 'usd',
+          },
+        ],
+      };
+
+      mockUserSubscriptionFindUnique.mockResolvedValue(mockUserSubscription);
+      mockStripeInvoicesList.mockResolvedValue(mockInvoices);
+
+      const result = await billingService.getInvoices('user1');
+
+      expect(result).toEqual(mockInvoices.data);
+      expect(mockUserSubscriptionFindUnique).toHaveBeenCalledWith({
+        where: { userId: 'user1' },
       });
-
-      const result = await billingService.canPerformAction(
-        'user1',
-        'basic_analytics'
-      );
-
-      expect(result).toBe(true);
+      expect(mockStripeInvoicesList).toHaveBeenCalledWith({
+        customer: 'cus_123',
+        limit: 10,
+      });
     });
 
-    it('returns false for premium features on free plan', async () => {
-      mockDb.user.findUnique.mockResolvedValue({
-        currentPlan: 'free',
+    it('returns empty array when no subscription found', async () => {
+      mockUserSubscriptionFindUnique.mockResolvedValue(null);
+
+      const result = await billingService.getInvoices('user1');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('createPortalSession', () => {
+    it('creates a billing portal session', async () => {
+      const mockUserSubscription = {
+        stripeCustomerId: 'cus_123',
+      };
+      const mockSession = {
+        id: 'bps_123',
+        url: 'https://billing.stripe.com/session/123',
+      };
+
+      mockUserSubscriptionFindUnique.mockResolvedValue(mockUserSubscription);
+      mockStripeBillingPortalSessionsCreate.mockResolvedValue(mockSession);
+
+      const result = await billingService.createPortalSession({
+        userId: 'user1',
+        returnUrl: 'https://app.com/billing',
       });
 
-      const result = await billingService.canPerformAction(
-        'user1',
-        'advanced_analytics'
-      );
-
-      expect(result).toBe(false);
+      expect(result).toEqual(mockSession);
+      expect(mockStripeBillingPortalSessionsCreate).toHaveBeenCalledWith({
+        customer: 'cus_123',
+        return_url: 'https://app.com/billing',
+      });
     });
 
-    it('returns true for premium features on premium plan', async () => {
-      mockDb.user.findUnique.mockResolvedValue({
-        currentPlan: 'premium',
+    it('throws error when no subscription found', async () => {
+      mockUserSubscriptionFindUnique.mockResolvedValue(null);
+
+      await expect(
+        billingService.createPortalSession({
+          userId: 'user1',
+          returnUrl: 'https://app.com/billing',
+        })
+      ).rejects.toThrow('No active subscription found');
+    });
+  });
+
+  describe('updateSubscription', () => {
+    it('updates subscription to new plan', async () => {
+      const mockUserSubscription = {
+        id: 'sub_local_123',
+        stripeSubscriptionId: 'sub_stripe_123',
+      };
+      const mockPlan = {
+        id: 'premium',
+        stripePriceId: 'price_123',
+      };
+      const mockSubscription = {
+        id: 'sub_stripe_123',
+        items: {
+          data: [{ id: 'si_123' }],
+        },
+      };
+
+      mockUserSubscriptionFindUnique.mockResolvedValue(mockUserSubscription);
+      mockPricingPlanFindUnique.mockResolvedValue(mockPlan);
+      mockStripeSubscriptionsRetrieve.mockResolvedValue(mockSubscription);
+      mockStripeSubscriptionsUpdate.mockResolvedValue({});
+      mockUserSubscriptionUpdate.mockResolvedValue({});
+
+      await billingService.updateSubscription({
+        userId: 'user1',
+        newPlanId: 'premium',
       });
 
-      const result = await billingService.canPerformAction(
-        'user1',
-        'advanced_analytics'
+      expect(mockStripeSubscriptionsUpdate).toHaveBeenCalledWith(
+        'sub_stripe_123',
+        {
+          items: [
+            {
+              id: 'si_123',
+              price: 'price_123',
+            },
+          ],
+          proration_behavior: 'create_prorations',
+        }
       );
-
-      expect(result).toBe(true);
+      expect(mockUserSubscriptionUpdate).toHaveBeenCalledWith({
+        where: { id: 'sub_local_123' },
+        data: {
+          planId: 'premium',
+          stripePriceId: 'price_123',
+        },
+      });
     });
 
-    it('checks subscription limits', async () => {
-      mockDb.user.findUnique.mockResolvedValue({
-        currentPlan: 'free',
-      });
-      mockDb.subscription.count.mockResolvedValue(5);
+    it('throws error when no subscription found', async () => {
+      mockUserSubscriptionFindUnique.mockResolvedValue(null);
 
-      const result = await billingService.canPerformAction(
-        'user1',
-        'add_subscription'
-      );
-
-      expect(result).toBe(false);
+      await expect(
+        billingService.updateSubscription({
+          userId: 'user1',
+          newPlanId: 'premium',
+        })
+      ).rejects.toThrow('No active subscription found');
     });
   });
 
   describe('createCheckoutSession', () => {
     it('creates a Stripe checkout session', async () => {
+      const mockUser = {
+        id: 'user1',
+        email: 'test@example.com',
+        name: 'Test User',
+        userSubscription: null,
+      };
+      const mockCustomer = {
+        id: 'cus_123',
+        email: 'test@example.com',
+      };
+      const mockPlan = {
+        id: 'premium',
+        stripePriceId: 'price_123',
+        name: 'Premium',
+      };
       const mockSession = {
         id: 'cs_123',
         url: 'https://checkout.stripe.com/cs_123',
       };
 
-      mockStripe.checkout.sessions.create.mockResolvedValue(mockSession);
-      mockDb.billingPlan.findUnique.mockResolvedValue({
-        id: 'premium',
-        stripePriceId: 'price_123',
-        name: 'Premium',
+      mockUserFindUnique.mockResolvedValue(mockUser);
+      mockPricingPlanFindUnique.mockResolvedValue(mockPlan);
+      mockStripeCustomersCreate.mockResolvedValue(mockCustomer);
+      mockStripeCheckoutSessionsCreate.mockResolvedValue(mockSession);
+
+      const result = await billingService.createCheckoutSession({
+        userId: 'user1',
+        planId: 'premium',
+        successUrl: 'https://success.com',
+        cancelUrl: 'https://cancel.com',
       });
 
-      const result = await billingService.createCheckoutSession(
-        'user1',
-        'premium',
-        'https://success.com',
-        'https://cancel.com'
-      );
-
       expect(result).toEqual(mockSession);
-      expect(mockStripe.checkout.sessions.create).toHaveBeenCalledWith({
-        mode: 'subscription',
+      expect(mockStripeCheckoutSessionsCreate).toHaveBeenCalledWith({
+        customer: 'cus_123',
         payment_method_types: ['card'],
+        mode: 'subscription',
+        allow_promotion_codes: true,
+        billing_address_collection: 'auto',
         line_items: [
           {
             price: 'price_123',
@@ -242,84 +356,101 @@ describe('BillingService', () => {
           userId: 'user1',
           planId: 'premium',
         },
+        subscription_data: {
+          trial_period_days: 14,
+          metadata: {
+            userId: 'user1',
+            planId: 'premium',
+          },
+        },
       });
     });
 
     it('throws error when plan not found', async () => {
-      mockDb.billingPlan.findUnique.mockResolvedValue(null);
+      mockPricingPlanFindUnique.mockResolvedValue(null);
 
       await expect(
-        billingService.createCheckoutSession(
-          'user1',
-          'nonexistent',
-          'https://success.com',
-          'https://cancel.com'
-        )
-      ).rejects.toThrow('Plan not found');
+        billingService.createCheckoutSession({
+          userId: 'user1',
+          planId: 'nonexistent',
+          successUrl: 'https://success.com',
+          cancelUrl: 'https://cancel.com',
+        })
+      ).rejects.toThrow('Invalid pricing plan');
     });
   });
 
-  describe('updateUserPlan', () => {
-    it('updates user plan successfully', async () => {
-      mockDb.user.update.mockResolvedValue({
-        id: 'user1',
-        currentPlan: 'premium',
-      });
+  describe('reactivateSubscription', () => {
+    it('reactivates cancelled subscription', async () => {
+      const mockUserSubscription = {
+        id: 'sub_local_123',
+        stripeSubscriptionId: 'sub_stripe_123',
+      };
 
-      const result = await billingService.updateUserPlan('user1', 'premium');
+      mockUserSubscriptionFindUnique.mockResolvedValue(mockUserSubscription);
+      mockStripeSubscriptionsUpdate.mockResolvedValue({});
+      mockUserSubscriptionUpdate.mockResolvedValue({});
 
-      expect(result).toEqual({
-        id: 'user1',
-        currentPlan: 'premium',
+      await billingService.reactivateSubscription('user1');
+
+      expect(mockStripeSubscriptionsUpdate).toHaveBeenCalledWith(
+        'sub_stripe_123',
+        {
+          cancel_at_period_end: false,
+        }
+      );
+      expect(mockUserSubscriptionUpdate).toHaveBeenCalledWith({
+        where: { id: 'sub_local_123' },
+        data: {
+          cancelAtPeriodEnd: false,
+          canceledAt: null,
+        },
       });
-      expect(mockDb.user.update).toHaveBeenCalledWith({
-        where: { id: 'user1' },
-        data: { currentPlan: 'premium' },
-      });
+    });
+
+    it('throws error when no subscription found', async () => {
+      mockUserSubscriptionFindUnique.mockResolvedValue(null);
+
+      await expect(
+        billingService.reactivateSubscription('user1')
+      ).rejects.toThrow('No subscription found');
     });
   });
 
   describe('cancelSubscription', () => {
-    it('cancels user subscription', async () => {
-      const mockUser = {
-        stripeCustomerId: 'cus_123',
-      };
-      const mockSubscriptions = {
-        data: [
-          {
-            id: 'sub_123',
-            status: 'active',
-          },
-        ],
+    it('cancels user subscription at period end', async () => {
+      const mockUserSubscription = {
+        id: 'sub_local_123',
+        stripeSubscriptionId: 'sub_stripe_123',
       };
 
-      mockDb.user.findUnique.mockResolvedValue(mockUser);
-      mockStripe.subscriptions.list.mockResolvedValue(mockSubscriptions);
-      mockStripe.subscriptions.cancel.mockResolvedValue({
-        id: 'sub_123',
-        status: 'canceled',
+      mockUserSubscriptionFindUnique.mockResolvedValue(mockUserSubscription);
+      mockStripeSubscriptionsUpdate.mockResolvedValue({});
+      mockUserSubscriptionUpdate.mockResolvedValue({});
+
+      await billingService.cancelSubscription('user1');
+
+      expect(mockStripeSubscriptionsUpdate).toHaveBeenCalledWith(
+        'sub_stripe_123',
+        {
+          cancel_at_period_end: true,
+        }
+      );
+      expect(mockUserSubscriptionUpdate).toHaveBeenCalledWith({
+        where: { id: 'sub_local_123' },
+        data: {
+          cancelAtPeriodEnd: true,
+          canceledAt: expect.any(Date),
+        },
       });
-
-      const result = await billingService.cancelSubscription('user1');
-
-      expect(result).toBe(true);
-      expect(mockStripe.subscriptions.cancel).toHaveBeenCalledWith('sub_123');
     });
 
-    it('returns false when no active subscription found', async () => {
-      const mockUser = {
-        stripeCustomerId: 'cus_123',
-      };
-      const mockSubscriptions = {
-        data: [],
-      };
+    it('throws error when no subscription found', async () => {
+      mockUserSubscriptionFindUnique.mockResolvedValue(null);
 
-      mockDb.user.findUnique.mockResolvedValue(mockUser);
-      mockStripe.subscriptions.list.mockResolvedValue(mockSubscriptions);
-
-      const result = await billingService.cancelSubscription('user1');
-
-      expect(result).toBe(false);
+      await expect(billingService.cancelSubscription('user1')).rejects.toThrow(
+        'No active subscription found'
+      );
     });
   });
 });

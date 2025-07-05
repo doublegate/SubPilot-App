@@ -1,5 +1,10 @@
 import type { PrismaClient } from '@prisma/client';
-import { getJobQueue, type Job, type JobResult } from '@/server/lib/job-queue';
+import {
+  getJobQueue,
+  type Job,
+  type JobResult,
+  type JobData,
+} from '@/server/lib/job-queue';
 import { CancellationJobProcessor } from './cancellation-processor';
 import { NotificationJobProcessor } from './notification-processor';
 import { WebhookJobProcessor } from './webhook-processor';
@@ -42,12 +47,13 @@ type JobDataFor<T extends JobType> = T extends `cancellation.${string}`
         ? AnalyticsJobData
         : Record<string, unknown>;
 
-// Branded Job Types for Type Safety
+// Branded Job Types for Type Safety - Enhanced with proper index signatures
 interface CancellationJobData {
   subscriptionId: string;
   userId: string;
   method?: string;
   reason?: string;
+  [key: string]: unknown;
 }
 
 interface NotificationJobData {
@@ -55,18 +61,26 @@ interface NotificationJobData {
   type: string;
   message: string;
   title: string;
+  notificationType?: string;
+  [key: string]: unknown;
 }
 
 interface WebhookJobData {
   signature: string;
   payload: Record<string, unknown>;
   source: string;
+  webhookId?: string;
+  provider?: string;
+  requestId?: string;
+  headers?: unknown;
+  [key: string]: unknown;
 }
 
 interface AnalyticsJobData {
   userId: string;
   event: string;
   properties: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 // Mapped Types for Processor Registry (type utility for future use)
@@ -75,7 +89,7 @@ interface AnalyticsJobData {
  * Central registry for all job processors
  */
 export class JobProcessorRegistry {
-  private processors = new Map<JobType, JobProcessor>();
+  private processors = new Map<JobType, JobProcessor<JobData>>();
   private isStarted = false;
 
   constructor(private db: PrismaClient) {
@@ -93,46 +107,46 @@ export class JobProcessorRegistry {
 
     // Register cancellation processors
     this.register('cancellation.validate', job =>
-      cancellationProcessor.processCancellationValidation(job)
+      cancellationProcessor.processCancellationValidation(job as Job)
     );
     this.register('cancellation.api', job =>
-      cancellationProcessor.processApiCancellation(job)
+      cancellationProcessor.processApiCancellation(job as Job)
     );
     this.register('cancellation.webhook', job =>
-      cancellationProcessor.processWebhookCancellation(job)
+      cancellationProcessor.processWebhookCancellation(job as Job)
     );
     this.register('cancellation.manual_instructions', job =>
-      cancellationProcessor.processManualInstructions(job)
+      cancellationProcessor.processManualInstructions(job as Job)
     );
     this.register('cancellation.confirm', job =>
-      cancellationProcessor.processCancellationConfirmation(job)
+      cancellationProcessor.processCancellationConfirmation(job as Job)
     );
     this.register('cancellation.update_status', job =>
-      cancellationProcessor.processStatusUpdate(job)
+      cancellationProcessor.processStatusUpdate(job as Job)
     );
 
     // Register notification processors
     this.register('notification.send', job =>
-      notificationProcessor.processNotificationSend(job)
+      notificationProcessor.processNotificationSend(job as Job)
     );
     this.register('notification.bulk_send', job =>
-      notificationProcessor.processBulkNotification(job)
+      notificationProcessor.processBulkNotification(job as Job)
     );
 
     // Register webhook processors
     this.register('webhook.validate', job =>
-      webhookProcessor.processWebhookValidation(job)
+      webhookProcessor.processWebhookValidation(job as Job)
     );
     this.register('webhook.process_data', job =>
-      webhookProcessor.processWebhookData(job)
+      webhookProcessor.processWebhookData(job as Job)
     );
 
     // Register analytics processors
     this.register('analytics.track', job =>
-      analyticsProcessor.processAnalyticsTracking(job)
+      analyticsProcessor.processAnalyticsTracking(job as Job)
     );
     this.register('analytics.aggregate', job =>
-      analyticsProcessor.processAnalyticsAggregation(job)
+      analyticsProcessor.processAnalyticsAggregation(job as Job)
     );
 
     console.log(
@@ -147,7 +161,7 @@ export class JobProcessorRegistry {
     jobType: T,
     processor: JobProcessor<JobDataFor<T>>
   ): void {
-    this.processors.set(jobType, processor as JobProcessor);
+    this.processors.set(jobType, processor as JobProcessor<JobData>);
     console.log(`[JobProcessorRegistry] Registered processor for: ${jobType}`);
   }
 

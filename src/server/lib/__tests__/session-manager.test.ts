@@ -65,6 +65,7 @@ describe('SessionManager', () => {
         trusted: false,
       },
       createdAt: new Date(),
+      updatedAt: new Date(),
       lastActivity: new Date(),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       isActive: true,
@@ -132,11 +133,12 @@ describe('SessionManager', () => {
       await sessionManager.createSession('user-123', 'session-123', options);
 
       const createCall = vi.mocked(mockPrisma.userSession.create).mock.calls[0];
-      const expiresAt = createCall[0].data.expiresAt;
+      expect(createCall).toBeDefined();
+      const expiresAt = createCall![0].data.expiresAt;
 
       // Should expire in 30 days (remember me timeout)
       const expectedExpiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
-      expect(expiresAt.getTime()).toBeCloseTo(expectedExpiry, -1000); // Within 1 second
+      expect((expiresAt as Date).getTime()).toBeCloseTo(expectedExpiry, -1000); // Within 1 second
     });
 
     it('should parse device information correctly', async () => {
@@ -191,7 +193,8 @@ describe('SessionManager', () => {
 
         const createCall = vi.mocked(mockPrisma.userSession.create).mock
           .calls[0];
-        const deviceInfo = createCall[0].data.deviceInfo;
+        expect(createCall).toBeDefined();
+        const deviceInfo = createCall![0].data.deviceInfo;
 
         expect(deviceInfo).toMatchObject(testCase.expected);
       }
@@ -254,7 +257,8 @@ describe('SessionManager', () => {
       });
 
       const createCall = vi.mocked(mockPrisma.userSession.create).mock.calls[0];
-      const deviceInfo = createCall[0].data.deviceInfo;
+      expect(createCall).toBeDefined();
+      const deviceInfo = createCall![0].data.deviceInfo as any;
 
       expect(deviceInfo.trusted).toBe(true);
       expect(deviceInfo.device).toBe('Custom Device');
@@ -270,6 +274,7 @@ describe('SessionManager', () => {
       userAgent: 'Mozilla/5.0',
       deviceInfo: { trusted: false },
       createdAt: new Date(Date.now() - 60000),
+      updatedAt: new Date(Date.now() - 30000),
       lastActivity: new Date(Date.now() - 30000),
       expiresAt: new Date(Date.now() + 60000),
       isActive: true,
@@ -373,7 +378,7 @@ describe('SessionManager', () => {
     it('should revoke session for suspicious activity', async () => {
       // Mock production environment
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       const oldSession = {
         ...mockSession,
@@ -399,7 +404,7 @@ describe('SessionManager', () => {
         },
       });
 
-      process.env.NODE_ENV = originalEnv;
+      vi.unstubAllEnvs();
     });
 
     it('should allow trusted device fingerprint mismatch', async () => {
@@ -594,6 +599,7 @@ describe('SessionManager', () => {
           userAgent: 'Browser1',
           deviceInfo: { os: 'Windows' },
           createdAt: new Date(),
+          updatedAt: new Date(),
           lastActivity: new Date(),
           expiresAt: new Date(Date.now() + 60000),
           isActive: true,
@@ -607,6 +613,7 @@ describe('SessionManager', () => {
           userAgent: 'Browser2',
           deviceInfo: { os: 'macOS' },
           createdAt: new Date(),
+          updatedAt: new Date(),
           lastActivity: new Date(),
           expiresAt: new Date(Date.now() + 60000),
           isActive: true,
@@ -621,8 +628,8 @@ describe('SessionManager', () => {
       const sessions = await sessionManager.getUserSessions('user-123');
 
       expect(sessions).toHaveLength(2);
-      expect(sessions[0].id).toBe('session-1');
-      expect(sessions[1].id).toBe('session-2');
+      expect(sessions[0]?.id).toBe('session-1');
+      expect(sessions[1]?.id).toBe('session-2');
 
       expect(mockPrisma.userSession.findMany).toHaveBeenCalledWith({
         where: {
@@ -740,11 +747,13 @@ describe('SessionManager', () => {
         const calls = vi.mocked(mockPrisma.userSession.create).mock.calls;
 
         // Same IP/UA should generate same fingerprint
-        expect(calls[0][0].data.fingerprint).toBe(calls[1][0].data.fingerprint);
+        expect(calls[0]?.[0]?.data?.fingerprint).toBe(
+          calls[1]?.[0]?.data?.fingerprint
+        );
 
         // Different IP should generate different fingerprint
-        expect(calls[0][0].data.fingerprint).not.toBe(
-          calls[2][0].data.fingerprint
+        expect(calls[0]?.[0]?.data?.fingerprint).not.toBe(
+          calls[2]?.[0]?.data?.fingerprint
         );
       });
     });
@@ -761,7 +770,8 @@ describe('SessionManager', () => {
 
         const createCall = vi.mocked(mockPrisma.userSession.create).mock
           .calls[0];
-        const deviceInfo = createCall[0].data.deviceInfo as any;
+        expect(createCall).toBeDefined();
+        const deviceInfo = createCall![0].data.deviceInfo as any;
 
         expect(deviceInfo.os).toBe('Unknown');
         expect(deviceInfo.browser).toBe('Unknown');
@@ -780,7 +790,8 @@ describe('SessionManager', () => {
 
         const createCall = vi.mocked(mockPrisma.userSession.create).mock
           .calls[0];
-        const deviceInfo = createCall[0].data.deviceInfo as any;
+        expect(createCall).toBeDefined();
+        const deviceInfo = createCall![0].data.deviceInfo as any;
 
         expect(deviceInfo.os).toBe('Unknown');
         expect(deviceInfo.browser).toBe('Unknown');
@@ -841,7 +852,8 @@ describe('SessionManager', () => {
 
       const regularCall = vi.mocked(mockPrisma.userSession.create).mock
         .calls[0];
-      const regularExpiry = regularCall[0].data.expiresAt;
+      expect(regularCall).toBeDefined();
+      const regularExpiry = regularCall![0].data.expiresAt;
       const expectedRegular = Date.now() + 24 * 60 * 60 * 1000;
 
       expect((regularExpiry as Date).getTime()).toBeCloseTo(
@@ -858,7 +870,8 @@ describe('SessionManager', () => {
 
       const rememberCall = vi.mocked(mockPrisma.userSession.create).mock
         .calls[1];
-      const rememberExpiry = rememberCall[0].data.expiresAt;
+      expect(rememberCall).toBeDefined();
+      const rememberExpiry = rememberCall![0].data.expiresAt;
       const expectedRemember = Date.now() + 30 * 24 * 60 * 60 * 1000;
 
       expect((rememberExpiry as Date).getTime()).toBeCloseTo(

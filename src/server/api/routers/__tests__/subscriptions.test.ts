@@ -186,7 +186,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
         transactions: s.transactions ? [s.transactions[0]] : [],
       }));
       vi.mocked(db.subscription.findMany).mockResolvedValue(
-        subsWithCount as MockSubscriptionWithCount[]
+        subsWithCount as unknown as MockSubscriptionWithCount[]
       );
 
       vi.mocked(db.subscription.count).mockResolvedValue(3);
@@ -796,7 +796,7 @@ describe('Subscriptions Router - Full tRPC Integration', () => {
   describe('edge cases', () => {
     it('should handle subscriptions with very large amounts', async () => {
       const expensiveSubscription = {
-        ...(mockSubscriptions[0]! as Subscription),
+        ...(mockSubscriptions[0]! as unknown as Subscription),
         amount: new Decimal(9999.99),
       };
 

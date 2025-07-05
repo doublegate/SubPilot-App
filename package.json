@@ -1,6 +1,6 @@
 {
   "name": "subpilot-app",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "private": true,
   "type": "module",
   "description": "SubPilot - Your command center for recurring finances",

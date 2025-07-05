@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
     );
 
   // Handle export completion
-  React.useEffect(() => {
+  useEffect(() => {
     if (exportData && exportFormat) {
       if (
         'format' in exportData &&

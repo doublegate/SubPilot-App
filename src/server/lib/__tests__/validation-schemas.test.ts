@@ -352,7 +352,9 @@ describe('Validation Schemas', () => {
           maxSizeKB: 1024,
         });
         expect(result.success).toBe(false);
-        expect(result.errors).toContain('File too large (max 1024KB)');
+        if (!result.success) {
+          expect(result.errors).toContain('File too large (max 1024KB)');
+        }
       });
 
       it('should reject invalid file types', () => {
@@ -361,7 +363,9 @@ describe('Validation Schemas', () => {
           allowedTypes: ['image/jpeg', 'image/png'],
         });
         expect(result.success).toBe(false);
-        expect(result.errors).toContain('type not allowed');
+        if (!result.success) {
+          expect(result.errors).toContain('type not allowed');
+        }
       });
 
       it('should reject invalid file extensions', () => {
@@ -370,7 +374,9 @@ describe('Validation Schemas', () => {
           allowedExtensions: ['jpg', 'png'],
         });
         expect(result.success).toBe(false);
-        expect(result.errors).toContain('extension not allowed');
+        if (!result.success) {
+          expect(result.errors).toContain('extension not allowed');
+        }
       });
     });
   });

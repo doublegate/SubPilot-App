@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import ServiceWorkerRegistration from '../service-worker-registration';
+import { ServiceWorkerRegistration } from '../service-worker-registration';
 
 // Mock navigator.serviceWorker
 const mockServiceWorker = {
@@ -76,15 +76,20 @@ describe('ServiceWorkerRegistration', () => {
   it('does not register when service worker is not supported', () => {
     // Temporarily remove service worker support
     const originalServiceWorker = window.navigator.serviceWorker;
-    // @ts-expect-error - Temporarily removing service worker for testing
-    delete window.navigator.serviceWorker;
+    Object.defineProperty(window.navigator, 'serviceWorker', {
+      value: undefined,
+      configurable: true,
+    });
 
     render(<ServiceWorkerRegistration />);
 
     expect(mockServiceWorker.register).not.toHaveBeenCalled();
 
     // Restore service worker
-    window.navigator.serviceWorker = originalServiceWorker;
+    Object.defineProperty(window.navigator, 'serviceWorker', {
+      value: originalServiceWorker,
+      configurable: true,
+    });
   });
 
   it('handles service worker updates', async () => {

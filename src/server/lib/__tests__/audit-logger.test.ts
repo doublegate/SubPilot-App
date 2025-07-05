@@ -599,7 +599,7 @@ describe('AuditLogger', () => {
   describe('Production Environment Handling', () => {
     it('should handle production environment logging failures', async () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
 
       const mockExecuteRaw = vi.mocked(db.$executeRaw);
       const mockConsoleError = vi
@@ -618,7 +618,7 @@ describe('AuditLogger', () => {
       expect(mockConsoleError).toHaveBeenCalled();
 
       // Restore original environment
-      process.env.NODE_ENV = originalEnv;
+      vi.unstubAllEnvs();
     });
   });
 

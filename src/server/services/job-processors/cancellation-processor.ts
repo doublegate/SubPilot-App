@@ -178,7 +178,7 @@ export class CancellationJobProcessor {
             action: 'api_cancellation_completed',
             status: 'success',
             message: `API cancellation completed. Confirmation: ${apiResult.confirmationCode}`,
-            metadata: apiResult as ProviderApiResponse,
+            metadata: apiResult as Prisma.InputJsonValue,
           },
         });
 
@@ -516,7 +516,7 @@ export class CancellationJobProcessor {
           action: 'status_updated',
           status: 'success',
           message: `Status updated to: ${typeof status === 'string' ? status : String(status)}`,
-          metadata: updateData as Record<string, unknown>,
+          metadata: updateData as Prisma.InputJsonValue,
         },
       });
 

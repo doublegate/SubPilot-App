@@ -466,8 +466,8 @@ export class EventDrivenCancellationService {
 
     // Determine next steps
     const nextSteps = this.determineNextSteps(
-      request as CancellationRequestWithSubscription,
-      workflowStatus as WorkflowStatus
+      request as unknown as CancellationRequestWithSubscription,
+      workflowStatus as unknown as WorkflowStatus
     );
 
     return {
@@ -476,9 +476,9 @@ export class EventDrivenCancellationService {
         refundAmount: request.refundAmount
           ? parseFloat(request.refundAmount.toString())
           : null,
-      } as CancellationRequestWithSubscription,
-      workflow: workflowStatus as WorkflowStatus,
-      timeline: timeline as CancellationTimeline[],
+      } as unknown as CancellationRequestWithSubscription,
+      workflow: workflowStatus as unknown as WorkflowStatus,
+      timeline: timeline as unknown as CancellationTimeline[],
       estimatedCompletion,
       nextSteps,
     };
@@ -521,7 +521,7 @@ export class EventDrivenCancellationService {
           if (data.willRetry) {
             await this.handleAutomaticRetry(data as AutoRetryData);
           } else {
-            await this.handleFinalFailure(data as FinalFailureData);
+            await this.handleFinalFailure(data as unknown as FinalFailureData);
           }
         }
       })();
@@ -843,17 +843,24 @@ export class EventDrivenCancellationService {
 
     return {
       summary: {
-        total,
-        completed,
-        failed,
-        pending,
+        totalRequests: total,
+        completedRequests: completed,
+        failedRequests: failed,
+        pendingRequests: pending,
+        averageCompletionTime: 0, // TODO: Calculate from data
         successRate: total > 0 ? Math.round((completed / total) * 100) : 0,
       },
-      trends: trends.map(t => ({
-        date: t.createdAt,
-        status: t.status,
-        method: t.method,
-      })),
+      trends: trends.map(t => {
+        const fallbackDate = new Date().toISOString().split('T')[0]!;
+        const dateString =
+          t.createdAt?.toISOString().split('T')[0] ?? fallbackDate;
+        return {
+          date: dateString,
+          requests: 1,
+          completions: t.status === 'completed' ? 1 : 0,
+          failures: t.status === 'failed' ? 1 : 0,
+        } as EventDrivenTrend;
+      }),
       methodEffectiveness: this.processMethodStats(
         methodStats as MethodStatistic[]
       ),
@@ -865,7 +872,7 @@ export class EventDrivenCancellationService {
    */
   private processMethodStats(
     stats: MethodStatistic[]
-  ): Record<string, MethodData> {
+  ): EventDrivenMethodEffectiveness {
     const methodData: Record<string, MethodData> = {};
 
     for (const stat of stats) {
@@ -881,13 +888,20 @@ export class EventDrivenCancellationService {
         stat._count.method;
     }
 
-    // Calculate success rates
+    // Transform to EventDrivenMethodEffectiveness format
+    const result: EventDrivenMethodEffectiveness = {};
     for (const method in methodData) {
       const data = methodData[method]!;
-      data.successRate =
-        data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
+      result[method] = {
+        totalAttempts: data.total,
+        successfulAttempts: data.completed,
+        failedAttempts: data.failed,
+        averageTime: 0, // TODO: Calculate from actual time data
+        successRate:
+          data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0,
+      };
     }
 
-    return methodData;
+    return result;
   }
 }

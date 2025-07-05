@@ -477,26 +477,24 @@ export const transactionsRouter = createTRPCRouter({
         },
       });
 
-      if (!subscription) {
-        // Create new subscription
-        subscription = await ctx.db.subscription.create({
-          data: {
-            userId: ctx.session.user.id,
-            name: input.subscriptionData.name,
-            description: input.subscriptionData.description,
-            category: input.subscriptionData.category,
-            amount: transaction.amount,
-            currency: transaction.bankAccount.isoCurrencyCode,
-            frequency: input.subscriptionData.frequency,
-            lastBilling: transaction.date,
-            detectionConfidence: 1.0, // Manual marking = 100% confidence
-            provider: {
-              name: transaction.merchantName ?? input.subscriptionData.name,
-              type: 'manual',
-            },
+      // Use nullish coalescing assignment
+      subscription ??= await ctx.db.subscription.create({
+        data: {
+          userId: ctx.session.user.id,
+          name: input.subscriptionData.name,
+          description: input.subscriptionData.description,
+          category: input.subscriptionData.category,
+          amount: transaction.amount,
+          currency: transaction.bankAccount.isoCurrencyCode,
+          frequency: input.subscriptionData.frequency,
+          lastBilling: transaction.date,
+          detectionConfidence: 1.0, // Manual marking = 100% confidence
+          provider: {
+            name: transaction.merchantName ?? input.subscriptionData.name,
+            type: 'manual',
           },
-        });
-      }
+        },
+      });
 
       // Link transaction to subscription
       await ctx.db.transaction.update({

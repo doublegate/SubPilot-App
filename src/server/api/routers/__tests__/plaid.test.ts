@@ -1,19 +1,19 @@
 // Test file
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  type MockedFunction,
-} from 'vitest';
+import type { MockedFunction } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { plaidRouter } from '../plaid';
 import { createInnerTRPCContext } from '@/server/api/trpc';
 // PlaidApi import removed as unused - fixes ESLint warning
 import type { Session } from 'next-auth';
 import type { PlaidItem, BankAccount } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { plaid } from '@/server/plaid-client';
+
+// Helper function to create Decimal from number for tests
+const createDecimal = (value: number): Decimal => {
+  return value as unknown as Decimal;
+};
 
 // Test types for mocking Prisma relations
 type MockPlaidItemWithRelations = PlaidItem & {
@@ -465,49 +465,45 @@ describe('Plaid Router', () => {
         {
           merchantName: 'Netflix',
           _count: { id: 5 },
-          _avg: { amount: 15.99 },
+          _avg: { amount: createDecimal(15.99) },
           _min: { date: new Date('2024-01-01') },
           _max: { date: new Date('2024-06-01') },
         },
-      ]);
+      ] as any);
 
       vi.mocked(db.transaction.findMany).mockResolvedValue([
         {
           id: 'txn_recurring_1',
           userId: 'user123',
-          bankAccountId: 'bank-account-1',
+          accountId: 'bank-account-1',
           plaidTransactionId: 'plaid_txn_1',
-          amount: 15.99,
+          amount: createDecimal(15.99),
           description: 'Netflix Subscription',
           merchantName: 'Netflix',
           date: new Date('2024-01-01'),
           pending: false,
-          category: 'Subscription',
+          category: ['Entertainment', 'Subscription'],
           subcategory: 'Entertainment',
-          plaidCategory: ['Entertainment', 'Subscription'],
           isoCurrencyCode: 'USD',
-          accountOwner: null,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      ]);
+      ] as any);
 
       // Mock subscription operations
       vi.mocked(db.subscription.findFirst).mockResolvedValue(null);
       vi.mocked(db.subscription.create).mockResolvedValue({
         id: 'sub_1',
         userId: 'user123',
-        merchantName: 'Netflix',
-        amount: 15.99,
+        name: 'Netflix',
+        amount: createDecimal(15.99),
         frequency: 'monthly',
-        nextBillingDate: new Date('2024-02-01'),
+        nextBilling: new Date('2024-02-01'),
         isActive: true,
-        confidence: 0.85,
         category: 'Entertainment',
-        subcategory: 'Streaming',
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
     });
 
     it('should sync transactions using sync endpoint', async () => {
@@ -798,7 +794,7 @@ describe('Plaid Router', () => {
           updatedAt: new Date(),
           bankAccounts: [],
         },
-      ] as MockPlaidItemWithEmptyAccounts[]);
+      ] as unknown as MockPlaidItemWithEmptyAccounts[]);
 
       const ctx = createInnerTRPCContext({ session: mockSession });
       // Mocking db for tests

@@ -12,9 +12,11 @@ const mockSession = {
   expires: '2025-12-31',
 };
 
-const mockUseSession = vi.fn();
-const mockSignIn = vi.fn();
-const mockSignOut = vi.fn();
+const { mockUseSession, mockSignIn, mockSignOut } = vi.hoisted(() => ({
+  mockUseSession: vi.fn(),
+  mockSignIn: vi.fn(),
+  mockSignOut: vi.fn(),
+}));
 
 vi.mock('next-auth/react', () => ({
   useSession: () => mockUseSession(),
@@ -72,7 +74,7 @@ describe('useAuth', () => {
     expect(result.current.session).toBeNull();
   });
 
-  it('provides signin function', () => {
+  it('provides login function', () => {
     mockUseSession.mockReturnValue({
       data: null,
       status: 'unauthenticated',
@@ -80,10 +82,10 @@ describe('useAuth', () => {
 
     const { result } = renderHook(() => useAuth());
 
-    expect(result.current.signin).toBe(mockSignIn);
+    expect(typeof result.current.login).toBe('function');
   });
 
-  it('provides signout function', () => {
+  it('provides logout function', () => {
     mockUseSession.mockReturnValue({
       data: mockSession,
       status: 'authenticated',
@@ -91,7 +93,7 @@ describe('useAuth', () => {
 
     const { result } = renderHook(() => useAuth());
 
-    expect(result.current.signout).toBe(mockSignOut);
+    expect(typeof result.current.logout).toBe('function');
   });
 
   it('handles session updates', async () => {

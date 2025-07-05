@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { emitCancellationEvent } from '@/server/lib/event-bus';
 import type { Job, JobResult } from '@/server/lib/job-queue';
 import { AuditLogger, type SecurityAction } from '@/server/lib/audit-logger';
@@ -234,13 +235,15 @@ export class WebhookJobProcessor {
         };
       }
 
-      // Store webhook processing result
-      await this.storeWebhookResult(
-        webhookIdStr,
-        provider as string,
-        extractedData.data,
-        requestId!
-      );
+      // Store webhook processing result only if data exists
+      if (extractedData.data) {
+        await this.storeWebhookResult(
+          webhookIdStr,
+          provider as string,
+          extractedData.data,
+          requestId
+        );
+      }
 
       await this.logWebhookActivity(
         webhookIdStr,
@@ -737,10 +740,12 @@ export class WebhookJobProcessor {
             status: 'failed',
             errorCode: 'WEBHOOK_TIMEOUT',
             errorMessage: timeoutReason ?? 'Webhook confirmation timeout',
-            errorDetails: {
-              expectedWebhookId: expectedWebhookId as string,
-              timeoutAt: new Date(),
-            } as Record<string, unknown>,
+            errorDetails: JSON.parse(
+              JSON.stringify({
+                expectedWebhookId: expectedWebhookId as string,
+                timeoutAt: new Date().toISOString(),
+              })
+            ) as Prisma.InputJsonValue,
           },
         });
 

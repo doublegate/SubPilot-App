@@ -9,8 +9,11 @@ import { TRPCError } from '@trpc/server';
 // Mock categorization service interface
 interface MockCategorizationService {
   categorizeTransaction: ReturnType<typeof vi.fn>;
-  getCategoryMapping: ReturnType<typeof vi.fn>;
-  bulkCategorize: ReturnType<typeof vi.fn>;
+  bulkCategorizeTransactions: ReturnType<typeof vi.fn>;
+  categorizeSubscription: ReturnType<typeof vi.fn>;
+  updateSubscriptionCategory: ReturnType<typeof vi.fn>;
+  getMerchantAliases: ReturnType<typeof vi.fn>;
+  initializeCategories: ReturnType<typeof vi.fn>;
 }
 
 // Mock dependencies
@@ -76,10 +79,10 @@ describe('categorizationRouter', () => {
       updateSubscriptionCategory: vi.fn(),
       getMerchantAliases: vi.fn(),
       initializeCategories: vi.fn(),
-    };
+    } as any;
 
     vi.mocked(getCategorizationService).mockReturnValue(
-      mockCategorizationService
+      mockCategorizationService as any
     );
     vi.mocked(cacheService.get).mockReturnValue(null);
     vi.mocked(cacheService.set).mockImplementation(() => {});

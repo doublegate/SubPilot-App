@@ -1,4 +1,5 @@
-import { type PrismaClient, type UserSession } from '@prisma/client';
+import type { PrismaClient, UserSession } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { createHash } from 'crypto';
 import { AuditLogger } from './audit-logger';
 
@@ -104,7 +105,7 @@ export class SessionManager {
         fingerprint,
         ip,
         userAgent,
-        deviceInfo: parsedDeviceInfo,
+        deviceInfo: parsedDeviceInfo as unknown as Prisma.InputJsonValue,
         createdAt: new Date(),
         lastActivity: new Date(),
         expiresAt,
@@ -121,7 +122,7 @@ export class SessionManager {
       userAgent,
       details: {
         rememberMe,
-        deviceInfo: parsedDeviceInfo,
+        deviceInfo: parsedDeviceInfo as unknown as Prisma.InputJsonValue,
         expiresAt,
       },
     });
@@ -453,7 +454,7 @@ export class SessionManager {
     const sessionAge = Date.now() - session.createdAt.getTime();
     const oneHour = 60 * 60 * 1000;
 
-    const deviceInfo = session.deviceInfo as DeviceInfo;
+    const deviceInfo = session.deviceInfo as unknown as DeviceInfo;
     return (
       sessionAge < oneHour ||
       deviceInfo.trusted ||
@@ -488,7 +489,7 @@ export class SessionManager {
       fingerprint: session.fingerprint,
       ip: session.ip,
       userAgent: session.userAgent,
-      deviceInfo: session.deviceInfo as DeviceInfo,
+      deviceInfo: session.deviceInfo as unknown as DeviceInfo,
       createdAt: session.createdAt,
       lastActivity: session.lastActivity,
       expiresAt: session.expiresAt,

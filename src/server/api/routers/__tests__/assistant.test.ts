@@ -239,7 +239,7 @@ describe('assistantRouter', () => {
       });
 
       expect(result.message.content).toBe('AI response');
-      expect(result.conversation).toEqual(mockConversation);
+      expect(result.action).toBeNull();
 
       expect(mockAssistantServiceInstance.sendMessage).toHaveBeenCalledWith(
         'conv_123',
@@ -606,8 +606,7 @@ describe('assistantRouter', () => {
         query: 'subscription',
       });
 
-      expect(result.conversations).toEqual([mockConversationList[0]]);
-      expect(result.total).toBe(1);
+      expect(result).toEqual([mockConversationList[0]]);
 
       expect(mockConversationServiceInstance.search).toHaveBeenCalledWith(
         'user_123',

@@ -44,7 +44,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('displays custom fallback when provided', () => {
-    const customFallback = (
+    const customFallback = (error: Error, reset: () => void) => (
       <div data-testid="custom-fallback">Custom error message</div>
     );
 

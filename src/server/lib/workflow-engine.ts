@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { getJobQueue } from './job-queue';
-import { Parser } from 'expr-eval';
+import { Parser, type Value } from 'expr-eval';
 
 // Define workflow value types
 export type WorkflowValue =
@@ -457,12 +457,12 @@ class SimpleWorkflowEngine extends EventEmitter {
    */
   private convertToSimpleValues(
     variables: Record<string, WorkflowValue>
-  ): Record<string, unknown> {
+  ): Value {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(variables)) {
       result[key] = this.simplifyValue(value);
     }
-    return result;
+    return result as Value;
   }
 
   private simplifyValue(value: WorkflowValue): unknown {

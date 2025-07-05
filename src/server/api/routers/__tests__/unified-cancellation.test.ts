@@ -115,12 +115,13 @@ describe('unifiedCancellationEnhancedRouter', () => {
   beforeEach(() => {
     mockReset(mockDb);
 
-    // Mock groupBy methods for helper functions
-    mockDb.cancellationRequest.groupBy.mockResolvedValue([
+    // Mock groupBy methods for helper functions - properly typed
+    const mockGroupBy = vi.fn().mockResolvedValue([
       { status: 'completed', _count: { status: 5 } },
       { status: 'failed', _count: { status: 1 } },
       { status: 'pending', _count: { status: 1 } },
     ] as any);
+    mockDb.cancellationRequest.groupBy = mockGroupBy;
 
     // Mock the db import to return our mockDb
     vi.doMock('@/server/db', () => ({

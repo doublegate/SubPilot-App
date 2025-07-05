@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { EmailService } from '../email.service';
 import { emitCancellationEvent } from '@/server/lib/event-bus';
 import type { Job, JobResult } from '@/server/lib/job-queue';
@@ -61,6 +62,7 @@ export interface NotificationJobData {
   priority?: 'low' | 'normal' | 'high';
   channels?: ('email' | 'push' | 'in_app')[];
   scheduledFor?: Date;
+  [key: string]: unknown;
 }
 
 /**
@@ -490,7 +492,7 @@ export class NotificationJobProcessor {
         title: content.title,
         message: content.message,
         severity: this.mapPriorityToSeverity(priority),
-        data: data as Record<string, unknown>,
+        data: JSON.parse(JSON.stringify(data)) as Prisma.InputJsonValue,
         scheduledFor: new Date(),
         read: false,
       },

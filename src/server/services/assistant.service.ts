@@ -1,4 +1,5 @@
-import { type PrismaClient } from '@prisma/client';
+import { type PrismaClient, type Prisma } from '@prisma/client';
+type InputJsonValue = Prisma.InputJsonValue;
 import { TRPCError } from '@trpc/server';
 import { openAIClient, type ChatMessage } from '@/server/lib/openai-client';
 
@@ -426,10 +427,12 @@ export class AssistantService {
           actionId,
         },
         functionCall: response.functionCall
-          ? {
-              name: response.functionCall.name,
-              arguments: response.functionCall.arguments,
-            }
+          ? (JSON.parse(
+              JSON.stringify({
+                name: response.functionCall.name,
+                arguments: response.functionCall.arguments,
+              })
+            ) as Prisma.InputJsonValue)
           : undefined,
       },
     });
@@ -514,7 +517,7 @@ export class AssistantService {
         data: {
           status: 'completed',
           completedAt: new Date(),
-          result: result,
+          result: JSON.parse(JSON.stringify(result)) as Prisma.InputJsonValue,
         },
       });
 
@@ -743,7 +746,7 @@ If you need to take an action, use the appropriate function.`;
       data: {
         conversationId,
         type: actionType,
-        parameters: parameters,
+        parameters: parameters as InputJsonValue,
         requiresConfirmation,
         targetResource: parameters.subscriptionId,
       },

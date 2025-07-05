@@ -334,7 +334,7 @@ describe('UnifiedCancellationOrchestratorService', () => {
 
       const input = {
         subscriptionId: 'sub123',
-        preferredMethod: 'automation' as const,
+        preferredMethod: 'event_driven' as const,
         priority: 'high' as const,
         scheduling: {
           scheduleFor: new Date(Date.now() + 86400000), // Tomorrow
@@ -414,10 +414,10 @@ describe('UnifiedCancellationOrchestratorService', () => {
 
       const result = await service.getCancellationStatus('user123', 'req123');
 
-      expect(result.status.requestId).toBe('req123');
-      expect(result.status.status).toBe('completed');
-      expect(result.status.method).toBe('api');
-      expect(result.status.confirmationCode).toBe('CONF123');
+      expect(result.status?.requestId).toBe('req123');
+      expect(result.status?.status).toBe('completed');
+      expect(result.status?.method).toBe('api');
+      expect(result.status?.confirmationCode).toBe('CONF123');
       expect(result.timeline).toHaveLength(1);
       expect(result.nextSteps).toContain('Cancellation completed successfully');
     });
@@ -692,15 +692,15 @@ describe('UnifiedCancellationOrchestratorService', () => {
 
       const result = await service.getUnifiedAnalytics('user123', 'month');
 
-      expect(result.summary.total).toBe(2);
-      expect(result.summary.successful).toBe(1);
-      expect(result.summary.failed).toBe(1);
-      expect(result.summary.pending).toBe(0);
-      expect(result.summary.successRate).toBe(50);
+      expect(result.summary?.total).toBe(2);
+      expect(result.summary?.successful).toBe(1);
+      expect(result.summary?.failed).toBe(1);
+      expect(result.summary?.pending).toBe(0);
+      expect(result.summary?.successRate).toBe(50);
       expect(result.methodBreakdown).toHaveProperty('api');
       expect(result.methodBreakdown).toHaveProperty('lightweight');
-      expect(result.methodBreakdown.api).toBe(1);
-      expect(result.methodBreakdown.lightweight).toBe(1);
+      expect(result.methodBreakdown?.api).toBe(1);
+      expect(result.methodBreakdown?.lightweight).toBe(1);
       expect(result.averageCompletionTime).toBeGreaterThanOrEqual(0);
       expect(result.timeframe).toBe('month');
     });

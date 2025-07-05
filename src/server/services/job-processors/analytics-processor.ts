@@ -684,6 +684,7 @@ export class AnalyticsJobProcessor {
     failedOperations: number;
     systemStatus: 'healthy' | 'degraded' | 'critical';
     uptime: number;
+    commonErrors?: Record<string, unknown>;
   }> {
     const { startDate, endDate } = this.getTimeframeDates(timeframe);
 
@@ -739,7 +740,7 @@ export class AnalyticsJobProcessor {
       totalOperations,
       failedOperations,
       errorRate,
-      commonErrors,
+      commonErrors: commonErrors as unknown as Record<string, unknown>,
       systemStatus:
         errorRate > 10 ? 'critical' : errorRate > 5 ? 'degraded' : 'healthy',
       uptime: 99.9, // Default uptime percentage
