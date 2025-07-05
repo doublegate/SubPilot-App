@@ -1,5 +1,15 @@
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ThemeToggleStandalone } from '@/components/theme-toggle-standalone';
+
+// Dynamically import ParticleBackground with loading state and error boundary
+const ParticleBackground = dynamic(
+  () => import('@/components/ui/particle-background'),
+  {
+    loading: () => null, // No loading spinner to avoid layout shift
+    ssr: false, // Disable SSR for client-side animation
+  }
+);
 
 export default function HomePage() {
   return (
@@ -7,8 +17,13 @@ export default function HomePage() {
       id="main-content"
       className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-cyan-50 to-purple-50 dark:from-gray-900 dark:to-gray-800"
     >
+      <ParticleBackground
+        particleCount={150}
+        opacity={0.3}
+        className="transition-opacity duration-500"
+      />
       <ThemeToggleStandalone />
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
+      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 relative z-10">
         <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 sm:text-[5rem]">
           Sub<span className="text-cyan-600 dark:text-cyan-400">Pilot</span>
         </h1>
