@@ -118,9 +118,10 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
   // In production, consider implementing nonce-based CSP for better security
   const cspDirectives = [
     "default-src 'self'",
-    // Remove 'unsafe-eval' - replaced eval usage with expr-eval library
-    // Keep 'unsafe-inline' for now due to Next.js requirements but add TODO
-    "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com",
+    // In development, React needs 'unsafe-eval' for hot reloading
+    process.env.NODE_ENV === 'development' 
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com"
+      : "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",

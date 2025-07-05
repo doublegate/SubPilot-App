@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { auth } from '@/server/auth';
 import { LoginForm } from '@/components/auth/login-form';
-import { ThemeToggleStandalone } from '@/components/theme-toggle-standalone';
+import { ThemeToggleSimple } from '@/components/theme-toggle-simple';
 
 export default async function SignUpPage() {
   const session = await auth();
@@ -16,7 +16,7 @@ export default async function SignUpPage() {
       <Link href="/" className="absolute left-4 top-4 md:left-8 md:top-8">
         <span className="text-lg font-semibold">SubPilot</span>
       </Link>
-      <ThemeToggleStandalone />
+      <ThemeToggleSimple />
       <main className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
         <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">

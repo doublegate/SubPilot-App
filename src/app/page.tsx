@@ -1,18 +1,96 @@
-// 'use client';
+'use client';
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import ParticleBackground from '@/components/ui/particle-background';
-import { ThemeToggleStandalone } from '@/components/theme-toggle-standalone';
+import { useState, useEffect } from 'react';
+import { RuntimeDOMCheck } from '@/components/debug/runtime-dom-check';
 
-// Dynamically import ParticleBackground with loading state and error boundary
-// const ParticleBackground = dynamic(
-// () => import('@/components/ui/particle-background'),
-// {
-//   loading: () => null, // No loading spinner to avoid layout shift
-//   ssr: false, // Disable SSR for client-side animation
-// }
-// );
+// Dynamically import ParticleBackground with SSR disabled
+const ParticleBackground = dynamic(
+  () => import('@/components/ui/particle-background'),
+  {
+    loading: () => <div className="fixed inset-0 pointer-events-none z-0" />,
+    ssr: false, // Disable SSR for client-side animation
+  }
+);
+
+// Nuclear Option: Direct theme toggle implementation
+function NuclearThemeToggle() {
+  console.log('🔥 NuclearThemeToggle: Component rendering');
+  
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    console.log('🔥 NuclearThemeToggle: useEffect mounting');
+    setMounted(true);
+    // Get theme from localStorage
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const currentTheme = savedTheme || systemTheme;
+    
+    console.log('🔥 NuclearThemeToggle: Theme detection', { savedTheme, systemTheme, currentTheme });
+    
+    setTheme(currentTheme);
+    
+    // Apply theme to document
+    if (currentTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+    // Debug DOM state after mount
+    setTimeout(() => {
+      const button = document.querySelector('button[aria-label="Toggle theme"]');
+      console.log('🔥 NuclearThemeToggle: Button in DOM?', button);
+      if (button) {
+        const rect = button.getBoundingClientRect();
+        const styles = window.getComputedStyle(button);
+        console.log('🔥 NuclearThemeToggle: Button rect', rect);
+        console.log('🔥 NuclearThemeToggle: Button styles', {
+          display: styles.display,
+          visibility: styles.visibility,
+          position: styles.position,
+          zIndex: styles.zIndex
+        });
+      }
+    }, 100);
+  }, []);
+
+  const toggleTheme = () => {
+    console.log('🔥 NuclearThemeToggle: Toggle clicked!', { currentTheme: theme });
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    
+    // Save to localStorage
+    localStorage.setItem('theme', newTheme);
+    
+    // Apply to document
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  if (!mounted) {
+    console.log('🔥 NuclearThemeToggle: Not mounted, returning null');
+    return null;
+  }
+
+  console.log('🔥 NuclearThemeToggle: Rendering button, current theme:', theme);
+  return (
+    <button
+      onClick={toggleTheme}
+      className="fixed top-4 right-4 z-50 p-2 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      aria-label="Toggle theme"
+      data-testid="nuclear-theme-toggle"
+    >
+      {theme === 'light' ? '🌙' : '☀️'}
+    </button>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -20,6 +98,7 @@ export default function HomePage() {
       id="main-content"
       className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-cyan-50 to-purple-50 dark:from-gray-900 dark:to-gray-800"
     >
+      <RuntimeDOMCheck />
       <ParticleBackground
         particleCount={500} // Increased to match Universal-Blue
         opacity={0.4} // Slightly higher opacity
@@ -27,7 +106,7 @@ export default function HomePage() {
         useImageSeeding={true} // Enable unique patterns based on JSON data
         className="transition-opacity duration-500"
       />
-      <ThemeToggleStandalone />
+      <NuclearThemeToggle />
       <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 relative z-10">
         <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 sm:text-[5rem]">
           Sub<span className="text-cyan-600 dark:text-cyan-400">Pilot</span>

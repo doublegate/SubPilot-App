@@ -1,14 +1,7 @@
 'use client';
 
-// Re-export the fixed button to avoid Radix UI Slot issues in development
-export * from './button-fixed';
-export { ButtonFixed as Button } from './button-fixed';
-
-/* Original implementation kept for reference
 import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
-
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
@@ -40,17 +33,23 @@ const buttonVariants = cva(
   }
 );
 
-export interface ButtonProps
+export interface ButtonNoSlotProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
-}
+    VariantProps<typeof buttonVariants> {}
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button';
+const ButtonNoSlot = React.forwardRef<HTMLButtonElement, ButtonNoSlotProps>(
+  ({ className, variant, size, ...props }, ref) => {
+    console.log('🔘 ButtonNoSlot: Rendering', { 
+      variant, 
+      size, 
+      className,
+      onClick: !!props.onClick,
+      children: props.children ? 'has children' : 'no children',
+      dataTestId: props['data-testid']
+    });
+    
     return (
-      <Comp
+      <button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         {...props}
@@ -58,7 +57,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     );
   }
 );
-Button.displayName = 'Button';
+ButtonNoSlot.displayName = 'ButtonNoSlot';
 
-export { Button, buttonVariants };
-*/
+export { ButtonNoSlot, buttonVariants };

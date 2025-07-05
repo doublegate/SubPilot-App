@@ -9,6 +9,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 /** @type {import("next").NextConfig} */
 const config = {
+  reactStrictMode: false, // Disable strict mode to prevent double rendering
   output: 'standalone',
   experimental: {
     // optimizeCss: true, // Disabled temporarily due to critters module issue

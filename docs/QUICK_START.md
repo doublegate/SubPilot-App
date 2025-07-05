@@ -136,7 +136,7 @@ psql -U username -l
 sudo lsof -ti:3000 | xargs kill -9
 
 # Or use different port
-npm run dev -- --port 3001
+npm run dev -- --port 3003
 ```
 
 ### Missing Environment Variables
