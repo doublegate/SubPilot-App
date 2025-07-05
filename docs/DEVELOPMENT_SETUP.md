@@ -572,7 +572,7 @@ nvm use 18
 lsof -ti:3000 | xargs kill -9
 
 # Use different port
-npm run dev -- --port 3003
+npm run dev -- --port 3001
 ```
 
 ### Performance Optimization

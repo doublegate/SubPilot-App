@@ -1,10 +1,5 @@
 'use client';
 
-// Re-export the fixed button to avoid Radix UI Slot issues in development
-export * from './button-fixed';
-export { ButtonFixed as Button } from './button-fixed';
-
-/* Original implementation kept for reference
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -61,4 +56,3 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = 'Button';
 
 export { Button, buttonVariants };
-*/
