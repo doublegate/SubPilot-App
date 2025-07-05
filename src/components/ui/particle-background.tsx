@@ -14,6 +14,9 @@ interface ParticleBackgroundProps {
   className?: string;
   particleCount?: number;
   opacity?: number;
+  useImageSeeding?: boolean; // Enable JSON-based seeding like Universal-Blue
+  seedUrl?: string; // Custom seed URL
+  stopOnScroll?: boolean; // Stop animation when scrolling past viewport
 }
 
 interface Particle {
@@ -21,20 +24,71 @@ interface Particle {
   y: number;
 }
 
+interface ImageData {
+  name: string;
+  repository: {
+    html_url: string;
+  };
+}
+
 /**
  * ParticleBackground component that creates an animated particle effect
  * Uses p5.js for smooth animations and responds to theme changes
+ * Incorporates features from Universal-Blue.org
  */
 export default function ParticleBackground({
   className = '',
-  particleCount = 150,
-  opacity = 0.3,
+  particleCount = 500, // Increased to match Universal-Blue
+  opacity = 0.4,
+  useImageSeeding = false,
+  seedUrl = 'https://Universal-Blue.org/image_list.json',
+  stopOnScroll = true,
 }: ParticleBackgroundProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const p5InstanceRef = useRef<any>(null);
   const isLoadedRef = useRef(false);
   const [p5Loaded, setP5Loaded] = useState(false);
+  const [seedInfo, setSeedInfo] = useState<{ name: string; url: string } | null>(null);
   const { theme } = useTheme();
+
+  // Fetch JSON data for seeding
+  const fetchSeedData = useCallback(async () => {
+    if (!useImageSeeding) return;
+
+    try {
+      const response = await fetch(seedUrl);
+      if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+
+      const jsonData = await response.json();
+      if (jsonData && jsonData.length > 0) {
+        // Filter non-private elements
+        const nonPrivateElements = jsonData.filter((element: any) => !element.private);
+        if (nonPrivateElements.length === 0) return;
+
+        // Random selection
+        const randomIndex = Math.floor(Math.random() * nonPrivateElements.length);
+        const randomImage = Math.floor(Math.random() * nonPrivateElements[randomIndex].length);
+        const imageData: ImageData = nonPrivateElements[randomIndex][randomImage];
+
+        // Calculate seed from name
+        let seed = 0;
+        for (let i = 0; i < imageData.name.length; i++) {
+          seed += imageData.name.charCodeAt(i);
+        }
+
+        setSeedInfo({
+          name: imageData.name,
+          url: imageData.repository.html_url,
+        });
+
+        return seed;
+      }
+    } catch (error) {
+      console.error('Error fetching seed data:', error);
+    }
+
+    return null;
+  }, [useImageSeeding, seedUrl]);
 
   const cleanupP5 = useCallback(() => {
     if (p5InstanceRef.current) {
@@ -47,17 +101,26 @@ export default function ParticleBackground({
     }
   }, []);
 
-  const initializeP5 = useCallback(() => {
+  const initializeP5 = useCallback(async () => {
     if (!p5Loaded || !window.p5 || !canvasRef.current || p5InstanceRef.current) return;
+
+    // Get seed value
+    const seed = await fetchSeedData();
 
     try {
       p5InstanceRef.current = new window.p5((p: any) => {
         let particles: Particle[] = [];
-        const noiseScale = 0.01 / 9;
+        const noiseScale = 0.01 / 9; // Matches Universal-Blue
 
         p.setup = () => {
           const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
           canvas.parent(canvasRef.current);
+
+          // Apply seeding if available
+          if (seed !== null) {
+            p.randomSeed(seed);
+            p.noiseSeed(seed);
+          }
 
           // Initialize particles
           for (let i = 0; i < particleCount; i++) {
@@ -67,27 +130,30 @@ export default function ParticleBackground({
             });
           }
 
-          // Set theme-aware colors
-          const strokeColor = theme === 'dark' ? [255, 255, 255, 60] : [100, 100, 100, 80];
-          p.stroke(...strokeColor);
+          // Match Universal-Blue styling
+          p.stroke(100); // Gray particles like original
           p.strokeWeight(1);
           p.clear();
         };
 
         p.draw = () => {
-          // Theme-aware background
-          const bgAlpha = theme === 'dark' ? 15 : 25;
-          p.background(0, bgAlpha);
+          // Stop animation when scrolled past viewport (like Universal-Blue)
+          if (stopOnScroll && window.scrollY > window.innerHeight) {
+            return;
+          }
 
-          for (let i = 0; i < particleCount; i++) {
+          // Create trailing effect with semi-transparent background
+          p.background(0, 10); // Matches Universal-Blue trail effect
+
+          for (let i = 0; i < particles.length; i++) {
             const pt = particles[i];
 
-            // Bounds check with early return
+            // Bounds check
             if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number') continue;
 
             p.point(pt.x, pt.y);
 
-            // Calculate movement using noise
+            // Calculate movement using noise (exact formula from Universal-Blue)
             const n = p.noise(
               pt.x * noiseScale,
               pt.y * noiseScale,
@@ -98,12 +164,17 @@ export default function ParticleBackground({
             pt.x += p.cos(angle);
             pt.y += p.sin(angle);
 
-            // Wrap particles around screen edges
-            if (pt.x < 0 || pt.x > p.width || pt.y < 0 || pt.y > p.height) {
+            // Respawn particles that go off-screen
+            if (!onScreen(pt, p)) {
               pt.x = p.random(p.width);
               pt.y = p.random(p.height);
             }
           }
+        };
+
+        // Helper function to check if particle is on screen
+        const onScreen = (v: Particle, p: any) => {
+          return v.x >= 0 && v.x <= p.width && v.y >= 0 && v.y <= p.height;
         };
 
         p.windowResized = () => {
@@ -117,7 +188,30 @@ export default function ParticleBackground({
     } catch (error) {
       console.error('Error initializing p5.js:', error);
     }
-  }, [theme, particleCount]);
+  }, [particleCount, fetchSeedData, p5Loaded, stopOnScroll]);
+
+  // Check for reduced motion preference
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const handleMotionPreference = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches && p5InstanceRef.current) {
+        p5InstanceRef.current.noLoop();
+      } else if (p5InstanceRef.current) {
+        p5InstanceRef.current.loop();
+      }
+    };
+
+    // Initial check
+    handleMotionPreference(prefersReducedMotion);
+
+    // Listen for changes
+    prefersReducedMotion.addEventListener('change', handleMotionPreference);
+
+    return () => {
+      prefersReducedMotion.removeEventListener('change', handleMotionPreference);
+    };
+  }, []);
 
   // Load p5.js script
   useEffect(() => {
@@ -127,7 +221,7 @@ export default function ParticleBackground({
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js';
     script.async = true;
     script.crossOrigin = 'anonymous';
-    
+
     script.onload = () => {
       isLoadedRef.current = true;
       setP5Loaded(true);
@@ -147,30 +241,45 @@ export default function ParticleBackground({
     };
   }, [cleanupP5]);
 
-  // Initialize p5.js once the script is loaded and component is mounted
+  // Initialize p5.js once the script is loaded
   useEffect(() => {
     if (p5Loaded) {
       initializeP5();
     }
   }, [p5Loaded, initializeP5]);
 
-  // Reinitialize when theme changes
+  // Reinitialize when theme changes (removed to match Universal-Blue style)
   useEffect(() => {
     if (p5Loaded) {
       cleanupP5();
-      // Small delay to ensure cleanup is complete
       const timeoutId = setTimeout(initializeP5, 100);
       return () => clearTimeout(timeoutId);
     }
-  }, [theme, cleanupP5, initializeP5]);
+  }, [cleanupP5, initializeP5]);
 
   return (
-    <div
-      ref={canvasRef}
-      className={`fixed inset-0 pointer-events-none z-0 ${className}`}
-      style={{ opacity }}
-      aria-hidden="true"
-      role="presentation"
-    />
+    <>
+      <div
+        ref={canvasRef}
+        className={`fixed inset-0 pointer-events-none z-0 ${className}`}
+        style={{ opacity }}
+        aria-hidden="true"
+        role="presentation"
+      />
+
+      {/* Optional: Show seed information like Universal-Blue */}
+      {seedInfo && (
+        <div className="fixed bottom-4 right-4 text-xs opacity-50 z-10">
+          Seed: <a
+            href={seedInfo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:underline"
+          >
+            {seedInfo.name}
+          </a>
+        </div>
+      )}
+    </>
   );
 }
