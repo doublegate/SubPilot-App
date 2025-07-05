@@ -39,15 +39,15 @@ export interface ButtonNoSlotProps
 
 const ButtonNoSlot = React.forwardRef<HTMLButtonElement, ButtonNoSlotProps>(
   ({ className, variant, size, ...props }, ref) => {
-    console.log('🔘 ButtonNoSlot: Rendering', { 
-      variant, 
-      size, 
+    console.log('🔘 ButtonNoSlot: Rendering', {
+      variant,
+      size,
       className,
       onClick: !!props.onClick,
       children: props.children ? 'has children' : 'no children',
-      dataTestId: props['data-testid']
+      dataTestId: props['data-testid'],
     });
-    
+
     return (
       <button
         className={cn(buttonVariants({ variant, size, className }))}

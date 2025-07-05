@@ -1,7 +1,7 @@
 'use client';
 
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 export default function TestThemePage() {
   const [mounted, setMounted] = useState(false);
@@ -22,9 +22,16 @@ export default function TestThemePage() {
   return (
     <div style={{ padding: '40px', fontFamily: 'sans-serif' }}>
       <h1 style={{ marginBottom: '30px' }}>Theme System Test</h1>
-      
+
       {/* Display current theme info */}
-      <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
+      <div
+        style={{
+          marginBottom: '30px',
+          padding: '20px',
+          backgroundColor: '#f0f0f0',
+          borderRadius: '8px',
+        }}
+      >
         <h3>Current Theme State:</h3>
         <p>Theme: {theme}</p>
         <p>Resolved Theme: {resolvedTheme}</p>
@@ -46,7 +53,7 @@ export default function TestThemePage() {
             color: theme === 'dark' ? '#fff' : '#000',
             border: 'none',
             borderRadius: '4px',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           Toggle Theme (Current: {theme})
@@ -68,7 +75,7 @@ export default function TestThemePage() {
               color: theme === 'light' ? '#fff' : '#000',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             ☀️ Light
@@ -84,7 +91,7 @@ export default function TestThemePage() {
               color: theme === 'dark' ? '#fff' : '#000',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             🌙 Dark
@@ -100,7 +107,7 @@ export default function TestThemePage() {
               color: theme === 'system' ? '#fff' : '#000',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             💻 System
@@ -128,7 +135,7 @@ export default function TestThemePage() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '20px'
+            fontSize: '20px',
           }}
         >
           {resolvedTheme === 'dark' ? '🌙' : '☀️'}
@@ -136,12 +143,14 @@ export default function TestThemePage() {
       </div>
 
       {/* Console helper */}
-      <div style={{ 
-        marginTop: '40px', 
-        padding: '20px', 
-        backgroundColor: '#f9fafb',
-        borderRadius: '8px'
-      }}>
+      <div
+        style={{
+          marginTop: '40px',
+          padding: '20px',
+          backgroundColor: '#f9fafb',
+          borderRadius: '8px',
+        }}
+      >
         <h3>Debug Info:</h3>
         <ul>
           <li>Open console to see theme changes</li>

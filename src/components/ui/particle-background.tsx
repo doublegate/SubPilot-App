@@ -48,7 +48,10 @@ export default function ParticleBackground({
   const p5InstanceRef = useRef<any>(null);
   const isLoadedRef = useRef(false);
   const [p5Loaded, setP5Loaded] = useState(false);
-  const [seedInfo, setSeedInfo] = useState<{ name: string; url: string } | null>(null);
+  const [seedInfo, setSeedInfo] = useState<{
+    name: string;
+    url: string;
+  } | null>(null);
   const { theme } = useTheme();
 
   // Fetch JSON data for seeding
@@ -62,13 +65,20 @@ export default function ParticleBackground({
       const jsonData = await response.json();
       if (jsonData && jsonData.length > 0) {
         // Filter non-private elements
-        const nonPrivateElements = jsonData.filter((element: any) => !element.private);
+        const nonPrivateElements = jsonData.filter(
+          (element: any) => !element.private
+        );
         if (nonPrivateElements.length === 0) return;
 
         // Random selection
-        const randomIndex = Math.floor(Math.random() * nonPrivateElements.length);
-        const randomImage = Math.floor(Math.random() * nonPrivateElements[randomIndex].length);
-        const imageData: ImageData = nonPrivateElements[randomIndex][randomImage];
+        const randomIndex = Math.floor(
+          Math.random() * nonPrivateElements.length
+        );
+        const randomImage = Math.floor(
+          Math.random() * nonPrivateElements[randomIndex].length
+        );
+        const imageData: ImageData =
+          nonPrivateElements[randomIndex][randomImage];
 
         // Calculate seed from name
         let seed = 0;
@@ -102,7 +112,8 @@ export default function ParticleBackground({
   }, []);
 
   const initializeP5 = useCallback(async () => {
-    if (!p5Loaded || !window.p5 || !canvasRef.current || p5InstanceRef.current) return;
+    if (!p5Loaded || !window.p5 || !canvasRef.current || p5InstanceRef.current)
+      return;
 
     // Get seed value
     const seed = await fetchSeedData();
@@ -134,7 +145,8 @@ export default function ParticleBackground({
           }
 
           // Theme-aware colors for better visibility on gradient backgrounds
-          const strokeColor = currentTheme === 'dark' ? [255, 255, 255, 60] : [50, 50, 50, 80];
+          const strokeColor =
+            currentTheme === 'dark' ? [255, 255, 255, 60] : [50, 50, 50, 80];
           p.stroke(...strokeColor);
           p.strokeWeight(1);
           p.clear();
@@ -155,7 +167,8 @@ export default function ParticleBackground({
             const pt = particles[i];
 
             // Bounds check
-            if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number') continue;
+            if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number')
+              continue;
 
             p.point(pt.x, pt.y);
 
@@ -198,9 +211,13 @@ export default function ParticleBackground({
 
   // Check for reduced motion preference
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    );
 
-    const handleMotionPreference = (e: MediaQueryListEvent | MediaQueryList) => {
+    const handleMotionPreference = (
+      e: MediaQueryListEvent | MediaQueryList
+    ) => {
       if (e.matches && p5InstanceRef.current) {
         p5InstanceRef.current.noLoop();
       } else if (p5InstanceRef.current) {
@@ -215,7 +232,10 @@ export default function ParticleBackground({
     prefersReducedMotion.addEventListener('change', handleMotionPreference);
 
     return () => {
-      prefersReducedMotion.removeEventListener('change', handleMotionPreference);
+      prefersReducedMotion.removeEventListener(
+        'change',
+        handleMotionPreference
+      );
     };
   }, []);
 
@@ -267,7 +287,7 @@ export default function ParticleBackground({
     <>
       <div
         ref={canvasRef}
-        className={`fixed inset-0 pointer-events-none z-0 ${className}`}
+        className={`pointer-events-none fixed inset-0 z-0 ${className}`}
         style={{ opacity }}
         aria-hidden="true"
         role="presentation"
@@ -275,8 +295,9 @@ export default function ParticleBackground({
 
       {/* Optional: Show seed information like Universal-Blue */}
       {seedInfo && (
-        <div className="fixed bottom-4 right-4 text-xs opacity-50 z-10">
-          Seed: <a
+        <div className="fixed bottom-4 right-4 z-10 text-xs opacity-50">
+          Seed:{' '}
+          <a
             href={seedInfo.url}
             target="_blank"
             rel="noopener noreferrer"

@@ -1,139 +1,158 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Button Debug Test</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f0f0f0;
-    }
-    .test-section {
-      background: white;
-      padding: 20px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    button {
-      padding: 10px 20px;
-      margin: 5px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      cursor: pointer;
-      background: #f9f9f9;
-    }
-    button:hover {
-      background: #e9e9e9;
-    }
-    .theme-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 50;
-      padding: 8px;
-      background: #333;
-      color: white;
-      border-radius: 4px;
-    }
-    .oauth-button {
-      background: #4285F4;
-      color: white;
-      padding: 12px 24px;
-      border: none;
-      font-size: 16px;
-    }
-    .oauth-button:hover {
-      background: #357AE8;
-    }
-    .log {
-      background: #f5f5f5;
-      padding: 10px;
-      border-radius: 4px;
-      font-family: monospace;
-      font-size: 12px;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-  </style>
-</head>
-<body>
-  <h1>Button Debug Test Page</h1>
-  
-  <div class="test-section">
-    <h2>1. Basic HTML Button Test</h2>
-    <button onclick="log('Basic button clicked!')">Basic HTML Button</button>
-    <button id="js-button">JavaScript Event Button</button>
-  </div>
-
-  <div class="test-section">
-    <h2>2. Theme Toggle Test</h2>
-    <button class="theme-toggle" onclick="log('Theme toggle clicked!')">🌙 Theme</button>
-  </div>
-
-  <div class="test-section">
-    <h2>3. OAuth Button Test</h2>
-    <button class="oauth-button" onclick="log('OAuth button clicked!')">Continue with Google</button>
-  </div>
-
-  <div class="test-section">
-    <h2>4. Disabled Button Test</h2>
-    <button disabled onclick="log('This should not fire')">Disabled Button</button>
-  </div>
-
-  <div class="test-section">
-    <h2>5. Hidden Button Test</h2>
-    <button style="display: none;" onclick="log('Hidden button clicked!')">Hidden Button</button>
-    <button style="visibility: hidden;" onclick="log('Invisible button clicked!')">Invisible Button</button>
-    <button style="opacity: 0;" onclick="log('Transparent button clicked!')">Transparent Button</button>
-  </div>
-
-  <div class="test-section">
-    <h2>Console Log</h2>
-    <div id="log" class="log"></div>
-  </div>
-
-  <script>
-    // Simple logging function
-    function log(message) {
-      console.log(message);
-      const logEl = document.getElementById('log');
-      const time = new Date().toLocaleTimeString();
-      logEl.innerHTML += `[${time}] ${message}<br>`;
-      logEl.scrollTop = logEl.scrollHeight;
-    }
-
-    // Add JavaScript event listener
-    document.getElementById('js-button').addEventListener('click', function() {
-      log('JavaScript event button clicked!');
-    });
-
-    // Test all buttons on page load
-    window.addEventListener('load', function() {
-      log('Page loaded');
-      
-      const buttons = document.querySelectorAll('button');
-      log(`Found ${buttons.length} buttons on the page`);
-      
-      buttons.forEach((button, index) => {
-        const rect = button.getBoundingClientRect();
-        const styles = window.getComputedStyle(button);
-        const isVisible = rect.width > 0 && rect.height > 0;
-        
-        log(`Button ${index}: "${button.textContent.trim()}" - Visible: ${isVisible}, Display: ${styles.display}`);
-      });
-    });
-
-    // Add click counter
-    let clickCount = 0;
-    document.addEventListener('click', function(e) {
-      if (e.target.tagName === 'BUTTON') {
-        clickCount++;
-        log(`Total button clicks: ${clickCount}`);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Button Debug Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f0f0f0;
       }
-    });
-  </script>
-</body>
+      .test-section {
+        background: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
+        background: #f9f9f9;
+      }
+      button:hover {
+        background: #e9e9e9;
+      }
+      .theme-toggle {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 50;
+        padding: 8px;
+        background: #333;
+        color: white;
+        border-radius: 4px;
+      }
+      .oauth-button {
+        background: #4285f4;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        font-size: 16px;
+      }
+      .oauth-button:hover {
+        background: #357ae8;
+      }
+      .log {
+        background: #f5f5f5;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Button Debug Test Page</h1>
+
+    <div class="test-section">
+      <h2>1. Basic HTML Button Test</h2>
+      <button onclick="log('Basic button clicked!')">Basic HTML Button</button>
+      <button id="js-button">JavaScript Event Button</button>
+    </div>
+
+    <div class="test-section">
+      <h2>2. Theme Toggle Test</h2>
+      <button class="theme-toggle" onclick="log('Theme toggle clicked!')">
+        🌙 Theme
+      </button>
+    </div>
+
+    <div class="test-section">
+      <h2>3. OAuth Button Test</h2>
+      <button class="oauth-button" onclick="log('OAuth button clicked!')">
+        Continue with Google
+      </button>
+    </div>
+
+    <div class="test-section">
+      <h2>4. Disabled Button Test</h2>
+      <button disabled onclick="log('This should not fire')">
+        Disabled Button
+      </button>
+    </div>
+
+    <div class="test-section">
+      <h2>5. Hidden Button Test</h2>
+      <button style="display: none" onclick="log('Hidden button clicked!')">
+        Hidden Button
+      </button>
+      <button
+        style="visibility: hidden"
+        onclick="log('Invisible button clicked!')"
+      >
+        Invisible Button
+      </button>
+      <button style="opacity: 0" onclick="log('Transparent button clicked!')">
+        Transparent Button
+      </button>
+    </div>
+
+    <div class="test-section">
+      <h2>Console Log</h2>
+      <div id="log" class="log"></div>
+    </div>
+
+    <script>
+      // Simple logging function
+      function log(message) {
+        console.log(message);
+        const logEl = document.getElementById('log');
+        const time = new Date().toLocaleTimeString();
+        logEl.innerHTML += `[${time}] ${message}<br>`;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      // Add JavaScript event listener
+      document
+        .getElementById('js-button')
+        .addEventListener('click', function () {
+          log('JavaScript event button clicked!');
+        });
+
+      // Test all buttons on page load
+      window.addEventListener('load', function () {
+        log('Page loaded');
+
+        const buttons = document.querySelectorAll('button');
+        log(`Found ${buttons.length} buttons on the page`);
+
+        buttons.forEach((button, index) => {
+          const rect = button.getBoundingClientRect();
+          const styles = window.getComputedStyle(button);
+          const isVisible = rect.width > 0 && rect.height > 0;
+
+          log(
+            `Button ${index}: "${button.textContent.trim()}" - Visible: ${isVisible}, Display: ${styles.display}`
+          );
+        });
+      });
+
+      // Add click counter
+      let clickCount = 0;
+      document.addEventListener('click', function (e) {
+        if (e.target.tagName === 'BUTTON') {
+          clickCount++;
+          log(`Total button clicks: ${clickCount}`);
+        }
+      });
+    </script>
+  </body>
 </html>

@@ -30,52 +30,54 @@ export default function TestOAuthPage() {
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-md">
-      <h1 className="text-2xl font-bold mb-6">OAuth Button Test</h1>
-      
+    <div className="container mx-auto max-w-md p-8">
+      <h1 className="mb-6 text-2xl font-bold">OAuth Button Test</h1>
+
       <div className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold mb-2">Simple Button Test</h2>
+          <h2 className="mb-2 text-lg font-semibold">Simple Button Test</h2>
           <button
             onClick={() => addLog('Simple button clicked')}
-            className="w-full p-2 bg-gray-200 hover:bg-gray-300 rounded"
+            className="w-full rounded bg-gray-200 p-2 hover:bg-gray-300"
           >
             Test Simple Click
           </button>
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold mb-2">Google OAuth</h2>
+          <h2 className="mb-2 text-lg font-semibold">Google OAuth</h2>
           <button
             type="button"
             onClick={() => handleOAuthClick('google')}
             disabled={isLoading}
-            className="w-full p-3 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+            className="w-full rounded bg-blue-500 p-3 text-white hover:bg-blue-600 disabled:opacity-50"
           >
             {isLoading ? 'Loading...' : 'Sign in with Google'}
           </button>
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold mb-2">GitHub OAuth</h2>
+          <h2 className="mb-2 text-lg font-semibold">GitHub OAuth</h2>
           <button
             type="button"
             onClick={() => handleOAuthClick('github')}
             disabled={isLoading}
-            className="w-full p-3 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:opacity-50"
+            className="w-full rounded bg-gray-800 p-3 text-white hover:bg-gray-900 disabled:opacity-50"
           >
             {isLoading ? 'Loading...' : 'Sign in with GitHub'}
           </button>
         </div>
 
-        <div className="mt-8 p-4 bg-gray-100 rounded">
-          <h2 className="text-lg font-semibold mb-2">Event Log</h2>
-          <div className="space-y-1 text-sm font-mono max-h-64 overflow-y-auto">
+        <div className="mt-8 rounded bg-gray-100 p-4">
+          <h2 className="mb-2 text-lg font-semibold">Event Log</h2>
+          <div className="max-h-64 space-y-1 overflow-y-auto font-mono text-sm">
             {log.length === 0 ? (
               <p className="text-gray-500">No events yet. Click a button!</p>
             ) : (
               log.map((entry, i) => (
-                <div key={i} className="text-gray-700 text-xs">{entry}</div>
+                <div key={i} className="text-xs text-gray-700">
+                  {entry}
+                </div>
               ))
             )}
           </div>

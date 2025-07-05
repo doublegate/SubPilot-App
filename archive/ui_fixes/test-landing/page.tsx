@@ -2,17 +2,21 @@
 
 export default function TestLandingPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+    >
       {/* Header mimicking landing page */}
-      <header style={{ 
-        padding: '20px 40px', 
-        borderBottom: '1px solid #e5e7eb',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
+      <header
+        style={{
+          padding: '20px 40px',
+          borderBottom: '1px solid #e5e7eb',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <div style={{ fontSize: '24px', fontWeight: 'bold' }}>SubPilot</div>
-        
+
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {/* Theme Toggle - Pure HTML */}
           <button
@@ -30,12 +34,12 @@ export default function TestLandingPage() {
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
             }}
           >
             🌓
           </button>
-          
+
           {/* Sign In Button - Pure HTML */}
           <button
             onClick={() => console.log('Sign in clicked!')}
@@ -46,7 +50,7 @@ export default function TestLandingPage() {
               border: 'none',
               borderRadius: '6px',
               cursor: 'pointer',
-              fontSize: '14px'
+              fontSize: '14px',
             }}
           >
             Sign In
@@ -56,16 +60,27 @@ export default function TestLandingPage() {
 
       {/* Main content area */}
       <main style={{ flex: 1, padding: '40px' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+        <div
+          style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}
+        >
           <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>
             Welcome to SubPilot
           </h1>
-          <p style={{ fontSize: '20px', marginBottom: '40px', color: '#6b7280' }}>
+          <p
+            style={{ fontSize: '20px', marginBottom: '40px', color: '#6b7280' }}
+          >
             Your subscription management platform
           </p>
 
           {/* CTA Buttons */}
-          <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '60px' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '20px',
+              justifyContent: 'center',
+              marginBottom: '60px',
+            }}
+          >
             <button
               onClick={() => console.log('Get Started clicked!')}
               style={{
@@ -76,7 +91,7 @@ export default function TestLandingPage() {
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontSize: '16px',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
               }}
             >
               Get Started
@@ -91,7 +106,7 @@ export default function TestLandingPage() {
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontSize: '16px',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
               }}
             >
               Learn More
@@ -99,15 +114,19 @@ export default function TestLandingPage() {
           </div>
 
           {/* Test section for OAuth buttons */}
-          <div style={{ 
-            padding: '40px', 
-            backgroundColor: '#f9fafb', 
-            borderRadius: '12px',
-            maxWidth: '400px',
-            margin: '0 auto'
-          }}>
+          <div
+            style={{
+              padding: '40px',
+              backgroundColor: '#f9fafb',
+              borderRadius: '12px',
+              maxWidth: '400px',
+              margin: '0 auto',
+            }}
+          >
             <h2 style={{ marginBottom: '20px' }}>Sign In Options</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+            >
               <button
                 onClick={() => console.log('Google OAuth clicked!')}
                 style={{
@@ -122,7 +141,7 @@ export default function TestLandingPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px'
+                  gap: '8px',
                 }}
               >
                 <span>🔍</span> Continue with Google
@@ -141,7 +160,7 @@ export default function TestLandingPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px'
+                  gap: '8px',
                 }}
               >
                 <span>🐙</span> Continue with GitHub
@@ -152,21 +171,23 @@ export default function TestLandingPage() {
       </main>
 
       {/* Debug info */}
-      <div style={{ 
-        position: 'fixed', 
-        bottom: '20px', 
-        right: '20px', 
-        padding: '20px', 
-        backgroundColor: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        maxWidth: '300px'
-      }}>
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          padding: '20px',
+          backgroundColor: '#fff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          maxWidth: '300px',
+        }}
+      >
         <h4 style={{ marginBottom: '10px' }}>Debug Panel</h4>
         <p style={{ fontSize: '12px', color: '#6b7280' }}>
-          All buttons should log to console when clicked.
-          This page uses NO external components.
+          All buttons should log to console when clicked. This page uses NO
+          external components.
         </p>
       </div>
     </div>

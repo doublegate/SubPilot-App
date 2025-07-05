@@ -55,42 +55,42 @@ export default function TestNuclearPage() {
 
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-8">Nuclear Option Test Page</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <h1 className="mb-8 text-3xl font-bold">Nuclear Option Test Page</h1>
+
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Test Controls</h2>
-          
+
           <div className="space-y-2">
             <button
               onClick={() => testOAuthDirect('google')}
-              className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
             >
               Test Google OAuth Direct
             </button>
-            
+
             <button
               onClick={() => testOAuthDirect('github')}
-              className="w-full p-2 bg-gray-800 text-white rounded hover:bg-gray-900"
+              className="w-full rounded bg-gray-800 p-2 text-white hover:bg-gray-900"
             >
               Test GitHub OAuth Direct
             </button>
-            
+
             <button
               onClick={testLocalStorage}
-              className="w-full p-2 bg-green-500 text-white rounded hover:bg-green-600"
+              className="w-full rounded bg-green-500 p-2 text-white hover:bg-green-600"
             >
               Test localStorage
             </button>
-            
+
             <button
               onClick={testThemeToggle}
-              className="w-full p-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+              className="w-full rounded bg-purple-500 p-2 text-white hover:bg-purple-600"
             >
               Test Theme Toggle
             </button>
           </div>
-          
+
           <div className="space-y-2 pt-4">
             <h3 className="font-semibold">Navigation</h3>
             <Link href="/" className="block text-blue-500 hover:underline">
@@ -99,19 +99,22 @@ export default function TestNuclearPage() {
             <Link href="/login" className="block text-blue-500 hover:underline">
               → Login (original)
             </Link>
-            <Link href="/login-nuclear" className="block text-blue-500 hover:underline">
+            <Link
+              href="/login-nuclear"
+              className="block text-blue-500 hover:underline"
+            >
               → Login (nuclear)
             </Link>
           </div>
         </div>
-        
+
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Test Results</h2>
-          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded h-96 overflow-y-auto">
+          <div className="h-96 overflow-y-auto rounded bg-gray-100 p-4 dark:bg-gray-800">
             {testResults.length === 0 ? (
               <p className="text-gray-500">No tests run yet...</p>
             ) : (
-              <pre className="text-xs whitespace-pre-wrap">
+              <pre className="whitespace-pre-wrap text-xs">
                 {testResults.join('\n')}
               </pre>
             )}
@@ -124,10 +127,10 @@ export default function TestNuclearPage() {
           </button>
         </div>
       </div>
-      
-      <div className="mt-8 p-4 bg-yellow-100 dark:bg-yellow-900 rounded">
-        <h3 className="font-semibold mb-2">Nuclear Implementation Status</h3>
-        <ul className="list-disc list-inside space-y-1 text-sm">
+
+      <div className="mt-8 rounded bg-yellow-100 p-4 dark:bg-yellow-900">
+        <h3 className="mb-2 font-semibold">Nuclear Implementation Status</h3>
+        <ul className="list-inside list-disc space-y-1 text-sm">
           <li>✅ Theme toggle without shadcn/ui Button component</li>
           <li>✅ OAuth buttons without shadcn/ui components</li>
           <li>✅ Direct localStorage access</li>

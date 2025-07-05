@@ -40,7 +40,7 @@ function NuclearThemeToggleServer() {
       <button
         id="nuclear-theme-btn"
         onClick={() => {}}
-        className="fixed top-4 right-4 z-50 p-2 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        className="fixed right-4 top-4 z-50 rounded-md bg-gray-200 p-2 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
         dangerouslySetInnerHTML={{
           __html: `
             <script>

@@ -1,12 +1,12 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 
 export default function TestProgressivePage() {
   return (
     <div style={{ padding: '40px', fontFamily: 'sans-serif' }}>
       <h1 style={{ marginBottom: '30px' }}>Progressive Enhancement Test</h1>
-      
+
       {/* Test 1: Native button */}
       <div style={{ marginBottom: '30px' }}>
         <h3>Test 1: Native HTML Button (should work)</h3>
@@ -29,7 +29,7 @@ export default function TestProgressivePage() {
       {/* Test 3: Button component with variant */}
       <div style={{ marginBottom: '30px' }}>
         <h3>Test 3: shadcn/ui Button - With Variant</h3>
-        <Button 
+        <Button
           variant="outline"
           onClick={() => console.log('shadcn outline Button clicked!')}
         >
@@ -68,12 +68,14 @@ export default function TestProgressivePage() {
         </div>
       </div>
 
-      <div style={{ 
-        marginTop: '40px', 
-        padding: '20px', 
-        backgroundColor: '#f9fafb',
-        borderRadius: '8px'
-      }}>
+      <div
+        style={{
+          marginTop: '40px',
+          padding: '20px',
+          backgroundColor: '#f9fafb',
+          borderRadius: '8px',
+        }}
+      >
         <p>Check the browser console to see which buttons are working.</p>
         <p>This will help identify where the Button component fails.</p>
       </div>

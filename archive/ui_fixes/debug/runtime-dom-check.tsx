@@ -5,22 +5,28 @@ import { useEffect } from 'react';
 export function RuntimeDOMCheck() {
   useEffect(() => {
     console.log('🔍 RuntimeDOMCheck: Starting DOM inspection...');
-    
+
     const checkDOM = () => {
       const allButtons = document.querySelectorAll('button');
       console.log(`🔍 Total buttons in DOM: ${allButtons.length}`);
-      
+
       allButtons.forEach((button, index) => {
         const rect = button.getBoundingClientRect();
         const styles = window.getComputedStyle(button);
         const text = button.textContent?.trim() || '';
-        
+
         console.log(`🔍 Button #${index}: "${text}"`);
-        console.log(`   Position: (${rect.left}, ${rect.top}) Size: ${rect.width}x${rect.height}`);
+        console.log(
+          `   Position: (${rect.left}, ${rect.top}) Size: ${rect.width}x${rect.height}`
+        );
         console.log(`   Visible: ${rect.width > 0 && rect.height > 0}`);
-        console.log(`   Display: ${styles.display}, Visibility: ${styles.visibility}`);
-        console.log(`   Z-Index: ${styles.zIndex}, Pointer Events: ${styles.pointerEvents}`);
-        
+        console.log(
+          `   Display: ${styles.display}, Visibility: ${styles.visibility}`
+        );
+        console.log(
+          `   Z-Index: ${styles.zIndex}, Pointer Events: ${styles.pointerEvents}`
+        );
+
         // Add visual indicator
         const indicator = document.createElement('div');
         indicator.style.cssText = `
@@ -48,26 +54,28 @@ export function RuntimeDOMCheck() {
         label.textContent = `#${index}: ${text}`;
         indicator.appendChild(label);
         document.body.appendChild(indicator);
-        
+
         // Remove after 10 seconds
         setTimeout(() => indicator.remove(), 10000);
       });
-      
+
       // Check for theme toggle specifically
-      const themeButton = document.querySelector('[aria-label*="theme"]') || 
-                         document.querySelector('[data-testid*="theme"]') ||
-                         document.querySelector('.fixed.top-4.right-4 button');
-      
+      const themeButton =
+        document.querySelector('[aria-label*="theme"]') ||
+        document.querySelector('[data-testid*="theme"]') ||
+        document.querySelector('.fixed.top-4.right-4 button');
+
       console.log('🔍 Theme toggle found:', !!themeButton);
-      
+
       // Check for OAuth buttons
-      const oauthButtons = Array.from(allButtons).filter(btn => 
-        btn.textContent?.includes('Google') || 
-        btn.textContent?.includes('GitHub')
+      const oauthButtons = Array.from(allButtons).filter(
+        btn =>
+          btn.textContent?.includes('Google') ||
+          btn.textContent?.includes('GitHub')
       );
-      
+
       console.log(`🔍 OAuth buttons found: ${oauthButtons.length}`);
-      
+
       // Check React fiber
       const checkReactFiber = (element: Element) => {
         for (const key in element) {
@@ -77,10 +85,12 @@ export function RuntimeDOMCheck() {
         }
         return false;
       };
-      
-      const reactButtons = Array.from(allButtons).filter(btn => checkReactFiber(btn));
+
+      const reactButtons = Array.from(allButtons).filter(btn =>
+        checkReactFiber(btn)
+      );
       console.log(`🔍 Buttons with React fiber: ${reactButtons.length}`);
-      
+
       // Create summary overlay
       const summary = document.createElement('div');
       summary.style.cssText = `
@@ -107,17 +117,17 @@ export function RuntimeDOMCheck() {
         This overlay will disappear in 10s</small>
       `;
       document.body.appendChild(summary);
-      
+
       // Remove after 10 seconds
       setTimeout(() => summary.remove(), 10000);
     };
-    
+
     // Check immediately
     checkDOM();
-    
+
     // Check again after a delay
     setTimeout(checkDOM, 1000);
   }, []);
-  
+
   return null;
 }

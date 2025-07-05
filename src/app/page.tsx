@@ -8,7 +8,7 @@ import { ThemeToggleStandalone } from '@/components/theme-toggle-standalone';
 const ParticleBackground = dynamic(
   () => import('@/components/ui/particle-background'),
   {
-    loading: () => <div className="fixed inset-0 pointer-events-none z-0" />,
+    loading: () => <div className="pointer-events-none fixed inset-0 z-0" />,
     ssr: false, // Disable SSR for client-side animation
   }
 );
@@ -27,7 +27,7 @@ export default function HomePage() {
         className="transition-opacity duration-500"
       />
       <ThemeToggleStandalone />
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 relative z-10">
+      <div className="container relative z-10 flex flex-col items-center justify-center gap-12 px-4 py-16">
         <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 sm:text-[5rem]">
           Sub<span className="text-cyan-600 dark:text-cyan-400">Pilot</span>
         </h1>

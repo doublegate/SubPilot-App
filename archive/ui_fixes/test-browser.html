@@ -1,67 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>SubPilot Theme Toggle Test</title>
     <style>
-        body { margin: 20px; font-family: Arial, sans-serif; }
-        .test-section { 
-            border: 2px solid #ddd; 
-            padding: 20px; 
-            margin: 20px 0;
-            border-radius: 8px;
-        }
-        .success { color: green; font-weight: bold; }
-        .error { color: red; font-weight: bold; }
-        iframe { 
-            width: 100%; 
-            height: 600px; 
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+      body {
+        margin: 20px;
+        font-family: Arial, sans-serif;
+      }
+      .test-section {
+        border: 2px solid #ddd;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+      }
+      .success {
+        color: green;
+        font-weight: bold;
+      }
+      .error {
+        color: red;
+        font-weight: bold;
+      }
+      iframe {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>SubPilot Development Server Test</h1>
-    
+
     <div class="test-section">
-        <h2>Test Instructions:</h2>
-        <ol>
-            <li>Open this file in your browser</li>
-            <li>Check if the pages load in the iframes below</li>
-            <li>Look for the theme toggle button in the top-right corner of each page</li>
-            <li>Click the theme toggle to test if it switches between light/dark mode</li>
-        </ol>
+      <h2>Test Instructions:</h2>
+      <ol>
+        <li>Open this file in your browser</li>
+        <li>Check if the pages load in the iframes below</li>
+        <li>
+          Look for the theme toggle button in the top-right corner of each page
+        </li>
+        <li>
+          Click the theme toggle to test if it switches between light/dark mode
+        </li>
+      </ol>
     </div>
 
     <div class="test-section">
-        <h2>Home Page (/):</h2>
-        <iframe src="http://localhost:3000/" title="Home Page"></iframe>
+      <h2>Home Page (/):</h2>
+      <iframe src="http://localhost:3000/" title="Home Page"></iframe>
     </div>
 
     <div class="test-section">
-        <h2>Login Page (/login):</h2>
-        <iframe src="http://localhost:3000/login" title="Login Page"></iframe>
+      <h2>Login Page (/login):</h2>
+      <iframe src="http://localhost:3000/login" title="Login Page"></iframe>
     </div>
 
     <div class="test-section">
-        <h2>Test Theme Page (/test-theme):</h2>
-        <iframe src="http://localhost:3000/test-theme" title="Test Theme Page"></iframe>
+      <h2>Test Theme Page (/test-theme):</h2>
+      <iframe
+        src="http://localhost:3000/test-theme"
+        title="Test Theme Page"
+      ></iframe>
     </div>
 
     <script>
-        // Check if server is accessible
-        fetch('http://localhost:3000')
-            .then(response => {
-                if (response.ok) {
-                    console.log('✅ Development server is accessible');
-                } else {
-                    console.error('❌ Development server returned error:', response.status);
-                }
-            })
-            .catch(error => {
-                console.error('❌ Cannot connect to development server:', error);
-                alert('Cannot connect to development server at http://localhost:3000. Make sure npm run dev is running.');
-            });
+      // Check if server is accessible
+      fetch('http://localhost:3000')
+        .then(response => {
+          if (response.ok) {
+            console.log('✅ Development server is accessible');
+          } else {
+            console.error(
+              '❌ Development server returned error:',
+              response.status
+            );
+          }
+        })
+        .catch(error => {
+          console.error('❌ Cannot connect to development server:', error);
+          alert(
+            'Cannot connect to development server at http://localhost:3000. Make sure npm run dev is running.'
+          );
+        });
     </script>
-</body>
+  </body>
 </html>

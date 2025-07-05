@@ -12,7 +12,7 @@ export default function ParticleBackground() {
     script.async = true;
     script.onload = () => {
       // Your particle animation code here
-      new window.p5((p) => {
+      new window.p5(p => {
         let particles = [];
         const num = 200;
         const noiseScale = 0.01 / 9;
@@ -22,7 +22,9 @@ export default function ParticleBackground() {
           canvas.parent('sketch-holder');
 
           for (let i = 0; i < num; i++) {
-            particles.push(p.createVector(p.random(p.width), p.random(p.height)));
+            particles.push(
+              p.createVector(p.random(p.width), p.random(p.height))
+            );
           }
 
           p.stroke(255, 255, 255, 60);
@@ -37,7 +39,11 @@ export default function ParticleBackground() {
             let pt = particles[i];
             p.point(pt.x, pt.y);
 
-            let n = p.noise(pt.x * noiseScale, pt.y * noiseScale, p.frameCount * noiseScale * noiseScale);
+            let n = p.noise(
+              pt.x * noiseScale,
+              pt.y * noiseScale,
+              p.frameCount * noiseScale * noiseScale
+            );
             let a = p.TAU * n;
             pt.x += p.cos(a);
             pt.y += p.sin(a);
@@ -64,14 +70,19 @@ export default function ParticleBackground() {
     };
   }, []);
 
-  return <div id="sketch-holder" style={{
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100vh',
-    zIndex: 0,
-    pointerEvents: 'none',
-    opacity: 0.3
-  }} />;
+  return (
+    <div
+      id="sketch-holder"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100vh',
+        zIndex: 0,
+        pointerEvents: 'none',
+        opacity: 0.3,
+      }}
+    />
+  );
 }

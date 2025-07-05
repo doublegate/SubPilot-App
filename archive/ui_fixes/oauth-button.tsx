@@ -10,21 +10,24 @@ interface OAuthButtonProps {
 
 export function OAuthButton({ provider, disabled = false }: OAuthButtonProps) {
   console.log(`🔐 OAuthButton[${provider}]: Component rendering`);
-  
+
   const [isLoading, setIsLoading] = useState(false);
-  
+
   useEffect(() => {
     console.log(`🔐 OAuthButton[${provider}]: useEffect mounted`);
-    
+
     // Debug DOM state after mount
     setTimeout(() => {
       const buttons = document.querySelectorAll('button');
-      const oauthButton = Array.from(buttons).find(btn => 
+      const oauthButton = Array.from(buttons).find(btn =>
         btn.textContent?.includes(provider === 'google' ? 'Google' : 'GitHub')
       );
-      
-      console.log(`🔐 OAuthButton[${provider}]: Button found in DOM?`, oauthButton);
-      
+
+      console.log(
+        `🔐 OAuthButton[${provider}]: Button found in DOM?`,
+        oauthButton
+      );
+
       if (oauthButton) {
         const rect = oauthButton.getBoundingClientRect();
         const styles = window.getComputedStyle(oauthButton);
@@ -34,14 +37,16 @@ export function OAuthButton({ provider, disabled = false }: OAuthButtonProps) {
           visibility: styles.visibility,
           opacity: styles.opacity,
           pointerEvents: styles.pointerEvents,
-          disabled: oauthButton.hasAttribute('disabled')
+          disabled: oauthButton.hasAttribute('disabled'),
         });
-        
+
         // Check if button is clickable
-        const isClickable = rect.width > 0 && rect.height > 0 && 
-                           styles.display !== 'none' && 
-                           styles.visibility !== 'hidden' &&
-                           styles.pointerEvents !== 'none';
+        const isClickable =
+          rect.width > 0 &&
+          rect.height > 0 &&
+          styles.display !== 'none' &&
+          styles.visibility !== 'hidden' &&
+          styles.pointerEvents !== 'none';
         console.log(`🔐 OAuthButton[${provider}]: Is clickable?`, isClickable);
       }
     }, 100);
@@ -49,8 +54,11 @@ export function OAuthButton({ provider, disabled = false }: OAuthButtonProps) {
 
   const handleClick = async () => {
     console.log(`🔐 OAuthButton[${provider}]: Button clicked!`);
-    console.log(`🔐 OAuthButton[${provider}]: Current state:`, { isLoading, disabled });
-    
+    console.log(`🔐 OAuthButton[${provider}]: Current state:`, {
+      isLoading,
+      disabled,
+    });
+
     setIsLoading(true);
     try {
       console.log(`🔐 OAuthButton[${provider}]: Calling signIn...`);
@@ -88,7 +96,8 @@ export function OAuthButton({ provider, disabled = false }: OAuthButtonProps) {
       ),
     },
     github: {
-      className: 'bg-[#24292F] hover:bg-[#24292F]/90 focus-visible:ring-[#24292F]',
+      className:
+        'bg-[#24292F] hover:bg-[#24292F]/90 focus-visible:ring-[#24292F]',
       text: 'Continue with GitHub',
       icon: (
         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">

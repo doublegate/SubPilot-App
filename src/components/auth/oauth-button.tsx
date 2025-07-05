@@ -48,7 +48,8 @@ export function OAuthButton({ provider, disabled = false }: OAuthButtonProps) {
       ),
     },
     github: {
-      className: 'bg-[#24292F] hover:bg-[#24292F]/90 focus-visible:ring-[#24292F]',
+      className:
+        'bg-[#24292F] hover:bg-[#24292F]/90 focus-visible:ring-[#24292F]',
       text: 'Continue with GitHub',
       icon: (
         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">

@@ -20,7 +20,7 @@ export function ThemeToggleStandalone() {
   // Return a placeholder with the same dimensions to prevent layout shift
   if (!mounted) {
     return (
-      <div className="absolute right-4 top-4 md:right-8 md:top-8 h-10 w-10" />
+      <div className="absolute right-4 top-4 h-10 w-10 md:right-8 md:top-8" />
     );
   }
 
@@ -29,7 +29,7 @@ export function ThemeToggleStandalone() {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="absolute right-4 top-4 md:right-8 md:top-8 z-50 border border-border/50 bg-background/50 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground"
+      className="hover:text-accent-foreground absolute right-4 top-4 z-50 border border-border/50 bg-background/50 backdrop-blur-sm hover:bg-accent md:right-8 md:top-8"
       style={{ pointerEvents: 'auto' }}
       data-testid="theme-toggle-button"
     >
