@@ -700,3 +700,24 @@ Critical Learning (2025-07-05):
 - Market Positioning: Competitive differentiation, unique value propositions, enterprise feature emphasis
 - SubPilot-specific: v1.8.0 UI fixes and development environment optimization
 ```
+
+### TypeScript Build Configuration Pattern
+```
+Critical Learning (2025-07-05):
+- Archive directories can cause TypeScript compilation failures in CI/CD
+- Solution: Add archive directories to tsconfig.json exclude list
+- Pattern: Exclude non-production code from TypeScript compilation
+- Implementation: Added "archive" to exclude array in tsconfig.json
+- Result: CI/CD pipeline builds successfully without attempting to compile debug code
+```
+
+### GitHub Release Creation Pattern
+```
+Critical Learning (2025-07-05):
+- GitHub releases require different format than git annotated tags
+- Git tags: Detailed technical information for developers
+- GitHub releases: User-facing markdown with quick start, docker commands, highlights
+- Solution: Use gh release create with proper markdown formatting
+- Pattern: Create annotated tag for git history, then gh release for users
+- Implementation: v1.8.0 release with standard sections matching previous releases
+```
