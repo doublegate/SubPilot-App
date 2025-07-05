@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
-import { RuntimeDOMCheck } from '@/components/debug/runtime-dom-check';
 
 // Dynamically import ParticleBackground with SSR disabled
 const ParticleBackground = dynamic(
@@ -97,7 +96,6 @@ export default function HomePage() {
       id="main-content"
       className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-cyan-50 to-purple-50 dark:from-gray-900 dark:to-gray-800"
     >
-      <RuntimeDOMCheck />
       <ParticleBackground
         particleCount={500} // Increased to match Universal-Blue
         opacity={0.4} // Slightly higher opacity
