@@ -5,6 +5,41 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2025-07-05 - UI Fixes & Development Environment Optimization
+
+### 🐛 Bug Fixes & Improvements
+
+#### Development Environment Standardization
+- **Port Standardization** - Fixed all port 3001 references throughout the project, standardized to port 3000
+- **Component Organization** - Archived all debugging/testing files to `archive/ui_fixes/` for cleaner project structure
+- **Runtime Error Fixes** - Resolved runtime errors for moved components with proper path updates
+- **Plaid API Fix** - Fixed "accounts" product error by removing invalid product from Plaid configuration
+- **Theme Toggle Enhancement** - Replaced NuclearThemeToggle with standard ThemeToggleStandalone on home page
+- **CSP Improvements** - Fixed particle background Content Security Policy issues
+- **CDN Support** - Added cdnjs.cloudflare.com to CSP for p5.js library support
+
+### 🏗️ Technical Details
+
+#### Port Standardization
+- Updated all development server references from port 3001 to 3000
+- Ensures consistency across documentation and configuration files
+- Improves developer experience with standard Next.js port
+
+#### Component Cleanup
+- Moved experimental UI components to archive directory
+- Maintains clean component structure for production code
+- Preserves debugging work for future reference
+
+#### API Configuration
+- Removed unsupported "accounts" product from Plaid configuration
+- Maintains proper product list: "transactions,identity"
+- Prevents API errors during bank connection flow
+
+#### Security Policy Updates
+- Enhanced Content Security Policy for third-party libraries
+- Added proper CDN allowlisting for p5.js dependency
+- Maintains security while supporting particle animation features
+
 ## [1.7.0] - 2025-07-05 - Production Readiness & Architecture Excellence Complete ✅
 
 > **MILESTONE ACHIEVED**: Complete enterprise production readiness established with comprehensive documentation synchronization, architecture optimization, and deployment pipeline excellence. SubPilot now represents a fully mature, production-grade subscription management platform ready for Phase 4 launch and commercial deployment.
@@ -2156,6 +2191,7 @@ This is the first official release of SubPilot, marking the completion of Phase 
 
 *For detailed task tracking, see the [TODO files](./to-dos/) in the project repository.*
 
+[1.8.0]: https://github.com/doublegate/SubPilot-App/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/doublegate/SubPilot-App/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/doublegate/SubPilot-App/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/doublegate/SubPilot-App/compare/v1.4.0...v1.5.0

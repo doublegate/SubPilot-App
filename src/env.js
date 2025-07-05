@@ -39,7 +39,7 @@ export const env = createEnv({
     PLAID_ENV: z
       .enum(['sandbox', 'development', 'production'])
       .default('sandbox'),
-    PLAID_PRODUCTS: z.string().default('transactions,accounts,identity'),
+    PLAID_PRODUCTS: z.string().default('transactions,identity'),
     PLAID_COUNTRY_CODES: z.string().default('US,CA'),
     PLAID_REDIRECT_URI: z.string().url().optional(),
     PLAID_WEBHOOK_URL: z.string().url().optional(),

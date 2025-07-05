@@ -29,7 +29,7 @@ export const getPlaidConfig = (): PlaidConfig => {
       | 'production',
     products: process.env.PLAID_PRODUCTS?.split(',') ?? [
       'transactions',
-      'accounts',
+      'identity',
     ],
     countryCodes: process.env.PLAID_COUNTRY_CODES?.split(',') ?? ['US'],
     webhookUrl: process.env.PLAID_WEBHOOK_URL,
@@ -206,11 +206,11 @@ export const validatePlaidConfig = (): {
   // Validate products
   const validProducts = [
     'transactions',
-    'accounts',
     'identity',
     'assets',
     'liabilities',
     'investments',
+    'auth',
   ];
   const products = process.env.PLAID_PRODUCTS?.split(',') ?? [];
   const invalidProducts = products.filter(
