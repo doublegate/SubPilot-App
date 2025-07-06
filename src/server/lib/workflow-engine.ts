@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { getJobQueue } from './job-queue';
 import { Parser, type Value } from 'expr-eval';
+import { generateId } from '@/lib/utils';
 
 // Define workflow value types
 export type WorkflowValue =
@@ -99,7 +100,7 @@ class SimpleWorkflowEngine extends EventEmitter {
       throw new Error(`Workflow definition not found: ${definitionId}`);
     }
 
-    const instanceId = `workflow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const instanceId = generateId('workflow', 16);
 
     const instance: WorkflowInstance = {
       id: instanceId,

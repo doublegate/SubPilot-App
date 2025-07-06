@@ -196,7 +196,7 @@ export const searchSchema = z.object({
     .trim()
     .min(1, 'Search query required')
     .max(100, 'Search query too long')
-    .regex(/^[a-zA-Z0-9\s.-_']+$/, 'Invalid search characters'),
+    .regex(/^[a-zA-Z0-9\s.\-_']+$/, 'Invalid search characters'),
   filters: z.record(z.string(), z.any()).optional(),
 });
 
@@ -560,7 +560,7 @@ export const validationUtils = {
   ): string => {
     const {
       maxLength = 1000,
-      allowedChars = /^[a-zA-Z0-9\s.-_']+$/,
+      allowedChars = /^[a-zA-Z0-9\s.\-_']+$/,
       preserveCase = true,
     } = options;
 
@@ -575,7 +575,7 @@ export const validationUtils = {
 
     // Apply character whitelist if provided
     if (!allowedChars.test(sanitized)) {
-      sanitized = sanitized.replace(/[^a-zA-Z0-9\s.-_']/g, '');
+      sanitized = sanitized.replace(/[^a-zA-Z0-9\s.\-_']/g, '');
     }
 
     return sanitized.substring(0, maxLength);

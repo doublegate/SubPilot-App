@@ -1,4 +1,5 @@
 import { emitCancellationEvent } from './event-bus';
+import { generateId } from '@/lib/utils';
 
 /**
  * Mock Job Queue System for Cancellation Processing
@@ -67,7 +68,7 @@ class MockJobQueue {
     data: T,
     options: JobOptions = {}
   ): Promise<string> {
-    const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const jobId = generateId('job', 16);
 
     const job: Job<T> = {
       id: jobId,

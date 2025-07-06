@@ -10,6 +10,7 @@ import { sendRealtimeNotification } from '@/server/lib/realtime-notifications';
 import { getJobQueue } from '@/server/lib/job-queue';
 import { getWorkflowEngine } from '@/server/lib/workflow-engine';
 import type { CancellationRequestCancelResult } from '@/types/cancellation';
+import { generateId } from '@/lib/utils';
 
 // Unified cancellation request interface
 export interface UnifiedCancellationRequest {
@@ -235,8 +236,8 @@ export class UnifiedCancellationOrchestratorService {
     userId: string,
     input: UnifiedCancellationRequest
   ): Promise<UnifiedCancellationResult> {
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const orchestrationId = `orch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const requestId = generateId('req', 16);
+    const orchestrationId = generateId('orch', 16);
 
     try {
       // Log orchestration start

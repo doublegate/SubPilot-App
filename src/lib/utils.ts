@@ -170,9 +170,20 @@ export function generateId(prefix?: string, length = 12): string {
       }
     }
   } else {
-    // Last resort fallback for environments without crypto
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    // Try to import Node.js crypto module
+    try {
+      // Dynamic import for Node.js crypto module
+      const crypto = require('crypto');
+      const bytes = crypto.randomBytes(length);
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(bytes[i] % chars.length);
+      }
+    } catch {
+      // Only use Math.random as absolute last resort with warning
+      console.warn('WARNING: Using Math.random for ID generation. This is not cryptographically secure.');
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
     }
   }
 

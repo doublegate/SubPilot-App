@@ -2,6 +2,7 @@ import { type PrismaClient, type Prisma } from '@prisma/client';
 type InputJsonValue = Prisma.InputJsonValue;
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import { generateId } from '@/lib/utils';
 import {
   type UnifiedCancellationResult,
   type CancellationProgressUpdate,
@@ -1523,18 +1524,14 @@ export class UnifiedCancellationOrchestratorEnhancedService {
    * Generate unique orchestration ID
    */
   private generateOrchestrationId(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 15);
-    return `orch_${timestamp}_${random}`;
+    return generateId('orch', 16);
   }
 
   /**
    * Generate unique request ID
    */
   private generateRequestId(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 15);
-    return `req_${timestamp}_${random}`;
+    return generateId('req', 16);
   }
 
   /**
