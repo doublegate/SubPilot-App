@@ -48,8 +48,9 @@ class EmailIntegrationTester {
 
   private async prompt(question: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      if (this.rl.closed) {
-        reject(new Error('Readline interface is closed'));
+      // Check if readline is still available
+      if (!this.rl) {
+        reject(new Error('Readline interface is not available'));
         return;
       }
       
