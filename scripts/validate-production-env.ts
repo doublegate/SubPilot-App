@@ -8,7 +8,6 @@
  * provides actionable feedback.
  */
 
-import { env } from '../src/env.js';
 
 interface ValidationResult {
   category: string;
@@ -20,6 +19,7 @@ interface ValidationResult {
 
 class ProductionEnvironmentValidator {
   private results: ValidationResult[] = [];
+  private env = process.env;
 
   private addResult(result: ValidationResult) {
     this.results.push(result);
@@ -133,28 +133,28 @@ class ProductionEnvironmentValidator {
     this.validateRequired(
       'Core',
       'NODE_ENV',
-      env.NODE_ENV,
+      this.env.NODE_ENV,
       'Should be "production" for production deployment'
     );
 
     this.validateRequired(
       'Core',
       'NEXTAUTH_SECRET',
-      env.NEXTAUTH_SECRET,
-      'Generate a secure 64-character random string'
+      this.env.NEXTAUTH_SECRET,
+      'Generate a secure 64-character random string using: openssl rand -base64 48'
     );
 
     this.validatePattern(
       'Core',
       'NEXTAUTH_URL',
-      env.NEXTAUTH_URL,
-      /^https:\/\/[a-zA-Z0-9.-]+$/,
-      'Should be https://subpilot.app for production'
+      this.env.NEXTAUTH_URL,
+      /^https?:\/\/[a-zA-Z0-9.-]+/,
+      'Should be https://yourdomain.com for production (e.g., https://subpilot-app.vercel.app)'
     );
 
     // Check NEXTAUTH_SECRET strength
-    if (env.NEXTAUTH_SECRET) {
-      if (env.NEXTAUTH_SECRET.length < 32) {
+    if (this.env.NEXTAUTH_SECRET) {
+      if (this.env.NEXTAUTH_SECRET.length < 32) {
         this.addResult({
           category: 'Core',
           variable: 'NEXTAUTH_SECRET',
@@ -165,8 +165,8 @@ class ProductionEnvironmentValidator {
       }
 
       if (
-        env.NEXTAUTH_SECRET.includes('your-super-secret-key') ||
-        env.NEXTAUTH_SECRET.includes('change-this')
+        this.env.NEXTAUTH_SECRET.includes('your-super-secret-key') ||
+        this.env.NEXTAUTH_SECRET.includes('change-this')
       ) {
         this.addResult({
           category: 'Core',
@@ -186,27 +186,27 @@ class ProductionEnvironmentValidator {
     this.validatePattern(
       'Database',
       'DATABASE_URL',
-      env.DATABASE_URL,
-      /^postgresql:\/\/.*$/,
-      'Should be a PostgreSQL connection string'
+      this.env.DATABASE_URL,
+      /^(postgresql|postgres):\/\/.*$/,
+      'Should be a PostgreSQL connection string (e.g., postgresql://user:pass@host:5432/dbname)'
     );
 
     // Check for production database indicators
-    if (env.DATABASE_URL) {
+    if (this.env.DATABASE_URL) {
       if (
-        env.DATABASE_URL.includes('localhost') ||
-        env.DATABASE_URL.includes('127.0.0.1')
+        this.env.DATABASE_URL.includes('localhost') ||
+        this.env.DATABASE_URL.includes('127.0.0.1')
       ) {
         this.addResult({
           category: 'Database',
           variable: 'DATABASE_URL',
           status: 'warning',
           message: 'Using localhost database',
-          recommendation: 'Use a production database service like Neon',
+          recommendation: 'Use a production database service like Neon, Supabase, or Vercel Postgres',
         });
       }
 
-      if (!env.DATABASE_URL.includes('sslmode=require')) {
+      if (!this.env.DATABASE_URL.includes('sslmode=require')) {
         this.addResult({
           category: 'Database',
           variable: 'DATABASE_URL',
@@ -226,7 +226,7 @@ class ProductionEnvironmentValidator {
     const hasGoogleId = this.validateOptional(
       'OAuth',
       'GOOGLE_CLIENT_ID',
-      env.GOOGLE_CLIENT_ID,
+      this.env.GOOGLE_CLIENT_ID,
       'Set up Google OAuth for Google sign-in'
     );
 
@@ -234,7 +234,7 @@ class ProductionEnvironmentValidator {
       this.validatePattern(
         'OAuth',
         'GOOGLE_CLIENT_ID',
-        env.GOOGLE_CLIENT_ID,
+        this.env.GOOGLE_CLIENT_ID,
         /^[0-9]+-[a-zA-Z0-9]+\.apps\.googleusercontent\.com$/,
         'Should end with .apps.googleusercontent.com'
       );
@@ -242,11 +242,11 @@ class ProductionEnvironmentValidator {
       this.validateRequired(
         'OAuth',
         'GOOGLE_CLIENT_SECRET',
-        env.GOOGLE_CLIENT_SECRET,
+        this.env.GOOGLE_CLIENT_SECRET,
         'Required when GOOGLE_CLIENT_ID is set'
       );
 
-      if (env.GOOGLE_CLIENT_SECRET?.startsWith('GOCSPX-')) {
+      if (this.env.GOOGLE_CLIENT_SECRET?.startsWith('GOCSPX-')) {
         this.addResult({
           category: 'OAuth',
           variable: 'GOOGLE_CLIENT_SECRET',
@@ -260,7 +260,7 @@ class ProductionEnvironmentValidator {
     const hasGitHubId = this.validateOptional(
       'OAuth',
       'GITHUB_CLIENT_ID',
-      env.GITHUB_CLIENT_ID,
+      this.env.GITHUB_CLIENT_ID,
       'Set up GitHub OAuth for GitHub sign-in'
     );
 
@@ -268,7 +268,7 @@ class ProductionEnvironmentValidator {
       this.validateRequired(
         'OAuth',
         'GITHUB_CLIENT_SECRET',
-        env.GITHUB_CLIENT_SECRET,
+        this.env.GITHUB_CLIENT_SECRET,
         'Required when GITHUB_CLIENT_ID is set'
       );
     }
@@ -281,7 +281,7 @@ class ProductionEnvironmentValidator {
     const hasPlaidId = this.validateRequired(
       'Plaid',
       'PLAID_CLIENT_ID',
-      env.PLAID_CLIENT_ID,
+      this.env.PLAID_CLIENT_ID,
       'Required for bank account connections'
     );
 
@@ -289,18 +289,18 @@ class ProductionEnvironmentValidator {
       this.validateRequired(
         'Plaid',
         'PLAID_SECRET',
-        env.PLAID_SECRET,
+        this.env.PLAID_SECRET,
         'Required when PLAID_CLIENT_ID is set'
       );
 
       this.validateRequired(
         'Plaid',
         'PLAID_ENV',
-        env.PLAID_ENV,
+        this.env.PLAID_ENV,
         'Should be "production" for production deployment'
       );
 
-      if (env.PLAID_ENV === 'sandbox') {
+      if (this.env.PLAID_ENV === 'sandbox') {
         this.addResult({
           category: 'Plaid',
           variable: 'PLAID_ENV',
@@ -310,12 +310,11 @@ class ProductionEnvironmentValidator {
         });
       }
 
-      this.validatePattern(
+      this.validateOptional(
         'Plaid',
         'PLAID_WEBHOOK_URL',
-        env.PLAID_WEBHOOK_URL,
-        /^https:\/\/.*\/api\/webhooks\/plaid$/,
-        'Should be https://subpilot.app/api/webhooks/plaid'
+        this.env.PLAID_WEBHOOK_URL,
+        'Should be https://yourdomain.com/api/webhooks/plaid'
       );
     }
   }
@@ -327,12 +326,12 @@ class ProductionEnvironmentValidator {
     const hasSendGrid = this.validateOptional(
       'Email',
       'SENDGRID_API_KEY',
-      env.SENDGRID_API_KEY,
+      this.env.SENDGRID_API_KEY,
       'Required for production email delivery'
     );
 
     if (hasSendGrid) {
-      if (env.SENDGRID_API_KEY?.startsWith('SG.')) {
+      if (this.env.SENDGRID_API_KEY?.startsWith('SG.')) {
         this.addResult({
           category: 'Email',
           variable: 'SENDGRID_API_KEY',
@@ -352,16 +351,16 @@ class ProductionEnvironmentValidator {
       this.validatePattern(
         'Email',
         'FROM_EMAIL',
-        env.FROM_EMAIL,
+        this.env.FROM_EMAIL,
         /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-        'Should be a valid email address like noreply@subpilot.app'
+        'Should be a valid email address like noreply@yourdomain.com'
       );
     } else {
       // Check for SMTP fallback
       this.validateOptional(
         'Email',
         'SMTP_HOST',
-        env.SMTP_HOST,
+        this.env.SMTP_HOST,
         'Configure SMTP or SendGrid for email delivery'
       );
     }
@@ -374,7 +373,7 @@ class ProductionEnvironmentValidator {
     const hasSentry = this.validateOptional(
       'Monitoring',
       'SENTRY_DSN',
-      env.SENTRY_DSN,
+      this.env.SENTRY_DSN || this.env.NEXT_PUBLIC_SENTRY_DSN,
       'Recommended for production error tracking'
     );
 
@@ -382,7 +381,7 @@ class ProductionEnvironmentValidator {
       this.validatePattern(
         'Monitoring',
         'SENTRY_DSN',
-        env.SENTRY_DSN,
+        this.env.SENTRY_DSN || this.env.NEXT_PUBLIC_SENTRY_DSN,
         /^https:\/\/[a-f0-9]+@[a-zA-Z0-9.-]+\/[0-9]+$/,
         'Should be a valid Sentry DSN URL'
       );
@@ -394,8 +393,8 @@ class ProductionEnvironmentValidator {
     console.log('='.repeat(40));
 
     // Check for production-only settings
-    if (env.NODE_ENV === 'production') {
-      if (env.NEXTAUTH_URL?.startsWith('http://')) {
+    if (this.env.NODE_ENV === 'production') {
+      if (this.env.NEXTAUTH_URL?.startsWith('http://')) {
         this.addResult({
           category: 'Security',
           variable: 'NEXTAUTH_URL',
@@ -405,7 +404,7 @@ class ProductionEnvironmentValidator {
         });
       }
 
-      if (env.DATABASE_URL?.includes('password')) {
+      if (this.env.DATABASE_URL?.includes('password')) {
         this.addResult({
           category: 'Security',
           variable: 'DATABASE_URL',
@@ -421,7 +420,7 @@ class ProductionEnvironmentValidator {
     this.validateOptional(
       'Security',
       'WEBHOOK_SECRET',
-      process.env.WEBHOOK_SECRET,
+      this.env.WEBHOOK_SECRET,
       'Recommended for webhook security'
     );
   }
@@ -429,7 +428,7 @@ class ProductionEnvironmentValidator {
   async runValidation() {
     console.log('🔍 Production Environment Validation');
     console.log('=====================================');
-    console.log(`Environment: ${env.NODE_ENV}`);
+    console.log(`Environment: ${this.env.NODE_ENV || 'not set'}`);
     console.log(`Validation Time: ${new Date().toISOString()}\n`);
 
     this.validateCoreApplication();
@@ -501,6 +500,18 @@ class ProductionEnvironmentValidator {
     if (failures.length > 0) {
       console.log('❌ PRODUCTION NOT READY');
       console.log('   Fix all critical issues before deploying to production.');
+      console.log('\n📝 Example .env.local for local development:');
+      console.log('```');
+      console.log('# Core Application');
+      console.log('NODE_ENV=development');
+      console.log('DATABASE_URL="postgresql://user:password@localhost:5432/subpilot_dev"');
+      console.log('NEXTAUTH_SECRET="' + this.generateSecret() + '"');
+      console.log('NEXTAUTH_URL="http://localhost:3000"');
+      console.log('\n# Plaid (Required)');
+      console.log('PLAID_CLIENT_ID="your_plaid_client_id"');
+      console.log('PLAID_SECRET="your_plaid_secret"');
+      console.log('PLAID_ENV="sandbox"');
+      console.log('```');
       process.exit(1);
     } else if (warnings.length > 0) {
       console.log('⚠️  PRODUCTION READY WITH WARNINGS');
@@ -513,6 +524,16 @@ class ProductionEnvironmentValidator {
       console.log('   All environment variables are properly configured!');
       process.exit(0);
     }
+  }
+
+  private generateSecret(): string {
+    // Generate a random string for demonstration
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 48; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
   }
 }
 

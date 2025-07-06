@@ -38,9 +38,9 @@
     "db:reset": "dotenv -e .env.local -- prisma migrate reset --force",
     "init:admin": "dotenv -e .env.local -- tsx scripts/init-admin.ts",
     "audit:accessibility": "tsx scripts/accessibility-audit.ts",
-    "test:production": "tsx scripts/test-production-integrations.ts",
-    "test:email": "tsx scripts/test-email-integration.ts",
-    "validate:production": "tsx scripts/validate-production-env.ts"
+    "test:production": "dotenv -e .env.local -- tsx scripts/test-production-integrations.ts",
+    "test:email": "dotenv -e .env.local -- tsx scripts/test-email-integration.ts",
+    "validate:production": "dotenv -e .env.local -- tsx scripts/validate-production-env.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",
