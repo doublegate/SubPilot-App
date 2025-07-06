@@ -49,7 +49,7 @@ export default function Page() {
           Click the button below, and view the sample error on the Sentry{' '}
           <a
             target="_blank"
-            href="https://subpilot-app.sentry.io/issues/?project=4509622718562304"
+            href="https://subpilot-app.sentry.io/issues/?project=4509623741251584"
           >
             Issues Page
           </a>

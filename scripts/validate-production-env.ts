@@ -149,7 +149,7 @@ class ProductionEnvironmentValidator {
       'NEXTAUTH_URL',
       env.NEXTAUTH_URL,
       /^https:\/\/[a-zA-Z0-9.-]+$/,
-      'Should be https://subpilot.com for production'
+      'Should be https://subpilot.app for production'
     );
 
     // Check NEXTAUTH_SECRET strength
@@ -315,7 +315,7 @@ class ProductionEnvironmentValidator {
         'PLAID_WEBHOOK_URL',
         env.PLAID_WEBHOOK_URL,
         /^https:\/\/.*\/api\/webhooks\/plaid$/,
-        'Should be https://subpilot.com/api/webhooks/plaid'
+        'Should be https://subpilot.app/api/webhooks/plaid'
       );
     }
   }
@@ -354,7 +354,7 @@ class ProductionEnvironmentValidator {
         'FROM_EMAIL',
         env.FROM_EMAIL,
         /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-        'Should be a valid email address like noreply@subpilot.com'
+        'Should be a valid email address like noreply@subpilot.app'
       );
     } else {
       // Check for SMTP fallback
