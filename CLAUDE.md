@@ -13,7 +13,8 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 - **Previous Release**: v1.7.0 on 2025-07-05 (Production Readiness & Architecture Excellence Complete)
 - **Security Status**: All 9 critical vulnerabilities FIXED (2025-07-04)
 - **Phase 3 Completed**: 2025-06-28 (All automation features implemented)
-- **Last Updated**: 2025-07-05 02:27 EDT
+- **Latest Updates**: 2025-07-06 - Sentry v9 migration, environment variable fixes, email integration testing
+- **Last Updated**: 2025-07-06 19:17 EDT
 - Phase 2 complete (AI categorization, PWA, predictive analytics)
 - Phase 3 Agent 1: Cancellation System - COMPLETE ✅
 - Phase 3 Agent 2: AI Assistant - COMPLETE ✅
@@ -100,10 +101,13 @@ npm run test         # Run unit tests with Vitest
 npm run test:watch   # Run tests in watch mode
 npm run test:e2e     # Run Playwright E2E tests
 npm run test:coverage # Generate coverage report
+npm run test:production # Test production integrations
+npm run test:email   # Test email integration (interactive/non-interactive modes)
 
 # Build & Production
 npm run build        # Build for production
 npm run start        # Start production server
+npm run validate:production # Validate production environment variables
 ```
 
 ## 🔐 Environment Setup
@@ -720,4 +724,36 @@ Critical Learning (2025-07-05):
 - Solution: Use gh release create with proper markdown formatting
 - Pattern: Create annotated tag for git history, then gh release for users
 - Implementation: v1.8.0 release with standard sections matching previous releases
+```
+
+### Sentry v9 Migration Pattern
+```
+Critical Learning (2025-07-06):
+- Sentry v8 to v9 requires API migration from class-based to functional approach
+- Deprecated: new Replay() → Use: Sentry.replayIntegration()
+- Next.js 15 requires instrumentation hooks instead of sentry.client.config.js
+- Solution: Move client config to instrumentation-client.ts
+- Pattern: Use functional integration API with Next.js instrumentation
+- Implementation: Deleted sentry.client.config.js, updated imports and integrations
+```
+
+### Environment Variable Loading for ES Modules Pattern
+```
+Critical Learning (2025-07-06):
+- ES module imports are hoisted before code execution
+- Problem: env.js validation fails before dotenv can load .env.local
+- Solution: Use dotenv-cli in npm scripts to preload environment
+- Pattern: dotenv -e .env.local -- tsx script.ts
+- Implementation: Updated test:production, validate:production, test:email scripts
+- Result: Environment variables available before ES module evaluation
+```
+
+### SendGrid ES Module Import Pattern
+```
+Critical Learning (2025-07-06):
+- @sendgrid/mail v8 exports default object, not namespace
+- Error: sgMail.setApiKey is not a function with import * as sgMail
+- Solution: Use default import - import sgMail from '@sendgrid/mail'
+- Pattern: Check module exports when migrating to ES modules
+- Implementation: Fixed imports in sendgrid.ts and test scripts
 ```
