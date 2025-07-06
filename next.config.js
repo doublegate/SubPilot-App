@@ -33,6 +33,22 @@ const config = {
       'lh3.googleusercontent.com',
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Suppress critical dependency warnings from OpenTelemetry instrumentation
+    if (isServer) {
+      config.ignoreWarnings = [
+        {
+          module: /node_modules\/@opentelemetry\/instrumentation/,
+          message: /Critical dependency/,
+        },
+        {
+          module: /node_modules\/@sentry\/node/,
+          message: /Critical dependency/,
+        },
+      ];
+    }
+    return config;
+  },
   async headers() {
     return [
       {
