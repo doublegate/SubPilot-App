@@ -1376,7 +1376,7 @@ This is the official stable release of SubPilot, marking the completion of Phase
 #### Deployment & Operations - (pre-v1.0.0)
 
 - **Production Deployment**
-  - Live at <https://subpilot-test.vercel.app>
+  - Live at <https://subpilot-app.vercel.app>
   - Vercel hosting with Edge Functions
   - Neon PostgreSQL serverless database
   - Automated deployments from main branch
@@ -1817,7 +1817,7 @@ Version 0.1.9 represents the completion of Phase 1 MVP development, delivering a
   - Configured Neon PostgreSQL serverless database
   - Set up all environment variables properly
   - Created comprehensive deployment documentation
-  - Application live at <https://subpilot-test.vercel.app>
+  - Application live at <https://subpilot-app.vercel.app>
   - Created automated deployment testing script
   - Added Vercel-specific .gitignore patterns
 

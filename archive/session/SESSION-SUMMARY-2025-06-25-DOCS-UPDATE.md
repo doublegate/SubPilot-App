@@ -114,7 +114,7 @@ This session focused on updating all documentation files in the `docs/` director
 - **Test Coverage**: 100% pass rate (147/147 tests)
 - **Features**: All core subscription management features implemented
 - **CI/CD**: Fully operational with automated releases
-- **Live Demo**: Fully functional at https://subpilot-test.vercel.app
+- **Live Demo**: Fully functional at https://subpilot-app.vercel.app
 - **Velocity**: 250% of target (consistent high performance)
 
 ## 📚 Documentation Organization

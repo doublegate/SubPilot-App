@@ -1,12 +1,12 @@
 # Vercel Environment Variables Setup
 
-Your SubPilot app is now deployed at: https://subpilot-test-r0zks06p2-doublegate-projects.vercel.app
+Your SubPilot app is now deployed at: https://subpilot-app-r0zks06p2-doublegate-projects.vercel.app
 
 However, it needs environment variables to function properly. Follow these steps:
 
 ## 1. Access Vercel Dashboard
 
-Go to: https://vercel.com/doublegate-projects/subpilot-test/settings/environment-variables
+Go to: https://vercel.com/doublegate-projects/subpilot-app/settings/environment-variables
 
 ## 2. Add Required Environment Variables
 
@@ -18,7 +18,7 @@ Click "Add Variable" and add each of these:
 |-----|-------|-------------|
 | `DATABASE_URL` | `postgresql://user:pass@host/db` | Production |
 | `NEXTAUTH_SECRET` | Generate with: `openssl rand -base64 32` | Production |
-| `NEXTAUTH_URL` | `https://subpilot-test.vercel.app` | Production |
+| `NEXTAUTH_URL` | `https://subpilot-app.vercel.app` | Production |
 
 ### Build Variables (Already Set)
 
@@ -30,7 +30,7 @@ Click "Add Variable" and add each of these:
 
 ### Option A: Vercel Postgres (Recommended for Testing)
 
-1. Go to: https://vercel.com/doublegate-projects/subpilot-test/stores
+1. Go to: https://vercel.com/doublegate-projects/subpilot-app/stores
 2. Click "Create Database"
 3. Select "Postgres"
 4. Click "Create"
@@ -81,7 +81,7 @@ Or use the Vercel dashboard to redeploy.
 
 ## Current Deployment Status
 
-- **URL**: https://subpilot-test-r0zks06p2-doublegate-projects.vercel.app
+- **URL**: https://subpilot-app-r0zks06p2-doublegate-projects.vercel.app
 - **Status**: Deployed but needs environment variables
 - **Expected Error**: "Server error" or build errors until database is configured
 

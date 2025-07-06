@@ -280,7 +280,7 @@ SubPilot Phase 1 MVP is now 95% complete and ready for production deployment. Th
 
 **Current Environment**:
 
-- **Live Demo**: <https://subpilot-test.vercel.app>
+- **Live Demo**: <https://subpilot-app.vercel.app>
 - **Status**: Fully functional with bank sync
 - **Database**: Neon PostgreSQL (serverless)
 - **CDN**: Vercel Edge Network

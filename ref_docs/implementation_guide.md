@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-06-30  
 **Implementation Status**: 100% Complete (Phase 3 Complete)  
-**Live Demo**: [https://subpilot-test.vercel.app](https://subpilot-test.vercel.app)  
+**Live Demo**: [https://subpilot-app.vercel.app](https://subpilot-app.vercel.app)  
 **Version**: 1.5.0 - Major UI/UX Enhancements + Complete Admin Panel
 
 ## Getting Started

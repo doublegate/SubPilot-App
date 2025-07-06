@@ -36,7 +36,7 @@ vercel
 # - Set up and deploy: Y
 # - Which scope: Select your account
 # - Link to existing project: N (for first deployment)
-# - Project name: subpilot-test (or your preferred name)
+# - Project name: subpilot-app (or your preferred name)
 # - Directory: ./ (current directory)
 # - Override settings: N
 ```

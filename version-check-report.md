@@ -117,7 +117,7 @@ npm update eslint @auth/prisma-adapter
 
 ## 🚀 Deployment Status
 
-- **Production URL**: <https://subpilot-test.vercel.app>
+- **Production URL**: <https://subpilot-app.vercel.app>
 - **Node Version**: 20.18.0 (LTS)
 - **npm Version**: 10.8.0
 - **Package Manager**: npm (specified in package.json)

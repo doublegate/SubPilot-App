@@ -283,7 +283,7 @@ After CI/CD completion, artifacts will be available at:
 
 ## 🔗 Links
 
-- [Live Demo](https://subpilot-test.vercel.app)
+- [Live Demo](https://subpilot-app.vercel.app)
 - [Documentation](https://github.com/doublegate/SubPilot-App/tree/main/docs)
 - [Issue Tracker](https://github.com/doublegate/SubPilot-App/issues)
 - [Changelog](./CHANGELOG.md)

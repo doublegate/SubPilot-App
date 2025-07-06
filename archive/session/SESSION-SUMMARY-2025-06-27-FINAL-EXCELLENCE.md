@@ -95,7 +95,7 @@ Achieve absolute code quality perfection and update all project documentation to
 8. ✅ **CI/CD**: Automated testing and deployment pipeline
 
 ### Production Readiness
-- ✅ **Live Deployment**: https://subpilot-test.vercel.app
+- ✅ **Live Deployment**: https://subpilot-app.vercel.app
 - ✅ **Database**: Neon PostgreSQL with Prisma ORM
 - ✅ **Monitoring**: Error tracking and performance metrics
 - ✅ **Security**: HTTPS, authentication, rate limiting

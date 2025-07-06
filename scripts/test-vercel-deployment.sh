@@ -4,7 +4,7 @@ echo "🧪 Testing SubPilot Vercel Deployment"
 echo "======================================"
 echo ""
 
-URL="https://subpilot-test.vercel.app"
+URL="https://subpilot-app.vercel.app"
 
 echo "🏠 Testing Homepage..."
 if curl -s "$URL" | grep -q "SubPilot"; then
@@ -77,4 +77,4 @@ echo "1. Try signing up with magic link (email will be in console logs)"
 echo "2. Configure OAuth providers for Google/GitHub login"
 echo "3. Add Plaid credentials for bank integration"
 echo ""
-echo "Dashboard: https://vercel.com/doublegate-projects/subpilot-test"
+echo "Dashboard: https://vercel.com/doublegate-projects/subpilot-app"

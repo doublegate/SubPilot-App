@@ -9,6 +9,6 @@ This directory contains completed setup and deployment guides from Phase 1.
 
 ## Notes
 
-These guides were used to successfully deploy SubPilot to production on Vercel. The application is now live at https://subpilot-test.vercel.app with all environment variables properly configured.
+These guides were used to successfully deploy SubPilot to production on Vercel. The application is now live at https://subpilot-app.vercel.app with all environment variables properly configured.
 
 For current deployment instructions, refer to the active documentation in the docs/ directory.

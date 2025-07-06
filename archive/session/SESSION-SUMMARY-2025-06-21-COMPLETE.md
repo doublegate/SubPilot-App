@@ -3,7 +3,7 @@
 **Date**: 2025-06-21
 **Total Duration**: 01:00 AM - 05:13 PM EDT (16 hours 13 minutes)
 **Version Released**: v0.1.0 (Fixed & Updated)
-**Live Demo**: <https://subpilot-test.vercel.app>
+**Live Demo**: <https://subpilot-app.vercel.app>
 
 ## Executive Summary
 
@@ -172,7 +172,7 @@ This comprehensive development session transformed SubPilot from a partially ini
 - **Neon Database**: Cloud PostgreSQL configured
 - **Environment Management**: All variables set
 - **Analytics**: Vercel Analytics integrated
-- **Live URL**: <https://subpilot-test.vercel.app>
+- **Live URL**: <https://subpilot-app.vercel.app>
 
 ## Technical Implementation Details
 
@@ -307,6 +307,6 @@ The application now has a solid foundation with authentication, UI components, c
 ---
 
 *Session completed at 5:13 PM EDT on June 21, 2025*
-*Application live at: <https://subpilot-test.vercel.app>*
+*Application live at: <https://subpilot-app.vercel.app>*
 *Next session focus: Plaid integration and transaction processing*
 *Test framework fully restored with 82.4% pass rate (89/108 tests passing)*

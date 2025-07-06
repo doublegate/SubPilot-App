@@ -20,7 +20,7 @@
 - ✅ **Test Coverage** - 99.5% pass rate (391 tests passing)
 - ✅ **TypeScript Excellence** - All compilation errors resolved (56 → 0), CI/CD pipeline unblocked
 - ✅ **Edge Runtime Compatibility** - Fixed critical middleware issues + OpenAI lazy initialization
-- ✅ **Production Deployment** - Live at https://subpilot-test.vercel.app
+- ✅ **Production Deployment** - Live at https://subpilot-app.vercel.app
 - ✅ **Security Hardening** - Account lockout, audit logging, error boundaries
 - ✅ **CI/CD Pipeline Optimization** - Complete unified workflow with Docker containerization
 - ✅ **Docker Infrastructure** - Multi-platform builds, case sensitivity fixed, security scanning

@@ -26,7 +26,7 @@ This guide walks through setting up SendGrid for production email delivery, incl
 1. Go to SendGrid Dashboard → Settings → Sender Authentication
 2. Click "Authenticate Your Domain"
 3. Choose "Yes" for branded links
-4. Enter your domain: `subpilot.com`
+4. Enter your domain: `subpilot.app`
 5. SendGrid will provide DNS records
 
 ### Step 2: Add DNS Records
@@ -36,21 +36,21 @@ Add these DNS records to your domain provider (example values):
 ```dns
 # CNAME Records for Domain Authentication
 Record Type: CNAME
-Host: s1._domainkey.subpilot.com
+Host: s1._domainkey.subpilot.app
 Value: s1.domainkey.u12345.wl123.sendgrid.net
 
 Record Type: CNAME
-Host: s2._domainkey.subpilot.com
+Host: s2._domainkey.subpilot.app
 Value: s2.domainkey.u12345.wl123.sendgrid.net
 
 # CNAME for Link Branding
 Record Type: CNAME
-Host: 12345.subpilot.com
+Host: 12345.subpilot.app
 Value: sendgrid.net
 
 # TXT Record for SPF
 Record Type: TXT
-Host: subpilot.com
+Host: subpilot.app
 Value: v=spf1 include:sendgrid.net ~all
 ```
 
@@ -76,8 +76,8 @@ Add to your production environment:
 
 ```bash
 SENDGRID_API_KEY="SG.your-sendgrid-api-key-here"
-FROM_EMAIL="noreply@subpilot.com"
-SUPPORT_EMAIL="support@subpilot.com"
+FROM_EMAIL="noreply@subpilot.app"
+SUPPORT_EMAIL="support@subpilot.app"
 ```
 
 ## 📄 Email Templates
@@ -106,33 +106,33 @@ SUPPORT_EMAIL="support@subpilot.com"
         <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #06B6D4; font-size: 24px; font-weight: bold; margin: 0;">SubPilot</h1>
         </div>
-        
+
         <!-- Main Content -->
         <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             <h1 style="color: #1f2937; margin-top: 0;">Welcome to SubPilot, {{user_name}}! 🎉</h1>
-            
+
             <p style="color: #4b5563; line-height: 1.6;">We're excited to help you take control of your recurring subscriptions and save money.</p>
-            
+
             <p style="color: #4b5563; line-height: 1.6;">Get started by:</p>
             <ul style="color: #4b5563; line-height: 1.6;">
                 <li>Connecting your first bank account</li>
                 <li>Reviewing detected subscriptions</li>
                 <li>Setting up cancellation alerts</li>
             </ul>
-            
+
             <div style="text-align: center; margin: 30px 0;">
                 <a href="{{login_url}}" style="display: inline-block; padding: 12px 24px; background: #06B6D4; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">Get Started</a>
             </div>
-            
+
             <p style="color: #4b5563; line-height: 1.6;">If you have any questions, feel free to reach out to our support team.</p>
         </div>
-        
+
         <!-- Footer -->
         <div style="text-align: center; margin-top: 40px; color: #6b7280; font-size: 14px;">
             <p>Best regards,<br>The SubPilot Team</p>
             <p>
-                <a href="https://subpilot.com" style="color: #06B6D4;">subpilot.com</a> | 
-                <a href="https://subpilot.com/support" style="color: #06B6D4;">Support</a> | 
+                <a href="https://subpilot.app" style="color: #06B6D4;">subpilot.app</a> | 
+                <a href="https://subpilot.app/support" style="color: #06B6D4;">Support</a> | 
                 <a href="{{unsubscribe_url}}" style="color: #6b7280;">Unsubscribe</a>
             </p>
         </div>
@@ -185,8 +185,8 @@ SUPPORT_EMAIL="support@subpilot.com"
         <div style="text-align: center; margin-top: 40px; color: #6b7280; font-size: 14px;">
             <p>Best regards,<br>The SubPilot Team</p>
             <p>
-                <a href="https://subpilot.com" style="color: #06B6D4;">subpilot.com</a> | 
-                <a href="https://subpilot.com/support" style="color: #06B6D4;">Support</a>
+                <a href="https://subpilot.app" style="color: #06B6D4;">subpilot.app</a> | 
+                <a href="https://subpilot.app/support" style="color: #06B6D4;">Support</a>
             </p>
         </div>
     </div>
@@ -235,7 +235,7 @@ SUPPORT_EMAIL="support@subpilot.com"
             
             <div style="text-align: center; margin: 30px 0;">
                 <a href="{{cancel_url}}" style="display: inline-block; padding: 12px 24px; background: #ef4444; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; margin: 5px;">Help Me Cancel</a>
-                <a href="https://subpilot.com/dashboard" style="display: inline-block; padding: 12px 24px; background: #06B6D4; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; margin: 5px;">View Dashboard</a>
+                <a href="https://subpilot.app/dashboard" style="display: inline-block; padding: 12px 24px; background: #06B6D4; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; margin: 5px;">View Dashboard</a>
             </div>
             
             <p style="color: #6b7280; font-size: 14px; line-height: 1.6;"><em>This alert was sent because you have subscription monitoring enabled. You can adjust your notification preferences in your dashboard.</em></p>
@@ -245,9 +245,9 @@ SUPPORT_EMAIL="support@subpilot.com"
         <div style="text-align: center; margin-top: 40px; color: #6b7280; font-size: 14px;">
             <p>Best regards,<br>The SubPilot Team</p>
             <p>
-                <a href="https://subpilot.com/dashboard" style="color: #06B6D4;">Dashboard</a> | 
-                <a href="https://subpilot.com/settings" style="color: #06B6D4;">Settings</a> | 
-                <a href="https://subpilot.com/support" style="color: #06B6D4;">Support</a>
+                <a href="https://subpilot.app/dashboard" style="color: #06B6D4;">Dashboard</a> | 
+                <a href="https://subpilot.app/settings" style="color: #06B6D4;">Settings</a> | 
+                <a href="https://subpilot.app/support" style="color: #06B6D4;">Support</a>
             </p>
         </div>
     </div>
@@ -258,6 +258,7 @@ SUPPORT_EMAIL="support@subpilot.com"
 ### Step 2: Get Template IDs
 
 After creating each template:
+
 1. Note the Template ID (format: `d-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`)
 2. Update `src/lib/email-templates/production.ts`:
 
@@ -291,7 +292,7 @@ export const SENDGRID_TEMPLATES = {
 ### Step 2: Set Up Webhooks (Optional)
 
 1. Go to Settings → Mail Settings → Event Webhook
-2. HTTP Post URL: `https://subpilot.com/api/webhooks/sendgrid`
+2. HTTP Post URL: `https://subpilot.app/api/webhooks/sendgrid`
 3. Select events to track:
    - Delivered
    - Opened
@@ -316,7 +317,7 @@ export const SENDGRID_TEMPLATES = {
 npm run test:email-integration
 
 # Or test directly with curl
-curl -X POST "https://subpilot.com/api/test/email" \
+curl -X POST "https://subpilot.app/api/test/email" \
   -H "Content-Type: application/json" \
   -d '{"email": "test@example.com"}'
 ```

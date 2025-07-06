@@ -23,7 +23,7 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 - Nine-Agent Excellence: Multi-agent parallel execution achieving 96%+ error reduction ✅
 - CI/CD Pipeline: Fully operational with deployment readiness ✅
 - Performance: 95/100 Lighthouse score
-- Live at: https://subpilot-test.vercel.app
+- Live at: https://subpilot-app.vercel.app
 - GitHub Release: https://github.com/doublegate/SubPilot-App/releases/tag/v1.8.0
 
 ## 🏗️ Architecture Overview

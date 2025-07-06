@@ -7,7 +7,7 @@
   <p>A modern web platform for monitoring, managing, and canceling subscriptions</p>
   
   <p><strong>🚀 v1.8.0: UI Fixes & Development Environment Optimization - July 5, 2025!</strong></p>
-  <p><strong>Current Version:</strong> v1.8.0 | <strong>Live Demo:</strong> <a href="https://subpilot-test.vercel.app">subpilot-test.vercel.app</a></p>
+  <p><strong>Current Version:</strong> v1.8.0 | <strong>Live Demo:</strong> <a href="https://subpilot-app.vercel.app">subpilot-app.vercel.app</a></p>
   <p><strong>Status:</strong> Phase 3 Complete ✅ | Production Ready ✅ | Enterprise Architecture ✅ | Commercial Launch Ready ✅ | Phase 4 Launch</p>
   <p><strong>Latest:</strong> Enterprise Production Readiness + Architecture Excellence + Commercial Launch Foundation ✅</p>
 </div>

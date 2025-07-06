@@ -7,12 +7,14 @@ This guide walks through the complete production setup for SubPilot, ensuring al
 ### Phase 1: OAuth Provider Setup ✅
 
 #### Google OAuth Production App
+
 1. **Create Production Google Cloud Project**
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
    - Create new project: "SubPilot Production"
    - Enable Google+ API and OAuth consent screen
 
 2. **Configure OAuth Consent Screen**
+
    ```
    Application name: SubPilot
    User support email: support@subpilot.com
@@ -34,6 +36,7 @@ This guide walks through the complete production setup for SubPilot, ensuring al
    - Add domain to authorized domains list
 
 #### GitHub OAuth Production App
+
 1. **Create GitHub OAuth App**
    - Go to GitHub Settings > Developer settings > OAuth Apps
    - Application name: SubPilot
@@ -48,12 +51,14 @@ This guide walks through the complete production setup for SubPilot, ensuring al
 ### Phase 2: Email Service Setup ✅
 
 #### SendGrid Production Configuration
+
 1. **Create SendGrid Account**
    - Sign up at [SendGrid](https://sendgrid.com/)
    - Choose appropriate pricing tier
    - Complete account verification
 
 2. **Domain Authentication**
+
    ```bash
    # Add these DNS records to your domain provider:
    
@@ -79,6 +84,7 @@ This guide walks through the complete production setup for SubPilot, ensuring al
    - Configure reverse DNS (optional)
 
 #### Email Templates Setup
+
 1. **Create Production Email Templates**
    - Welcome email template
    - Password reset template
@@ -87,6 +93,7 @@ This guide walks through the complete production setup for SubPilot, ensuring al
    - Weekly summary template
 
 2. **Template Variables**
+
    ```handlebars
    Subject: Welcome to SubPilot, {{user.name}}!
    
@@ -104,12 +111,14 @@ This guide walks through the complete production setup for SubPilot, ensuring al
 ### Phase 3: Monitoring & Error Tracking ✅
 
 #### Sentry Error Tracking
+
 1. **Create Sentry Project**
    - Sign up at [Sentry](https://sentry.io/)
    - Create new project for Next.js
    - Note the DSN for environment variables
 
 2. **Install Sentry SDK**
+
    ```bash
    npm install @sentry/nextjs @sentry/tracing
    ```
@@ -121,6 +130,7 @@ This guide walks through the complete production setup for SubPilot, ensuring al
    - Add to `next.config.js`
 
 #### Vercel Analytics & Monitoring
+
 1. **Enable Vercel Analytics**
    - Already configured with `@vercel/analytics`
    - Enable in Vercel dashboard
@@ -134,6 +144,7 @@ This guide walks through the complete production setup for SubPilot, ensuring al
 ### Phase 4: Environment Variables ✅
 
 #### Production Environment Setup
+
 ```bash
 # Database
 DATABASE_URL="postgresql://user:pass@neon-prod.neon.tech/subpilot_prod"
@@ -173,12 +184,14 @@ ENABLE_QUERY_LOGGING="false"
 ### Phase 5: Plaid Production Setup ✅
 
 #### Plaid Production Environment
+
 1. **Apply for Plaid Production Access**
    - Complete Plaid production application
    - Provide business documentation
    - Pass security review
 
 2. **Production Configuration**
+
    ```typescript
    // Configure for production environment
    const plaidConfig = {
@@ -198,16 +211,19 @@ ENABLE_QUERY_LOGGING="false"
 ### Phase 6: Security Hardening ✅
 
 #### SSL/TLS Configuration
+
 - Ensure HTTPS-only in production
 - Configure proper security headers
 - Implement HSTS
 
 #### Database Security
+
 - Use connection pooling
 - Enable SSL connections
 - Regular security patches
 
 #### API Security
+
 - Rate limiting (already implemented)
 - CSRF protection (already implemented)
 - Input validation and sanitization
@@ -215,6 +231,7 @@ ENABLE_QUERY_LOGGING="false"
 ### Phase 7: Performance Optimization ✅
 
 #### Caching Strategy
+
 ```typescript
 // Redis for session storage (optional)
 REDIS_URL="redis://prod-redis-url"
@@ -224,6 +241,7 @@ REDIS_URL="redis://prod-redis-url"
 ```
 
 #### Database Optimization
+
 - Connection pooling
 - Query optimization
 - Index analysis
@@ -231,11 +249,13 @@ REDIS_URL="redis://prod-redis-url"
 ### Phase 8: Backup & Recovery ✅
 
 #### Database Backups
+
 - Automated daily backups (Neon)
 - Point-in-time recovery
 - Cross-region backup storage
 
 #### Application Backups
+
 - Git repository backups
 - Environment variable backups (encrypted)
 - Configuration backups
@@ -243,6 +263,7 @@ REDIS_URL="redis://prod-redis-url"
 ## 🚀 Deployment Steps
 
 ### 1. Vercel Production Deployment
+
 ```bash
 # Connect to GitHub for automatic deployments
 vercel --prod
@@ -253,6 +274,7 @@ vercel --prod
 ```
 
 ### 2. Domain Configuration
+
 ```bash
 # DNS Records
 A     subpilot.com → Vercel IP
@@ -266,6 +288,7 @@ CNAME s2._domainkey.subpilot.com → [SendGrid CNAME]
 ```
 
 ### 3. Final Testing Checklist
+
 - [ ] OAuth login flows (Google, GitHub, Email)
 - [ ] Email delivery (welcome, magic link, notifications)
 - [ ] Plaid bank connections
@@ -281,16 +304,19 @@ CNAME s2._domainkey.subpilot.com → [SendGrid CNAME]
 ## 🔧 Maintenance Tasks
 
 ### Daily
+
 - Monitor error rates in Sentry
 - Check email delivery metrics
 - Verify Plaid webhook processing
 
 ### Weekly
+
 - Review performance metrics
 - Check database performance
 - Update dependencies (security patches)
 
 ### Monthly
+
 - SSL certificate renewal check
 - Security audit
 - Performance optimization review
@@ -299,6 +325,7 @@ CNAME s2._domainkey.subpilot.com → [SendGrid CNAME]
 ## 📞 Emergency Contacts
 
 ### Service Providers
+
 - **Vercel Support**: Enterprise support channel
 - **Neon Database**: Support tickets
 - **SendGrid Support**: Email support
@@ -306,6 +333,7 @@ CNAME s2._domainkey.subpilot.com → [SendGrid CNAME]
 - **Sentry Support**: Error tracking support
 
 ### On-Call Procedures
+
 1. Check Sentry for error details
 2. Verify Vercel deployment status
 3. Check database connectivity

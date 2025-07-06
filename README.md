@@ -17,7 +17,7 @@
     <a href="https://github.com/doublegate/SubPilot-App/releases">
       <img src="https://img.shields.io/github/v/release/doublegate/SubPilot-App?style=for-the-badge&color=blue" alt="Version">
     </a>
-    <a href="https://subpilot-test.vercel.app">
+    <a href="https://subpilot-app.vercel.app">
       <img src="https://img.shields.io/badge/🚀_Live_Demo-Production_Ready-brightgreen?style=for-the-badge" alt="Live Demo">
     </a>
     <a href="./LICENSE">
@@ -461,13 +461,13 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) for 
   <h2>🚀 Ready to Transform Your Subscription Management?</h2>
 
   <p>
-    <a href="https://subpilot-test.vercel.app" target="_blank">
+    <a href="https://subpilot-app.vercel.app" target="_blank">
       <img src="https://img.shields.io/badge/🌟_Try_Live_Demo-Production_Ready-brightgreen?style=for-the-badge&logoColor=white" alt="Live Demo">
     </a>
   </p>
 
   <p>
-    <a href="https://subpilot-test.vercel.app">🔗 Live Demo</a> •
+    <a href="https://subpilot-app.vercel.app">🔗 Live Demo</a> •
     <a href="./docs">📚 Documentation</a> •
     <a href="https://github.com/doublegate/SubPilot-App/releases">📦 Releases</a> •
     <a href="./CONTRIBUTING.md">🤝 Contribute</a>

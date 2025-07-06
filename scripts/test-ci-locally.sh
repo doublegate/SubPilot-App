@@ -148,9 +148,9 @@ fi
 
 # Test Docker build
 echo "🐳 Testing Docker build..."
-if docker build -t subpilot-test . >/dev/null 2>&1; then
+if docker build -t subpilot-app . >/dev/null 2>&1; then
     print_status "Docker build successful"
-    docker rmi subpilot-test >/dev/null 2>&1 || true
+    docker rmi subpilot-app >/dev/null 2>&1 || true
 else
     print_error "Docker build failed"
     exit 1

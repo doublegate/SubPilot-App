@@ -279,3 +279,5 @@ certs/
 !certs/README.md
 private/
 !private/.gitkeep
+# Sentry Config File
+.env.sentry-build-plugin

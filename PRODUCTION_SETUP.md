@@ -49,16 +49,20 @@ This will check all required environment variables and provide specific guidance
 ### Step 2: OAuth Provider Setup
 
 #### Google OAuth (Required for Google Sign-in)
+
 1. Follow [Google OAuth Setup Guide](docs/OAUTH_SETUP.md#google-oauth-setup)
 2. Add environment variables:
+
    ```bash
    GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
    GOOGLE_CLIENT_SECRET="GOCSPX-your-client-secret"
    ```
 
 #### GitHub OAuth (Required for GitHub Sign-in)
+
 1. Follow [GitHub OAuth Setup Guide](docs/OAUTH_SETUP.md#github-oauth-setup)
 2. Add environment variables:
+
    ```bash
    GITHUB_CLIENT_ID="your-github-client-id"
    GITHUB_CLIENT_SECRET="your-github-client-secret"
@@ -67,19 +71,23 @@ This will check all required environment variables and provide specific guidance
 ### Step 3: Email Service Setup
 
 #### SendGrid (Required for Email Delivery)
+
 1. Follow [SendGrid Setup Guide](docs/SENDGRID_SETUP.md)
 2. Add environment variables:
+
    ```bash
    SENDGRID_API_KEY="SG.your-sendgrid-api-key"
-   FROM_EMAIL="noreply@subpilot.com"
+   FROM_EMAIL="noreply@subpilot.app"
    ```
 
 ### Step 4: Plaid Production Application
 
 #### Production Bank Integration
+
 1. Apply for Plaid production access
 2. Complete business verification
 3. Add production credentials:
+
    ```bash
    PLAID_CLIENT_ID="your-production-plaid-client-id"
    PLAID_SECRET="your-production-plaid-secret"
@@ -89,8 +97,10 @@ This will check all required environment variables and provide specific guidance
 ### Step 5: Error Tracking (Optional)
 
 #### Sentry Configuration
+
 1. Create Sentry account and project
 2. Add environment variable:
+
    ```bash
    SENTRY_DSN="https://your-sentry-dsn@sentry.io/project-id"
    ```
@@ -135,7 +145,7 @@ npm run test:email
 # Core Application
 NODE_ENV="production"
 NEXTAUTH_SECRET="your-64-character-production-secret"
-NEXTAUTH_URL="https://subpilot.com"
+NEXTAUTH_URL="https://subpilot.app"
 
 # Database
 DATABASE_URL="postgresql://production-connection-string"
@@ -148,13 +158,13 @@ GITHUB_CLIENT_SECRET="your-github-client-secret"
 
 # Email Service (required)
 SENDGRID_API_KEY="your-sendgrid-api-key"
-FROM_EMAIL="noreply@subpilot.com"
+FROM_EMAIL="noreply@subpilot.app"
 
 # Bank Integration (required)
 PLAID_CLIENT_ID="your-plaid-client-id"
 PLAID_SECRET="your-plaid-secret"
 PLAID_ENV="production"
-PLAID_WEBHOOK_URL="https://subpilot.com/api/webhooks/plaid"
+PLAID_WEBHOOK_URL="https://subpilot.app/api/webhooks/plaid"
 ```
 
 ### Optional for Production
@@ -173,6 +183,7 @@ REDIS_URL="your-redis-connection-string"
 ### Vercel Deployment
 
 1. **Connect Repository**
+
    ```bash
    # Link to Vercel (one-time setup)
    vercel --prod
@@ -184,6 +195,7 @@ REDIS_URL="your-redis-connection-string"
    - Ensure "Production" environment is selected
 
 3. **Deploy to Production**
+
    ```bash
    # Automatic deployment on main branch push
    git push origin main
@@ -196,15 +208,16 @@ REDIS_URL="your-redis-connection-string"
 
 1. **Add Domain in Vercel**
    - Go to Vercel Dashboard → Project → Settings → Domains
-   - Add `subpilot.com` and `www.subpilot.com`
+   - Add `subpilot.app` and `www.subpilot.app`
 
 2. **Configure DNS**
+
    ```dns
    # A Record
-   subpilot.com → [Vercel IP from dashboard]
+   subpilot.app → [Vercel IP from dashboard]
    
    # CNAME Record  
-   www.subpilot.com → subpilot.com
+   www.subpilot.app → subpilot.app
    ```
 
 ## 📊 Monitoring & Health Checks
@@ -213,7 +226,7 @@ REDIS_URL="your-redis-connection-string"
 
 ```bash
 # Check application health
-curl https://subpilot.com/api/health
+curl https://subpilot.app/api/health
 
 # Expected response
 {
@@ -243,21 +256,25 @@ curl https://subpilot.com/api/health
 ### Common Issues
 
 #### OAuth Login Fails
+
 - Verify redirect URIs match exactly in provider settings
 - Check client ID and secret are correct
 - Ensure HTTPS is used in production
 
 #### Email Not Delivered
+
 - Check SendGrid domain authentication
 - Verify API key has correct permissions
 - Check sender reputation in SendGrid dashboard
 
 #### Database Connection Issues
+
 - Verify DATABASE_URL is correct
 - Check SSL requirements (sslmode=require)
 - Monitor connection limits in Neon dashboard
 
 #### Plaid Integration Issues
+
 - Ensure production environment is approved
 - Verify webhook URL is accessible
 - Check Plaid production credentials
@@ -269,8 +286,9 @@ curl https://subpilot.com/api/health
    - Sentry: Error details and stack traces
 
 2. **Health Check Endpoint**
+
    ```bash
-   curl https://subpilot.com/api/health
+   curl https://subpilot.app/api/health
    ```
 
 3. **Service Status Pages**
@@ -282,6 +300,7 @@ curl https://subpilot.com/api/health
 ## 📞 Support Contacts
 
 ### Service Providers
+
 - **Vercel**: Enterprise support (if applicable)
 - **Neon**: Support tickets via dashboard
 - **SendGrid**: Support portal
@@ -289,6 +308,7 @@ curl https://subpilot.com/api/health
 - **Sentry**: Support tickets
 
 ### Documentation
+
 - [Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT.md)
 - [OAuth Setup Guide](docs/OAUTH_SETUP.md)
 - [SendGrid Setup Guide](docs/SENDGRID_SETUP.md)
@@ -299,6 +319,7 @@ curl https://subpilot.com/api/health
 ## 🎯 Next Steps
 
 1. **Run Environment Validation**
+
    ```bash
    npm run validate:production
    ```
@@ -309,6 +330,7 @@ curl https://subpilot.com/api/health
    - Apply for Plaid production access
 
 3. **Test Integrations**
+
    ```bash
    npm run test:production
    ```

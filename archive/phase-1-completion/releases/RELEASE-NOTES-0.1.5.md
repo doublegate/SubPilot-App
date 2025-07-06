@@ -67,7 +67,7 @@ This release marks a major milestone in SubPilot's development with the completi
 - **Story Points Completed**: 65+ (target was 40)
 - **Velocity**: 162.5% of target
 - **Test Coverage**: Maintained at 83.2%
-- **Live Demo**: Fully functional at https://subpilot-test.vercel.app
+- **Live Demo**: Fully functional at https://subpilot-app.vercel.app
 
 ## 🐛 Bug Fixes
 
@@ -154,7 +154,7 @@ npm run dev
 
 ## 🔗 Links
 
-- **Live Demo**: https://subpilot-test.vercel.app
+- **Live Demo**: https://subpilot-app.vercel.app
 - **Documentation**: [Project Docs](./docs/README.md)
 - **Issue Tracker**: [GitHub Issues](https://github.com/doublegate/SubPilot-App/issues)
 - **Changelog**: [CHANGELOG.md](./CHANGELOG.md)
