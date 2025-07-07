@@ -125,12 +125,15 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.plaid.com wss://ws-us3.pusher.com",
+    // Add Sentry domains and Vercel Analytics to connect-src
+    "connect-src 'self' https://api.plaid.com wss://ws-us3.pusher.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://vercel.live https://vitals.vercel-insights.com https://region1.google-analytics.com https://www.google-analytics.com",
     "frame-src 'self' https://cdn.plaid.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
+    // Add worker-src directive to allow blob: workers for Sentry
+    "worker-src 'self' blob:",
     'upgrade-insecure-requests',
   ];
 
@@ -139,7 +142,7 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
   // Referrer Policy - Use 'no-referrer' for maximum privacy
   response.headers.set('Referrer-Policy', 'no-referrer');
 
-  // Permissions Policy
+  // Permissions Policy - Remove unrecognized browsing-topics feature
   response.headers.set(
     'Permissions-Policy',
     'camera=(), microphone=(), geolocation=(), payment=(self)'
