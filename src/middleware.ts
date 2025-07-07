@@ -15,7 +15,10 @@ export async function middleware(req: NextRequest) {
 
   // Debug logging
   console.log('[Middleware] Path:', pathname);
-  console.log('[Middleware] Auth status:', isLoggedIn ? 'Logged in' : 'Not logged in');
+  console.log(
+    '[Middleware] Auth status:',
+    isLoggedIn ? 'Logged in' : 'Not logged in'
+  );
   console.log('[Middleware] Auth user:', auth?.user?.email ?? 'None');
 
   // Define protected routes
@@ -28,21 +31,31 @@ export async function middleware(req: NextRequest) {
   );
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
 
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  console.log('[Middleware] Protected route check:', { isProtectedRoute, isLoggedIn });
+  console.log('[Middleware] Auth route check:', { isAuthRoute, isLoggedIn });
+  
   // Redirect to login if accessing protected route without auth
   if (isProtectedRoute && !isLoggedIn) {
-    console.log('[Middleware] Redirecting to login - protected route without auth');
-    const url = req.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(url);
+    console.log(
+      '[Middleware] WOULD redirect to login - protected route without auth'
+    );
+    console.log('[Middleware] BUT REDIRECTS DISABLED FOR DEBUGGING');
+    // const url = req.nextUrl.clone();
+    // url.pathname = '/login';
+    // url.searchParams.set('callbackUrl', pathname);
+    // return NextResponse.redirect(url);
   }
 
   // Redirect to dashboard if accessing auth routes while logged in
   if (isAuthRoute && isLoggedIn) {
-    console.log('[Middleware] Redirecting to dashboard - auth route while logged in');
-    const url = req.nextUrl.clone();
-    url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
+    console.log(
+      '[Middleware] WOULD redirect to dashboard - auth route while logged in'
+    );
+    console.log('[Middleware] BUT REDIRECTS DISABLED FOR DEBUGGING');
+    // const url = req.nextUrl.clone();
+    // url.pathname = '/dashboard';
+    // return NextResponse.redirect(url);
   }
 
   // Apply security headers to the response

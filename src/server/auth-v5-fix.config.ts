@@ -42,7 +42,7 @@ const secret =
 
 // Get the correct URL (v5 uses AUTH_URL, v4 uses NEXTAUTH_URL)
 // In production on Vercel, use the actual deployed URL
-const authUrl = 
+const authUrl =
   process.env.AUTH_URL ??
   process.env.NEXTAUTH_URL ??
   env.NEXTAUTH_URL ??

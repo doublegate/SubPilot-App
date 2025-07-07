@@ -76,8 +76,12 @@ export async function GET() {
           // Check if provider has the expected structure
           analysis.hasOptions = !!provider.options;
           if ('clientId' in (provider.options ?? {})) {
-            analysis.hasClientId = !!(provider.options as OAuthProvider['options'])?.clientId;
-            analysis.hasClientSecret = !!(provider.options as OAuthProvider['options'])?.clientSecret;
+            analysis.hasClientId = !!(
+              provider.options as OAuthProvider['options']
+            )?.clientId;
+            analysis.hasClientSecret = !!(
+              provider.options as OAuthProvider['options']
+            )?.clientSecret;
           }
 
           // For Google provider

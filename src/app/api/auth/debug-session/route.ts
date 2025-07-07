@@ -6,24 +6,33 @@ export async function GET() {
   try {
     // Get session from auth
     const session = await auth();
-    
+
     // Get headers
     const headersList = await headers();
     const cookies = headersList.get('cookie') ?? '';
-    
+
     // Check for auth cookies
-    const hasSessionToken = cookies.includes('authjs.session-token') || cookies.includes('next-auth.session-token');
-    const hasCSRFToken = cookies.includes('authjs.csrf-token') || cookies.includes('next-auth.csrf-token');
-    
+    const hasSessionToken =
+      cookies.includes('authjs.session-token') ||
+      cookies.includes('next-auth.session-token');
+    const hasCSRFToken =
+      cookies.includes('authjs.csrf-token') ||
+      cookies.includes('next-auth.csrf-token');
+
     return NextResponse.json({
-      session: session ? {
-        user: session.user,
-        expires: session.expires,
-      } : null,
+      session: session
+        ? {
+            user: session.user,
+            expires: session.expires,
+          }
+        : null,
       cookies: {
         hasSessionToken,
         hasCSRFToken,
-        rawCookies: process.env.NODE_ENV === 'development' ? cookies : 'Hidden in production',
+        rawCookies:
+          process.env.NODE_ENV === 'development'
+            ? cookies
+            : 'Hidden in production',
       },
       environment: {
         nodeEnv: process.env.NODE_ENV,
@@ -33,9 +42,12 @@ export async function GET() {
       },
     });
   } catch (error) {
-    return NextResponse.json({
-      error: 'Failed to debug session',
-      details: String(error),
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to debug session',
+        details: String(error),
+      },
+      { status: 500 }
+    );
   }
 }

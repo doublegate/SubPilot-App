@@ -25,17 +25,20 @@ export async function GET(request: NextRequest) {
 
     // Check provider configuration at the moment of signin
     const { authConfig } = await import('@/server/auth.config');
-    const configuredProviders = authConfig.providers.map(
-      (p) => {
-        // Handle both provider objects and provider functions
-        const provider = typeof p === 'function' ? p() : p;
-        return (provider as Provider).id ?? (provider as Provider).type ?? 'unknown';
-      }
-    );
+    const configuredProviders = authConfig.providers.map(p => {
+      // Handle both provider objects and provider functions
+      const provider = typeof p === 'function' ? p() : p;
+      return (
+        (provider as Provider).id ?? (provider as Provider).type ?? 'unknown'
+      );
+    });
 
     console.log('Configured providers at signin:', configuredProviders);
     console.log('Provider requested:', provider);
-    console.log('Provider exists:', provider ? configuredProviders.includes(provider) : false);
+    console.log(
+      'Provider exists:',
+      provider ? configuredProviders.includes(provider) : false
+    );
 
     // Check if this is a configuration error scenario
     const isConfigError = provider && !configuredProviders.includes(provider);

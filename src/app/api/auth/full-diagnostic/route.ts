@@ -163,7 +163,10 @@ export async function GET() {
         // Handle both provider objects and provider functions
         const provider = typeof p === 'function' ? p() : p;
         return {
-          id: (provider as Provider).id ?? (provider as Provider).type ?? 'unknown',
+          id:
+            (provider as Provider).id ??
+            (provider as Provider).type ??
+            'unknown',
           type: (provider as Provider).type,
           name: (provider as Provider).name,
         };

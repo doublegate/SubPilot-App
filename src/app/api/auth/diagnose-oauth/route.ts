@@ -121,13 +121,13 @@ export async function GET() {
     const { authConfig } = await import('@/server/auth.config');
     diagnostics.authConfigImport = {
       providersCount: authConfig.providers?.length ?? 0,
-      providerTypes: authConfig.providers?.map(
-        (p) => {
-          // Handle both provider objects and provider functions
-          const provider = typeof p === 'function' ? p() : p;
-          return (provider as Provider).id ?? (provider as Provider).type ?? 'unknown';
-        }
-      ),
+      providerTypes: authConfig.providers?.map(p => {
+        // Handle both provider objects and provider functions
+        const provider = typeof p === 'function' ? p() : p;
+        return (
+          (provider as Provider).id ?? (provider as Provider).type ?? 'unknown'
+        );
+      }),
       sessionStrategy: authConfig.session?.strategy,
       hasAdapter: !!authConfig.adapter,
       hasCallbacks: !!authConfig.callbacks,

@@ -83,17 +83,15 @@ export async function GET() {
     result.tests.authConfigProviders = {
       success: true,
       providersCount: config.providers?.length || 0,
-      providers: config.providers?.map(
-        (p): ProviderInfo => {
-          // Handle both provider objects and provider functions
-          const provider = typeof p === 'function' ? p() : p;
-          return {
-            id: (provider as Provider).id,
-            type: (provider as Provider).type,
-            name: (provider as Provider).name,
-          };
-        }
-      ),
+      providers: config.providers?.map((p): ProviderInfo => {
+        // Handle both provider objects and provider functions
+        const provider = typeof p === 'function' ? p() : p;
+        return {
+          id: (provider as Provider).id,
+          type: (provider as Provider).type,
+          name: (provider as Provider).name,
+        };
+      }),
     };
   } catch (error) {
     result.tests.authConfigProviders = {
