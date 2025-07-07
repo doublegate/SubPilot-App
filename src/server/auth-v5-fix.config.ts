@@ -41,11 +41,13 @@ const secret =
   env.AUTH_SECRET;
 
 // Get the correct URL (v5 uses AUTH_URL, v4 uses NEXTAUTH_URL)
-const authUrl =
+// In production on Vercel, use the actual deployed URL
+const authUrl = 
   process.env.AUTH_URL ??
   process.env.NEXTAUTH_URL ??
   env.NEXTAUTH_URL ??
-  env.AUTH_URL;
+  env.AUTH_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
 
 // Log configuration for debugging
 console.log('[AUTH V5 FIX] Configuration:', {
@@ -62,6 +64,8 @@ console.log('[AUTH V5 FIX] Configuration:', {
  */
 export const authConfig: NextAuthConfig = {
   secret,
+  // Trust host for Vercel deployments
+  trustHost: true,
   session: {
     // Use JWT strategy in development for credentials provider
     strategy: env.NODE_ENV === 'development' ? 'jwt' : 'database',

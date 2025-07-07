@@ -39,6 +39,8 @@ declare module 'next-auth' {
  * @see https://authjs.dev/reference/configuration/auth-config
  */
 export const authConfig: NextAuthConfig = {
+  // Trust host for Vercel deployments
+  trustHost: true,
   session: {
     // Use JWT strategy in development for credentials provider
     strategy: env.NODE_ENV === 'development' ? 'jwt' : 'database',
