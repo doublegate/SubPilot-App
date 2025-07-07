@@ -94,7 +94,7 @@ const sentryConfig = {
   tunnelRoute: '/monitoring',
   hideSourceMaps: true,
   disableLogger: true,
-  
+
   // Enables automatic instrumentation of Vercel Cron Monitors
   automaticVercelMonitors: true,
 };

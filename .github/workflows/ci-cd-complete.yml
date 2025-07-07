@@ -92,6 +92,10 @@ jobs:
           sarif_file: 'trivy-fs-results.sarif'
 
       - name: Run code quality checks
+        env:
+          SKIP_ENV_VALIDATION: true
+          NEXTAUTH_SECRET: "ci-test-secret"
+          NEXTAUTH_URL: "http://localhost:3000"
         run: |
           echo "🔍 Running code quality checks..."
 

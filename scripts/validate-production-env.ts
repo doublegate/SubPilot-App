@@ -8,7 +8,6 @@
  * provides actionable feedback.
  */
 
-
 interface ValidationResult {
   category: string;
   variable: string;
@@ -202,7 +201,8 @@ class ProductionEnvironmentValidator {
           variable: 'DATABASE_URL',
           status: 'warning',
           message: 'Using localhost database',
-          recommendation: 'Use a production database service like Neon, Supabase, or Vercel Postgres',
+          recommendation:
+            'Use a production database service like Neon, Supabase, or Vercel Postgres',
         });
       }
 
@@ -504,7 +504,9 @@ class ProductionEnvironmentValidator {
       console.log('```');
       console.log('# Core Application');
       console.log('NODE_ENV=development');
-      console.log('DATABASE_URL="postgresql://user:password@localhost:5432/subpilot_dev"');
+      console.log(
+        'DATABASE_URL="postgresql://user:password@localhost:5432/subpilot_dev"'
+      );
       console.log('NEXTAUTH_SECRET="' + this.generateSecret() + '"');
       console.log('NEXTAUTH_URL="http://localhost:3000"');
       console.log('\n# Plaid (Required)');
@@ -528,7 +530,8 @@ class ProductionEnvironmentValidator {
 
   private generateSecret(): string {
     // Generate a random string for demonstration
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     for (let i = 0; i < 48; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));

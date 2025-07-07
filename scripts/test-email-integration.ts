@@ -8,7 +8,7 @@
  * - Template availability
  * - Email delivery (with user confirmation)
  * - Fallback HTML email functionality
- * 
+ *
  * Usage:
  *   npm run test:email              # Interactive mode
  *   npm run test:email -- --check   # Non-interactive mode (config check only)
@@ -35,12 +35,12 @@ class EmailIntegrationTester {
       input: process.stdin,
       output: process.stdout,
     });
-    
+
     // Check if running in interactive mode
     // Non-interactive if --check flag is passed or no TTY
     const checkOnly = process.argv.includes('--check');
     this.isInteractive = process.stdin.isTTY === true && !checkOnly;
-    
+
     if (checkOnly) {
       console.log('🔍 Running in check-only mode (non-interactive)\n');
     }
@@ -53,7 +53,7 @@ class EmailIntegrationTester {
         reject(new Error('Readline interface is not available'));
         return;
       }
-      
+
       this.rl.question(question, answer => {
         resolve(answer.trim());
       });
@@ -140,10 +140,10 @@ class EmailIntegrationTester {
       // Import SendGrid client directly to test connection
       const sgMailModule = await import('@sendgrid/mail');
       const sgMail = sgMailModule.default;
-      
+
       if (env.SENDGRID_API_KEY) {
         sgMail.setApiKey(env.SENDGRID_API_KEY);
-        
+
         // Test API key validity by attempting to verify sender
         // This doesn't actually send an email but validates the API key
         try {
@@ -195,7 +195,9 @@ class EmailIntegrationTester {
         test: 'SendGrid Module',
         status: 'fail',
         message: 'Failed to load SendGrid module',
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       });
       return false;
     }
@@ -258,7 +260,7 @@ class EmailIntegrationTester {
         });
 
         console.log('\n📥 Please check your email inbox (and spam folder).');
-        
+
         const received = await this.prompt(
           'Did you receive the test email? (y/N): '
         );
@@ -275,7 +277,8 @@ class EmailIntegrationTester {
             status: 'fail',
             message: 'Email not received',
             details: {
-              recommendation: 'Check spam folder, sender verification, or SendGrid logs',
+              recommendation:
+                'Check spam folder, sender verification, or SendGrid logs',
             },
           });
         }
@@ -291,7 +294,9 @@ class EmailIntegrationTester {
         test: 'Email Delivery',
         status: 'fail',
         message: 'Error during email delivery',
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       });
     }
   }
@@ -353,7 +358,9 @@ class EmailIntegrationTester {
         test: 'Welcome Email Template',
         status: 'fail',
         message: 'Failed to send welcome email',
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       });
     }
 
@@ -379,7 +386,9 @@ class EmailIntegrationTester {
         test: 'Magic Link Email Template',
         status: 'fail',
         message: 'Failed to send magic link email',
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       });
     }
 
@@ -409,7 +418,9 @@ class EmailIntegrationTester {
         test: 'Subscription Alert Email Template',
         status: 'fail',
         message: 'Failed to send subscription alert email',
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       });
     }
 
@@ -423,10 +434,10 @@ class EmailIntegrationTester {
 
     try {
       const hasConfig = await this.testConfiguration();
-      
+
       if (hasConfig) {
         const hasConnection = await this.testSendGridConnection();
-        
+
         if (hasConnection) {
           await this.testEmailDelivery();
           await this.testEmailTemplates();
@@ -478,12 +489,12 @@ class EmailIntegrationTester {
 // Run tests if script is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   const tester = new EmailIntegrationTester();
-  
+
   // Handle process termination gracefully
   process.on('SIGINT', () => {
     console.log('\n\n⚠️  Test interrupted by user');
     process.exit(0);
   });
-  
+
   void tester.runAllTests();
 }

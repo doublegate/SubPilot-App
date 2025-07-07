@@ -281,3 +281,7 @@ private/
 !private/.gitkeep
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Security scanning artifacts
+trivy-fs-results.sarif
+*.sarif
