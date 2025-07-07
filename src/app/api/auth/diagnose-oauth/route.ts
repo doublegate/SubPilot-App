@@ -5,7 +5,7 @@ export async function GET() {
   const diagnostics = {
     timestamp: new Date().toISOString(),
     nodeEnv: process.env.NODE_ENV,
-    
+
     // Raw environment variables (safely)
     rawEnv: {
       NEXTAUTH_URL: process.env.NEXTAUTH_URL,
@@ -25,22 +25,22 @@ export async function GET() {
       githubIdExists: process.env.GITHUB_CLIENT_ID !== undefined,
       githubSecretExists: process.env.GITHUB_CLIENT_SECRET !== undefined,
     },
-    
+
     // Try to import env without validation
     envImport: null as any,
     envImportError: null as any,
-    
+
     // Try to import auth config
     authConfigImport: null as any,
     authConfigError: null as any,
-    
+
     // Check NextAuth route
     nextAuthRoute: null as any,
-    
+
     // Environment validation bypass
     skipValidation: process.env.SKIP_ENV_VALIDATION,
   };
-  
+
   // Try importing env.js
   try {
     const { env } = await import('@/env');
@@ -53,27 +53,33 @@ export async function GET() {
       NEXTAUTH_SECRET: !!env.NEXTAUTH_SECRET,
     };
   } catch (error) {
-    diagnostics.envImportError = error instanceof Error ? error.message : String(error);
+    diagnostics.envImportError =
+      error instanceof Error ? error.message : String(error);
   }
-  
+
   // Try importing auth config
   try {
     const { authConfig } = await import('@/server/auth.config');
     diagnostics.authConfigImport = {
       providersCount: authConfig.providers?.length || 0,
-      providerTypes: authConfig.providers?.map((p: any) => p.id || p.type || 'unknown'),
+      providerTypes: authConfig.providers?.map(
+        (p: any) => p.id || p.type || 'unknown'
+      ),
       sessionStrategy: authConfig.session?.strategy,
       hasAdapter: !!authConfig.adapter,
       hasCallbacks: !!authConfig.callbacks,
     };
   } catch (error) {
-    diagnostics.authConfigError = error instanceof Error ? error.message : String(error);
+    diagnostics.authConfigError =
+      error instanceof Error ? error.message : String(error);
   }
-  
+
   // Check if NextAuth route exists
   try {
     const routePath = '/api/auth/providers';
-    const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const baseUrl =
+      process.env.NEXTAUTH_URL ||
+      `http://localhost:${process.env.PORT || 3000}`;
     const response = await fetch(`${baseUrl}${routePath}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
@@ -91,12 +97,12 @@ export async function GET() {
       error: error instanceof Error ? error.message : String(error),
     };
   }
-  
-  return NextResponse.json(diagnostics, { 
+
+  return NextResponse.json(diagnostics, {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
-    }
+    },
   });
 }

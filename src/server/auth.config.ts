@@ -168,22 +168,24 @@ export const authConfig: NextAuthConfig = {
       : []),
     // Only include OAuth providers if credentials are available
     // Use process.env directly as fallback for OAuth providers
-    ...((env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID) && 
-        (env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET)
+    ...((env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID) &&
+    (env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET)
       ? [
           GoogleProvider({
             clientId: env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET!,
+            clientSecret:
+              env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET!,
             allowDangerousEmailAccountLinking: false,
           }),
         ]
       : []),
-    ...((env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID) && 
-        (env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET)
+    ...((env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID) &&
+    (env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET)
       ? [
           GitHubProvider({
             clientId: env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID!,
-            clientSecret: env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET!,
+            clientSecret:
+              env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET!,
             allowDangerousEmailAccountLinking: false,
           }),
         ]
@@ -273,15 +275,30 @@ if (process.env.NODE_ENV === 'production') {
   console.log('=== Auth Config Debug (Production) ===');
   console.log('OAuth Environment Variables:');
   console.log('- GOOGLE_CLIENT_ID (env):', !!env.GOOGLE_CLIENT_ID);
-  console.log('- GOOGLE_CLIENT_ID (process.env):', !!process.env.GOOGLE_CLIENT_ID);
+  console.log(
+    '- GOOGLE_CLIENT_ID (process.env):',
+    !!process.env.GOOGLE_CLIENT_ID
+  );
   console.log('- GOOGLE_CLIENT_SECRET (env):', !!env.GOOGLE_CLIENT_SECRET);
-  console.log('- GOOGLE_CLIENT_SECRET (process.env):', !!process.env.GOOGLE_CLIENT_SECRET);
+  console.log(
+    '- GOOGLE_CLIENT_SECRET (process.env):',
+    !!process.env.GOOGLE_CLIENT_SECRET
+  );
   console.log('- GITHUB_CLIENT_ID (env):', !!env.GITHUB_CLIENT_ID);
-  console.log('- GITHUB_CLIENT_ID (process.env):', !!process.env.GITHUB_CLIENT_ID);
+  console.log(
+    '- GITHUB_CLIENT_ID (process.env):',
+    !!process.env.GITHUB_CLIENT_ID
+  );
   console.log('- GITHUB_CLIENT_SECRET (env):', !!env.GITHUB_CLIENT_SECRET);
-  console.log('- GITHUB_CLIENT_SECRET (process.env):', !!process.env.GITHUB_CLIENT_SECRET);
+  console.log(
+    '- GITHUB_CLIENT_SECRET (process.env):',
+    !!process.env.GITHUB_CLIENT_SECRET
+  );
   console.log('- Total providers configured:', authConfig.providers.length);
-  console.log('- Provider IDs:', authConfig.providers.map((p: any) => p.id || p.type).join(', '));
+  console.log(
+    '- Provider IDs:',
+    authConfig.providers.map((p: any) => p.id || p.type).join(', ')
+  );
   console.log('=====================================');
 }
 

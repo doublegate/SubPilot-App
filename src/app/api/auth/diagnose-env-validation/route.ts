@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   const diagnostics: any = {
     timestamp: new Date().toISOString(),
-    
+
     // Raw process.env values
     rawEnv: {
       GOOGLE_CLIENT_ID: {
@@ -33,16 +33,16 @@ export async function GET() {
         isUndefined: process.env.GITHUB_CLIENT_SECRET === undefined,
       },
     },
-    
+
     // Validated env values
     validatedEnv: null as any,
     envValidationError: null as any,
-    
+
     // Check getAvailableProviders
     availableProviders: null as any,
     availableProvidersError: null as any,
   };
-  
+
   // Try to import validated env
   try {
     const { env } = await import('@/env');
@@ -69,17 +69,19 @@ export async function GET() {
       },
     };
   } catch (error) {
-    diagnostics.envValidationError = error instanceof Error ? error.message : String(error);
+    diagnostics.envValidationError =
+      error instanceof Error ? error.message : String(error);
   }
-  
+
   // Try to check available providers
   try {
     const { getAvailableProviders } = await import('@/lib/auth-providers');
     diagnostics.availableProviders = getAvailableProviders();
   } catch (error) {
-    diagnostics.availableProvidersError = error instanceof Error ? error.message : String(error);
+    diagnostics.availableProvidersError =
+      error instanceof Error ? error.message : String(error);
   }
-  
+
   // Test if empty string handling is the issue
   diagnostics.emptyStringTest = {
     rawGoogleId: process.env.GOOGLE_CLIENT_ID,
@@ -87,7 +89,7 @@ export async function GET() {
     rawGithubId: process.env.GITHUB_CLIENT_ID,
     trimmedGithubId: process.env.GITHUB_CLIENT_ID?.trim(),
   };
-  
+
   return NextResponse.json(diagnostics, {
     status: 200,
     headers: {

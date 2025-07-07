@@ -3,11 +3,11 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const provider = searchParams.get('provider') || 'google';
-  
+
   const diagnostics: any = {
     timestamp: new Date().toISOString(),
     provider,
-    
+
     // Environment check
     environment: {
       NODE_ENV: process.env.NODE_ENV,
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       envValues: null,
       envError: null,
     },
-    
+
     // Provider credentials check
     credentials: {
       google: {
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         idPreview: process.env.GITHUB_CLIENT_ID?.substring(0, 15) + '...',
       },
     },
-    
+
     // NextAuth endpoints check
     authEndpoints: {
       providers: null as any,
@@ -44,39 +44,40 @@ export async function GET(request: Request) {
       session: null as any,
       csrf: null as any,
     },
-    
+
     // OAuth URLs
     oauthUrls: {
       callbackUrl: null as string | null,
       signInUrl: null as string | null,
     },
   };
-  
+
   // Determine base URL
-  const baseUrl = process.env.NEXTAUTH_URL || 
-                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-                  `http://localhost:${process.env.PORT || 3000}`;
-  
+  const baseUrl =
+    process.env.NEXTAUTH_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    `http://localhost:${process.env.PORT || 3000}`;
+
   // Check NextAuth endpoints
   const checkEndpoint = async (path: string) => {
     try {
       const response = await fetch(`${baseUrl}/api/auth/${path}`, {
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
       });
-      
+
       const result = {
         status: response.status,
         ok: response.ok,
         headers: Object.fromEntries(
-          [...response.headers.entries()].filter(([key]) => 
-            !key.toLowerCase().includes('cookie')
+          [...response.headers.entries()].filter(
+            ([key]) => !key.toLowerCase().includes('cookie')
           )
         ),
         data: null as any,
       };
-      
+
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType?.includes('application/json')) {
@@ -85,7 +86,7 @@ export async function GET(request: Request) {
           result.data = await response.text();
         }
       }
-      
+
       return result;
     } catch (error) {
       return {
@@ -93,17 +94,17 @@ export async function GET(request: Request) {
       };
     }
   };
-  
+
   // Check each endpoint
   diagnostics.authEndpoints.providers = await checkEndpoint('providers');
   diagnostics.authEndpoints.signin = await checkEndpoint('signin');
   diagnostics.authEndpoints.session = await checkEndpoint('session');
   diagnostics.authEndpoints.csrf = await checkEndpoint('csrf');
-  
+
   // Generate OAuth URLs
   diagnostics.oauthUrls.callbackUrl = `${baseUrl}/api/auth/callback/${provider}`;
   diagnostics.oauthUrls.signInUrl = `${baseUrl}/api/auth/signin/${provider}`;
-  
+
   // Check if the environment validation is the issue
   try {
     // Try to require the env file
@@ -117,9 +118,10 @@ export async function GET(request: Request) {
     };
   } catch (error) {
     diagnostics.environment.envModuleLoaded = false;
-    diagnostics.environment.envError = error instanceof Error ? error.message : String(error);
+    diagnostics.environment.envError =
+      error instanceof Error ? error.message : String(error);
   }
-  
+
   return NextResponse.json(diagnostics, {
     status: 200,
     headers: {

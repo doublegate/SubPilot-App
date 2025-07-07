@@ -13,20 +13,20 @@ export function OAuthButton({ provider, disabled = false }: OAuthButtonProps) {
 
   const handleClick = async () => {
     setIsLoading(true);
-    
+
     // Debug logging for OAuth issues
     console.log(`=== OAuth Button Click: ${provider} ===`);
     console.log('Provider:', provider);
     console.log('Callback URL:', '/dashboard');
     console.log('Current URL:', window.location.href);
     console.log('================================');
-    
+
     try {
-      const result = await signIn(provider, { 
+      const result = await signIn(provider, {
         callbackUrl: '/dashboard',
-        redirect: true  // Explicitly set redirect
+        redirect: true, // Explicitly set redirect
       });
-      
+
       console.log('SignIn result:', result);
     } catch (error) {
       console.error(`Sign-in error for ${provider}:`, error);

@@ -10,16 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🔒 Security Fixes
 
 #### DOM Security Vulnerabilities
+
 - **Fixed DOM text reinterpreted as HTML** - Resolved critical vulnerability in `archive/ui_fixes/debug-test.html` where user input could be interpreted as HTML
 - **Sanitized DOM manipulation** - Updated all DOM text insertions to use `textContent` instead of `innerHTML` to prevent XSS attacks
 - **Archive security** - Applied security fixes even to archived debugging files to maintain secure codebase
 
 #### Regular Expression Security
+
 - **Fixed overly permissive regex patterns** - Resolved 3 instances of insecure regex in `validation-schemas.ts`
 - **Tightened validation patterns** - Updated email, URL, and phone number validation to use more restrictive patterns
 - **Prevented ReDoS attacks** - Eliminated patterns that could cause Regular Expression Denial of Service
 
 #### Cryptographic Security
+
 - **Fixed insecure randomness** - Replaced `Math.random()` with cryptographically secure `crypto.getRandomValues()` in `monthly-spending.ts`
 - **Enhanced security for sensitive operations** - Ensured all random number generation for security-sensitive contexts uses proper cryptographic methods
 - **Maintained backward compatibility** - Security fixes applied without breaking existing functionality
@@ -27,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🐛 Bug Fixes
 
 #### Google OAuth Authentication
+
 - **Fixed "Missing required parameter: client_id" error** - Resolved production authentication failures
 - **Conditional OAuth rendering** - OAuth buttons now only render when valid credentials are configured
 - **Created auth-providers utility** - Server-side checking of available authentication providers
@@ -34,12 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Environment variable validation** - Proper handling of missing OAuth credentials in production
 
 #### Content Security Policy (CSP)
+
 - **Fixed Sentry connectivity** - Added Sentry ingest domains to CSP connect-src directive
 - **Enabled Vercel Analytics** - Added Vercel Analytics domains to allowed connections
 - **Worker support for Sentry** - Added `worker-src 'self' blob:` for Sentry's session replay workers
 - **Removed deprecated features** - Cleaned up unrecognized 'browsing-topics' from Permissions-Policy
 
 #### CI/CD Workflow
+
 - **Fixed linting failures** - Added required environment variables to code quality checks
 - **Resolved formatting issues** - Applied Prettier formatting to 6 files
 - **SARIF file management** - Removed tracked security scanning artifact and updated .gitignore
@@ -48,17 +54,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🎨 Improvements
 
 #### Sentry v9 Migration
+
 - **Updated to functional API** - Migrated from deprecated v8 class-based integrations to v9 functional API
 - **Next.js 15 compatibility** - Moved client configuration to `instrumentation-client.ts`
 - **Cleaned up configuration** - Removed duplicate `withSentryConfig` declarations
 - **Deleted deprecated files** - Removed obsolete `sentry.client.config.js` file
 
 #### Environment Variable Loading
+
 - **Fixed production scripts** - Resolved "Invalid environment variables" errors in validation and test scripts
 - **Updated npm scripts** - Added `dotenv-cli` to load `.env.local` before ES module imports
 - **Consistent pattern** - Applied same environment loading pattern across all production scripts
 
 #### Email Integration
+
 - **Fixed SendGrid imports** - Corrected ES module import syntax for @sendgrid/mail package
 - **Created test suite** - Added comprehensive email integration test script with interactive and non-interactive modes
 - **Enhanced readline handling** - Fixed readline interface issues with proper error handling and graceful shutdown
@@ -66,11 +75,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 📚 Developer Experience
 
 #### Email Testing
+
 - **New test command** - Added `npm run test:email` for validating SendGrid configuration
 - **Non-interactive mode** - Added `--check` flag for CI/CD email configuration validation
 - **Better error messages** - Improved error handling and user feedback in production scripts
 
 #### Authentication Debugging
+
 - **OAuth provider detection** - Clear indication of which OAuth providers are available
 - **Environment guidance** - Helpful error messages when OAuth credentials are missing
 - **Vercel deployment tips** - Documentation for adding OAuth environment variables

@@ -5,7 +5,7 @@ export async function GET() {
   try {
     // Dynamically import to ensure fresh provider configuration
     const { authConfig } = await import('@/server/auth.config');
-    
+
     // Get provider details without exposing secrets
     const providers = authConfig.providers.map((provider: any) => {
       const safeProvider: any = {
@@ -19,7 +19,8 @@ export async function GET() {
         safeProvider.hasClientId = !!provider.options?.clientId;
         safeProvider.hasClientSecret = !!provider.options?.clientSecret;
         safeProvider.clientIdLength = provider.options?.clientId?.length || 0;
-        safeProvider.authorization = provider.options?.authorization || 'default';
+        safeProvider.authorization =
+          provider.options?.authorization || 'default';
       }
 
       // Check email provider
@@ -35,9 +36,13 @@ export async function GET() {
     const nextAuthChecks = {
       hasProviders: providers.length > 0,
       providerCount: providers.length,
-      hasOAuthProviders: providers.some((p: any) => p.type === 'oauth' || p.type === 'oidc'),
+      hasOAuthProviders: providers.some(
+        (p: any) => p.type === 'oauth' || p.type === 'oidc'
+      ),
       hasEmailProvider: providers.some((p: any) => p.type === 'email'),
-      hasCredentialsProvider: providers.some((p: any) => p.type === 'credentials'),
+      hasCredentialsProvider: providers.some(
+        (p: any) => p.type === 'credentials'
+      ),
     };
 
     // Get environment status
@@ -65,7 +70,7 @@ export async function GET() {
   } catch (error) {
     console.error('Provider debug error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to debug providers',
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,

@@ -8,9 +8,13 @@ export async function GET() {
     // Check raw process.env values
     const rawEnvVars = {
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? '[REDACTED]' : undefined,
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET
+        ? '[REDACTED]'
+        : undefined,
       GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
-      GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET ? '[REDACTED]' : undefined,
+      GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET
+        ? '[REDACTED]'
+        : undefined,
       NODE_ENV: process.env.NODE_ENV,
       NEXTAUTH_URL: process.env.NEXTAUTH_URL,
       NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? '[SET]' : undefined,
@@ -37,8 +41,12 @@ export async function GET() {
 
     // Check provider configuration logic
     const providerChecks = {
-      googleProviderWouldBeIncluded: !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET),
-      githubProviderWouldBeIncluded: !!(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET),
+      googleProviderWouldBeIncluded: !!(
+        env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+      ),
+      githubProviderWouldBeIncluded: !!(
+        env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
+      ),
       credentialsProviderIncluded: env.NODE_ENV === 'development',
     };
 
@@ -58,9 +66,15 @@ export async function GET() {
     console.log('=== OAuth Debug Information ===');
     console.log('Raw env vars:', JSON.stringify(rawEnvVars, null, 2));
     console.log('Parsed env vars:', JSON.stringify(parsedEnvVars, null, 2));
-    console.log('Empty string checks:', JSON.stringify(emptyStringChecks, null, 2));
+    console.log(
+      'Empty string checks:',
+      JSON.stringify(emptyStringChecks, null, 2)
+    );
     console.log('Provider checks:', JSON.stringify(providerChecks, null, 2));
-    console.log('Configured providers:', JSON.stringify(configuredProviders, null, 2));
+    console.log(
+      'Configured providers:',
+      JSON.stringify(configuredProviders, null, 2)
+    );
     console.log('==============================');
 
     return NextResponse.json({
@@ -79,7 +93,7 @@ export async function GET() {
   } catch (error) {
     console.error('OAuth debug error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to debug OAuth configuration',
         message: error instanceof Error ? error.message : 'Unknown error',
       },

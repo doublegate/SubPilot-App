@@ -11,7 +11,7 @@ export async function GET() {
 
     // Import auth handlers
     const { handlers } = await import('@/server/auth.config');
-    
+
     // Check if handlers are properly configured
     const handlerChecks = {
       hasHandlers: !!handlers,
@@ -36,8 +36,13 @@ export async function GET() {
     }
 
     // Error: NEXTAUTH_URL mismatch
-    if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.startsWith('http')) {
-      configErrors.push('NEXTAUTH_URL must be a valid URL starting with http:// or https://');
+    if (
+      process.env.NEXTAUTH_URL &&
+      !process.env.NEXTAUTH_URL.startsWith('http')
+    ) {
+      configErrors.push(
+        'NEXTAUTH_URL must be a valid URL starting with http:// or https://'
+      );
     }
 
     // Error: Empty string OAuth credentials
@@ -49,11 +54,15 @@ export async function GET() {
     };
 
     if (oauthChecks.googleClientIdEmpty || oauthChecks.googleSecretEmpty) {
-      configErrors.push('Google OAuth credentials are empty strings (should be undefined if not set)');
+      configErrors.push(
+        'Google OAuth credentials are empty strings (should be undefined if not set)'
+      );
     }
 
     if (oauthChecks.githubClientIdEmpty || oauthChecks.githubSecretEmpty) {
-      configErrors.push('GitHub OAuth credentials are empty strings (should be undefined if not set)');
+      configErrors.push(
+        'GitHub OAuth credentials are empty strings (should be undefined if not set)'
+      );
     }
 
     // Test provider URLs
@@ -66,7 +75,8 @@ export async function GET() {
     // Sentry check
     const sentryCheck = {
       hasDSN: !!process.env.SENTRY_DSN,
-      isCapturingErrors: !!process.env.SENTRY_DSN && process.env.NODE_ENV === 'production',
+      isCapturingErrors:
+        !!process.env.SENTRY_DSN && process.env.NODE_ENV === 'production',
     };
 
     const diagnostics = {
@@ -80,12 +90,18 @@ export async function GET() {
       providerUrls,
       sentryCheck,
       recommendations: [
-        configErrors.length === 0 ? 'No configuration errors detected' : 'Fix the configuration errors above',
-        oauthChecks.googleClientIdEmpty || oauthChecks.googleSecretEmpty ? 
-          'Remove Google OAuth env vars from Vercel if not using Google OAuth' : null,
-        oauthChecks.githubClientIdEmpty || oauthChecks.githubSecretEmpty ? 
-          'Remove GitHub OAuth env vars from Vercel if not using GitHub OAuth' : null,
-        !csrfCheck.urlsMatch ? 'Ensure NEXTAUTH_URL matches your deployment URL' : null,
+        configErrors.length === 0
+          ? 'No configuration errors detected'
+          : 'Fix the configuration errors above',
+        oauthChecks.googleClientIdEmpty || oauthChecks.googleSecretEmpty
+          ? 'Remove Google OAuth env vars from Vercel if not using Google OAuth'
+          : null,
+        oauthChecks.githubClientIdEmpty || oauthChecks.githubSecretEmpty
+          ? 'Remove GitHub OAuth env vars from Vercel if not using GitHub OAuth'
+          : null,
+        !csrfCheck.urlsMatch
+          ? 'Ensure NEXTAUTH_URL matches your deployment URL'
+          : null,
       ].filter(Boolean),
     };
 
@@ -97,7 +113,7 @@ export async function GET() {
   } catch (error) {
     console.error('OAuth flow test error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to test OAuth flow',
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,

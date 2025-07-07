@@ -18,34 +18,62 @@ export async function GET(request: NextRequest) {
 
     // Check provider configuration at the moment of signin
     const { authConfig } = await import('@/server/auth.config');
-    const configuredProviders = authConfig.providers.map((p: any) => p.id || p.type);
-    
+    const configuredProviders = authConfig.providers.map(
+      (p: any) => p.id || p.type
+    );
+
     console.log('Configured providers at signin:', configuredProviders);
     console.log('Provider requested:', provider);
     console.log('Provider exists:', configuredProviders.includes(provider));
 
     // Check if this is a configuration error scenario
     const isConfigError = provider && !configuredProviders.includes(provider);
-    
+
     if (isConfigError) {
-      console.error(`CONFIGURATION ERROR: Provider "${provider}" requested but not configured!`);
+      console.error(
+        `CONFIGURATION ERROR: Provider "${provider}" requested but not configured!`
+      );
       console.log('Available providers:', configuredProviders);
-      
+
       // Check why the provider might not be configured
       if (provider === 'google') {
         console.log('Google OAuth check:');
-        console.log('- GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
-        console.log('- GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
-        console.log('- ID is empty string:', process.env.GOOGLE_CLIENT_ID === '');
-        console.log('- Secret is empty string:', process.env.GOOGLE_CLIENT_SECRET === '');
+        console.log(
+          '- GOOGLE_CLIENT_ID:',
+          process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET'
+        );
+        console.log(
+          '- GOOGLE_CLIENT_SECRET:',
+          process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET'
+        );
+        console.log(
+          '- ID is empty string:',
+          process.env.GOOGLE_CLIENT_ID === ''
+        );
+        console.log(
+          '- Secret is empty string:',
+          process.env.GOOGLE_CLIENT_SECRET === ''
+        );
       }
-      
+
       if (provider === 'github') {
         console.log('GitHub OAuth check:');
-        console.log('- GITHUB_CLIENT_ID:', process.env.GITHUB_CLIENT_ID ? 'SET' : 'NOT SET');
-        console.log('- GITHUB_CLIENT_SECRET:', process.env.GITHUB_CLIENT_SECRET ? 'SET' : 'NOT SET');
-        console.log('- ID is empty string:', process.env.GITHUB_CLIENT_ID === '');
-        console.log('- Secret is empty string:', process.env.GITHUB_CLIENT_SECRET === '');
+        console.log(
+          '- GITHUB_CLIENT_ID:',
+          process.env.GITHUB_CLIENT_ID ? 'SET' : 'NOT SET'
+        );
+        console.log(
+          '- GITHUB_CLIENT_SECRET:',
+          process.env.GITHUB_CLIENT_SECRET ? 'SET' : 'NOT SET'
+        );
+        console.log(
+          '- ID is empty string:',
+          process.env.GITHUB_CLIENT_ID === ''
+        );
+        console.log(
+          '- Secret is empty string:',
+          process.env.GITHUB_CLIENT_SECRET === ''
+        );
       }
     }
 
@@ -60,14 +88,16 @@ export async function GET(request: NextRequest) {
       isConfigError,
       diagnostics: {
         providerRequested: provider,
-        providerConfigured: provider ? configuredProviders.includes(provider) : false,
+        providerConfigured: provider
+          ? configuredProviders.includes(provider)
+          : false,
         totalProviders: configuredProviders.length,
       },
     });
   } catch (error) {
     console.error('Signin intercept error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to intercept signin',
         message: error instanceof Error ? error.message : 'Unknown error',
       },

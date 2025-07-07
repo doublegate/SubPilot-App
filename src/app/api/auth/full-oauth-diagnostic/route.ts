@@ -68,41 +68,59 @@ export async function GET() {
 
     // 4. Identify the exact issue
     const issues = [];
-    
+
     // Check for empty string issue
-    if (rawEnvCheck.GOOGLE_CLIENT_ID.isEmpty || rawEnvCheck.GOOGLE_CLIENT_SECRET.isEmpty) {
+    if (
+      rawEnvCheck.GOOGLE_CLIENT_ID.isEmpty ||
+      rawEnvCheck.GOOGLE_CLIENT_SECRET.isEmpty
+    ) {
       issues.push({
         severity: 'CRITICAL',
         issue: 'Google OAuth credentials are empty strings',
-        impact: 'Provider will not be included due to emptyStringAsUndefined setting',
-        solution: 'In Vercel dashboard, DELETE the Google OAuth env vars completely (dont leave them empty)',
+        impact:
+          'Provider will not be included due to emptyStringAsUndefined setting',
+        solution:
+          'In Vercel dashboard, DELETE the Google OAuth env vars completely (dont leave them empty)',
       });
     }
-    
-    if (rawEnvCheck.GITHUB_CLIENT_ID.isEmpty || rawEnvCheck.GITHUB_CLIENT_SECRET.isEmpty) {
+
+    if (
+      rawEnvCheck.GITHUB_CLIENT_ID.isEmpty ||
+      rawEnvCheck.GITHUB_CLIENT_SECRET.isEmpty
+    ) {
       issues.push({
         severity: 'CRITICAL',
         issue: 'GitHub OAuth credentials are empty strings',
-        impact: 'Provider will not be included due to emptyStringAsUndefined setting',
-        solution: 'In Vercel dashboard, DELETE the GitHub OAuth env vars completely (dont leave them empty)',
+        impact:
+          'Provider will not be included due to emptyStringAsUndefined setting',
+        solution:
+          'In Vercel dashboard, DELETE the GitHub OAuth env vars completely (dont leave them empty)',
       });
     }
 
     // Check for provider inclusion logic
     const providerLogicCheck = {
       google: {
-        envVarsPresent: parsedEnvCheck.GOOGLE_CLIENT_ID.hasValue && parsedEnvCheck.GOOGLE_CLIENT_SECRET.hasValue,
-        providerIncluded: configuredProviders.some((p: any) => p.id === 'google'),
+        envVarsPresent:
+          parsedEnvCheck.GOOGLE_CLIENT_ID.hasValue &&
+          parsedEnvCheck.GOOGLE_CLIENT_SECRET.hasValue,
+        providerIncluded: configuredProviders.some(
+          (p: any) => p.id === 'google'
+        ),
       },
       github: {
-        envVarsPresent: parsedEnvCheck.GITHUB_CLIENT_ID.hasValue && parsedEnvCheck.GITHUB_CLIENT_SECRET.hasValue,
-        providerIncluded: configuredProviders.some((p: any) => p.id === 'github'),
+        envVarsPresent:
+          parsedEnvCheck.GITHUB_CLIENT_ID.hasValue &&
+          parsedEnvCheck.GITHUB_CLIENT_SECRET.hasValue,
+        providerIncluded: configuredProviders.some(
+          (p: any) => p.id === 'github'
+        ),
       },
     };
 
     // 5. Generate clear action items
     const actionItems = [];
-    
+
     if (issues.length > 0) {
       actionItems.push('🚨 IMMEDIATE ACTIONS REQUIRED:');
       issues.forEach(issue => {
@@ -110,14 +128,19 @@ export async function GET() {
       });
     }
 
-    if (!providerLogicCheck.google.providerIncluded && !providerLogicCheck.github.providerIncluded) {
+    if (
+      !providerLogicCheck.google.providerIncluded &&
+      !providerLogicCheck.github.providerIncluded
+    ) {
       actionItems.push('ℹ️ Currently only email authentication is available');
     }
 
     // Final diagnostic output
     const diagnostic = {
       summary: {
-        hasOAuthConfigured: providerLogicCheck.google.providerIncluded || providerLogicCheck.github.providerIncluded,
+        hasOAuthConfigured:
+          providerLogicCheck.google.providerIncluded ||
+          providerLogicCheck.github.providerIncluded,
         googleConfigured: providerLogicCheck.google.providerIncluded,
         githubConfigured: providerLogicCheck.github.providerIncluded,
         totalProviders: configuredProviders.length,
@@ -129,18 +152,21 @@ export async function GET() {
       providerLogicCheck,
       criticalIssues: issues,
       actionItems,
-      rootCause: issues.length > 0 ? 
-        'Empty string environment variables are being treated as undefined by env.js' :
-        'No issues detected - check if OAuth apps are properly configured in Google/GitHub',
+      rootCause:
+        issues.length > 0
+          ? 'Empty string environment variables are being treated as undefined by env.js'
+          : 'No issues detected - check if OAuth apps are properly configured in Google/GitHub',
     };
 
     // Log the summary for server logs
     console.log('📊 DIAGNOSTIC SUMMARY:');
-    console.log(`- OAuth Providers Configured: ${diagnostic.summary.hasOAuthConfigured}`);
+    console.log(
+      `- OAuth Providers Configured: ${diagnostic.summary.hasOAuthConfigured}`
+    );
     console.log(`- Google: ${diagnostic.summary.googleConfigured}`);
     console.log(`- GitHub: ${diagnostic.summary.githubConfigured}`);
     console.log(`- Critical Issues: ${diagnostic.summary.issueCount}`);
-    
+
     if (issues.length > 0) {
       console.log('\n🚨 CRITICAL ISSUES FOUND:');
       issues.forEach(issue => {
@@ -148,7 +174,7 @@ export async function GET() {
         console.log(`  Solution: ${issue.solution}`);
       });
     }
-    
+
     console.log('\n✅ DIAGNOSTIC COMPLETE\n');
 
     return NextResponse.json(diagnostic, {
@@ -157,7 +183,7 @@ export async function GET() {
   } catch (error) {
     console.error('Diagnostic error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to run diagnostic',
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,

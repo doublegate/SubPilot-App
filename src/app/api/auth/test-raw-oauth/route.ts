@@ -7,7 +7,7 @@ export async function GET() {
   // Test OAuth configuration without env validation
   const result = {
     timestamp: new Date().toISOString(),
-    
+
     // Raw environment check
     rawEnvCheck: {
       googleId: process.env.GOOGLE_CLIENT_ID,
@@ -15,17 +15,17 @@ export async function GET() {
       githubId: process.env.GITHUB_CLIENT_ID,
       githubSecret: !!process.env.GITHUB_CLIENT_SECRET,
     },
-    
+
     // Test provider creation
     providerTests: {
       google: null as any,
       github: null as any,
     },
-    
+
     // Test NextAuth creation
     nextAuthTest: null as any,
   };
-  
+
   // Test creating Google provider
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     try {
@@ -51,7 +51,7 @@ export async function GET() {
       error: 'Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET',
     };
   }
-  
+
   // Test creating GitHub provider
   if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
     try {
@@ -77,11 +77,11 @@ export async function GET() {
       error: 'Missing GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET',
     };
   }
-  
+
   // Test creating NextAuth instance
   try {
     const providers = [];
-    
+
     if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       providers.push(
         GoogleProvider({
@@ -90,7 +90,7 @@ export async function GET() {
         })
       );
     }
-    
+
     if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
       providers.push(
         GitHubProvider({
@@ -99,12 +99,12 @@ export async function GET() {
         })
       );
     }
-    
+
     const authInstance = NextAuth({
       providers,
       secret: process.env.NEXTAUTH_SECRET,
     });
-    
+
     result.nextAuthTest = {
       success: true,
       providersCount: providers.length,
@@ -116,12 +116,12 @@ export async function GET() {
       error: error instanceof Error ? error.message : String(error),
     };
   }
-  
+
   return NextResponse.json(result, {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
-    }
+    },
   });
 }
