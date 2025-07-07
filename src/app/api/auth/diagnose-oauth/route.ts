@@ -1,8 +1,67 @@
 import { NextResponse } from 'next/server';
 
+interface RawEnv {
+  NEXTAUTH_URL: string | undefined;
+  NEXTAUTH_SECRET: boolean;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: boolean;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: boolean;
+  googleIdEmpty: boolean;
+  googleSecretEmpty: boolean;
+  githubIdEmpty: boolean;
+  githubSecretEmpty: boolean;
+  googleIdExists: boolean;
+  googleSecretExists: boolean;
+  githubIdExists: boolean;
+  githubSecretExists: boolean;
+}
+
+interface EnvImport {
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: boolean;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: boolean;
+  NEXTAUTH_URL: string | undefined;
+  NEXTAUTH_SECRET: boolean;
+}
+
+interface AuthConfigImport {
+  providersCount: number;
+  providerTypes: string[];
+  sessionStrategy: string | undefined;
+  hasAdapter: boolean;
+  hasCallbacks: boolean;
+}
+
+interface NextAuthRoute {
+  status?: number;
+  ok?: boolean;
+  headers?: Record<string, string>;
+  data?: unknown;
+  error?: string;
+}
+
+interface Provider {
+  id?: string;
+  type?: string;
+}
+
+interface Diagnostics {
+  timestamp: string;
+  nodeEnv: string | undefined;
+  rawEnv: RawEnv;
+  envImport: EnvImport | null;
+  envImportError: string | null;
+  authConfigImport: AuthConfigImport | null;
+  authConfigError: string | null;
+  nextAuthRoute: NextAuthRoute | null;
+  skipValidation: string | undefined;
+}
+
 export async function GET() {
   // Comprehensive OAuth diagnostics
-  const diagnostics = {
+  const diagnostics: Diagnostics = {
     timestamp: new Date().toISOString(),
     nodeEnv: process.env.NODE_ENV,
 
@@ -27,15 +86,15 @@ export async function GET() {
     },
 
     // Try to import env without validation
-    envImport: null as any,
-    envImportError: null as any,
+    envImport: null,
+    envImportError: null,
 
     // Try to import auth config
-    authConfigImport: null as any,
-    authConfigError: null as any,
+    authConfigImport: null,
+    authConfigError: null,
 
     // Check NextAuth route
-    nextAuthRoute: null as any,
+    nextAuthRoute: null,
 
     // Environment validation bypass
     skipValidation: process.env.SKIP_ENV_VALIDATION,
@@ -61,9 +120,13 @@ export async function GET() {
   try {
     const { authConfig } = await import('@/server/auth.config');
     diagnostics.authConfigImport = {
-      providersCount: authConfig.providers?.length || 0,
+      providersCount: authConfig.providers?.length ?? 0,
       providerTypes: authConfig.providers?.map(
-        (p: any) => p.id || p.type || 'unknown'
+        (p) => {
+          // Handle both provider objects and provider functions
+          const provider = typeof p === 'function' ? p() : p;
+          return (provider as Provider).id ?? (provider as Provider).type ?? 'unknown';
+        }
       ),
       sessionStrategy: authConfig.session?.strategy,
       hasAdapter: !!authConfig.adapter,
@@ -78,8 +141,8 @@ export async function GET() {
   try {
     const routePath = '/api/auth/providers';
     const baseUrl =
-      process.env.NEXTAUTH_URL ||
-      `http://localhost:${process.env.PORT || 3000}`;
+      process.env.NEXTAUTH_URL ??
+      `http://localhost:${process.env.PORT ?? 3000}`;
     const response = await fetch(`${baseUrl}${routePath}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },

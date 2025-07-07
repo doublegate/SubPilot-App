@@ -35,16 +35,16 @@ declare module 'next-auth' {
 
 // Get the correct secret (v5 uses AUTH_SECRET, v4 uses NEXTAUTH_SECRET)
 const secret =
-  process.env.AUTH_SECRET ||
-  process.env.NEXTAUTH_SECRET ||
-  env.NEXTAUTH_SECRET ||
+  process.env.AUTH_SECRET ??
+  process.env.NEXTAUTH_SECRET ??
+  env.NEXTAUTH_SECRET ??
   env.AUTH_SECRET;
 
 // Get the correct URL (v5 uses AUTH_URL, v4 uses NEXTAUTH_URL)
 const authUrl =
-  process.env.AUTH_URL ||
-  process.env.NEXTAUTH_URL ||
-  env.NEXTAUTH_URL ||
+  process.env.AUTH_URL ??
+  process.env.NEXTAUTH_URL ??
+  env.NEXTAUTH_URL ??
   env.AUTH_URL;
 
 // Log configuration for debugging
@@ -199,14 +199,14 @@ export const authConfig: NextAuthConfig = {
       ? [
           GoogleProvider({
             clientId:
-              env.GOOGLE_CLIENT_ID ||
-              process.env.GOOGLE_CLIENT_ID ||
-              process.env.AUTH_GOOGLE_ID ||
+              env.GOOGLE_CLIENT_ID ??
+              process.env.GOOGLE_CLIENT_ID ??
+              process.env.AUTH_GOOGLE_ID ??
               '',
             clientSecret:
-              env.GOOGLE_CLIENT_SECRET ||
-              process.env.GOOGLE_CLIENT_SECRET ||
-              process.env.AUTH_GOOGLE_SECRET ||
+              env.GOOGLE_CLIENT_SECRET ??
+              process.env.GOOGLE_CLIENT_SECRET ??
+              process.env.AUTH_GOOGLE_SECRET ??
               '',
             allowDangerousEmailAccountLinking: false,
           }),
@@ -221,14 +221,14 @@ export const authConfig: NextAuthConfig = {
       ? [
           GitHubProvider({
             clientId:
-              env.GITHUB_CLIENT_ID ||
-              process.env.GITHUB_CLIENT_ID ||
-              process.env.AUTH_GITHUB_ID ||
+              env.GITHUB_CLIENT_ID ??
+              process.env.GITHUB_CLIENT_ID ??
+              process.env.AUTH_GITHUB_ID ??
               '',
             clientSecret:
-              env.GITHUB_CLIENT_SECRET ||
-              process.env.GITHUB_CLIENT_SECRET ||
-              process.env.AUTH_GITHUB_SECRET ||
+              env.GITHUB_CLIENT_SECRET ??
+              process.env.GITHUB_CLIENT_SECRET ??
+              process.env.AUTH_GITHUB_SECRET ??
               '',
             allowDangerousEmailAccountLinking: false,
           }),
@@ -329,7 +329,13 @@ if (process.env.NODE_ENV === 'production') {
   console.log('- Total providers configured:', authConfig.providers.length);
   console.log(
     '- Provider IDs:',
-    authConfig.providers.map((p: any) => p.id || p.type).join(', ')
+    authConfig.providers
+      .map(
+        p =>
+          (p as { id?: string; type?: string }).id ??
+          (p as { id?: string; type?: string }).type
+      )
+      .join(', ')
   );
   console.log('=============================================');
 }

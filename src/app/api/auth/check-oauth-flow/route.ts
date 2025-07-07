@@ -1,10 +1,56 @@
 import { NextResponse } from 'next/server';
 
+interface DiagnosticsEnvironment {
+  NODE_ENV: string | undefined;
+  NEXTAUTH_URL: string | undefined;
+  VERCEL_URL: string | undefined;
+  hasSecret: boolean;
+  envModuleLoaded: boolean;
+  envValues: Record<string, boolean> | null;
+  envError: string | null;
+}
+
+interface ProviderCredentials {
+  hasId: boolean;
+  hasSecret: boolean;
+  idLength: number;
+  secretLength: number;
+  idPreview: string;
+}
+
+interface AuthEndpointResult {
+  status?: number;
+  ok?: boolean;
+  headers?: Record<string, string>;
+  data?: unknown;
+  error?: string;
+}
+
+interface Diagnostics {
+  timestamp: string;
+  provider: string;
+  environment: DiagnosticsEnvironment;
+  credentials: {
+    google: ProviderCredentials;
+    github: ProviderCredentials;
+  };
+  authEndpoints: {
+    providers: AuthEndpointResult | null;
+    signin: AuthEndpointResult | null;
+    session: AuthEndpointResult | null;
+    csrf: AuthEndpointResult | null;
+  };
+  oauthUrls: {
+    callbackUrl: string | null;
+    signInUrl: string | null;
+  };
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const provider = searchParams.get('provider') || 'google';
+  const provider = searchParams.get('provider') ?? 'google';
 
-  const diagnostics: any = {
+  const diagnostics: Diagnostics = {
     timestamp: new Date().toISOString(),
     provider,
 
@@ -24,42 +70,44 @@ export async function GET(request: Request) {
       google: {
         hasId: !!process.env.GOOGLE_CLIENT_ID,
         hasSecret: !!process.env.GOOGLE_CLIENT_SECRET,
-        idLength: process.env.GOOGLE_CLIENT_ID?.length || 0,
-        secretLength: process.env.GOOGLE_CLIENT_SECRET?.length || 0,
-        idPreview: process.env.GOOGLE_CLIENT_ID?.substring(0, 15) + '...',
+        idLength: process.env.GOOGLE_CLIENT_ID?.length ?? 0,
+        secretLength: process.env.GOOGLE_CLIENT_SECRET?.length ?? 0,
+        idPreview:
+          (process.env.GOOGLE_CLIENT_ID?.substring(0, 15) ?? '') + '...',
       },
       github: {
         hasId: !!process.env.GITHUB_CLIENT_ID,
         hasSecret: !!process.env.GITHUB_CLIENT_SECRET,
-        idLength: process.env.GITHUB_CLIENT_ID?.length || 0,
-        secretLength: process.env.GITHUB_CLIENT_SECRET?.length || 0,
-        idPreview: process.env.GITHUB_CLIENT_ID?.substring(0, 15) + '...',
+        idLength: process.env.GITHUB_CLIENT_ID?.length ?? 0,
+        secretLength: process.env.GITHUB_CLIENT_SECRET?.length ?? 0,
+        idPreview:
+          (process.env.GITHUB_CLIENT_ID?.substring(0, 15) ?? '') + '...',
       },
     },
 
     // NextAuth endpoints check
     authEndpoints: {
-      providers: null as any,
-      signin: null as any,
-      session: null as any,
-      csrf: null as any,
+      providers: null,
+      signin: null,
+      session: null,
+      csrf: null,
     },
 
     // OAuth URLs
     oauthUrls: {
-      callbackUrl: null as string | null,
-      signInUrl: null as string | null,
+      callbackUrl: null,
+      signInUrl: null,
     },
   };
 
   // Determine base URL
   const baseUrl =
-    process.env.NEXTAUTH_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    `http://localhost:${process.env.PORT || 3000}`;
+    process.env.NEXTAUTH_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ??
+    `http://localhost:${process.env.PORT ?? 3000}`;
 
   // Check NextAuth endpoints
-  const checkEndpoint = async (path: string) => {
+  const checkEndpoint = async (path: string): Promise<AuthEndpointResult> => {
     try {
       const response = await fetch(`${baseUrl}/api/auth/${path}`, {
         headers: {
@@ -67,7 +115,7 @@ export async function GET(request: Request) {
         },
       });
 
-      const result = {
+      const result: AuthEndpointResult = {
         status: response.status,
         ok: response.ok,
         headers: Object.fromEntries(
@@ -75,13 +123,13 @@ export async function GET(request: Request) {
             ([key]) => !key.toLowerCase().includes('cookie')
           )
         ),
-        data: null as any,
+        data: null,
       };
 
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType?.includes('application/json')) {
-          result.data = await response.json();
+          result.data = (await response.json()) as unknown;
         } else {
           result.data = await response.text();
         }

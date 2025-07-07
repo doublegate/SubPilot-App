@@ -6,10 +6,10 @@
   <h3>Your command center for recurring finances</h3>
   <p>A modern web platform for monitoring, managing, and canceling subscriptions</p>
   
-  <p><strong>🚀 v1.8.0: UI Fixes & Development Environment Optimization - July 5, 2025!</strong></p>
-  <p><strong>Current Version:</strong> v1.8.0 | <strong>Live Demo:</strong> <a href="https://subpilot-app.vercel.app">subpilot-app.vercel.app</a></p>
+  <p><strong>🚀 v1.8.5: Critical Security Fixes & OAuth Authentication Improvements - July 7, 2025!</strong></p>
+  <p><strong>Current Version:</strong> v1.8.5 | <strong>Live Demo:</strong> <a href="https://subpilot-app.vercel.app">subpilot-app.vercel.app</a></p>
   <p><strong>Status:</strong> Phase 3 Complete ✅ | Production Ready ✅ | Enterprise Architecture ✅ | Commercial Launch Ready ✅ | Phase 4 Launch</p>
-  <p><strong>Latest (2025-07-06):</strong> Sentry v9 Migration + Environment Variable Fixes + Email Integration Testing ✅</p>
+  <p><strong>Latest (2025-07-07):</strong> Security Fixes + OAuth Improvements + Build Excellence (Zero TypeScript/ESLint errors) ✅</p>
 </div>
 
 ## 🚀 Quick Start

@@ -757,3 +757,37 @@ Critical Learning (2025-07-06):
 - Pattern: Check module exports when migrating to ES modules
 - Implementation: Fixed imports in sendgrid.ts and test scripts
 ```
+
+### OAuth Authentication Configuration Pattern
+```
+Critical Learning (2025-07-07):
+- NextAuth v5 uses different environment variable naming: AUTH_* instead of NEXTAUTH_*
+- Problem: OAuth fails with "Missing required parameter: client_id" in production
+- Solution: Support both v4 and v5 naming conventions with fallbacks
+- Implementation: Created auth-v5-fix.config.ts with comprehensive fallback chain
+- Pattern: Check env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID
+- Diagnostics: Created multiple endpoints in /api/auth/* for troubleshooting
+- TypeScript: Fixed compilation errors with proper type annotations and async headers()
+```
+
+### NextAuth Provider Type Compatibility Pattern
+```
+Critical Learning (2025-07-07):
+- NextAuth providers can be functions that return provider configs, not just objects
+- Problem: TypeScript errors when mapping over authConfig.providers array
+- Solution: Handle both provider objects and provider functions in type guards
+- Pattern: const provider = typeof p === 'function' ? p() : p;
+- Implementation: Fixed all OAuth diagnostic endpoints to handle dynamic providers
+- Type Safety: Created proper interfaces for OAuth, Email, and other provider types
+```
+
+### Security Vulnerability Remediation Pattern
+```
+Critical Learning (2025-07-07):
+- DOM XSS: Fixed innerHTML usage in archive/ui_fixes/debug-test.html
+- Regex ReDoS: Tightened 3 overly permissive patterns in validation-schemas.ts
+- Insecure Randomness: Replaced Math.random() with crypto.getRandomValues() in monthly-spending.ts
+- Pattern: Apply security fixes even to archived/debug files
+- Implementation: Systematic review and remediation of all security vulnerabilities
+- Testing: Include dedicated security tests for vulnerability prevention
+```

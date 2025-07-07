@@ -1,14 +1,67 @@
 import { NextResponse } from 'next/server';
 
+interface DirectEnv {
+  GOOGLE_CLIENT_ID: string | undefined;
+  GOOGLE_CLIENT_SECRET: boolean;
+  GITHUB_CLIENT_ID: string | undefined;
+  GITHUB_CLIENT_SECRET: boolean;
+  NEXTAUTH_URL: string | undefined;
+  NEXTAUTH_SECRET: boolean;
+}
+
+interface Provider {
+  id?: string;
+  type?: string;
+  name?: string;
+}
+
+interface ProviderInfo {
+  id: string | undefined;
+  type: string | undefined;
+  name: string | undefined;
+}
+
+interface AuthConfigProvidersTest {
+  success: boolean;
+  providersCount?: number;
+  providers?: ProviderInfo[];
+  error?: string;
+  stack?: string;
+}
+
+interface ManualProviderCreationTest {
+  success: boolean;
+  providersCount?: number;
+  providers?: ProviderInfo[];
+  error?: string;
+}
+
+interface NextAuthInstanceTest {
+  success: boolean;
+  providersCount?: number;
+  hasHandlers?: boolean;
+  error?: string;
+}
+
+interface TestResult {
+  timestamp: string;
+  tests: {
+    directEnv: DirectEnv | null;
+    authConfigProviders: AuthConfigProvidersTest | null;
+    manualProviderCreation: ManualProviderCreationTest | null;
+    nextAuthInstance: NextAuthInstanceTest | null;
+  };
+}
+
 // Test directly importing and using providers without env validation
 export async function GET() {
-  const result = {
+  const result: TestResult = {
     timestamp: new Date().toISOString(),
     tests: {
-      directEnv: null as any,
-      authConfigProviders: null as any,
-      manualProviderCreation: null as any,
-      nextAuthInstance: null as any,
+      directEnv: null,
+      authConfigProviders: null,
+      manualProviderCreation: null,
+      nextAuthInstance: null,
     },
   };
 
@@ -30,11 +83,17 @@ export async function GET() {
     result.tests.authConfigProviders = {
       success: true,
       providersCount: config.providers?.length || 0,
-      providers: config.providers?.map((p: any) => ({
-        id: p.id,
-        type: p.type,
-        name: p.name,
-      })),
+      providers: config.providers?.map(
+        (p): ProviderInfo => {
+          // Handle both provider objects and provider functions
+          const provider = typeof p === 'function' ? p() : p;
+          return {
+            id: (provider as Provider).id,
+            type: (provider as Provider).type,
+            name: (provider as Provider).name,
+          };
+        }
+      ),
     };
   } catch (error) {
     result.tests.authConfigProviders = {

@@ -1,5 +1,59 @@
 import { NextResponse } from 'next/server';
 
+interface OAuthProvider {
+  id?: string;
+  type?: string;
+  name?: string;
+  options?: {
+    clientId?: string;
+    clientSecret?: string;
+  };
+}
+
+interface EmailProvider {
+  id?: string;
+  type?: string;
+  name?: string;
+  options?: Record<string, unknown>;
+}
+
+type Provider = OAuthProvider | EmailProvider;
+
+interface ProviderAnalysis {
+  id: string;
+  type: string;
+  name: string;
+  hasOptions?: boolean;
+  hasClientId?: boolean;
+  hasClientSecret?: boolean;
+  expectedClientId?: boolean;
+  expectedClientSecret?: boolean;
+  configMismatch?: boolean;
+}
+
+interface EmptyStringIssue {
+  googleIdEmpty: boolean;
+  googleSecretEmpty: boolean;
+  githubIdEmpty: boolean;
+  githubSecretEmpty: boolean;
+  hasEmptyStrings: boolean;
+}
+
+interface ProviderLogic {
+  googleShouldBeIncluded: boolean;
+  githubShouldBeIncluded: boolean;
+  googleActuallyIncluded: boolean;
+  githubActuallyIncluded: boolean;
+}
+
+interface ErrorScenario {
+  type: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  message: string;
+  solution: string;
+  affected?: string[];
+}
+
 // Comprehensive diagnostic for Auth.js configuration errors
 export async function GET() {
   try {
@@ -9,44 +63,48 @@ export async function GET() {
     const { env } = await import('@/env');
 
     // Deep inspection of provider configuration
-    const providerAnalysis = authConfig.providers.map((provider: any) => {
-      const analysis: any = {
-        id: provider.id || 'N/A',
-        type: provider.type || 'unknown',
-        name: provider.name || 'N/A',
-      };
+    const providerAnalysis = authConfig.providers.map(
+      (provider: Provider): ProviderAnalysis => {
+        const analysis: ProviderAnalysis = {
+          id: provider.id ?? 'N/A',
+          type: provider.type ?? 'unknown',
+          name: provider.name ?? 'N/A',
+        };
 
-      // For OAuth providers, check configuration
-      if (provider.type === 'oauth' || provider.type === 'oidc') {
-        // Check if provider has the expected structure
-        analysis.hasOptions = !!provider.options;
-        analysis.hasClientId = !!provider.options?.clientId;
-        analysis.hasClientSecret = !!provider.options?.clientSecret;
+        // For OAuth providers, check configuration
+        if (provider.type === 'oauth' || provider.type === 'oidc') {
+          // Check if provider has the expected structure
+          analysis.hasOptions = !!provider.options;
+          if ('clientId' in (provider.options ?? {})) {
+            analysis.hasClientId = !!(provider.options as OAuthProvider['options'])?.clientId;
+            analysis.hasClientSecret = !!(provider.options as OAuthProvider['options'])?.clientSecret;
+          }
 
-        // For Google provider
-        if (provider.id === 'google') {
-          analysis.expectedClientId = !!env.GOOGLE_CLIENT_ID;
-          analysis.expectedClientSecret = !!env.GOOGLE_CLIENT_SECRET;
-          analysis.configMismatch =
-            analysis.expectedClientId !== analysis.hasClientId ||
-            analysis.expectedClientSecret !== analysis.hasClientSecret;
+          // For Google provider
+          if (provider.id === 'google') {
+            analysis.expectedClientId = !!env.GOOGLE_CLIENT_ID;
+            analysis.expectedClientSecret = !!env.GOOGLE_CLIENT_SECRET;
+            analysis.configMismatch =
+              analysis.expectedClientId !== analysis.hasClientId ||
+              analysis.expectedClientSecret !== analysis.hasClientSecret;
+          }
+
+          // For GitHub provider
+          if (provider.id === 'github') {
+            analysis.expectedClientId = !!env.GITHUB_CLIENT_ID;
+            analysis.expectedClientSecret = !!env.GITHUB_CLIENT_SECRET;
+            analysis.configMismatch =
+              analysis.expectedClientId !== analysis.hasClientId ||
+              analysis.expectedClientSecret !== analysis.hasClientSecret;
+          }
         }
 
-        // For GitHub provider
-        if (provider.id === 'github') {
-          analysis.expectedClientId = !!env.GITHUB_CLIENT_ID;
-          analysis.expectedClientSecret = !!env.GITHUB_CLIENT_SECRET;
-          analysis.configMismatch =
-            analysis.expectedClientId !== analysis.hasClientId ||
-            analysis.expectedClientSecret !== analysis.hasClientSecret;
-        }
+        return analysis;
       }
-
-      return analysis;
-    });
+    );
 
     // Check for empty string issue
-    const emptyStringIssue = {
+    const emptyStringIssue: EmptyStringIssue = {
       googleIdEmpty: process.env.GOOGLE_CLIENT_ID === '',
       googleSecretEmpty: process.env.GOOGLE_CLIENT_SECRET === '',
       githubIdEmpty: process.env.GITHUB_CLIENT_ID === '',
@@ -59,7 +117,7 @@ export async function GET() {
     );
 
     // Provider inclusion logic analysis
-    const providerLogic = {
+    const providerLogic: ProviderLogic = {
       googleShouldBeIncluded: !!(
         env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ),
@@ -67,15 +125,15 @@ export async function GET() {
         env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
       ),
       googleActuallyIncluded: providerAnalysis.some(
-        (p: any) => p.id === 'google'
+        (p: ProviderAnalysis) => p.id === 'google'
       ),
       githubActuallyIncluded: providerAnalysis.some(
-        (p: any) => p.id === 'github'
+        (p: ProviderAnalysis) => p.id === 'github'
       ),
     };
 
     // Configuration error scenarios
-    const errorScenarios = [];
+    const errorScenarios: ErrorScenario[] = [];
 
     if (emptyStringIssue.hasEmptyStrings) {
       errorScenarios.push({
@@ -117,8 +175,8 @@ export async function GET() {
 
     // NextAuth URL configuration
     const urlConfig = {
-      NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'not-set',
-      VERCEL_URL: process.env.VERCEL_URL || 'not-set',
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL ?? 'not-set',
+      VERCEL_URL: process.env.VERCEL_URL ?? 'not-set',
       isProduction: process.env.NODE_ENV === 'production',
       urlRequired: process.env.NODE_ENV === 'production',
     };
@@ -167,9 +225,9 @@ export async function GET() {
 }
 
 function generateRecommendations(
-  errorScenarios: any[],
-  emptyStringIssue: any,
-  providerLogic: any
+  errorScenarios: ErrorScenario[],
+  emptyStringIssue: EmptyStringIssue,
+  providerLogic: ProviderLogic
 ): string[] {
   const recommendations = [];
 

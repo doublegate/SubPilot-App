@@ -3,9 +3,41 @@ import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 
+interface RawEnvCheck {
+  googleId: string | undefined;
+  googleSecret: boolean;
+  githubId: string | undefined;
+  githubSecret: boolean;
+}
+
+interface ProviderTest {
+  success: boolean;
+  id?: string;
+  type?: string;
+  name?: string;
+  error?: string;
+}
+
+interface NextAuthTest {
+  success: boolean;
+  providersCount?: number;
+  hasHandlers?: boolean;
+  error?: string;
+}
+
+interface TestResult {
+  timestamp: string;
+  rawEnvCheck: RawEnvCheck;
+  providerTests: {
+    google: ProviderTest | null;
+    github: ProviderTest | null;
+  };
+  nextAuthTest: NextAuthTest | null;
+}
+
 export async function GET() {
   // Test OAuth configuration without env validation
-  const result = {
+  const result: TestResult = {
     timestamp: new Date().toISOString(),
 
     // Raw environment check
@@ -18,12 +50,12 @@ export async function GET() {
 
     // Test provider creation
     providerTests: {
-      google: null as any,
-      github: null as any,
+      google: null,
+      github: null,
     },
 
     // Test NextAuth creation
-    nextAuthTest: null as any,
+    nextAuthTest: null,
   };
 
   // Test creating Google provider

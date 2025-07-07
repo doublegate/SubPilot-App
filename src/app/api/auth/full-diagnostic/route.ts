@@ -1,7 +1,75 @@
 import { NextResponse } from 'next/server';
 
+interface EnvVar {
+  exists: boolean;
+  isEmpty: boolean;
+  length: number;
+  preview?: string;
+}
+
+interface RawEnvironment {
+  NEXTAUTH_URL: string | undefined;
+  NEXTAUTH_SECRET: boolean;
+  GOOGLE_CLIENT_ID: EnvVar;
+  GOOGLE_CLIENT_SECRET: EnvVar;
+  GITHUB_CLIENT_ID: EnvVar;
+  GITHUB_CLIENT_SECRET: EnvVar;
+}
+
+interface ValidatedEnv {
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: boolean;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: boolean;
+}
+
+interface Provider {
+  id?: string;
+  type?: string;
+  name?: string;
+}
+
+interface ProviderInfo {
+  id: string;
+  type: string | undefined;
+  name: string | undefined;
+}
+
+interface EndpointResult {
+  status?: number;
+  ok?: boolean;
+  data?: unknown;
+  error?: string;
+}
+
+interface Diagnostics {
+  timestamp: string;
+  environment: string | undefined;
+  vercelUrl: string | undefined;
+  rawEnvironment: RawEnvironment;
+  envValidation: {
+    skipValidation: string | undefined;
+    validatedEnv: ValidatedEnv | null;
+    envError: string | null;
+  };
+  providers: {
+    available: unknown;
+    error: string | null;
+  };
+  authConfig: {
+    providers: ProviderInfo[] | null;
+    error: string | null;
+  };
+  endpoints: {
+    providers: EndpointResult | null;
+    session: EndpointResult | null;
+    csrf: EndpointResult | null;
+  };
+  recommendations: string[];
+}
+
 export async function GET() {
-  const diagnostics = {
+  const diagnostics: Diagnostics = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     vercelUrl: process.env.VERCEL_URL,
@@ -13,64 +81,64 @@ export async function GET() {
       GOOGLE_CLIENT_ID: {
         exists: process.env.GOOGLE_CLIENT_ID !== undefined,
         isEmpty: process.env.GOOGLE_CLIENT_ID === '',
-        length: process.env.GOOGLE_CLIENT_ID?.length || 0,
+        length: process.env.GOOGLE_CLIENT_ID?.length ?? 0,
         preview: process.env.GOOGLE_CLIENT_ID?.substring(0, 20) + '...',
       },
       GOOGLE_CLIENT_SECRET: {
         exists: process.env.GOOGLE_CLIENT_SECRET !== undefined,
         isEmpty: process.env.GOOGLE_CLIENT_SECRET === '',
-        length: process.env.GOOGLE_CLIENT_SECRET?.length || 0,
+        length: process.env.GOOGLE_CLIENT_SECRET?.length ?? 0,
       },
       GITHUB_CLIENT_ID: {
         exists: process.env.GITHUB_CLIENT_ID !== undefined,
         isEmpty: process.env.GITHUB_CLIENT_ID === '',
-        length: process.env.GITHUB_CLIENT_ID?.length || 0,
+        length: process.env.GITHUB_CLIENT_ID?.length ?? 0,
         preview: process.env.GITHUB_CLIENT_ID?.substring(0, 20) + '...',
       },
       GITHUB_CLIENT_SECRET: {
         exists: process.env.GITHUB_CLIENT_SECRET !== undefined,
         isEmpty: process.env.GITHUB_CLIENT_SECRET === '',
-        length: process.env.GITHUB_CLIENT_SECRET?.length || 0,
+        length: process.env.GITHUB_CLIENT_SECRET?.length ?? 0,
       },
     },
 
     // 2. Check env validation
     envValidation: {
       skipValidation: process.env.SKIP_ENV_VALIDATION,
-      validatedEnv: null as any,
-      envError: null as any,
+      validatedEnv: null,
+      envError: null,
     },
 
     // 3. Check available providers
     providers: {
-      available: null as any,
-      error: null as any,
+      available: null,
+      error: null,
     },
 
     // 4. Check auth config
     authConfig: {
-      providers: null as any,
-      error: null as any,
+      providers: null,
+      error: null,
     },
 
     // 5. NextAuth endpoints
     endpoints: {
-      providers: null as any,
-      session: null as any,
-      csrf: null as any,
+      providers: null,
+      session: null,
+      csrf: null,
     },
 
     // 6. Recommendations
-    recommendations: [] as string[],
+    recommendations: [],
   };
 
   // Check validated env
   try {
     const { env } = await import('@/env');
     diagnostics.envValidation.validatedEnv = {
-      GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID || 'undefined',
+      GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID ?? 'undefined',
       GOOGLE_CLIENT_SECRET: !!env.GOOGLE_CLIENT_SECRET,
-      GITHUB_CLIENT_ID: env.GITHUB_CLIENT_ID || 'undefined',
+      GITHUB_CLIENT_ID: env.GITHUB_CLIENT_ID ?? 'undefined',
       GITHUB_CLIENT_SECRET: !!env.GITHUB_CLIENT_SECRET,
     };
   } catch (error) {
@@ -90,11 +158,17 @@ export async function GET() {
   // Check auth config
   try {
     const { authConfig } = await import('@/server/auth.config');
-    diagnostics.authConfig.providers = authConfig.providers.map((p: any) => ({
-      id: p.id || p.type,
-      type: p.type,
-      name: p.name,
-    }));
+    diagnostics.authConfig.providers = authConfig.providers.map(
+      (p): ProviderInfo => {
+        // Handle both provider objects and provider functions
+        const provider = typeof p === 'function' ? p() : p;
+        return {
+          id: (provider as Provider).id ?? (provider as Provider).type ?? 'unknown',
+          type: (provider as Provider).type,
+          name: (provider as Provider).name,
+        };
+      }
+    );
   } catch (error) {
     diagnostics.authConfig.error =
       error instanceof Error ? error.message : String(error);
@@ -102,11 +176,11 @@ export async function GET() {
 
   // Check NextAuth endpoints
   const baseUrl =
-    process.env.NEXTAUTH_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    process.env.NEXTAUTH_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ??
     'http://localhost:3000';
 
-  const checkEndpoint = async (path: string) => {
+  const checkEndpoint = async (path: string): Promise<EndpointResult> => {
     try {
       const response = await fetch(`${baseUrl}/api/auth/${path}`);
       return {
@@ -115,7 +189,7 @@ export async function GET() {
         data: response.ok
           ? await response.text().then(text => {
               try {
-                return JSON.parse(text);
+                return JSON.parse(text) as unknown;
               } catch {
                 return text;
               }

@@ -1,5 +1,38 @@
 import { NextResponse } from 'next/server';
 
+interface BaseProvider {
+  id?: string;
+  name?: string;
+  type?: string;
+  options?: {
+    clientId?: string;
+    clientSecret?: string;
+    authorization?: string;
+    server?: unknown;
+    from?: string;
+  };
+}
+
+interface SafeProvider {
+  id: string;
+  name: string;
+  type: string;
+  hasClientId?: boolean;
+  hasClientSecret?: boolean;
+  clientIdLength?: number;
+  authorization?: string;
+  hasServer?: boolean;
+  from?: string;
+}
+
+interface NextAuthChecks {
+  hasProviders: boolean;
+  providerCount: number;
+  hasOAuthProviders: boolean;
+  hasEmailProvider: boolean;
+  hasCredentialsProvider: boolean;
+}
+
 // This endpoint checks NextAuth providers at runtime
 export async function GET() {
   try {
@@ -7,50 +40,52 @@ export async function GET() {
     const { authConfig } = await import('@/server/auth.config');
 
     // Get provider details without exposing secrets
-    const providers = authConfig.providers.map((provider: any) => {
-      const safeProvider: any = {
-        id: provider.id || 'unknown',
-        name: provider.name || 'unknown',
-        type: provider.type || 'unknown',
-      };
+    const providers = authConfig.providers.map(
+      (provider: BaseProvider): SafeProvider => {
+        const safeProvider: SafeProvider = {
+          id: provider.id ?? 'unknown',
+          name: provider.name ?? 'unknown',
+          type: provider.type ?? 'unknown',
+        };
 
-      // Check if OAuth provider has required configuration
-      if (provider.type === 'oauth' || provider.type === 'oidc') {
-        safeProvider.hasClientId = !!provider.options?.clientId;
-        safeProvider.hasClientSecret = !!provider.options?.clientSecret;
-        safeProvider.clientIdLength = provider.options?.clientId?.length || 0;
-        safeProvider.authorization =
-          provider.options?.authorization || 'default';
+        // Check if OAuth provider has required configuration
+        if (provider.type === 'oauth' || provider.type === 'oidc') {
+          safeProvider.hasClientId = !!provider.options?.clientId;
+          safeProvider.hasClientSecret = !!provider.options?.clientSecret;
+          safeProvider.clientIdLength = provider.options?.clientId?.length ?? 0;
+          safeProvider.authorization =
+            provider.options?.authorization ?? 'default';
+        }
+
+        // Check email provider
+        if (provider.type === 'email') {
+          safeProvider.hasServer = !!provider.options?.server;
+          safeProvider.from = provider.options?.from ?? 'not-set';
+        }
+
+        return safeProvider;
       }
-
-      // Check email provider
-      if (provider.type === 'email') {
-        safeProvider.hasServer = !!provider.options?.server;
-        safeProvider.from = provider.options?.from || 'not-set';
-      }
-
-      return safeProvider;
-    });
+    );
 
     // Check NextAuth configuration
-    const nextAuthChecks = {
+    const nextAuthChecks: NextAuthChecks = {
       hasProviders: providers.length > 0,
       providerCount: providers.length,
       hasOAuthProviders: providers.some(
-        (p: any) => p.type === 'oauth' || p.type === 'oidc'
+        (p: SafeProvider) => p.type === 'oauth' || p.type === 'oidc'
       ),
-      hasEmailProvider: providers.some((p: any) => p.type === 'email'),
+      hasEmailProvider: providers.some((p: SafeProvider) => p.type === 'email'),
       hasCredentialsProvider: providers.some(
-        (p: any) => p.type === 'credentials'
+        (p: SafeProvider) => p.type === 'credentials'
       ),
     };
 
     // Get environment status
     const envStatus = {
       NODE_ENV: process.env.NODE_ENV,
-      NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'not-set',
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL ?? 'not-set',
       hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET,
-      vercelUrl: process.env.VERCEL_URL || 'not-set',
+      vercelUrl: process.env.VERCEL_URL ?? 'not-set',
       isVercel: !!process.env.VERCEL,
     };
 
@@ -65,7 +100,7 @@ export async function GET() {
       providers,
       nextAuthChecks,
       envStatus,
-      authPages: authConfig.pages || {},
+      authPages: authConfig.pages ?? {},
     });
   } catch (error) {
     console.error('Provider debug error:', error);

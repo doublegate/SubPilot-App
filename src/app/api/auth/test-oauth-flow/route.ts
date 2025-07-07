@@ -5,8 +5,8 @@ import { headers } from 'next/headers';
 export async function GET() {
   try {
     const headersList = await headers();
-    const host = headersList.get('host') || 'localhost:3000';
-    const protocol = headersList.get('x-forwarded-proto') || 'http';
+    const host = headersList.get('host') ?? 'localhost:3000';
+    const protocol = headersList.get('x-forwarded-proto') ?? 'http';
     const baseUrl = `${protocol}://${host}`;
 
     // Import auth handlers
@@ -22,7 +22,7 @@ export async function GET() {
     // Check CSRF token generation (Auth.js requirement)
     const csrfCheck = {
       hasAuthUrl: !!process.env.NEXTAUTH_URL,
-      authUrl: process.env.NEXTAUTH_URL || 'not-set',
+      authUrl: process.env.NEXTAUTH_URL ?? 'not-set',
       computedUrl: baseUrl,
       urlsMatch: process.env.NEXTAUTH_URL === baseUrl,
     };

@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 
+interface ProviderTestResult {
+  success: boolean;
+  id?: string;
+  name?: string;
+  type?: string;
+  reason?: string;
+  error?: string;
+}
+
 export async function GET() {
   // Test direct provider instantiation without any validation
   const results = {
@@ -30,8 +39,8 @@ export async function GET() {
 
     // Test provider creation
     providerTests: {
-      google: null as any,
-      github: null as any,
+      google: null as ProviderTestResult | null,
+      github: null as ProviderTestResult | null,
     },
 
     // Errors
@@ -62,7 +71,7 @@ export async function GET() {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
-    results.errors.push(`Google provider error: ${error}`);
+    results.errors.push(`Google provider error: ${String(error)}`);
   }
 
   // Test GitHub Provider
@@ -89,7 +98,7 @@ export async function GET() {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     };
-    results.errors.push(`GitHub provider error: ${error}`);
+    results.errors.push(`GitHub provider error: ${String(error)}`);
   }
 
   // Check for NextAuth v5 vs v4 naming
@@ -116,8 +125,8 @@ export async function GET() {
   }
 
   if (
-    !results.providerTests.google.success &&
-    !results.providerTests.github.success
+    !results.providerTests.google?.success &&
+    !results.providerTests.github?.success
   ) {
     recommendations.push(
       'No OAuth providers are configured - check your environment variables'

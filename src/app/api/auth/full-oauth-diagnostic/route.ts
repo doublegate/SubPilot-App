@@ -1,5 +1,74 @@
 import { NextResponse } from 'next/server';
 
+interface EnvCheck {
+  exists: boolean;
+  value?: string;
+  isEmpty: boolean;
+  isUndefined: boolean;
+  length?: number;
+  hasValue?: boolean;
+}
+
+interface ParsedEnvCheck {
+  value?: string;
+  hasValue: boolean;
+  type: string;
+}
+
+interface Provider {
+  id?: string;
+  type?: string;
+  name?: string;
+}
+
+interface ProviderInfo {
+  id: string;
+  type: string | undefined;
+  name: string | undefined;
+}
+
+interface Issue {
+  severity: string;
+  issue: string;
+  impact: string;
+  solution: string;
+}
+
+interface ProviderLogicCheck {
+  envVarsPresent: boolean;
+  providerIncluded: boolean;
+}
+
+interface Diagnostic {
+  summary: {
+    hasOAuthConfigured: boolean;
+    googleConfigured: boolean;
+    githubConfigured: boolean;
+    totalProviders: number;
+    issueCount: number;
+  };
+  rawEnvironmentVariables: {
+    GOOGLE_CLIENT_ID: EnvCheck;
+    GOOGLE_CLIENT_SECRET: EnvCheck;
+    GITHUB_CLIENT_ID: EnvCheck;
+    GITHUB_CLIENT_SECRET: EnvCheck;
+  };
+  parsedEnvironmentVariables: {
+    GOOGLE_CLIENT_ID: ParsedEnvCheck;
+    GOOGLE_CLIENT_SECRET: ParsedEnvCheck;
+    GITHUB_CLIENT_ID: ParsedEnvCheck;
+    GITHUB_CLIENT_SECRET: ParsedEnvCheck;
+  };
+  configuredProviders: ProviderInfo[];
+  providerLogicCheck: {
+    google: ProviderLogicCheck;
+    github: ProviderLogicCheck;
+  };
+  criticalIssues: Issue[];
+  actionItems: string[];
+  rootCause: string;
+}
+
 // COMPREHENSIVE OAuth DIAGNOSTIC - RUN THIS TO IDENTIFY THE ISSUE
 export async function GET() {
   try {
@@ -12,7 +81,7 @@ export async function GET() {
         value: process.env.GOOGLE_CLIENT_ID,
         isEmpty: process.env.GOOGLE_CLIENT_ID === '',
         isUndefined: process.env.GOOGLE_CLIENT_ID === undefined,
-        length: process.env.GOOGLE_CLIENT_ID?.length || 0,
+        length: process.env.GOOGLE_CLIENT_ID?.length ?? 0,
       },
       GOOGLE_CLIENT_SECRET: {
         exists: 'GOOGLE_CLIENT_SECRET' in process.env,
@@ -25,7 +94,7 @@ export async function GET() {
         value: process.env.GITHUB_CLIENT_ID,
         isEmpty: process.env.GITHUB_CLIENT_ID === '',
         isUndefined: process.env.GITHUB_CLIENT_ID === undefined,
-        length: process.env.GITHUB_CLIENT_ID?.length || 0,
+        length: process.env.GITHUB_CLIENT_ID?.length ?? 0,
       },
       GITHUB_CLIENT_SECRET: {
         exists: 'GITHUB_CLIENT_SECRET' in process.env,
@@ -60,14 +129,20 @@ export async function GET() {
 
     // 3. Check actual provider configuration
     const { authConfig } = await import('@/server/auth.config');
-    const configuredProviders = authConfig.providers.map((p: any) => ({
-      id: p.id || p.type,
-      type: p.type,
-      name: p.name,
-    }));
+    const configuredProviders = authConfig.providers.map(
+      (p): ProviderInfo => {
+        // Handle both provider objects and provider functions
+        const provider = typeof p === 'function' ? p() : p;
+        return {
+          id: (provider as Provider).id ?? (provider as Provider).type ?? 'unknown',
+          type: (provider as Provider).type,
+          name: (provider as Provider).name,
+        };
+      }
+    );
 
     // 4. Identify the exact issue
-    const issues = [];
+    const issues: Issue[] = [];
 
     // Check for empty string issue
     if (
@@ -105,7 +180,7 @@ export async function GET() {
           parsedEnvCheck.GOOGLE_CLIENT_ID.hasValue &&
           parsedEnvCheck.GOOGLE_CLIENT_SECRET.hasValue,
         providerIncluded: configuredProviders.some(
-          (p: any) => p.id === 'google'
+          (p: ProviderInfo) => p.id === 'google'
         ),
       },
       github: {
@@ -113,13 +188,13 @@ export async function GET() {
           parsedEnvCheck.GITHUB_CLIENT_ID.hasValue &&
           parsedEnvCheck.GITHUB_CLIENT_SECRET.hasValue,
         providerIncluded: configuredProviders.some(
-          (p: any) => p.id === 'github'
+          (p: ProviderInfo) => p.id === 'github'
         ),
       },
     };
 
     // 5. Generate clear action items
-    const actionItems = [];
+    const actionItems: string[] = [];
 
     if (issues.length > 0) {
       actionItems.push('🚨 IMMEDIATE ACTIONS REQUIRED:');
@@ -136,7 +211,7 @@ export async function GET() {
     }
 
     // Final diagnostic output
-    const diagnostic = {
+    const diagnostic: Diagnostic = {
       summary: {
         hasOAuthConfigured:
           providerLogicCheck.google.providerIncluded ||

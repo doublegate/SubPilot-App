@@ -7,9 +7,9 @@ export function getAvailableProviders(): AuthProvider[] {
   const providers: AuthProvider[] = [];
 
   // Check for Google OAuth - use process.env directly as fallback
-  const googleId = env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+  const googleId = env.GOOGLE_CLIENT_ID ?? process.env.GOOGLE_CLIENT_ID;
   const googleSecret =
-    env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+    env.GOOGLE_CLIENT_SECRET ?? process.env.GOOGLE_CLIENT_SECRET;
   if (
     googleId &&
     googleSecret &&
@@ -21,9 +21,9 @@ export function getAvailableProviders(): AuthProvider[] {
   }
 
   // Check for GitHub OAuth - use process.env directly as fallback
-  const githubId = env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID;
+  const githubId = env.GITHUB_CLIENT_ID ?? process.env.GITHUB_CLIENT_ID;
   const githubSecret =
-    env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET;
+    env.GITHUB_CLIENT_SECRET ?? process.env.GITHUB_CLIENT_SECRET;
   if (
     githubId &&
     githubSecret &&

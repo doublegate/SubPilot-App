@@ -172,9 +172,9 @@ export const authConfig: NextAuthConfig = {
     (env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET)
       ? [
           GoogleProvider({
-            clientId: env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID!,
+            clientId: env.GOOGLE_CLIENT_ID ?? process.env.GOOGLE_CLIENT_ID!,
             clientSecret:
-              env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET!,
+              env.GOOGLE_CLIENT_SECRET ?? process.env.GOOGLE_CLIENT_SECRET!,
             allowDangerousEmailAccountLinking: false,
           }),
         ]
@@ -183,9 +183,9 @@ export const authConfig: NextAuthConfig = {
     (env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET)
       ? [
           GitHubProvider({
-            clientId: env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID!,
+            clientId: env.GITHUB_CLIENT_ID ?? process.env.GITHUB_CLIENT_ID!,
             clientSecret:
-              env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET!,
+              env.GITHUB_CLIENT_SECRET ?? process.env.GITHUB_CLIENT_SECRET!,
             allowDangerousEmailAccountLinking: false,
           }),
         ]
@@ -297,7 +297,13 @@ if (process.env.NODE_ENV === 'production') {
   console.log('- Total providers configured:', authConfig.providers.length);
   console.log(
     '- Provider IDs:',
-    authConfig.providers.map((p: any) => p.id || p.type).join(', ')
+    authConfig.providers
+      .map(
+        p =>
+          (p as { id?: string; type?: string }).id ??
+          (p as { id?: string; type?: string }).type
+      )
+      .join(', ')
   );
   console.log('=====================================');
 }
