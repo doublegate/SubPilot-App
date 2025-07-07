@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { signIn } from 'next-auth/react';
 import { LoginForm } from '../login-form';
+import type { AuthProvider } from '@/lib/auth-providers';
 
 // Mock next-auth/react
 vi.mock('next-auth/react', () => ({
@@ -19,6 +20,9 @@ Object.defineProperty(window, 'location', {
 });
 
 describe('LoginForm', () => {
+  // Default available providers for testing
+  const defaultProviders: AuthProvider[] = ['google', 'github', 'email', 'credentials'];
+  
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset environment to development by default
@@ -27,14 +31,14 @@ describe('LoginForm', () => {
 
   describe('Rendering', () => {
     it('should render OAuth buttons', () => {
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       expect(screen.getByText('Continue with Google')).toBeInTheDocument();
       expect(screen.getByText('Continue with GitHub')).toBeInTheDocument();
     });
 
     it('should render email form', () => {
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       expect(
         screen.getByLabelText('Email address for magic link login')
@@ -43,7 +47,7 @@ describe('LoginForm', () => {
     });
 
     it('should render credentials form in development', () => {
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       expect(screen.getByText('Development Mode')).toBeInTheDocument();
       expect(
@@ -55,11 +59,22 @@ describe('LoginForm', () => {
 
     it('should not render credentials form in production', () => {
       vi.stubEnv('NODE_ENV', 'production');
+      const productionProviders: AuthProvider[] = ['google', 'github', 'email'];
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={productionProviders} />);
 
       expect(screen.queryByText('Development Mode')).not.toBeInTheDocument();
       expect(screen.queryByLabelText('Password')).not.toBeInTheDocument();
+    });
+    
+    it('should not render OAuth buttons when not available', () => {
+      const emailOnlyProviders: AuthProvider[] = ['email'];
+      
+      render(<LoginForm availableProviders={emailOnlyProviders} />);
+
+      expect(screen.queryByText('Continue with Google')).not.toBeInTheDocument();
+      expect(screen.queryByText('Continue with GitHub')).not.toBeInTheDocument();
+      expect(screen.getByText('Send magic link')).toBeInTheDocument();
     });
   });
 
@@ -68,7 +83,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockResolvedValueOnce({ ok: true } as any);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const googleButton = screen.getByText('Continue with Google');
       fireEvent.click(googleButton);
@@ -82,7 +97,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockImplementation(() => new Promise(() => {})); // Never resolves
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const googleButton = screen.getByText('Continue with Google');
       fireEvent.click(googleButton);
@@ -99,7 +114,7 @@ describe('LoginForm', () => {
         .mockImplementation(() => {});
       mockSignIn.mockRejectedValueOnce(new Error('Google auth failed'));
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const googleButton = screen.getByText('Continue with Google');
       fireEvent.click(googleButton);
@@ -119,7 +134,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockResolvedValueOnce({ ok: true } as any);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const githubButton = screen.getByText('Continue with GitHub');
       fireEvent.click(githubButton);
@@ -133,7 +148,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockImplementation(() => new Promise(() => {})); // Never resolves
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const githubButton = screen.getByText('Continue with GitHub');
       fireEvent.click(githubButton);
@@ -150,7 +165,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockResolvedValueOnce({ ok: true } as any);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText(
         'Email address for magic link login'
@@ -172,7 +187,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockResolvedValueOnce({ ok: true } as any);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText(
         'Email address for magic link login'
@@ -196,7 +211,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockResolvedValueOnce({ ok: true } as any);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText(
         'Email address for magic link login'
@@ -227,7 +242,7 @@ describe('LoginForm', () => {
         error: 'Email sending failed',
       } as any);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText(
         'Email address for magic link login'
@@ -246,7 +261,7 @@ describe('LoginForm', () => {
     });
 
     it('should validate email format', async () => {
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText(
         'Email address for magic link login'
@@ -265,7 +280,7 @@ describe('LoginForm', () => {
         url: '/dashboard',
       } as any);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText('Email');
       const passwordInput = screen.getByLabelText('Password');
@@ -292,7 +307,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockResolvedValueOnce({ error: 'CredentialsSignin' } as any);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText('Email');
       const passwordInput = screen.getByLabelText('Password');
@@ -317,7 +332,7 @@ describe('LoginForm', () => {
         .mockImplementation(() => {});
       mockSignIn.mockRejectedValueOnce(new Error('Network error'));
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText('Email');
       const passwordInput = screen.getByLabelText('Password');
@@ -347,7 +362,7 @@ describe('LoginForm', () => {
       // First call fails
       mockSignIn.mockResolvedValueOnce({ error: 'CredentialsSignin' } as any);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText('Email');
       const passwordInput = screen.getByLabelText('Password');
@@ -380,7 +395,7 @@ describe('LoginForm', () => {
     });
 
     it('should validate credentials form fields', () => {
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText('Email');
       const passwordInput = screen.getByLabelText('Password');
@@ -397,7 +412,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockImplementation(() => new Promise(() => {})); // Never resolves
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const googleButton = screen.getByText('Continue with Google');
       fireEvent.click(googleButton);
@@ -418,7 +433,7 @@ describe('LoginForm', () => {
       const mockSignIn = vi.mocked(signIn);
       mockSignIn.mockImplementation(() => new Promise(() => {})); // Never resolves
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const googleButton = screen.getByText('Continue with Google');
       fireEvent.click(googleButton);
@@ -432,7 +447,7 @@ describe('LoginForm', () => {
 
   describe('Accessibility', () => {
     it('should have proper ARIA labels', () => {
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const emailInput = screen.getByLabelText(
         'Email address for magic link login'
@@ -454,7 +469,7 @@ describe('LoginForm', () => {
     });
 
     it('should have proper form structure', () => {
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       // Should have form elements
       const forms = screen.getAllByRole('form');
@@ -476,7 +491,7 @@ describe('LoginForm', () => {
       const error = new Error('OAuth failed');
       mockSignIn.mockRejectedValueOnce(error);
 
-      render(<LoginForm />);
+      render(<LoginForm availableProviders={defaultProviders} />);
 
       const googleButton = screen.getByText('Continue with Google');
       fireEvent.click(googleButton);
