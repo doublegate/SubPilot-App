@@ -99,12 +99,10 @@ export default function ParticleBackground({
       const jsonData = (await response.json()) as unknown[];
       if (jsonData && jsonData.length > 0) {
         // Filter non-private elements
-        const nonPrivateElements = jsonData.filter(
-          (element) => {
-            const elem = element as { private?: boolean };
-            return !elem.private;
-          }
-        );
+        const nonPrivateElements = jsonData.filter(element => {
+          const elem = element as { private?: boolean };
+          return !elem.private;
+        });
         if (nonPrivateElements.length === 0) return;
 
         // Random selection

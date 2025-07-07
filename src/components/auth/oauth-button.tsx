@@ -13,12 +13,31 @@ export function OAuthButton({ provider, disabled = false }: OAuthButtonProps) {
 
   const handleClick = async () => {
     setIsLoading(true);
+    
+    // Debug logging for OAuth issues
+    console.log(`=== OAuth Button Click: ${provider} ===`);
+    console.log('Provider:', provider);
+    console.log('Callback URL:', '/dashboard');
+    console.log('Current URL:', window.location.href);
+    console.log('================================');
+    
     try {
-      await signIn(provider, { callbackUrl: '/dashboard' });
+      const result = await signIn(provider, { 
+        callbackUrl: '/dashboard',
+        redirect: true  // Explicitly set redirect
+      });
+      
+      console.log('SignIn result:', result);
     } catch (error) {
-      console.error(`Sign-in error:`, error);
+      console.error(`Sign-in error for ${provider}:`, error);
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
     } finally {
-      setIsLoading(false);
+      // Don't set loading to false if we're redirecting
+      // setIsLoading(false);
     }
   };
 

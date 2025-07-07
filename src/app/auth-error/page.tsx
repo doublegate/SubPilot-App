@@ -11,7 +11,8 @@ export default async function AuthErrorPage({
   const error = (params.error as string) ?? 'Unknown error';
 
   const errorMessages: Record<string, string> = {
-    Configuration: 'OAuth authentication is not properly configured. Please contact support if this issue persists.',
+    Configuration:
+      'OAuth authentication is not properly configured. Please contact support if this issue persists.',
     AccessDenied: 'You do not have permission to sign in.',
     Verification:
       'The sign in link is no longer valid. It may have been used already or it may have expired.',
@@ -88,8 +89,10 @@ export default async function AuthErrorPage({
                         For administrators
                       </h3>
                       <div className="mt-2 text-sm text-blue-700">
-                        <p>OAuth credentials need to be configured in Vercel:</p>
-                        <ol className="mt-2 list-decimal list-inside space-y-1">
+                        <p>
+                          OAuth credentials need to be configured in Vercel:
+                        </p>
+                        <ol className="mt-2 list-inside list-decimal space-y-1">
                           <li>Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET</li>
                           <li>Add GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET</li>
                           <li>Set NEXTAUTH_URL to https://subpilot.app</li>

@@ -153,7 +153,7 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|.*\\.png$).*)',
+    '/((?!api/auth|api|_next/static|_next/image|.*\\.png$).*)',
     '/dashboard/:path*',
     '/profile/:path*',
     '/settings/:path*',

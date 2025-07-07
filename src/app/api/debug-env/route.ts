@@ -4,7 +4,7 @@ import { auth } from '@/server/auth';
 export async function GET() {
   // Only allow in development or for authenticated admins
   const session = await auth();
-  
+
   if (process.env.NODE_ENV === 'production' && !session?.user) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
@@ -24,8 +24,10 @@ export async function GET() {
     GITHUB_CLIENT_ID_LENGTH: process.env.GITHUB_CLIENT_ID?.length ?? 0,
     GITHUB_CLIENT_SECRET_LENGTH: process.env.GITHUB_CLIENT_SECRET?.length ?? 0,
     // Raw values (first 8 chars only for security)
-    GOOGLE_CLIENT_ID_PREVIEW: process.env.GOOGLE_CLIENT_ID?.substring(0, 8) ?? 'undefined',
-    GITHUB_CLIENT_ID_PREVIEW: process.env.GITHUB_CLIENT_ID?.substring(0, 8) ?? 'undefined',
+    GOOGLE_CLIENT_ID_PREVIEW:
+      process.env.GOOGLE_CLIENT_ID?.substring(0, 8) ?? 'undefined',
+    GITHUB_CLIENT_ID_PREVIEW:
+      process.env.GITHUB_CLIENT_ID?.substring(0, 8) ?? 'undefined',
   };
 
   return NextResponse.json(envCheck, { status: 200 });

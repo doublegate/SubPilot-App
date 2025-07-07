@@ -33,12 +33,27 @@ declare module 'next-auth' {
   }
 }
 
+// Get the correct secret (v5 uses AUTH_SECRET, v4 uses NEXTAUTH_SECRET)
+const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || env.NEXTAUTH_SECRET || env.AUTH_SECRET;
+
+// Get the correct URL (v5 uses AUTH_URL, v4 uses NEXTAUTH_URL)
+const authUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || env.NEXTAUTH_URL || env.AUTH_URL;
+
+// Log configuration for debugging
+console.log('[AUTH V5 FIX] Configuration:', {
+  hasSecret: !!secret,
+  hasUrl: !!authUrl,
+  url: authUrl,
+  nodeEnv: process.env.NODE_ENV,
+});
+
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  *
  * @see https://authjs.dev/reference/configuration/auth-config
  */
 export const authConfig: NextAuthConfig = {
+  secret,
   session: {
     // Use JWT strategy in development for credentials provider
     strategy: env.NODE_ENV === 'development' ? 'jwt' : 'database',
@@ -166,24 +181,23 @@ export const authConfig: NextAuthConfig = {
           }),
         ]
       : []),
-    // Only include OAuth providers if credentials are available
-    // Use process.env directly as fallback for OAuth providers
-    ...((env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID) && 
-        (env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET)
+    // OAuth providers with multiple fallbacks for maximum compatibility
+    ...((env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID) && 
+        (env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET)
       ? [
           GoogleProvider({
-            clientId: env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET!,
+            clientId: env.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || '',
+            clientSecret: env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || '',
             allowDangerousEmailAccountLinking: false,
           }),
         ]
       : []),
-    ...((env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID) && 
-        (env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET)
+    ...((env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID || process.env.AUTH_GITHUB_ID) && 
+        (env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET || process.env.AUTH_GITHUB_SECRET)
       ? [
           GitHubProvider({
-            clientId: env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID!,
-            clientSecret: env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET!,
+            clientId: env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID || process.env.AUTH_GITHUB_ID || '',
+            clientSecret: env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET || process.env.AUTH_GITHUB_SECRET || '',
             allowDangerousEmailAccountLinking: false,
           }),
         ]
@@ -270,19 +284,19 @@ export const authConfig: NextAuthConfig = {
 
 // Debug logging for production OAuth issues
 if (process.env.NODE_ENV === 'production') {
-  console.log('=== Auth Config Debug (Production) ===');
+  console.log('=== Auth V5 Fix Config Debug (Production) ===');
   console.log('OAuth Environment Variables:');
-  console.log('- GOOGLE_CLIENT_ID (env):', !!env.GOOGLE_CLIENT_ID);
-  console.log('- GOOGLE_CLIENT_ID (process.env):', !!process.env.GOOGLE_CLIENT_ID);
-  console.log('- GOOGLE_CLIENT_SECRET (env):', !!env.GOOGLE_CLIENT_SECRET);
-  console.log('- GOOGLE_CLIENT_SECRET (process.env):', !!process.env.GOOGLE_CLIENT_SECRET);
-  console.log('- GITHUB_CLIENT_ID (env):', !!env.GITHUB_CLIENT_ID);
-  console.log('- GITHUB_CLIENT_ID (process.env):', !!process.env.GITHUB_CLIENT_ID);
-  console.log('- GITHUB_CLIENT_SECRET (env):', !!env.GITHUB_CLIENT_SECRET);
-  console.log('- GITHUB_CLIENT_SECRET (process.env):', !!process.env.GITHUB_CLIENT_SECRET);
+  console.log('- GOOGLE_CLIENT_ID:', !!process.env.GOOGLE_CLIENT_ID);
+  console.log('- AUTH_GOOGLE_ID:', !!process.env.AUTH_GOOGLE_ID);
+  console.log('- GITHUB_CLIENT_ID:', !!process.env.GITHUB_CLIENT_ID);
+  console.log('- AUTH_GITHUB_ID:', !!process.env.AUTH_GITHUB_ID);
+  console.log('- AUTH_SECRET:', !!process.env.AUTH_SECRET);
+  console.log('- NEXTAUTH_SECRET:', !!process.env.NEXTAUTH_SECRET);
+  console.log('- AUTH_URL:', process.env.AUTH_URL ?? 'NOT SET');
+  console.log('- NEXTAUTH_URL:', process.env.NEXTAUTH_URL ?? 'NOT SET');
   console.log('- Total providers configured:', authConfig.providers.length);
   console.log('- Provider IDs:', authConfig.providers.map((p: any) => p.id || p.type).join(', '));
-  console.log('=====================================');
+  console.log('=============================================');
 }
 
 export const { auth, handlers, signIn, signOut } = NextAuth(authConfig);
