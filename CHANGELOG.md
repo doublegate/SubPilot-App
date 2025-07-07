@@ -5,7 +5,7 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.8.5] - 2025-07-06 - Critical Security Fixes & OAuth Authentication Improvements
+## [1.8.5] - 2025-07-07 - Critical Security Fixes & OAuth Authentication Improvements
 
 ### 🔒 Security Fixes
 
@@ -72,6 +72,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Created test suite** - Added comprehensive email integration test script with interactive and non-interactive modes
 - **Enhanced readline handling** - Fixed readline interface issues with proper error handling and graceful shutdown
 
+#### OAuth Authentication Configuration
+
+- **Fixed TypeScript compilation errors** - Added proper type annotations to OAuth diagnostic endpoints
+- **Fixed async headers() call** - Updated to await headers() for Next.js 15 compatibility
+- **NextAuth v5 compatibility** - Added support for both AUTH_* and NEXTAUTH_* environment variable naming conventions
+- **Multiple fallbacks** - OAuth providers now check for v4 (GOOGLE_CLIENT_ID) and v5 (AUTH_GOOGLE_ID) patterns
+- **Comprehensive diagnostics** - Created multiple diagnostic endpoints to troubleshoot OAuth configuration issues
+- **Code formatting** - Applied Prettier formatting to all OAuth-related files for consistency
+
 ### 📚 Developer Experience
 
 #### Email Testing
@@ -93,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Environment setup** - Clarified `.env.local` requirements for production scripts
 - **Email testing** - Added documentation for new email testing capabilities
 
-## [Unreleased] - 2025-07-06
+## [Unreleased]
 
 ### 🐛 Bug Fixes
 
@@ -115,6 +124,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fixed SendGrid imports** - Corrected ES module import syntax for @sendgrid/mail package
 - **Created test suite** - Added comprehensive email integration test script with interactive and non-interactive modes
 - **Enhanced readline handling** - Fixed readline interface issues with proper error handling and graceful shutdown
+
+#### OAuth Authentication Configuration
+
+- **Fixed TypeScript compilation errors** - Added proper type annotations to OAuth diagnostic endpoints
+- **Fixed async headers() call** - Updated to await headers() for Next.js 15 compatibility
+- **NextAuth v5 compatibility** - Added support for both AUTH_* and NEXTAUTH_* environment variable naming conventions
+- **Multiple fallbacks** - OAuth providers now check for v4 (GOOGLE_CLIENT_ID) and v5 (AUTH_GOOGLE_ID) patterns
+- **Comprehensive diagnostics** - Created multiple diagnostic endpoints to troubleshoot OAuth configuration issues
+- **Code formatting** - Applied Prettier formatting to all OAuth-related files for consistency
 
 ### 🎨 Improvements
 
