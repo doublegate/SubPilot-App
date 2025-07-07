@@ -21,8 +21,13 @@ Object.defineProperty(window, 'location', {
 
 describe('LoginForm', () => {
   // Default available providers for testing
-  const defaultProviders: AuthProvider[] = ['google', 'github', 'email', 'credentials'];
-  
+  const defaultProviders: AuthProvider[] = [
+    'google',
+    'github',
+    'email',
+    'credentials',
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset environment to development by default
@@ -66,14 +71,18 @@ describe('LoginForm', () => {
       expect(screen.queryByText('Development Mode')).not.toBeInTheDocument();
       expect(screen.queryByLabelText('Password')).not.toBeInTheDocument();
     });
-    
+
     it('should not render OAuth buttons when not available', () => {
       const emailOnlyProviders: AuthProvider[] = ['email'];
-      
+
       render(<LoginForm availableProviders={emailOnlyProviders} />);
 
-      expect(screen.queryByText('Continue with Google')).not.toBeInTheDocument();
-      expect(screen.queryByText('Continue with GitHub')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Continue with Google')
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Continue with GitHub')
+      ).not.toBeInTheDocument();
       expect(screen.getByText('Send magic link')).toBeInTheDocument();
     });
   });

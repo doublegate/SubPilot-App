@@ -10,27 +10,13 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ availableProviders }: LoginFormProps) {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading] = useState<boolean>(false);
 
   const hasOAuthProviders =
     availableProviders.includes('google') ||
     availableProviders.includes('github');
   const hasCredentials = availableProviders.includes('credentials');
   const hasEmail = availableProviders.includes('email');
-
-  async function onSubmit(provider: string) {
-    console.log(`OAuth button clicked: ${provider}`);
-    setIsLoading(true);
-
-    try {
-      console.log(`Calling signIn for ${provider}...`);
-      await signIn(provider, { callbackUrl: '/dashboard' });
-    } catch (error) {
-      console.error(`Error signing in with ${provider}:`, error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   return (
     <div className="grid gap-6">
@@ -60,13 +46,14 @@ export function LoginForm({ availableProviders }: LoginFormProps) {
       {availableProviders.includes('github') && (
         <OAuthButton provider="github" disabled={isLoading} />
       )}
-      
+
       {/* Show message if no OAuth providers are configured in production */}
       {!hasOAuthProviders && process.env.NODE_ENV === 'production' && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
           <p className="font-medium text-amber-800">OAuth Not Configured</p>
           <p className="text-amber-700">
-            OAuth sign-in is temporarily unavailable. Please use email sign-in below.
+            OAuth sign-in is temporarily unavailable. Please use email sign-in
+            below.
           </p>
         </div>
       )}

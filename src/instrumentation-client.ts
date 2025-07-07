@@ -4,11 +4,11 @@
 
 import * as Sentry from '@sentry/nextjs';
 
-const SENTRY_DSN = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+const SENTRY_DSN = process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 Sentry.init({
   dsn:
-    SENTRY_DSN ||
+    SENTRY_DSN ??
     'https://0e749c029e9ce36639df7a5326835d33@o4509622716399616.ingest.us.sentry.io/4509623741251584',
 
   // Set tracesSampleRate to 1.0 to capture 100%
@@ -49,20 +49,12 @@ Sentry.init({
       const error = hint.originalException as Error;
 
       // Filter out network errors
-      if (
-        error &&
-        error.message &&
-        error.message.includes('Network request failed')
-      ) {
+      if (error?.message?.includes('Network request failed')) {
         return null;
       }
 
       // Filter out ResizeObserver errors (common browser quirk)
-      if (
-        error &&
-        error.message &&
-        error.message.includes('ResizeObserver loop limit exceeded')
-      ) {
+      if (error?.message?.includes('ResizeObserver loop limit exceeded')) {
         return null;
       }
     }
@@ -74,7 +66,7 @@ Sentry.init({
   environment: process.env.NODE_ENV,
 
   // Set release version
-  release: process.env.npm_package_version || '1.8.0',
+  release: process.env.npm_package_version ?? '1.8.0',
 
   // Additional tags
   initialScope: {

@@ -1,5 +1,5 @@
 import type { PrismaClient, UserSession } from '@prisma/client';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { createHash } from 'crypto';
 import { AuditLogger } from './audit-logger';
 

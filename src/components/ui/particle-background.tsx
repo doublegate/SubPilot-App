@@ -4,9 +4,43 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useTheme } from 'next-themes';
 
 // Type declarations for p5.js
+interface P5Instance {
+  createCanvas: (width: number, height: number) => P5Canvas;
+  windowWidth: number;
+  windowHeight: number;
+  width: number;
+  height: number;
+  random: (max: number) => number;
+  randomSeed: (seed: number) => void;
+  noiseSeed: (seed: number) => void;
+  noise: (x: number, y: number, z: number) => number;
+  stroke: (...args: number[]) => void;
+  strokeWeight: (weight: number) => void;
+  clear: () => void;
+  background: (color: number, alpha?: number) => void;
+  point: (x: number, y: number) => void;
+  TAU: number;
+  cos: (angle: number) => number;
+  sin: (angle: number) => number;
+  frameCount: number;
+  resizeCanvas: (width: number, height: number) => void;
+  noLoop: () => void;
+  loop: () => void;
+  remove: () => void;
+  setup?: () => void;
+  draw?: () => void;
+  windowResized?: () => void;
+}
+
+interface P5Canvas {
+  parent: (parent: HTMLElement | null) => void;
+}
+
+type P5Constructor = new (sketch: (p: P5Instance) => void) => P5Instance;
+
 declare global {
   interface Window {
-    p5?: any;
+    p5?: P5Constructor;
   }
 }
 
@@ -45,7 +79,7 @@ export default function ParticleBackground({
   stopOnScroll = true,
 }: ParticleBackgroundProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const p5InstanceRef = useRef<any>(null);
+  const p5InstanceRef = useRef<P5Instance | null>(null);
   const isLoadedRef = useRef(false);
   const [p5Loaded, setP5Loaded] = useState(false);
   const [seedInfo, setSeedInfo] = useState<{
@@ -62,11 +96,14 @@ export default function ParticleBackground({
       const response = await fetch(seedUrl);
       if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
 
-      const jsonData = await response.json();
+      const jsonData = (await response.json()) as unknown[];
       if (jsonData && jsonData.length > 0) {
         // Filter non-private elements
         const nonPrivateElements = jsonData.filter(
-          (element: any) => !element.private
+          (element) => {
+            const elem = element as { private?: boolean };
+            return !elem.private;
+          }
         );
         if (nonPrivateElements.length === 0) return;
 
@@ -74,11 +111,11 @@ export default function ParticleBackground({
         const randomIndex = Math.floor(
           Math.random() * nonPrivateElements.length
         );
-        const randomImage = Math.floor(
-          Math.random() * nonPrivateElements[randomIndex].length
-        );
-        const imageData: ImageData =
-          nonPrivateElements[randomIndex][randomImage];
+        const selectedElement = nonPrivateElements[randomIndex];
+        if (!Array.isArray(selectedElement)) return;
+
+        const randomImage = Math.floor(Math.random() * selectedElement.length);
+        const imageData = selectedElement[randomImage] as ImageData;
 
         // Calculate seed from name
         let seed = 0;
@@ -122,8 +159,8 @@ export default function ParticleBackground({
     const currentTheme = theme;
 
     try {
-      p5InstanceRef.current = new window.p5((p: any) => {
-        let particles: Particle[] = [];
+      p5InstanceRef.current = new window.p5((p: P5Instance) => {
+        const particles: Particle[] = [];
         const noiseScale = 0.01 / 9; // Matches Universal-Blue
 
         p.setup = () => {
@@ -131,7 +168,7 @@ export default function ParticleBackground({
           canvas.parent(canvasRef.current);
 
           // Apply seeding if available
-          if (seed !== null) {
+          if (seed !== null && seed !== undefined) {
             p.randomSeed(seed);
             p.noiseSeed(seed);
           }
@@ -163,9 +200,7 @@ export default function ParticleBackground({
           const bgAlpha = currentTheme === 'dark' ? 10 : 15; // Adjust trail length based on theme
           p.background(bgColor, bgAlpha);
 
-          for (let i = 0; i < particles.length; i++) {
-            const pt = particles[i];
-
+          for (const pt of particles) {
             // Bounds check
             if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number')
               continue;
@@ -192,7 +227,7 @@ export default function ParticleBackground({
         };
 
         // Helper function to check if particle is on screen
-        const onScreen = (v: Particle, p: any) => {
+        const onScreen = (v: Particle, p: P5Instance) => {
           return v.x >= 0 && v.x <= p.width && v.y >= 0 && v.y <= p.height;
         };
 
@@ -270,7 +305,7 @@ export default function ParticleBackground({
   // Initialize p5.js once the script is loaded
   useEffect(() => {
     if (p5Loaded) {
-      initializeP5();
+      void initializeP5();
     }
   }, [p5Loaded, initializeP5]);
 
@@ -278,7 +313,7 @@ export default function ParticleBackground({
   useEffect(() => {
     if (p5Loaded && p5InstanceRef.current) {
       cleanupP5();
-      const timeoutId = setTimeout(initializeP5, 100);
+      const timeoutId = setTimeout(() => void initializeP5(), 100);
       return () => clearTimeout(timeoutId);
     }
   }, [theme, cleanupP5, initializeP5, p5Loaded]);

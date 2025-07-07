@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { EmailService } from '../email.service';
 import { emitCancellationEvent } from '@/server/lib/event-bus';
 import type { Job, JobResult } from '@/server/lib/job-queue';

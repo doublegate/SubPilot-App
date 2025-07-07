@@ -7,7 +7,7 @@ import { createInnerTRPCContext } from '@/server/api/trpc';
 // PlaidApi import removed as unused - fixes ESLint warning
 import type { Session } from 'next-auth';
 import type { PlaidItem, BankAccount } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+import type { Decimal } from '@prisma/client/runtime/library';
 import { plaid } from '@/server/plaid-client';
 
 // Helper function to create Decimal from number for tests
