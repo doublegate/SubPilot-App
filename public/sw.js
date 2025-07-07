@@ -53,6 +53,9 @@ self.addEventListener('fetch', event => {
   // Skip cross-origin requests
   if (url.origin !== location.origin) return;
 
+  // Skip Vercel analytics and monitoring
+  if (url.pathname.startsWith('/_vercel/')) return;
+
   // API requests - network first, cache fallback
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirst(request));
