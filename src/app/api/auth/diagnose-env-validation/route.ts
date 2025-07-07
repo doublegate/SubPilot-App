@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const diagnostics = {
+  const diagnostics: any = {
     timestamp: new Date().toISOString(),
     
     // Raw process.env values

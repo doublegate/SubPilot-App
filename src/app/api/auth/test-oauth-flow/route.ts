@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 // Test OAuth flow and check for configuration errors
 export async function GET() {
   try {
-    const headersList = headers();
+    const headersList = await headers();
     const host = headersList.get('host') || 'localhost:3000';
     const protocol = headersList.get('x-forwarded-proto') || 'http';
     const baseUrl = `${protocol}://${host}`;

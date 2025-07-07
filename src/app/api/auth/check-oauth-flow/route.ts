@@ -4,7 +4,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const provider = searchParams.get('provider') || 'google';
   
-  const diagnostics = {
+  const diagnostics: any = {
     timestamp: new Date().toISOString(),
     provider,
     
@@ -14,6 +14,9 @@ export async function GET(request: Request) {
       NEXTAUTH_URL: process.env.NEXTAUTH_URL,
       VERCEL_URL: process.env.VERCEL_URL,
       hasSecret: !!process.env.NEXTAUTH_SECRET,
+      envModuleLoaded: false,
+      envValues: null,
+      envError: null,
     },
     
     // Provider credentials check
