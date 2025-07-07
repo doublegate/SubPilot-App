@@ -5,6 +5,22 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.6] - 2025-07-07 - Authentication Redirect Loop Fix
+
+### 🐛 Bug Fixes
+
+#### Authentication System Debugging
+- **Identified root cause of redirect loops** - Discovered Vercel SSO protection was intercepting requests before app auth
+- **Enhanced debug capabilities** - Added comprehensive auth debugging endpoints and logging
+- **NextAuth v4/v5 compatibility** - Improved support for both AUTH_* and NEXTAUTH_* environment variables
+- **Restored middleware functionality** - Re-enabled auth redirects after confirming they work correctly
+- **Cleaned up debug code** - Removed temporary debug logging after issue resolution
+
+#### Middleware Security
+- **Enhanced auth edge compatibility** - Improved edge runtime authentication checks
+- **Maintained security headers** - Preserved all CSP and security configurations
+- **Trust host configuration** - Added proper Vercel deployment support
+
 ## [1.8.5] - 2025-07-07 - Critical Security Fixes & OAuth Authentication Improvements
 
 ### 🔒 Security Fixes

@@ -6,10 +6,10 @@
   <h3>Your command center for recurring finances</h3>
   <p>A modern web platform for monitoring, managing, and canceling subscriptions</p>
   
-  <p><strong>🚀 v1.8.5: Critical Security Fixes & OAuth Authentication Improvements - July 7, 2025!</strong></p>
-  <p><strong>Current Version:</strong> v1.8.5 | <strong>Live Demo:</strong> <a href="https://subpilot-app.vercel.app">subpilot-app.vercel.app</a></p>
+  <p><strong>🚀 v1.8.6: Authentication Redirect Loop Fix - July 7, 2025!</strong></p>
+  <p><strong>Current Version:</strong> v1.8.6 | <strong>Live Demo:</strong> <a href="https://subpilot-app.vercel.app">subpilot-app.vercel.app</a></p>
   <p><strong>Status:</strong> Phase 3 Complete ✅ | Production Ready ✅ | Enterprise Architecture ✅ | Commercial Launch Ready ✅ | Phase 4 Launch</p>
-  <p><strong>Latest (2025-07-07 01:27 EDT):</strong> Security Fixes + OAuth Improvements + Redirect Loop Fix + Build Excellence (Zero TypeScript/ESLint errors) ✅</p>
+  <p><strong>Latest (2025-07-07 02:06 EDT):</strong> Auth Redirect Debug + Vercel SSO Issue Identified + Middleware Restored + Build Excellence ✅</p>
 </div>
 
 ## 🚀 Quick Start
