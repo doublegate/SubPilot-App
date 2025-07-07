@@ -1,17 +1,18 @@
 import 'server-only';
+import { env } from '@/env';
 
 export type AuthProvider = 'google' | 'github' | 'email' | 'credentials';
 
 export function getAvailableProviders(): AuthProvider[] {
   const providers: AuthProvider[] = [];
 
-  // Check for Google OAuth
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  // Check for Google OAuth using validated env object
+  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
     providers.push('google');
   }
 
-  // Check for GitHub OAuth
-  if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  // Check for GitHub OAuth using validated env object
+  if (env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET) {
     providers.push('github');
   }
 
@@ -19,7 +20,7 @@ export function getAvailableProviders(): AuthProvider[] {
   providers.push('email');
 
   // Credentials provider only in development
-  if (process.env.NODE_ENV === 'development') {
+  if (env.NODE_ENV === 'development') {
     providers.push('credentials');
   }
 

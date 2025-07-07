@@ -6,7 +6,7 @@ import EmailProvider from 'next-auth/providers/email';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 
-// Use process.env directly for linting compatibility
+import { env } from '@/env';
 import { db } from '@/server/db';
 import { sendVerificationRequest } from '@/lib/email';
 import {
@@ -41,7 +41,7 @@ declare module 'next-auth' {
 export const authConfig: NextAuthConfig = {
   session: {
     // Use JWT strategy in development for credentials provider
-    strategy: process.env.NODE_ENV === 'development' ? 'jwt' : 'database',
+    strategy: env.NODE_ENV === 'development' ? 'jwt' : 'database',
   },
   callbacks: {
     session: ({ session, token, user }) => {
@@ -76,7 +76,7 @@ export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(db),
   providers: [
     // Credentials provider for development/testing
-    ...(process.env.NODE_ENV === 'development'
+    ...(env.NODE_ENV === 'development'
       ? [
           CredentialsProvider({
             name: 'credentials',
@@ -167,37 +167,37 @@ export const authConfig: NextAuthConfig = {
         ]
       : []),
     // Only include OAuth providers if credentials are available
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? [
           GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
             allowDangerousEmailAccountLinking: false,
           }),
         ]
       : []),
-    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+    ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
       ? [
           GitHubProvider({
-            clientId: process.env.GITHUB_CLIENT_ID,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET,
+            clientId: env.GITHUB_CLIENT_ID,
+            clientSecret: env.GITHUB_CLIENT_SECRET,
             allowDangerousEmailAccountLinking: false,
           }),
         ]
       : []),
     EmailProvider({
       server: {
-        host: process.env.SMTP_HOST ?? 'localhost',
-        port: parseInt(process.env.SMTP_PORT ?? '1025'),
+        host: env.SMTP_HOST ?? 'localhost',
+        port: parseInt(env.SMTP_PORT ?? '1025'),
         auth:
-          process.env.SMTP_USER && process.env.SMTP_PASS
+          env.SMTP_USER && env.SMTP_PASS
             ? {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
+                user: env.SMTP_USER,
+                pass: env.SMTP_PASS,
               }
             : undefined,
       },
-      from: process.env.FROM_EMAIL ?? 'noreply@subpilot.com',
+      from: env.FROM_EMAIL ?? 'noreply@subpilot.com',
       sendVerificationRequest: async params => {
         await sendVerificationRequest({
           identifier: params.identifier,
@@ -205,17 +205,17 @@ export const authConfig: NextAuthConfig = {
           expires: params.expires,
           provider: {
             server: {
-              host: process.env.SMTP_HOST ?? 'smtp.sendgrid.net',
-              port: parseInt(process.env.SMTP_PORT ?? '587'),
+              host: env.SMTP_HOST ?? 'smtp.sendgrid.net',
+              port: parseInt(env.SMTP_PORT ?? '587'),
               auth:
-                process.env.SMTP_USER && process.env.SMTP_PASS
+                env.SMTP_USER && env.SMTP_PASS
                   ? {
-                      user: process.env.SMTP_USER,
-                      pass: process.env.SMTP_PASS,
+                      user: env.SMTP_USER,
+                      pass: env.SMTP_PASS,
                     }
                   : undefined,
             },
-            from: process.env.FROM_EMAIL ?? 'noreply@subpilot.com',
+            from: env.FROM_EMAIL ?? 'noreply@subpilot.com',
           },
           token: params.token,
           theme: params.theme,
