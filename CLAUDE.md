@@ -791,3 +791,17 @@ Critical Learning (2025-07-07):
 - Implementation: Systematic review and remediation of all security vulnerabilities
 - Testing: Include dedicated security tests for vulnerability prevention
 ```
+
+### Authentication Redirect Loop Fix Pattern
+```
+Critical Learning (2025-07-07):
+- Edge Runtime Environment Variables: auth-edge.ts requires both AUTH_SECRET and NEXTAUTH_SECRET support
+- Problem: Infinite redirect loop when authenticated users try to access protected routes
+- Root Cause: Missing environment variable fallback in edge runtime context
+- Solution: Support both NextAuth v4 (NEXTAUTH_SECRET) and v5 (AUTH_SECRET) naming
+- Middleware Configuration: Properly exclude auth routes from protection with updated matcher
+- Debug Strategy: Add comprehensive logging to middleware for auth flow troubleshooting
+- Pattern: const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET
+- Implementation: Updated auth-edge.ts and middleware.ts with fallback support and debug logging
+- Testing: Created /api/auth/debug-session endpoint for authentication state inspection
+```

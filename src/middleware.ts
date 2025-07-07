@@ -13,6 +13,11 @@ export async function middleware(req: NextRequest) {
   const isLoggedIn = !!auth;
   const { pathname } = req.nextUrl;
 
+  // Debug logging
+  console.log('[Middleware] Path:', pathname);
+  console.log('[Middleware] Auth status:', isLoggedIn ? 'Logged in' : 'Not logged in');
+  console.log('[Middleware] Auth user:', auth?.user?.email ?? 'None');
+
   // Define protected routes
   const protectedRoutes = ['/dashboard', '/profile', '/settings'];
   const authRoutes = ['/login', '/signup', '/verify-request', '/auth-error'];
@@ -25,6 +30,7 @@ export async function middleware(req: NextRequest) {
 
   // Redirect to login if accessing protected route without auth
   if (isProtectedRoute && !isLoggedIn) {
+    console.log('[Middleware] Redirecting to login - protected route without auth');
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('callbackUrl', pathname);
@@ -33,6 +39,7 @@ export async function middleware(req: NextRequest) {
 
   // Redirect to dashboard if accessing auth routes while logged in
   if (isAuthRoute && isLoggedIn) {
+    console.log('[Middleware] Redirecting to dashboard - auth route while logged in');
     const url = req.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
@@ -153,9 +160,14 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 
 export const config = {
   matcher: [
-    '/((?!api/auth|api|_next/static|_next/image|.*\\.png$).*)',
-    '/dashboard/:path*',
-    '/profile/:path*',
-    '/settings/:path*',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api/auth (auth endpoints need to be accessible)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.svg$|.*\\.gif$).*)',
   ],
 };
