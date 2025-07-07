@@ -10,17 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🐛 Bug Fixes
 
 #### Sentry v9 Migration
+
 - **Migrated to Sentry v9 API** - Updated from deprecated v8 class-based integrations to v9 functional API
 - **Fixed instrumentation** - Moved client configuration to `instrumentation-client.ts` for Next.js 15 compatibility
 - **Removed duplicate configurations** - Cleaned up duplicate `withSentryConfig` declarations in next.config.js
 - **Deleted deprecated files** - Removed obsolete `sentry.client.config.js` file
 
 #### Environment Variable Loading
+
 - **Fixed production scripts** - Resolved "Invalid environment variables" errors in validation and test scripts
 - **Updated npm scripts** - Added `dotenv-cli` to load `.env.local` before ES module imports
 - **Consistent pattern** - Applied same environment loading pattern across all production scripts
 
 #### Email Integration
+
 - **Fixed SendGrid imports** - Corrected ES module import syntax for @sendgrid/mail package
 - **Created test suite** - Added comprehensive email integration test script with interactive and non-interactive modes
 - **Enhanced readline handling** - Fixed readline interface issues with proper error handling and graceful shutdown
@@ -28,11 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🎨 Improvements
 
 #### Developer Experience
+
 - **Email testing script** - New `npm run test:email` command for validating SendGrid configuration
 - **Non-interactive mode** - Added `--check` flag for CI/CD email configuration validation
 - **Better error messages** - Improved error handling and user feedback in production scripts
 
 ### 📝 Documentation
+
 - **Updated script usage** - Added documentation for new email testing capabilities
 - **Environment setup** - Clarified `.env.local` requirements for production scripts
 

@@ -3,12 +3,20 @@
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { OAuthButton } from './oauth-button';
+import type { AuthProvider } from '@/lib/auth-providers';
 
-export function LoginForm() {
+interface LoginFormProps {
+  availableProviders: AuthProvider[];
+}
+
+export function LoginForm({ availableProviders }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  // Credentials login is only available in development for testing
-  // This is disabled in production for security
-  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  const hasOAuthProviders =
+    availableProviders.includes('google') ||
+    availableProviders.includes('github');
+  const hasCredentials = availableProviders.includes('credentials');
+  const hasEmail = availableProviders.includes('email');
 
   async function onSubmit(provider: string) {
     console.log(`OAuth button clicked: ${provider}`);
@@ -27,37 +35,47 @@ export function LoginForm() {
   return (
     <div className="grid gap-6">
       {/* Development credentials login */}
-      {isDevelopment && (
+      {hasCredentials && (
         <>
           <CredentialsForm isLoading={isLoading} />
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+          {hasOAuthProviders && (
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with OAuth
+                </span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with OAuth
-              </span>
-            </div>
-          </div>
+          )}
         </>
       )}
 
-      <OAuthButton provider="google" disabled={isLoading} />
-      <OAuthButton provider="github" disabled={isLoading} />
+      {/* OAuth buttons - only show if provider is available */}
+      {availableProviders.includes('google') && (
+        <OAuthButton provider="google" disabled={isLoading} />
+      )}
+      {availableProviders.includes('github') && (
+        <OAuthButton provider="github" disabled={isLoading} />
+      )}
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+      {/* Divider before email if we have OAuth or credentials */}
+      {hasEmail && (hasOAuthProviders || hasCredentials) && (
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
+      )}
 
-      <EmailForm isLoading={isLoading} />
+      {hasEmail && <EmailForm isLoading={isLoading} />}
     </div>
   );
 }

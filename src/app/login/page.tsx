@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/server/auth';
 import { LoginForm } from '@/components/auth/login-form';
 import { ThemeToggleStandalone } from '@/components/theme-toggle-standalone';
+import { getAvailableProviders } from '@/lib/auth-providers';
 
 export default async function LoginPage() {
   const session = await auth();
@@ -10,6 +11,8 @@ export default async function LoginPage() {
   if (session?.user) {
     redirect('/dashboard');
   }
+
+  const availableProviders = getAvailableProviders();
 
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
@@ -26,7 +29,7 @@ export default async function LoginPage() {
             Sign in to your account to continue
           </p>
         </div>
-        <LoginForm />
+        <LoginForm availableProviders={availableProviders} />
         <p className="px-8 text-center text-sm text-muted-foreground">
           <Link
             href="/signup"
