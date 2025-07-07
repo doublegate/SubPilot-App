@@ -60,6 +60,16 @@ export function LoginForm({ availableProviders }: LoginFormProps) {
       {availableProviders.includes('github') && (
         <OAuthButton provider="github" disabled={isLoading} />
       )}
+      
+      {/* Show message if no OAuth providers are configured in production */}
+      {!hasOAuthProviders && process.env.NODE_ENV === 'production' && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+          <p className="font-medium text-amber-800">OAuth Not Configured</p>
+          <p className="text-amber-700">
+            OAuth sign-in is temporarily unavailable. Please use email sign-in below.
+          </p>
+        </div>
+      )}
 
       {/* Divider before email if we have OAuth or credentials */}
       {hasEmail && (hasOAuthProviders || hasCredentials) && (
