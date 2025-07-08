@@ -10,11 +10,12 @@ SubPilot is a modern subscription management platform built with the T3 Stack. I
 - **Architecture Excellence**: Microservice design with intelligent orchestration ✅  
 - **Commercial Ready**: Scalable platform ready for Phase 4 launch initiatives ✅
 - **Security Enhancement**: Complete Two-Factor Authentication implementation ✅
+- **Git History**: Successfully cleaned exposed secrets using BFG Repo-Cleaner ✅
 - **Previous Release**: v1.8.7 on 2025-07-08 (OAuth Account Linking UI Feature)
 - **Security Status**: Enhanced with 2FA - SMS & Authenticator App support (2025-07-08)
 - **Phase 3 Completed**: 2025-06-28 (All automation features implemented)
-- **Latest Updates**: 2025-07-08 - UI fixes, billing restructure, complete 2FA system
-- **Last Updated**: 2025-07-08 02:50 EDT
+- **Latest Updates**: 2025-07-08 - UI fixes, billing restructure, 2FA system, Git history cleanup
+- **Last Updated**: 2025-07-08 17:57 EDT
 - Phase 2 complete (AI categorization, PWA, predictive analytics)
 - Phase 3 Agent 1: Cancellation System - COMPLETE ✅
 - Phase 3 Agent 2: AI Assistant - COMPLETE ✅
@@ -846,4 +847,23 @@ Critical Learning (2025-07-08):
 - Backward Compatibility: Created smooth migration path with re-exports
 - Pattern: Single source of truth for authentication configuration
 - Implementation: Production-ready auth system with enterprise security features
+```
+
+### Git History Security Cleanup Pattern
+```
+Critical Learning (2025-07-08):
+- Exposed Secret Incident: AUTH_SECRET accidentally committed in documentation file
+- Tool Used: BFG Repo-Cleaner (Java-based Git history rewriter)
+- Process Steps:
+  1. Create repo-cleaning directory and add to .gitignore
+  2. Download BFG: wget https://repo1.maven.org/maven2/com/madgag/bfg/1.14.0/bfg-1.14.0.jar
+  3. Create secrets file with exposed secret value
+  4. Clone mirror: git clone --mirror [repo-url]
+  5. Run BFG: java -jar bfg.jar --replace-text secrets-to-remove.txt repo.git
+  6. Clean refs: git reflog expire --expire=now --all && git gc --prune=now --aggressive
+  7. Force push: git push --force
+  8. Update local: git fetch --all && git reset --hard origin/main
+- Secret Removed: EKZRPEVo3X/cZAgA6wam5L7ZwUeVfzPh5ivra0JiKQ4=
+- Files Affected: docs/authentication-redirect-loop-fix.md (now deleted)
+- Pattern: Always audit commits for secrets before pushing
 ```
