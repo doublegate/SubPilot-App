@@ -1,6 +1,6 @@
 /**
  * Consolidated Authentication Configuration for SubPilot
- * 
+ *
  * This is the single, production-ready auth configuration that consolidates
  * all working features from multiple auth config files.
  */
@@ -48,9 +48,9 @@ const secret =
   env.AUTH_SECRET;
 
 // For OAuth callbacks, use the correct URL
-const authUrl = 
-  process.env.AUTH_URL ?? 
-  process.env.NEXTAUTH_URL ?? 
+const authUrl =
+  process.env.AUTH_URL ??
+  process.env.NEXTAUTH_URL ??
   'https://subpilot-app.vercel.app';
 
 /**
@@ -68,37 +68,41 @@ export const authConfig: NextAuthConfig = {
   providers: [
     // OAuth Providers with environment variable fallbacks
     GoogleProvider({
-      clientId: 
-        process.env.GOOGLE_CLIENT_ID || 
-        process.env.AUTH_GOOGLE_ID || 
+      clientId:
+        process.env.GOOGLE_CLIENT_ID ||
+        process.env.AUTH_GOOGLE_ID ||
         env.GOOGLE_CLIENT_ID,
-      clientSecret: 
-        process.env.GOOGLE_CLIENT_SECRET || 
-        process.env.AUTH_GOOGLE_SECRET || 
+      clientSecret:
+        process.env.GOOGLE_CLIENT_SECRET ||
+        process.env.AUTH_GOOGLE_SECRET ||
         env.GOOGLE_CLIENT_SECRET,
     }),
     GitHubProvider({
-      clientId: 
-        process.env.GITHUB_CLIENT_ID || 
-        process.env.AUTH_GITHUB_ID || 
+      clientId:
+        process.env.GITHUB_CLIENT_ID ||
+        process.env.AUTH_GITHUB_ID ||
         env.GITHUB_CLIENT_ID,
-      clientSecret: 
-        process.env.GITHUB_CLIENT_SECRET || 
-        process.env.AUTH_GITHUB_SECRET || 
+      clientSecret:
+        process.env.GITHUB_CLIENT_SECRET ||
+        process.env.AUTH_GITHUB_SECRET ||
         env.GITHUB_CLIENT_SECRET,
     }),
     // Email provider for magic links (only if SMTP is configured)
-    ...(env.SMTP_HOST ? [EmailProvider({
-      server: {
-        host: env.SMTP_HOST,
-        port: Number(env.SMTP_PORT || '587'),
-        auth: {
-          user: env.SMTP_USER || '',
-          pass: env.SMTP_PASS || '',
-        },
-      },
-      from: env.FROM_EMAIL || 'noreply@subpilot.app',
-    })] : []),
+    ...(env.SMTP_HOST
+      ? [
+          EmailProvider({
+            server: {
+              host: env.SMTP_HOST,
+              port: Number(env.SMTP_PORT || '587'),
+              auth: {
+                user: env.SMTP_USER || '',
+                pass: env.SMTP_PASS || '',
+              },
+            },
+            from: env.FROM_EMAIL || 'noreply@subpilot.app',
+          }),
+        ]
+      : []),
     // Credentials provider for email/password
     CredentialsProvider({
       name: 'credentials',
@@ -109,7 +113,7 @@ export const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         const email = credentials?.email as string;
         const password = credentials?.password as string;
-        
+
         if (!email || !password) {
           return null;
         }
@@ -203,12 +207,12 @@ export const authConfig: NextAuthConfig = {
       try {
         const targetUrl = new URL(url);
         const baseUrlObj = new URL(baseUrl);
-        
+
         // Allow same origin redirects
         if (targetUrl.origin === baseUrlObj.origin) {
           return url;
         }
-        
+
         // Allow Vercel app URLs
         if (targetUrl.hostname.endsWith('.vercel.app')) {
           return url;
@@ -249,7 +253,9 @@ export const authConfig: NextAuthConfig = {
                   scope: account.scope,
                   id_token: account.id_token,
                   session_state: account.session_state as string | undefined,
-                  refresh_token_expires_in: account.refresh_token_expires_in as number | undefined,
+                  refresh_token_expires_in: account.refresh_token_expires_in as
+                    | number
+                    | undefined,
                 },
               });
 
@@ -264,7 +270,7 @@ export const authConfig: NextAuthConfig = {
               } catch (error) {
                 console.error('Failed to log audit event:', error);
               }
-              
+
               // Redirect to profile with success message
               return `/profile?linked=${account.provider}`;
             }
@@ -329,8 +335,12 @@ export const authConfig: NextAuthConfig = {
     },
     async signOut(data) {
       // Handle both session-based and token-based signOut events
-      const userId = 'token' in data ? data.token?.sub : 
-                    'session' in data ? data.session?.userId : undefined;
+      const userId =
+        'token' in data
+          ? data.token?.sub
+          : 'session' in data
+            ? data.session?.userId
+            : undefined;
       if (userId) {
         try {
           await AuditLogger.log({

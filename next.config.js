@@ -13,8 +13,6 @@ const config = {
   output: 'standalone',
   experimental: {
     // optimizeCss: true, // Disabled temporarily due to critters module issue
-    // Trust proxy headers for Vercel deployments
-    trustHostHeader: true,
   },
   eslint: {
     // During builds, use external ESLint config (eslint.config.js)
