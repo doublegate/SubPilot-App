@@ -22,7 +22,7 @@ export default async function AuthErrorPage({
     EmailCreateAccount: 'Could not create email provider user in the database.',
     Callback: 'Error in the OAuth callback handler route.',
     OAuthAccountNotLinked:
-      'To confirm your identity, sign in with the same account you used originally.',
+      'An account with this email already exists. Please sign in with your original provider first, then link your GitHub account from your profile settings.',
     EmailSignin: 'The e-mail could not be sent. Please try again later.',
     CredentialsSignin:
       'Sign in failed. Check the details you provided are correct.',
@@ -68,6 +68,40 @@ export default async function AuthErrorPage({
             <div className="mt-4 text-center">
               <h2 className="text-lg font-medium text-gray-900">{error}</h2>
               <p className="mt-2 text-sm text-gray-600">{errorMessage}</p>
+              {error === 'OAuthAccountNotLinked' && (
+                <div className="mt-4 rounded-md bg-blue-50 p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-blue-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3 text-left">
+                      <h3 className="text-sm font-medium text-blue-800">
+                        How to link your GitHub account
+                      </h3>
+                      <div className="mt-2 text-sm text-blue-700">
+                        <ol className="list-inside list-decimal space-y-1">
+                          <li>Sign in with Google (your original provider)</li>
+                          <li>Go to your Profile settings</li>
+                          <li>Link your GitHub account in the Connected Accounts section</li>
+                        </ol>
+                        <p className="mt-2">
+                          <strong>Note:</strong> Account linking will be available in the next update.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {error === 'Configuration' && (
                 <div className="mt-4 rounded-md bg-blue-50 p-4">
                   <div className="flex">
