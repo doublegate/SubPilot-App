@@ -26,10 +26,11 @@ export function getVercelAuthConfig(
   const isPreview = process.env.VERCEL_ENV === 'preview';
   const isProduction = process.env.VERCEL_ENV === 'production';
 
-  // For preview deployments, we need to use 'none' to allow cross-site cookies
-  // This is necessary because OAuth callbacks go to production domain but
-  // users access via preview URLs
-  const sameSiteValue = isPreview ? 'none' : 'lax';
+  // For both preview and production deployments on Vercel, we need to use 'none'
+  // to allow cross-site cookies. This is necessary because OAuth callbacks go to
+  // production domain (subpilot.app) but users might access via Vercel URLs
+  // (subpilot-app.vercel.app)
+  const sameSiteValue = isVercelDeployment() ? 'none' : 'lax';
 
   console.log('[Auth Vercel Config] Cookie configuration:', {
     isPreview,

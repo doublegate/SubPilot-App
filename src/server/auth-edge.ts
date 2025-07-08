@@ -9,6 +9,7 @@ import { getCurrentUrl, isVercelDeployment } from '@/server/lib/auth-utils';
 export async function getAuthForEdge(req: NextRequest) {
   const timestamp = new Date().toISOString();
   const currentUrl = getCurrentUrl(req.headers);
+  const isProduction = process.env.NODE_ENV === 'production';
 
   console.log(`[Auth-Edge Debug ${timestamp}] Starting auth check`, {
     url: req.url,
@@ -21,10 +22,43 @@ export async function getAuthForEdge(req: NextRequest) {
     authUrl: process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? 'NOT SET',
     isVercel: isVercelDeployment(),
     vercelUrl: process.env.VERCEL_URL,
+    isProduction,
   });
 
   try {
-    // Get the correct secret (v5 uses AUTH_SECRET, v4 uses NEXTAUTH_SECRET)
+    // In production, we use database sessions, so we need to check for the session cookie
+    if (isProduction) {
+      // Check for database session cookie
+      const sessionToken =
+        req.cookies.get('__Secure-authjs.session-token')?.value ||
+        req.cookies.get('authjs.session-token')?.value ||
+        req.cookies.get('__Host-authjs.session-token')?.value;
+
+      console.log(`[Auth-Edge Debug ${timestamp}] Production session check:`, {
+        hasSessionToken: !!sessionToken,
+        cookieNames: req.cookies.getAll().map(c => c.name),
+      });
+
+      if (sessionToken) {
+        // In edge runtime, we can't access the database to validate the session
+        // But we can trust that if the secure session cookie exists, the user is authenticated
+        // The actual session validation will happen in the server components
+        return {
+          auth: {
+            user: {
+              // We don't have user details in edge runtime with database sessions
+              // These will be populated by server components
+              id: 'authenticated',
+              email: 'authenticated',
+            },
+          },
+        };
+      }
+
+      return { auth: null };
+    }
+
+    // In development, we use JWT strategy
     const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
     if (!secret) {
@@ -34,7 +68,9 @@ export async function getAuthForEdge(req: NextRequest) {
       return { auth: null };
     }
 
-    console.log(`[Auth-Edge Debug ${timestamp}] Calling getToken with secret`);
+    console.log(
+      `[Auth-Edge Debug ${timestamp}] Development: Calling getToken with secret`
+    );
 
     // For Vercel deployments, we need to handle the URL properly
     const tokenOptions: Parameters<typeof getToken>[0] = {

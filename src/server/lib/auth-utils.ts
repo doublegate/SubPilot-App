@@ -13,6 +13,9 @@ export function getTrustedOrigins(): string[] {
   origins.push('https://subpilot.app');
   origins.push('https://www.subpilot.app');
 
+  // Always trust the main Vercel app domain
+  origins.push('https://subpilot-app.vercel.app');
+
   // Add the configured URL if different
   const configuredUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
   if (configuredUrl) {

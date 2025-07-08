@@ -1,6 +1,14 @@
-// Temporarily use the v5 fix config to resolve OAuth issues
-import { auth } from '@/server/auth-v5-fix.config';
-export { auth, handlers, signIn, signOut } from '@/server/auth-v5-fix.config';
+// Use the production fix configuration
+import {
+  auth,
+  handlers,
+  signIn,
+  signOut,
+  debugAuth,
+} from '@/server/auth-production-fix';
 
 // Re-export auth as getServerAuthSession for backward compatibility
 export const getServerAuthSession = auth;
+
+// Export everything
+export { auth, handlers, signIn, signOut, debugAuth };

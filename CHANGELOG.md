@@ -5,23 +5,23 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### 🔧 Changes
-
-#### Authentication Debugging Enhancement
-- **Temporarily disabled middleware auth redirects** - Allows bypassing auth checks for debugging
-- **Added comprehensive debug logging** - Extensive logging in auth-edge.ts and middleware.ts
-- **Created debug endpoint** - New `/api/auth/debug-redirect-loop` endpoint for diagnostics
-- **Fixed environment URL mismatch** - Updated AUTH_URL/NEXTAUTH_URL to correct Vercel deployment URL
-- **Enhanced auth configuration** - Added support for both NextAuth v4 and v5 environment variables
+## [1.8.7] - 2025-07-08 - Cross-Domain Authentication Fix
 
 ### 🐛 Bug Fixes
 
-#### OAuth Redirect Loop Resolution
-- **Fixed production URL mismatch** - OAuth callbacks were failing due to incorrect NEXTAUTH_URL
-- **Disabled Vercel SSO interference** - Vercel's own SSO protection was intercepting auth requests
-- **Improved middleware routing** - Correctly excludes /api/auth paths from middleware processing
+#### Cross-Domain Session Recognition
+- **Fixed Edge Runtime session validation** - Database sessions now properly detected in middleware
+- **Resolved cookie domain mismatch** - Enabled cross-site cookies for Vercel production deployments
+- **Added Vercel app domain to trusted origins** - Ensures authentication works on both custom and Vercel domains
+- **Fixed JWT/Database session strategy mismatch** - Edge runtime now correctly handles database sessions
+
+### 🔧 Technical Improvements
+
+#### Authentication Edge Runtime
+- **Session cookie detection** - Edge runtime now checks for session cookies instead of JWT tokens
+- **Production vs Development handling** - Separate logic for JWT (dev) and database (prod) sessions
+- **Enhanced debugging** - Improved logging for session validation in edge runtime
+- **Cookie configuration** - Set `sameSite: 'none'` for all Vercel deployments to enable cross-domain access
 
 ## [1.8.6] - 2025-07-07 - Authentication Redirect Loop Fix
 
