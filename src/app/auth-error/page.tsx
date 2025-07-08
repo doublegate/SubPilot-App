@@ -92,10 +92,14 @@ export default async function AuthErrorPage({
                         <ol className="list-inside list-decimal space-y-1">
                           <li>Sign in with Google (your original provider)</li>
                           <li>Go to your Profile settings</li>
-                          <li>Link your GitHub account in the Connected Accounts section</li>
+                          <li>
+                            Link your GitHub account in the Connected Accounts
+                            section
+                          </li>
                         </ol>
                         <p className="mt-2">
-                          <strong>Note:</strong> Account linking will be available in the next update.
+                          <strong>Note:</strong> Account linking will be
+                          available in the next update.
                         </p>
                       </div>
                     </div>

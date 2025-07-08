@@ -117,13 +117,65 @@ export const authConfig: NextAuthConfig = {
       // Default to the baseUrl
       return baseUrl;
     },
-    async signIn({ account, profile }) {
+    async signIn({ account, profile, user }) {
       // Log sign-in attempts for debugging
       console.log('[Auth Sign-In] Processing sign-in:', {
         provider: account?.provider,
         email: profile?.email,
+        userId: user?.id,
         timestamp: new Date().toISOString(),
       });
+
+      // Check if this is an account linking flow
+      if (account && profile?.email) {
+        // First, check if an account with this provider already exists
+        const existingAccount = await db.account.findFirst({
+          where: {
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+          },
+        });
+
+        if (!existingAccount) {
+          // Check if user exists with this email
+          const existingUser = await db.user.findUnique({
+            where: { email: profile.email },
+          });
+
+          if (existingUser) {
+            // Link the account to the existing user
+            await db.account.create({
+              data: {
+                userId: existingUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                refresh_token: account.refresh_token,
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+                session_state: account.session_state as string | null,
+                refresh_token_expires_in: account.refresh_token_expires_in as
+                  | number
+                  | null,
+              },
+            });
+
+            console.log(
+              '[Auth Sign-In] Linked new OAuth account to existing user:',
+              {
+                userId: existingUser.id,
+                provider: account.provider,
+              }
+            );
+
+            // Return the user ID to sign in as the existing user
+            return `/profile?linked=${account.provider}`;
+          }
+        }
+      }
 
       // Allow all sign-ins
       return true;
