@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+// import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Database,
   HardDrive,
@@ -109,7 +109,7 @@ async function DatabaseDashboard() {
             <p className="text-xs text-muted-foreground">Total storage used</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Rows</CardTitle>
@@ -122,7 +122,7 @@ async function DatabaseDashboard() {
             <p className="text-xs text-muted-foreground">Across all tables</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Connections</CardTitle>
@@ -135,7 +135,7 @@ async function DatabaseDashboard() {
             <p className="text-xs text-muted-foreground">Active / Max</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Query Time</CardTitle>
@@ -163,10 +163,12 @@ async function DatabaseDashboard() {
                 <span>Active Connections</span>
                 <span className="font-medium">{connectionPool.active}</span>
               </div>
-              <Progress value={(connectionPool.active / connectionPool.max) * 100} />
+              <Progress
+                value={(connectionPool.active / connectionPool.max) * 100}
+              />
             </div>
-            
-            <div className="grid gap-4 md:grid-cols-4 text-sm">
+
+            <div className="grid gap-4 text-sm md:grid-cols-4">
               <div>
                 <p className="text-muted-foreground">Idle</p>
                 <p className="font-medium">{connectionPool.idle}</p>
@@ -187,7 +189,9 @@ async function DatabaseDashboard() {
                   ) : (
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
                   )}
-                  <span className="font-medium capitalize">{connectionPool.health}</span>
+                  <span className="font-medium capitalize">
+                    {connectionPool.health}
+                  </span>
                 </div>
               </div>
             </div>
@@ -201,9 +205,7 @@ async function DatabaseDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Query Performance</CardTitle>
-              <CardDescription>
-                Recent query execution metrics
-              </CardDescription>
+              <CardDescription>Recent query execution metrics</CardDescription>
             </div>
             <Button size="sm" variant="outline">
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -214,10 +216,14 @@ async function DatabaseDashboard() {
         <CardContent>
           <div className="space-y-3">
             {queryPerformance.slowQueries.map((query, i) => (
-              <div key={i} className="rounded-lg border p-3 space-y-2">
+              <div key={i} className="space-y-2 rounded-lg border p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Badge variant={query.duration > 1000 ? 'destructive' : 'secondary'}>
+                    <Badge
+                      variant={
+                        query.duration > 1000 ? 'destructive' : 'secondary'
+                      }
+                    >
                       {query.duration}ms
                     </Badge>
                     <span className="text-sm text-muted-foreground">
@@ -228,7 +234,7 @@ async function DatabaseDashboard() {
                     {query.lastExecuted}
                   </span>
                 </div>
-                <p className="font-mono text-xs text-muted-foreground truncate">
+                <p className="truncate font-mono text-xs text-muted-foreground">
                   {query.query}
                 </p>
               </div>
@@ -243,9 +249,7 @@ async function DatabaseDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Database Tables</CardTitle>
-              <CardDescription>
-                Table sizes and row counts
-              </CardDescription>
+              <CardDescription>Table sizes and row counts</CardDescription>
             </div>
             <Button size="sm" variant="outline">
               <Activity className="mr-2 h-4 w-4" />
@@ -272,19 +276,27 @@ async function DatabaseDashboard() {
               <div className="space-y-1">
                 <p className="font-medium">Last Backup</p>
                 <p className="text-sm text-muted-foreground">
-                  {backupStatus.lastBackup ? new Date(backupStatus.lastBackup).toLocaleString() : 'Never'}
+                  {backupStatus.lastBackup
+                    ? new Date(backupStatus.lastBackup).toLocaleString()
+                    : 'Never'}
                 </p>
               </div>
-              <Badge variant={backupStatus.status === 'success' ? 'default' : 'destructive'}>
+              <Badge
+                variant={
+                  backupStatus.status === 'success' ? 'default' : 'destructive'
+                }
+              >
                 {backupStatus.status}
               </Badge>
             </div>
-            
+
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-1">
                 <p className="font-medium">Next Scheduled Backup</p>
                 <p className="text-sm text-muted-foreground">
-                  {backupStatus.nextBackup ? new Date(backupStatus.nextBackup).toLocaleString() : 'Not scheduled'}
+                  {backupStatus.nextBackup
+                    ? new Date(backupStatus.nextBackup).toLocaleString()
+                    : 'Not scheduled'}
                 </p>
               </div>
               <Button size="sm">
@@ -292,12 +304,15 @@ async function DatabaseDashboard() {
                 Backup Now
               </Button>
             </div>
-            
+
             {backupStatus.backups.length > 0 && (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">Recent Backups</h4>
                 {backupStatus.backups.map((backup, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between text-sm"
+                  >
                     <span>{new Date(backup.date).toLocaleDateString()}</span>
                     <span className="text-muted-foreground">{backup.size}</span>
                   </div>
@@ -312,9 +327,7 @@ async function DatabaseDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>Database Migrations</CardTitle>
-          <CardDescription>
-            Schema migration history and status
-          </CardDescription>
+          <CardDescription>Schema migration history and status</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -323,23 +336,26 @@ async function DatabaseDashboard() {
                 <p className="text-sm font-medium">Current Version</p>
                 <p className="text-2xl font-bold">{migrations.current}</p>
               </div>
-              <Badge variant="secondary">
-                {migrations.pending} pending
-              </Badge>
+              <Badge variant="secondary">{migrations.pending} pending</Badge>
             </div>
-            
+
             {migrations.history.length > 0 && (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">Recent Migrations</h4>
                 {migrations.history.map((migration, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-lg border p-2">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between rounded-lg border p-2"
+                  >
                     <div className="flex items-center gap-2">
                       {migration.direction === 'up' ? (
                         <ArrowUp className="h-4 w-4 text-green-500" />
                       ) : (
                         <ArrowDown className="h-4 w-4 text-red-500" />
                       )}
-                      <span className="font-mono text-sm">{migration.name}</span>
+                      <span className="font-mono text-sm">
+                        {migration.name}
+                      </span>
                     </div>
                     <span className="text-xs text-muted-foreground">
                       {new Date(migration.appliedAt).toLocaleDateString()}

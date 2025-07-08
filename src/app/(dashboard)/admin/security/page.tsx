@@ -23,9 +23,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DataTable } from '@/components/admin/data-table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Shield,
+  // Shield,
   Lock,
-  Key,
+  // Key,
   AlertTriangle,
   Search,
   Filter,
@@ -59,11 +59,7 @@ const auditLogColumns: ColumnDef<AuditLogEntry>[] = [
     accessorKey: 'action',
     header: 'Action',
     cell: ({ row }) => {
-      return (
-        <Badge variant="outline">
-          {row.getValue('action')}
-        </Badge>
-      );
+      return <Badge variant="outline">{row.getValue('action')}</Badge>;
     },
   },
   {
@@ -88,9 +84,7 @@ const auditLogColumns: ColumnDef<AuditLogEntry>[] = [
     cell: ({ row }) => {
       const result = row.getValue('result') as string;
       return (
-        <Badge
-          variant={result === 'success' ? 'default' : 'destructive'}
-        >
+        <Badge variant={result === 'success' ? 'default' : 'destructive'}>
           {result}
         </Badge>
       );
@@ -111,19 +105,14 @@ const auditLogColumns: ColumnDef<AuditLogEntry>[] = [
 ];
 
 async function SecurityDashboard() {
-  const [
-    securityStats,
-    auditLogs,
-    activeSessions,
-    securityConfig,
-    threats,
-  ] = await Promise.all([
-    api.admin.getSecurityStats(),
-    api.admin.getAuditLogs({ limit: 100 }),
-    api.admin.getActiveSessions(),
-    api.admin.getSecurityConfig(),
-    api.admin.getSecurityThreats(),
-  ]);
+  const [securityStats, auditLogs, activeSessions, securityConfig, threats] =
+    await Promise.all([
+      api.admin.getSecurityStats(),
+      api.admin.getAuditLogs({ limit: 100 }),
+      api.admin.getActiveSessions(),
+      api.admin.getSecurityConfig(),
+      api.admin.getSecurityThreats(),
+    ]);
 
   return (
     <div className="space-y-6">
@@ -135,40 +124,52 @@ async function SecurityDashboard() {
             <UserX className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{securityStats.failedLogins}</div>
+            <div className="text-2xl font-bold">
+              {securityStats.failedLogins}
+            </div>
             <p className="text-xs text-muted-foreground">Last 24 hours</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Locked Accounts</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Locked Accounts
+            </CardTitle>
             <Lock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{securityStats.lockedAccounts}</div>
+            <div className="text-2xl font-bold">
+              {securityStats.lockedAccounts}
+            </div>
             <p className="text-xs text-muted-foreground">Currently locked</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">2FA Enabled</CardTitle>
             <Smartphone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{securityStats.twoFactorUsers}%</div>
+            <div className="text-2xl font-bold">
+              {securityStats.twoFactorUsers}%
+            </div>
             <p className="text-xs text-muted-foreground">Of all users</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Sessions
+            </CardTitle>
             <Globe className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{securityStats.activeSessions}</div>
+            <div className="text-2xl font-bold">
+              {securityStats.activeSessions}
+            </div>
             <p className="text-xs text-muted-foreground">Current sessions</p>
           </CardContent>
         </Card>
@@ -210,7 +211,7 @@ async function SecurityDashboard() {
               </div>
               <Switch defaultChecked={securityConfig.require2FA} />
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Session Timeout</Label>
@@ -230,7 +231,7 @@ async function SecurityDashboard() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Max Login Attempts</Label>
@@ -249,7 +250,7 @@ async function SecurityDashboard() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Password Policy</Label>
@@ -269,9 +270,7 @@ async function SecurityDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Active Sessions</CardTitle>
-              <CardDescription>
-                Currently active user sessions
-              </CardDescription>
+              <CardDescription>Currently active user sessions</CardDescription>
             </div>
             <Button size="sm" variant="outline">
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -301,11 +300,7 @@ async function SecurityDashboard() {
                     <span>Active {session.lastActivity}</span>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={session.isCurrent}
-                >
+                <Button size="sm" variant="ghost" disabled={session.isCurrent}>
                   Revoke
                 </Button>
               </div>
@@ -345,7 +340,7 @@ async function SecurityDashboard() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="action">Action Type</Label>
                 <Select defaultValue="all">
@@ -361,7 +356,7 @@ async function SecurityDashboard() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="result">Result</Label>
                 <Select defaultValue="all">
@@ -376,14 +371,14 @@ async function SecurityDashboard() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="flex justify-end">
               <Button variant="outline" size="sm">
                 <Filter className="mr-2 h-4 w-4" />
                 Apply Filters
               </Button>
             </div>
-            
+
             {/* Logs Table */}
             <DataTable columns={auditLogColumns} data={auditLogs} />
           </div>

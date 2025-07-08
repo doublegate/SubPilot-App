@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DataTable } from '@/components/admin/data-table';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+// import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertCircle,
   Search,
@@ -31,9 +31,9 @@ import {
   AlertTriangle,
   XCircle,
   CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Copy,
+  // ChevronDown,
+  // ChevronRight,
+  // Copy,
   ExternalLink,
 } from 'lucide-react';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -71,8 +71,8 @@ const errorColumns: ColumnDef<ErrorLog>[] = [
             level === 'error'
               ? 'destructive'
               : level === 'warning'
-              ? 'secondary'
-              : 'outline'
+                ? 'secondary'
+                : 'outline'
           }
         >
           {level}
@@ -120,7 +120,7 @@ const errorColumns: ColumnDef<ErrorLog>[] = [
     accessorKey: 'resolved',
     header: 'Status',
     cell: ({ row }) => {
-      const resolved = row.getValue('resolved') as boolean;
+      const resolved = row.getValue('resolved');
       return resolved ? (
         <div className="flex items-center gap-1 text-green-600">
           <CheckCircle className="h-3 w-3" />
@@ -136,60 +136,54 @@ const errorColumns: ColumnDef<ErrorLog>[] = [
   },
 ];
 
-function ErrorDetails({ error }: { error: ErrorLog }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <div className="mt-2 border-t pt-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full justify-start"
-      >
-        {isExpanded ? (
-          <ChevronDown className="mr-2 h-4 w-4" />
-        ) : (
-          <ChevronRight className="mr-2 h-4 w-4" />
-        )}
-        Stack Trace
-      </Button>
-      
-      {isExpanded && error.stack && (
-        <div className="mt-2 rounded-lg bg-muted p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground">Stack Trace</span>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => navigator.clipboard.writeText(error.stack!)}
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
-          </div>
-          <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap">
-            {error.stack}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
-}
-
-import { useState } from 'react';
+// function ErrorDetails({ error }: { error: ErrorLog }) {
+//   const [isExpanded, setIsExpanded] = useState(false);
+//
+//   return (
+//     <div className="mt-2 border-t pt-2">
+//       <Button
+//         variant="ghost"
+//         size="sm"
+//         onClick={() => setIsExpanded(!isExpanded)}
+//         className="w-full justify-start"
+//       >
+//         {isExpanded ? (
+//           <ChevronDown className="mr-2 h-4 w-4" />
+//         ) : (
+//           <ChevronRight className="mr-2 h-4 w-4" />
+//         )}
+//         Stack Trace
+//       </Button>
+//
+//       {isExpanded && error.stack && (
+//         <div className="mt-2 rounded-lg bg-muted p-3">
+//           <div className="mb-2 flex items-center justify-between">
+//             <span className="text-xs text-muted-foreground">Stack Trace</span>
+//             <Button
+//               size="sm"
+//               variant="ghost"
+//               onClick={() => navigator.clipboard.writeText(error.stack!)}
+//             >
+//               <Copy className="h-3 w-3" />
+//             </Button>
+//           </div>
+//           <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-xs">
+//             {error.stack}
+//           </pre>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
 
 async function ErrorsDashboard() {
-  const [
-    errorStats,
-    recentErrors,
-    errorTrends,
-    commonErrors,
-  ] = await Promise.all([
-    api.admin.getErrorStats(),
-    api.admin.getRecentErrors({ limit: 100 }),
-    api.admin.getErrorTrends(),
-    api.admin.getCommonErrors(),
-  ]);
+  const [errorStats, recentErrors, errorTrends, commonErrors] =
+    await Promise.all([
+      api.admin.getErrorStats(),
+      api.admin.getRecentErrors({ limit: 100 }),
+      api.admin.getErrorTrends(),
+      api.admin.getCommonErrors(),
+    ]);
 
   return (
     <div className="space-y-6">
@@ -205,18 +199,20 @@ async function ErrorsDashboard() {
             <p className="text-xs text-muted-foreground">Last 24 hours</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Unresolved</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{errorStats.unresolved}</div>
+            <div className="text-2xl font-bold text-orange-600">
+              {errorStats.unresolved}
+            </div>
             <p className="text-xs text-muted-foreground">Requires attention</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Error Rate</CardTitle>
@@ -224,18 +220,23 @@ async function ErrorsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{errorStats.errorRate}%</div>
-            <div className={cn(
-              "text-xs",
-              errorStats.trend > 0 ? "text-red-500" : "text-green-500"
-            )}>
-              {errorStats.trend > 0 ? '↑' : '↓'} {Math.abs(errorStats.trend)}% from yesterday
+            <div
+              className={cn(
+                'text-xs',
+                errorStats.trend > 0 ? 'text-red-500' : 'text-green-500'
+              )}
+            >
+              {errorStats.trend > 0 ? '↑' : '↓'} {Math.abs(errorStats.trend)}%
+              from yesterday
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Affected Users</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Affected Users
+            </CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -321,7 +322,7 @@ async function ErrorsDashboard() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="level">Level</Label>
                 <Select defaultValue="all">
@@ -336,7 +337,7 @@ async function ErrorsDashboard() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
                 <Select defaultValue="all">
@@ -350,7 +351,7 @@ async function ErrorsDashboard() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="timeRange">Time Range</Label>
                 <Select defaultValue="24h">
@@ -366,14 +367,14 @@ async function ErrorsDashboard() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="flex justify-end">
               <Button variant="outline" size="sm">
                 <Filter className="mr-2 h-4 w-4" />
                 Apply Filters
               </Button>
             </div>
-            
+
             {/* Logs Table */}
             <DataTable columns={errorColumns} data={recentErrors} />
           </div>
@@ -394,7 +395,7 @@ async function ErrorsDashboard() {
               <div key={i} className="flex items-center justify-between">
                 <span className="text-sm font-medium">{day.date}</span>
                 <div className="flex items-center gap-2">
-                  <div className="w-32 h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-2 w-32 overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full bg-red-500 transition-all"
                       style={{
@@ -402,7 +403,7 @@ async function ErrorsDashboard() {
                       }}
                     />
                   </div>
-                  <span className="text-sm text-muted-foreground w-12 text-right">
+                  <span className="w-12 text-right text-sm text-muted-foreground">
                     {day.errors}
                   </span>
                 </div>

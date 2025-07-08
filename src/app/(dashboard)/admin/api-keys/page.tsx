@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+// import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Key,
   RefreshCw,
@@ -20,27 +20,27 @@ import {
   XCircle,
   Copy,
   Eye,
-  EyeOff,
+  // EyeOff,
   Webhook,
   TestTube,
-  AlertTriangle,
-  Calendar,
+  // AlertTriangle,
+  // Calendar,
   Activity,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+// import { cn } from '@/lib/utils';
 
-interface ApiKeyConfig {
-  name: string;
-  key: string;
-  masked: boolean;
-  isActive: boolean;
-  lastUsed: Date | null;
-  expiresAt: Date | null;
-  usage: {
-    count: number;
-    limit: number | null;
-  };
-}
+// interface ApiKeyConfig {
+//   name: string;
+//   key: string;
+//   masked: boolean;
+//   isActive: boolean;
+//   lastUsed: Date | null;
+//   expiresAt: Date | null;
+//   usage: {
+//     count: number;
+//     limit: number | null;
+//   };
+// }
 
 async function ApiKeysDashboard() {
   const [apiKeys, webhooks, usageStats] = await Promise.all([
@@ -59,11 +59,13 @@ async function ApiKeysDashboard() {
             <Key className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{apiKeys.filter(k => k.isActive).length}</div>
+            <div className="text-2xl font-bold">
+              {apiKeys.filter(k => k.isActive).length}
+            </div>
             <p className="text-xs text-muted-foreground">Currently active</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">API Calls</CardTitle>
@@ -76,7 +78,7 @@ async function ApiKeysDashboard() {
             <p className="text-xs text-muted-foreground">Last 24 hours</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
@@ -87,14 +89,16 @@ async function ApiKeysDashboard() {
             <p className="text-xs text-muted-foreground">API reliability</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Webhooks</CardTitle>
             <Webhook className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{webhooks.filter(w => w.isActive).length}</div>
+            <div className="text-2xl font-bold">
+              {webhooks.filter(w => w.isActive).length}
+            </div>
             <p className="text-xs text-muted-foreground">Active endpoints</p>
           </CardContent>
         </Card>
@@ -110,8 +114,16 @@ async function ApiKeysDashboard() {
                 Bank connection and transaction sync
               </CardDescription>
             </div>
-            <Badge variant={apiKeys.find(k => k.name === 'Plaid')?.isActive ? 'default' : 'secondary'}>
-              {apiKeys.find(k => k.name === 'Plaid')?.isActive ? 'Connected' : 'Not Connected'}
+            <Badge
+              variant={
+                apiKeys.find(k => k.name === 'Plaid')?.isActive
+                  ? 'default'
+                  : 'secondary'
+              }
+            >
+              {apiKeys.find(k => k.name === 'Plaid')?.isActive
+                ? 'Connected'
+                : 'Not Connected'}
             </Badge>
           </div>
         </CardHeader>
@@ -132,7 +144,7 @@ async function ApiKeysDashboard() {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Secret Key</Label>
                 <div className="flex gap-2">
@@ -148,7 +160,7 @@ async function ApiKeysDashboard() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div className="space-y-1">
                 <p className="text-sm font-medium">Environment</p>
@@ -165,7 +177,7 @@ async function ApiKeysDashboard() {
                 </Button>
               </div>
             </div>
-            
+
             <div className="grid gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Last Used</span>
@@ -190,12 +202,18 @@ async function ApiKeysDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Stripe API</CardTitle>
-              <CardDescription>
-                Payment processing and billing
-              </CardDescription>
+              <CardDescription>Payment processing and billing</CardDescription>
             </div>
-            <Badge variant={apiKeys.find(k => k.name === 'Stripe')?.isActive ? 'default' : 'secondary'}>
-              {apiKeys.find(k => k.name === 'Stripe')?.isActive ? 'Connected' : 'Not Connected'}
+            <Badge
+              variant={
+                apiKeys.find(k => k.name === 'Stripe')?.isActive
+                  ? 'default'
+                  : 'secondary'
+              }
+            >
+              {apiKeys.find(k => k.name === 'Stripe')?.isActive
+                ? 'Connected'
+                : 'Not Connected'}
             </Badge>
           </div>
         </CardHeader>
@@ -216,7 +234,7 @@ async function ApiKeysDashboard() {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Secret Key</Label>
                 <div className="flex gap-2">
@@ -232,7 +250,7 @@ async function ApiKeysDashboard() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div className="space-y-1">
                 <p className="text-sm font-medium">Mode</p>
@@ -249,7 +267,7 @@ async function ApiKeysDashboard() {
                 </Button>
               </div>
             </div>
-            
+
             <div className="grid gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Last Used</span>
@@ -274,12 +292,18 @@ async function ApiKeysDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>SendGrid API</CardTitle>
-              <CardDescription>
-                Email notifications and alerts
-              </CardDescription>
+              <CardDescription>Email notifications and alerts</CardDescription>
             </div>
-            <Badge variant={apiKeys.find(k => k.name === 'SendGrid')?.isActive ? 'default' : 'secondary'}>
-              {apiKeys.find(k => k.name === 'SendGrid')?.isActive ? 'Connected' : 'Not Connected'}
+            <Badge
+              variant={
+                apiKeys.find(k => k.name === 'SendGrid')?.isActive
+                  ? 'default'
+                  : 'secondary'
+              }
+            >
+              {apiKeys.find(k => k.name === 'SendGrid')?.isActive
+                ? 'Connected'
+                : 'Not Connected'}
             </Badge>
           </div>
         </CardHeader>
@@ -299,11 +323,13 @@ async function ApiKeysDashboard() {
                 </Button>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div className="space-y-1">
                 <p className="text-sm font-medium">From Email</p>
-                <p className="text-sm text-muted-foreground">notifications@subpilot.app</p>
+                <p className="text-sm text-muted-foreground">
+                  notifications@subpilot.app
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline">
@@ -316,7 +342,7 @@ async function ApiKeysDashboard() {
                 </Button>
               </div>
             </div>
-            
+
             <div className="grid gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Emails Sent (24h)</span>
@@ -363,7 +389,10 @@ async function ApiKeysDashboard() {
                     {webhook.url}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Last triggered: {webhook.lastTriggered ? new Date(webhook.lastTriggered).toLocaleString() : 'Never'}
+                    Last triggered:{' '}
+                    {webhook.lastTriggered
+                      ? new Date(webhook.lastTriggered).toLocaleString()
+                      : 'Never'}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -398,7 +427,7 @@ async function ApiKeysDashboard() {
                     {new Intl.NumberFormat().format(service.calls)} calls
                   </span>
                 </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full bg-primary transition-all"
                     style={{

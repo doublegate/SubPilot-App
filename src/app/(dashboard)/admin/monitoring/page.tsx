@@ -19,7 +19,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import {
-  Activity,
+  // Activity,
   Users,
   Zap,
   Clock,
@@ -27,7 +27,7 @@ import {
   TrendingDown,
   AlertTriangle,
   RefreshCw,
-  BarChart3,
+  // BarChart3,
   Cpu,
   HardDrive,
   Wifi,
@@ -35,14 +35,20 @@ import {
 import { cn } from '@/lib/utils';
 
 // Simple line chart component
-function SimpleLineChart({ data, height = 100 }: { data: number[]; height?: number }) {
+function SimpleLineChart({
+  data,
+  height = 100,
+}: {
+  data: number[];
+  height?: number;
+}) {
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
-  
+
   return (
     <div className="relative" style={{ height }}>
-      <svg className="absolute inset-0 w-full h-full">
+      <svg className="absolute inset-0 h-full w-full">
         <polyline
           fill="none"
           stroke="currentColor"
@@ -97,33 +103,37 @@ async function MonitoringDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">API Requests</CardTitle>
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{apiMetrics.requestsPerMinute}/min</div>
+            <div className="text-2xl font-bold">
+              {apiMetrics.requestsPerMinute}/min
+            </div>
             <div className="text-xs text-muted-foreground">
               {apiMetrics.totalRequests.toLocaleString()} total today
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Response Time</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{performanceMetrics.avgResponseTime}ms</div>
+            <div className="text-2xl font-bold">
+              {performanceMetrics.avgResponseTime}ms
+            </div>
             <div className="text-xs text-muted-foreground">
               p95: {performanceMetrics.p95ResponseTime}ms
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Error Rate</CardTitle>
@@ -131,11 +141,15 @@ async function MonitoringDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{errorRates.current}%</div>
-            <div className={cn(
-              "text-xs",
-              parseFloat(errorRates.current) > 1 ? "text-red-500" : "text-green-500"
-            )}>
-              {parseFloat(errorRates.current) > 1 ? "Above" : "Below"} threshold
+            <div
+              className={cn(
+                'text-xs',
+                parseFloat(errorRates.current) > 1
+                  ? 'text-red-500'
+                  : 'text-green-500'
+              )}
+            >
+              {parseFloat(errorRates.current) > 1 ? 'Above' : 'Below'} threshold
             </div>
           </CardContent>
         </Card>
@@ -147,9 +161,7 @@ async function MonitoringDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>System Resources</CardTitle>
-              <CardDescription>
-                Real-time resource utilization
-              </CardDescription>
+              <CardDescription>Real-time resource utilization</CardDescription>
             </div>
             <Button size="sm" variant="outline">
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -169,7 +181,7 @@ async function MonitoringDashboard() {
               </div>
               <Progress value={systemMetrics.cpu} className="h-2" />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
@@ -180,7 +192,7 @@ async function MonitoringDashboard() {
               </div>
               <Progress value={systemMetrics.memory} className="h-2" />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
@@ -191,7 +203,7 @@ async function MonitoringDashboard() {
               </div>
               <Progress value={systemMetrics.disk} className="h-2" />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
@@ -199,7 +211,8 @@ async function MonitoringDashboard() {
                   <span>Network I/O</span>
                 </div>
                 <span className="font-medium">
-                  ↓ {systemMetrics.networkIn} MB/s | ↑ {systemMetrics.networkOut} MB/s
+                  ↓ {systemMetrics.networkIn} MB/s | ↑{' '}
+                  {systemMetrics.networkOut} MB/s
                 </span>
               </div>
             </div>
@@ -213,9 +226,7 @@ async function MonitoringDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>API Performance</CardTitle>
-              <CardDescription>
-                Response times and throughput
-              </CardDescription>
+              <CardDescription>Response times and throughput</CardDescription>
             </div>
             <Select defaultValue="1h">
               <SelectTrigger className="w-32">
@@ -233,22 +244,28 @@ async function MonitoringDashboard() {
         <CardContent>
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium mb-2">Response Time (ms)</p>
+              <p className="mb-2 text-sm font-medium">Response Time (ms)</p>
               <SimpleLineChart data={performanceMetrics.responseTimeHistory} />
             </div>
-            
-            <div className="grid gap-4 md:grid-cols-3 text-sm">
+
+            <div className="grid gap-4 text-sm md:grid-cols-3">
               <div className="space-y-1">
                 <p className="text-muted-foreground">Average</p>
-                <p className="text-2xl font-bold">{performanceMetrics.avgResponseTime}ms</p>
+                <p className="text-2xl font-bold">
+                  {performanceMetrics.avgResponseTime}ms
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground">Median</p>
-                <p className="text-2xl font-bold">{performanceMetrics.medianResponseTime}ms</p>
+                <p className="text-2xl font-bold">
+                  {performanceMetrics.medianResponseTime}ms
+                </p>
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground">95th Percentile</p>
-                <p className="text-2xl font-bold">{performanceMetrics.p95ResponseTime}ms</p>
+                <p className="text-2xl font-bold">
+                  {performanceMetrics.p95ResponseTime}ms
+                </p>
               </div>
             </div>
           </div>
@@ -259,15 +276,13 @@ async function MonitoringDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>User Activity</CardTitle>
-          <CardDescription>
-            Active users over time
-          </CardDescription>
+          <CardDescription>Active users over time</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <SimpleLineChart data={userActivity.timeline} height={150} />
-            
-            <div className="grid gap-4 md:grid-cols-4 text-sm">
+
+            <div className="grid gap-4 text-sm md:grid-cols-4">
               <div className="space-y-1">
                 <p className="text-muted-foreground">Current</p>
                 <p className="text-xl font-bold">{userActivity.activeNow}</p>
@@ -282,7 +297,9 @@ async function MonitoringDashboard() {
               </div>
               <div className="space-y-1">
                 <p className="text-muted-foreground">Monthly Active</p>
-                <p className="text-xl font-bold">{userActivity.monthlyActive}</p>
+                <p className="text-xl font-bold">
+                  {userActivity.monthlyActive}
+                </p>
               </div>
             </div>
           </div>
@@ -293,9 +310,7 @@ async function MonitoringDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>Error Rates</CardTitle>
-          <CardDescription>
-            Error frequency by type
-          </CardDescription>
+          <CardDescription>Error frequency by type</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -309,8 +324,8 @@ async function MonitoringDashboard() {
                         error.severity === 'critical'
                           ? 'destructive'
                           : error.severity === 'warning'
-                          ? 'secondary'
-                          : 'outline'
+                            ? 'secondary'
+                            : 'outline'
                       }
                     >
                       {error.severity}
@@ -323,9 +338,11 @@ async function MonitoringDashboard() {
                 <Progress
                   value={error.percentage}
                   className={cn(
-                    "h-2",
-                    error.severity === 'critical' && "bg-red-100 [&>div]:bg-red-500",
-                    error.severity === 'warning' && "bg-yellow-100 [&>div]:bg-yellow-500"
+                    'h-2',
+                    error.severity === 'critical' &&
+                      'bg-red-100 [&>div]:bg-red-500',
+                    error.severity === 'warning' &&
+                      'bg-yellow-100 [&>div]:bg-yellow-500'
                   )}
                 />
               </div>
@@ -338,22 +355,24 @@ async function MonitoringDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>Top Endpoints</CardTitle>
-          <CardDescription>
-            Most accessed API endpoints
-          </CardDescription>
+          <CardDescription>Most accessed API endpoints</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {apiMetrics.topEndpoints.map((endpoint, i) => (
               <div key={i} className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium font-mono">{endpoint.path}</p>
+                  <p className="font-mono text-sm font-medium">
+                    {endpoint.path}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {endpoint.method} • {endpoint.avgTime}ms avg
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium">{endpoint.calls.toLocaleString()}</p>
+                  <p className="text-sm font-medium">
+                    {endpoint.calls.toLocaleString()}
+                  </p>
                   <p className="text-xs text-muted-foreground">calls/hour</p>
                 </div>
               </div>

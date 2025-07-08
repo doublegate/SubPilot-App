@@ -19,7 +19,7 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
-  Cpu,
+  // Cpu,
   HardDrive,
   Clock,
 } from 'lucide-react';
@@ -46,7 +46,7 @@ async function SystemInfo() {
             <p className="text-xs text-muted-foreground">Runtime Environment</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Environment</CardTitle>
@@ -57,7 +57,7 @@ async function SystemInfo() {
             <p className="text-xs text-muted-foreground">Current Environment</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Uptime</CardTitle>
@@ -83,20 +83,30 @@ async function SystemInfo() {
                 <h4 className="text-sm font-medium">Application</h4>
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Next.js Version</span>
+                    <span className="text-muted-foreground">
+                      Next.js Version
+                    </span>
                     <span className="font-mono">{systemInfo.nextVersion}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Prisma Version</span>
-                    <span className="font-mono">{systemInfo.prismaVersion}</span>
+                    <span className="text-muted-foreground">
+                      Prisma Version
+                    </span>
+                    <span className="font-mono">
+                      {systemInfo.prismaVersion}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">TypeScript Version</span>
-                    <span className="font-mono">{systemInfo.typescriptVersion}</span>
+                    <span className="text-muted-foreground">
+                      TypeScript Version
+                    </span>
+                    <span className="font-mono">
+                      {systemInfo.typescriptVersion}
+                    </span>
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">Resources</h4>
                 <div className="space-y-1">
@@ -162,9 +172,7 @@ async function SystemInfo() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Feature Flags</CardTitle>
-              <CardDescription>
-                Toggle application features
-              </CardDescription>
+              <CardDescription>Toggle application features</CardDescription>
             </div>
             <Button size="sm">
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -194,8 +202,10 @@ async function SystemInfo() {
                 </div>
                 <Button
                   size="sm"
-                  variant={flag.enabled ? "default" : "outline"}
-                  onClick={() => {/* Toggle feature flag */}}
+                  variant={flag.enabled ? 'default' : 'outline'}
+                  onClick={() => {
+                    /* Toggle feature flag */
+                  }}
                 >
                   {flag.enabled ? 'Enabled' : 'Disabled'}
                 </Button>
@@ -228,16 +238,20 @@ async function SystemInfo() {
                         job.status === 'running'
                           ? 'default'
                           : job.status === 'idle'
-                          ? 'secondary'
-                          : 'destructive'
+                            ? 'secondary'
+                            : 'destructive'
                       }
                     >
                       {job.status}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Last run: {job.lastRun ? new Date(job.lastRun).toLocaleString() : 'Never'}
-                    {job.nextRun && ` | Next: ${new Date(job.nextRun).toLocaleString()}`}
+                    Last run:{' '}
+                    {job.lastRun
+                      ? new Date(job.lastRun).toLocaleString()
+                      : 'Never'}
+                    {job.nextRun &&
+                      ` | Next: ${new Date(job.nextRun).toLocaleString()}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -264,19 +278,18 @@ async function SystemInfo() {
       <Card>
         <CardHeader>
           <CardTitle>Cache Management</CardTitle>
-          <CardDescription>
-            Clear application caches
-          </CardDescription>
+          <CardDescription>Clear application caches</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Clearing caches may temporarily impact performance while they rebuild.
+                Clearing caches may temporarily impact performance while they
+                rebuild.
               </AlertDescription>
             </Alert>
-            
+
             <div className="grid gap-2 md:grid-cols-3">
               <Button variant="outline">
                 <HardDrive className="mr-2 h-4 w-4" />
