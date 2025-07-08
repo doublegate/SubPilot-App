@@ -34,7 +34,7 @@ Added detailed logging to:
 Updated `.env.local`:
 ```env
 # Added for NextAuth v5 compatibility
-AUTH_SECRET="***REMOVED***"
+AUTH_SECRET="[REDACTED - Generate new secret with: openssl rand -base64 32]"
 AUTH_URL="https://subpilot-app.vercel.app"
 
 # Updated to match actual deployment URL
