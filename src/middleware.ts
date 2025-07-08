@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getAuthForEdge } from '@/server/auth-edge';
+import { getAuthForEdge } from '@/server/auth-edge-vercel';
 import {
   isTrustedOrigin,
   getCurrentUrl,
   isVercelDeployment,
+  getTrustedOrigins,
 } from '@/server/lib/auth-utils';
 
 export async function middleware(req: NextRequest) {
@@ -21,10 +22,15 @@ export async function middleware(req: NextRequest) {
     cookies: req.cookies.getAll().map(c => c.name),
     origin: req.headers.get('origin'),
     referer: req.headers.get('referer'),
+    host: req.headers.get('host'),
+    xForwardedHost: req.headers.get('x-forwarded-host'),
+    xForwardedProto: req.headers.get('x-forwarded-proto'),
     searchParams: Object.fromEntries(searchParams.entries()),
     isVercel: isVercelDeployment(),
     vercelUrl: process.env.VERCEL_URL,
+    vercelEnv: process.env.VERCEL_ENV,
     currentUrl: getCurrentUrl(req.headers),
+    trustedOrigins: getTrustedOrigins(),
   });
 
   // Apply basic security checks (Edge Runtime compatible)
@@ -101,12 +107,28 @@ async function applyBasicSecurity(
   // Basic CSRF protection for mutations
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     const origin = request.headers.get('origin');
+    const referer = request.headers.get('referer');
 
-    if (origin) {
-      // Check if the origin is trusted
-      if (!isTrustedOrigin(origin)) {
+    // For Vercel deployments, construct origin from forwarded headers
+    let effectiveOrigin = origin;
+    if (!effectiveOrigin && isVercelDeployment()) {
+      const forwardedHost = request.headers.get('x-forwarded-host');
+      const forwardedProto =
+        request.headers.get('x-forwarded-proto') ?? 'https';
+
+      if (forwardedHost) {
+        effectiveOrigin = `${forwardedProto}://${forwardedHost}`;
         console.log(
-          `[Middleware Security] Blocked untrusted origin: ${origin}`
+          `[Middleware Security] Constructed origin from forwarded headers: ${effectiveOrigin}`
+        );
+      }
+    }
+
+    // Check origin if present
+    if (effectiveOrigin) {
+      if (!isTrustedOrigin(effectiveOrigin)) {
+        console.log(
+          `[Middleware Security] Blocked untrusted origin: ${effectiveOrigin}`
         );
         return new NextResponse(
           JSON.stringify({
@@ -120,31 +142,14 @@ async function applyBasicSecurity(
           }
         );
       }
-    } else {
-      // No origin header for same-origin requests is acceptable
-      // But we should still validate the referer for additional security
-      const referer = request.headers.get('referer');
-      if (referer) {
-        try {
-          const refererUrl = new URL(referer);
-          if (!isTrustedOrigin(refererUrl.origin)) {
-            console.log(
-              `[Middleware Security] Blocked untrusted referer: ${referer}`
-            );
-            return new NextResponse(
-              JSON.stringify({
-                error: 'CSRF_VALIDATION_FAILED',
-                message:
-                  'Invalid request origin. Please refresh the page and try again.',
-              }),
-              {
-                status: 403,
-                headers: { 'Content-Type': 'application/json' },
-              }
-            );
-          }
-        } catch {
-          // Invalid referer URL, block the request
+    } else if (referer) {
+      // Fall back to referer validation
+      try {
+        const refererUrl = new URL(referer);
+        if (!isTrustedOrigin(refererUrl.origin)) {
+          console.log(
+            `[Middleware Security] Blocked untrusted referer: ${referer}`
+          );
           return new NextResponse(
             JSON.stringify({
               error: 'CSRF_VALIDATION_FAILED',
@@ -157,7 +162,36 @@ async function applyBasicSecurity(
             }
           );
         }
+      } catch {
+        // Invalid referer URL, block the request
+        return new NextResponse(
+          JSON.stringify({
+            error: 'CSRF_VALIDATION_FAILED',
+            message:
+              'Invalid request origin. Please refresh the page and try again.',
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
       }
+    } else if (!isVercelDeployment()) {
+      // If we're not on Vercel and have no origin or referer, it's suspicious
+      console.log(
+        '[Middleware Security] Blocked request with no origin or referer (non-Vercel environment)'
+      );
+      return new NextResponse(
+        JSON.stringify({
+          error: 'CSRF_VALIDATION_FAILED',
+          message:
+            'Invalid request origin. Please refresh the page and try again.',
+        }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
   }
 

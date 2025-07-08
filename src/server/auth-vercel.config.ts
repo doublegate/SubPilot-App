@@ -22,6 +22,23 @@ export function getVercelAuthConfig(
     return baseConfig;
   }
 
+  // Determine if we're on a preview deployment
+  const isPreview = process.env.VERCEL_ENV === 'preview';
+  const isProduction = process.env.VERCEL_ENV === 'production';
+
+  // For preview deployments, we need to use 'none' to allow cross-site cookies
+  // This is necessary because OAuth callbacks go to production domain but
+  // users access via preview URLs
+  const sameSiteValue = isPreview ? 'none' : 'lax';
+
+  console.log('[Auth Vercel Config] Cookie configuration:', {
+    isPreview,
+    isProduction,
+    sameSiteValue,
+    vercelEnv: process.env.VERCEL_ENV,
+    vercelUrl: process.env.VERCEL_URL,
+  });
+
   return {
     ...baseConfig,
     // Always trust the host on Vercel deployments
@@ -29,10 +46,10 @@ export function getVercelAuthConfig(
     // Override cookies configuration for cross-domain support
     cookies: {
       sessionToken: {
-        name: `authjs.session-token`,
+        name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}authjs.session-token`,
         options: {
           httpOnly: true,
-          sameSite: 'lax',
+          sameSite: sameSiteValue,
           path: '/',
           secure: true,
           // Don't set domain to allow cookies on all subdomains
@@ -40,19 +57,19 @@ export function getVercelAuthConfig(
         },
       },
       callbackUrl: {
-        name: `authjs.callback-url`,
+        name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}authjs.callback-url`,
         options: {
-          sameSite: 'lax',
+          sameSite: sameSiteValue,
           path: '/',
           secure: true,
           domain: undefined,
         },
       },
       csrfToken: {
-        name: `authjs.csrf-token`,
+        name: `${process.env.NODE_ENV === 'production' ? '__Host-' : ''}authjs.csrf-token`,
         options: {
           httpOnly: true,
-          sameSite: 'lax',
+          sameSite: sameSiteValue,
           path: '/',
           secure: true,
           domain: undefined,
@@ -62,7 +79,7 @@ export function getVercelAuthConfig(
         name: `authjs.pkce.code_verifier`,
         options: {
           httpOnly: true,
-          sameSite: 'lax',
+          sameSite: sameSiteValue,
           path: '/',
           secure: true,
           maxAge: 60 * 15, // 15 minutes
@@ -73,7 +90,7 @@ export function getVercelAuthConfig(
         name: `authjs.state`,
         options: {
           httpOnly: true,
-          sameSite: 'lax',
+          sameSite: sameSiteValue,
           path: '/',
           secure: true,
           maxAge: 60 * 15, // 15 minutes

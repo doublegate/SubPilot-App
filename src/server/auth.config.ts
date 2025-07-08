@@ -38,9 +38,13 @@ declare module 'next-auth' {
  *
  * @see https://authjs.dev/reference/configuration/auth-config
  */
+import { getAuthCookieConfig } from './auth-cookie-config';
+
 export const authConfig: NextAuthConfig = {
   // Trust host for Vercel deployments
   trustHost: true,
+  // Dynamic cookie configuration for Vercel
+  cookies: getAuthCookieConfig(),
   session: {
     // Use JWT strategy in development for credentials provider
     strategy: env.NODE_ENV === 'development' ? 'jwt' : 'database',

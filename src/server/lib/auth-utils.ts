@@ -59,7 +59,15 @@ export function isTrustedOrigin(origin: string | null): boolean {
       // Additional check: ensure it matches our project pattern
       const projectPattern =
         /^subpilot-[a-z0-9]+-doublegate-projects\.vercel\.app$/;
-      return projectPattern.test(url.hostname);
+
+      // Also check for the specific preview URL pattern from debug output
+      const specificPreviewPattern =
+        /^subpilot-cf0u28a0q-doublegate-projects\.vercel\.app$/;
+
+      return (
+        projectPattern.test(url.hostname) ||
+        specificPreviewPattern.test(url.hostname)
+      );
     }
   } catch {
     return false;

@@ -24,6 +24,7 @@ import {
   getVercelAuthConfig,
   logVercelDeploymentInfo,
 } from '@/server/auth-vercel.config';
+import { getAuthCookieConfig } from '@/server/auth-cookie-config';
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -74,6 +75,10 @@ export const authConfig: NextAuthConfig = {
   trustHost: true,
   // Use the canonical URL for OAuth callbacks
   ...(authUrl && { url: authUrl }),
+  // For preview deployments, we need to handle secure cookies differently
+  useSecureCookies:
+    process.env.NODE_ENV === 'production' &&
+    process.env.VERCEL_ENV !== 'preview',
   session: {
     // Use JWT strategy in development for credentials provider
     strategy: env.NODE_ENV === 'development' ? 'jwt' : 'database',
@@ -111,6 +116,17 @@ export const authConfig: NextAuthConfig = {
 
       // Default to the baseUrl
       return baseUrl;
+    },
+    async signIn({ account, profile }) {
+      // Log sign-in attempts for debugging
+      console.log('[Auth Sign-In] Processing sign-in:', {
+        provider: account?.provider,
+        email: profile?.email,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Allow all sign-ins
+      return true;
     },
     session: ({ session, token, user }) => {
       // Handle both JWT (dev) and database (prod) sessions

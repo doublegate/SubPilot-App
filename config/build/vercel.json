@@ -27,6 +27,32 @@
           "value": "no-store, max-age=0"
         }
       ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Forwarded-Proto",
+          "value": "$forwarded_proto"
+        },
+        {
+          "key": "X-Forwarded-Host",
+          "value": "$forwarded_host"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/$1",
+      "has": [
+        {
+          "type": "header",
+          "key": "x-forwarded-proto",
+          "value": "https"
+        }
+      ]
     }
   ]
 }
