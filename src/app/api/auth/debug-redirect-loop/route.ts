@@ -48,9 +48,8 @@ export async function GET() {
       ).map(c => ({
         name: c.name,
         hasValue: !!c.value,
-        httpOnly: c.httpOnly,
-        secure: c.secure,
-        sameSite: c.sameSite,
+        // Note: RequestCookie type doesn't expose httpOnly, secure, sameSite properties
+        valueLength: c.value?.length ?? 0,
       })),
     };
     
