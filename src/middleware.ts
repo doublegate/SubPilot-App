@@ -1,43 +1,45 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getAuthForEdge } from '@/server/auth-edge';
+import {
+  isTrustedOrigin,
+  getCurrentUrl,
+  isVercelDeployment,
+} from '@/server/lib/auth-utils';
 
 export async function middleware(req: NextRequest) {
   const timestamp = new Date().toISOString();
   const { pathname, searchParams } = req.nextUrl;
-  
+
   console.log(`[Middleware Debug ${timestamp}]`, {
     url: req.url,
     pathname,
     method: req.method,
-    hasAuthCookie: req.cookies.has('authjs.session-token') || req.cookies.has('__Secure-authjs.session-token'),
+    hasAuthCookie:
+      req.cookies.has('authjs.session-token') ||
+      req.cookies.has('__Secure-authjs.session-token'),
     cookies: req.cookies.getAll().map(c => c.name),
     origin: req.headers.get('origin'),
     referer: req.headers.get('referer'),
     searchParams: Object.fromEntries(searchParams.entries()),
+    isVercel: isVercelDeployment(),
+    vercelUrl: process.env.VERCEL_URL,
+    currentUrl: getCurrentUrl(req.headers),
   });
 
   // Apply basic security checks (Edge Runtime compatible)
   const securityResponse = await applyBasicSecurity(req);
   if (securityResponse) {
-    console.log(`[Middleware Debug ${timestamp}] Security check failed, returning security response`);
+    console.log(
+      `[Middleware Debug ${timestamp}] Security check failed, returning security response`
+    );
     return securityResponse;
   }
 
-  // TEMPORARILY DISABLED: Auth check to debug redirect loop
-  console.log(`[Middleware Debug ${timestamp}] AUTH CHECK TEMPORARILY DISABLED FOR DEBUGGING`);
-  
-  // Skip auth checks for debugging
-  if (true) {
-    console.log(`[Middleware Debug ${timestamp}] Bypassing auth check - allowing all requests`);
-    const response = NextResponse.next();
-    return applySecurityHeaders(response);
-  }
-
-  /* ORIGINAL AUTH CODE - TEMPORARILY COMMENTED OUT
+  // Re-enabled auth checks now that login is working
   const { auth } = await getAuthForEdge(req);
   const isLoggedIn = !!auth;
-  
+
   console.log(`[Middleware Debug ${timestamp}] Auth check result:`, {
     isLoggedIn,
     userId: auth?.user?.id,
@@ -88,7 +90,6 @@ export async function middleware(req: NextRequest) {
   // Apply security headers to the response
   const response = NextResponse.next();
   return applySecurityHeaders(response);
-  */
 }
 
 /**
@@ -100,15 +101,50 @@ async function applyBasicSecurity(
   // Basic CSRF protection for mutations
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     const origin = request.headers.get('origin');
-    const host = request.headers.get('host');
 
-    if (origin && host) {
-      try {
-        const originUrl = new URL(origin);
-        const expectedOrigin = process.env.NEXTAUTH_URL ?? `https://${host}`;
-        const expectedUrl = new URL(expectedOrigin);
-
-        if (originUrl.host !== expectedUrl.host) {
+    if (origin) {
+      // Check if the origin is trusted
+      if (!isTrustedOrigin(origin)) {
+        console.log(
+          `[Middleware Security] Blocked untrusted origin: ${origin}`
+        );
+        return new NextResponse(
+          JSON.stringify({
+            error: 'CSRF_VALIDATION_FAILED',
+            message:
+              'Invalid request origin. Please refresh the page and try again.',
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    } else {
+      // No origin header for same-origin requests is acceptable
+      // But we should still validate the referer for additional security
+      const referer = request.headers.get('referer');
+      if (referer) {
+        try {
+          const refererUrl = new URL(referer);
+          if (!isTrustedOrigin(refererUrl.origin)) {
+            console.log(
+              `[Middleware Security] Blocked untrusted referer: ${referer}`
+            );
+            return new NextResponse(
+              JSON.stringify({
+                error: 'CSRF_VALIDATION_FAILED',
+                message:
+                  'Invalid request origin. Please refresh the page and try again.',
+              }),
+              {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' },
+              }
+            );
+          }
+        } catch {
+          // Invalid referer URL, block the request
           return new NextResponse(
             JSON.stringify({
               error: 'CSRF_VALIDATION_FAILED',
@@ -121,18 +157,6 @@ async function applyBasicSecurity(
             }
           );
         }
-      } catch {
-        return new NextResponse(
-          JSON.stringify({
-            error: 'CSRF_VALIDATION_FAILED',
-            message:
-              'Invalid request origin. Please refresh the page and try again.',
-          }),
-          {
-            status: 403,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
       }
     }
   }

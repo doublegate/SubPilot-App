@@ -15,6 +15,15 @@ import {
   clearFailedAuth,
 } from '@/server/lib/rate-limiter';
 import { AuditLogger } from '@/server/lib/audit-logger';
+import {
+  getCanonicalAuthUrl,
+  isVercelDeployment,
+  getTrustedOrigins,
+} from '@/server/lib/auth-utils';
+import {
+  getVercelAuthConfig,
+  logVercelDeploymentInfo,
+} from '@/server/auth-vercel.config';
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -40,20 +49,17 @@ const secret =
   env.NEXTAUTH_SECRET ??
   env.AUTH_SECRET;
 
-// Get the correct URL (v5 uses AUTH_URL, v4 uses NEXTAUTH_URL)
-// In production on Vercel, use the actual deployed URL
-const authUrl =
-  process.env.AUTH_URL ??
-  process.env.NEXTAUTH_URL ??
-  env.NEXTAUTH_URL ??
-  env.AUTH_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
+// For OAuth callbacks, we need to use the canonical production URL
+// But the application can be accessed from multiple origins (Vercel previews)
+const authUrl = getCanonicalAuthUrl();
 
 // Log configuration for debugging
 console.log('[AUTH V5 FIX] Configuration:', {
   hasSecret: !!secret,
-  hasUrl: !!authUrl,
-  url: authUrl,
+  canonicalUrl: authUrl,
+  trustedOrigins: getTrustedOrigins(),
+  isVercel: isVercelDeployment(),
+  vercelUrl: process.env.VERCEL_URL,
   nodeEnv: process.env.NODE_ENV,
 });
 
@@ -66,11 +72,46 @@ export const authConfig: NextAuthConfig = {
   secret,
   // Trust host for Vercel deployments
   trustHost: true,
+  // Use the canonical URL for OAuth callbacks
+  ...(authUrl && { url: authUrl }),
   session: {
     // Use JWT strategy in development for credentials provider
     strategy: env.NODE_ENV === 'development' ? 'jwt' : 'database',
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Handle redirects for multiple origins
+      const trustedOrigins = getTrustedOrigins();
+
+      // If the redirect URL is relative, use it as-is
+      if (url.startsWith('/')) {
+        return url;
+      }
+
+      // Check if the URL is from a trusted origin
+      try {
+        const targetUrl = new URL(url);
+        const targetOrigin = targetUrl.origin;
+
+        if (trustedOrigins.includes(targetOrigin)) {
+          return url;
+        }
+
+        // Check if it's a Vercel preview URL
+        if (targetUrl.hostname.endsWith('.vercel.app')) {
+          const projectPattern =
+            /^subpilot-[a-z0-9]+-doublegate-projects\.vercel\.app$/;
+          if (projectPattern.test(targetUrl.hostname)) {
+            return url;
+          }
+        }
+      } catch {
+        // Invalid URL, fall through to baseUrl
+      }
+
+      // Default to the baseUrl
+      return baseUrl;
+    },
     session: ({ session, token, user }) => {
       // Handle both JWT (dev) and database (prod) sessions
       if (token) {
@@ -344,4 +385,10 @@ if (process.env.NODE_ENV === 'production') {
   console.log('=============================================');
 }
 
-export const { auth, handlers, signIn, signOut } = NextAuth(authConfig);
+// Log Vercel deployment info if applicable
+logVercelDeploymentInfo();
+
+// Apply Vercel-specific configuration if needed
+const finalAuthConfig = getVercelAuthConfig(authConfig);
+
+export const { auth, handlers, signIn, signOut } = NextAuth(finalAuthConfig);
