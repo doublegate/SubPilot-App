@@ -7,23 +7,7 @@ import { getCurrentUrl, isVercelDeployment } from '@/server/lib/auth-utils';
  * This only checks if a user is authenticated without importing heavy dependencies
  */
 export async function getAuthForEdge(req: NextRequest) {
-  const timestamp = new Date().toISOString();
-  const currentUrl = getCurrentUrl(req.headers);
   const isProduction = process.env.NODE_ENV === 'production';
-
-  console.log(`[Auth-Edge Debug ${timestamp}] Starting auth check`, {
-    url: req.url,
-    currentUrl,
-    cookies: req.cookies
-      .getAll()
-      .map(c => ({ name: c.name, hasValue: !!c.value })),
-    hasAuthSecret: !!process.env.AUTH_SECRET,
-    hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET,
-    authUrl: process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? 'NOT SET',
-    isVercel: isVercelDeployment(),
-    vercelUrl: process.env.VERCEL_URL,
-    isProduction,
-  });
 
   try {
     // In production, we use database sessions, so we need to check for the session cookie
@@ -33,11 +17,6 @@ export async function getAuthForEdge(req: NextRequest) {
         req.cookies.get('__Secure-authjs.session-token')?.value ||
         req.cookies.get('authjs.session-token')?.value ||
         req.cookies.get('__Host-authjs.session-token')?.value;
-
-      console.log(`[Auth-Edge Debug ${timestamp}] Production session check:`, {
-        hasSessionToken: !!sessionToken,
-        cookieNames: req.cookies.getAll().map(c => c.name),
-      });
 
       if (sessionToken) {
         // In edge runtime, we can't access the database to validate the session
@@ -62,15 +41,8 @@ export async function getAuthForEdge(req: NextRequest) {
     const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
     if (!secret) {
-      console.error(
-        `[Auth-Edge Debug ${timestamp}] NO SECRET FOUND - AUTH WILL FAIL`
-      );
       return { auth: null };
     }
-
-    console.log(
-      `[Auth-Edge Debug ${timestamp}] Development: Calling getToken with secret`
-    );
 
     // For Vercel deployments, we need to handle the URL properly
     const tokenOptions: Parameters<typeof getToken>[0] = {
@@ -78,23 +50,20 @@ export async function getAuthForEdge(req: NextRequest) {
       secret,
     };
 
-    // If we're on a Vercel deployment, we need to ensure the URL is correct
-    if (isVercelDeployment() && process.env.VERCEL_URL) {
-      // Override the req URL for token validation
-      const url = new URL(req.url);
-      url.host = process.env.VERCEL_URL;
-      (tokenOptions as any).url = url.toString();
+    // For Vercel deployments, handle proxy headers properly
+    if (isVercelDeployment()) {
+      const currentUrl = getCurrentUrl(req.headers);
+      if (currentUrl) {
+        // Create a new URL based on the forwarded headers
+        const url = new URL(req.url);
+        const forwardedUrl = new URL(currentUrl);
+        url.protocol = forwardedUrl.protocol;
+        url.host = forwardedUrl.host;
+        (tokenOptions as any).url = url.toString();
+      }
     }
 
     const token = await getToken(tokenOptions);
-
-    console.log(`[Auth-Edge Debug ${timestamp}] Token result:`, {
-      hasToken: !!token,
-      tokenSub: token?.sub,
-      tokenEmail: token && typeof token === 'object' ? token.email : undefined,
-      tokenExp: token && typeof token === 'object' ? token.exp : undefined,
-      tokenIat: token && typeof token === 'object' ? token.iat : undefined,
-    });
 
     return {
       auth:
@@ -108,10 +77,7 @@ export async function getAuthForEdge(req: NextRequest) {
           : null,
     };
   } catch (error) {
-    console.error(
-      `[Auth-Edge Debug ${timestamp}] Error checking auth in edge:`,
-      error
-    );
+    console.error('Auth edge error:', error);
     return { auth: null };
   }
 }

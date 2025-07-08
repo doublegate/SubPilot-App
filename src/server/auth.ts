@@ -1,14 +1,11 @@
-// Use the production fix configuration
+// Use the consolidated auth configuration
 import {
   auth,
   handlers,
   signIn,
   signOut,
-  debugAuth,
-} from '@/server/auth-production-fix';
-
-// Re-export auth as getServerAuthSession for backward compatibility
-export const getServerAuthSession = auth;
+  getServerAuthSession,
+} from '@/server/auth.consolidated';
 
 // Export everything
-export { auth, handlers, signIn, signOut, debugAuth };
+export { auth, handlers, signIn, signOut, getServerAuthSession };

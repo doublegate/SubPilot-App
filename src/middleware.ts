@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getAuthForEdge } from '@/server/auth-edge-vercel';
+import { getAuthForEdge } from '@/server/auth-edge';
 import {
   isTrustedOrigin,
   getCurrentUrl,
@@ -9,48 +9,17 @@ import {
 } from '@/server/lib/auth-utils';
 
 export async function middleware(req: NextRequest) {
-  const timestamp = new Date().toISOString();
-  const { pathname, searchParams } = req.nextUrl;
-
-  console.log(`[Middleware Debug ${timestamp}]`, {
-    url: req.url,
-    pathname,
-    method: req.method,
-    hasAuthCookie:
-      req.cookies.has('authjs.session-token') ||
-      req.cookies.has('__Secure-authjs.session-token'),
-    cookies: req.cookies.getAll().map(c => c.name),
-    origin: req.headers.get('origin'),
-    referer: req.headers.get('referer'),
-    host: req.headers.get('host'),
-    xForwardedHost: req.headers.get('x-forwarded-host'),
-    xForwardedProto: req.headers.get('x-forwarded-proto'),
-    searchParams: Object.fromEntries(searchParams.entries()),
-    isVercel: isVercelDeployment(),
-    vercelUrl: process.env.VERCEL_URL,
-    vercelEnv: process.env.VERCEL_ENV,
-    currentUrl: getCurrentUrl(req.headers),
-    trustedOrigins: getTrustedOrigins(),
-  });
+  const { pathname } = req.nextUrl;
 
   // Apply basic security checks (Edge Runtime compatible)
   const securityResponse = await applyBasicSecurity(req);
   if (securityResponse) {
-    console.log(
-      `[Middleware Debug ${timestamp}] Security check failed, returning security response`
-    );
     return securityResponse;
   }
 
-  // Re-enabled auth checks now that login is working
+  // Authentication check
   const { auth } = await getAuthForEdge(req);
   const isLoggedIn = !!auth;
-
-  console.log(`[Middleware Debug ${timestamp}] Auth check result:`, {
-    isLoggedIn,
-    userId: auth?.user?.id,
-    userEmail: auth?.user?.email,
-  });
 
   // Define protected routes
   const protectedRoutes = ['/dashboard', '/profile', '/settings'];
@@ -62,22 +31,11 @@ export async function middleware(req: NextRequest) {
   );
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
 
-  console.log(`[Middleware Debug ${timestamp}] Route check:`, {
-    isProtectedRoute,
-    isAuthRoute,
-    pathname,
-  });
-
   // Redirect to login if accessing protected route without auth
   if (isProtectedRoute && !isLoggedIn) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('callbackUrl', pathname);
-    console.log(`[Middleware Debug ${timestamp}] Redirecting to login:`, {
-      from: pathname,
-      to: url.pathname,
-      reason: 'Protected route without auth',
-    });
     return NextResponse.redirect(url);
   }
 
@@ -85,11 +43,6 @@ export async function middleware(req: NextRequest) {
   if (isAuthRoute && isLoggedIn) {
     const url = req.nextUrl.clone();
     url.pathname = '/dashboard';
-    console.log(`[Middleware Debug ${timestamp}] Redirecting to dashboard:`, {
-      from: pathname,
-      to: url.pathname,
-      reason: 'Auth route while logged in',
-    });
     return NextResponse.redirect(url);
   }
 
