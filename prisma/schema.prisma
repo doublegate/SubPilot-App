@@ -26,6 +26,14 @@ model User {
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
 
+  // Two-Factor Authentication
+  twoFactorEnabled    Boolean   @default(false)
+  twoFactorMethod     String?   // 'sms' or 'authenticator'
+  twoFactorPhone      String?   // Phone number for SMS (encrypted)
+  twoFactorSecret     String?   // TOTP secret (encrypted)
+  twoFactorBackupCodes Json     @default("[]") // Array of encrypted backup codes
+  twoFactorVerifiedAt DateTime? // When 2FA was last verified
+
   // Admin flag
   isAdmin      Boolean  @default(false)
 

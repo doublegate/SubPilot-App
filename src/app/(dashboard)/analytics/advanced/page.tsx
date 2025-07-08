@@ -48,6 +48,12 @@ export default function AdvancedAnalyticsPage() {
     'month-over-month' | 'year-over-year' | 'quarter-over-quarter'
   >('month-over-month');
 
+  // Check if user has linked bank accounts
+  const { data: plaidItems, isLoading: plaidItemsLoading } =
+    api.plaid.getItems.useQuery();
+
+  const hasLinkedAccounts = plaidItems && plaidItems.length > 0;
+
   // Fetch data
   const { data: predictions, isLoading: predictionsLoading } =
     api.analytics.getPredictions.useQuery({
@@ -79,6 +85,17 @@ export default function AdvancedAnalyticsPage() {
             ? 'month'
             : 'week',
     });
+
+  // Fetch daily spending data for heatmap
+  const { data: dailySpending, isLoading: dailySpendingLoading } =
+    api.analytics.getDailySpending.useQuery(
+      {
+        year: new Date().getFullYear(),
+      },
+      {
+        enabled: hasLinkedAccounts,
+      }
+    );
 
   // Generate report query - we'll trigger it manually
   const [shouldGenerateReport, setShouldGenerateReport] = useState(false);
@@ -183,33 +200,31 @@ export default function AdvancedAnalyticsPage() {
     }));
   }, [comparisons, categoryBreakdown]);
 
-  // Prepare heatmap data (dummy data for now, would need real daily data)
+  // Prepare heatmap data from real daily spending or empty array
   const heatmapData = useMemo(() => {
-    const data = [];
-    const currentYear = new Date().getFullYear();
-
-    for (let month = 0; month < 12; month++) {
-      const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
-      for (let day = 1; day <= daysInMonth; day++) {
-        data.push({
-          day,
-          month,
-          value: Math.random() * 500, // Replace with real data
-          label: `${day}/${month + 1}`,
-        });
-      }
+    if (!hasLinkedAccounts || !dailySpending) {
+      return [];
     }
 
-    return data;
-  }, []);
+    // Convert daily spending data to heatmap format
+    return dailySpending.map(item => ({
+      day: item.day,
+      month: item.month,
+      value: item.amount,
+      label: `${item.day}/${item.month + 1}`,
+      subscriptions: item.subscriptions,
+    }));
+  }, [hasLinkedAccounts, dailySpending]);
 
   const isLoading =
+    plaidItemsLoading ||
     predictionsLoading ||
     comparisonsLoading ||
     categoryLoading ||
     anomaliesLoading ||
     optimizationsLoading ||
-    timeSeriesLoading;
+    timeSeriesLoading ||
+    dailySpendingLoading;
 
   if (isLoading) {
     return <AnalyticsSkeleton />;
@@ -438,13 +453,38 @@ export default function AdvancedAnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="heatmap" className="space-y-4">
-          <HeatmapChartEnhanced
-            data={heatmapData}
-            title="Spending Heatmap"
-            description="Daily spending patterns throughout the year"
-            colorScheme="blue"
-            showLegend={true}
-          />
+          {hasLinkedAccounts ? (
+            <HeatmapChartEnhanced
+              data={heatmapData}
+              title="Spending Heatmap"
+              description="Daily spending patterns throughout the year"
+              colorScheme="blue"
+              showLegend={true}
+            />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Spending Heatmap</CardTitle>
+                <CardDescription>
+                  Daily spending patterns throughout the year
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex h-[400px] flex-col items-center justify-center text-center">
+                  <p className="mb-4 text-lg text-muted-foreground">
+                    Link a bank account to see your spending heatmap
+                  </p>
+                  <Button
+                    onClick={() => router.push('/banks')}
+                    className="flex items-center gap-2"
+                  >
+                    <DollarSign className="h-4 w-4" />
+                    Connect Bank Account
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

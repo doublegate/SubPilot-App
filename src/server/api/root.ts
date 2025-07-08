@@ -18,6 +18,7 @@ import { unifiedCancellationRouter } from '@/server/api/routers/unified-cancella
 import { unifiedCancellationEnhancedRouter } from '@/server/api/routers/unified-cancellation-enhanced';
 import { adminRouter } from '@/server/api/routers/admin';
 import { oauthAccountsRouter } from '@/server/api/routers/oauth-accounts';
+import { twoFactorRouter } from '@/server/api/routers/two-factor';
 
 /**
  * This is the primary router for your server.
@@ -44,6 +45,7 @@ export const appRouter = createTRPCRouter({
   unifiedCancellationEnhanced: unifiedCancellationEnhancedRouter,
   admin: adminRouter,
   oauthAccounts: oauthAccountsRouter,
+  twoFactor: twoFactorRouter,
 });
 
 // export type definition of API

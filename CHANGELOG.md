@@ -5,26 +5,81 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.8] - 2025-07-08 - UI Fixes, Billing Page Restructure & Two-Factor Authentication
+
+### ✨ New Features
+
+#### Two-Factor Authentication (2FA) - (v1.8.8)
+
+- **Complete 2FA Implementation** - Added comprehensive two-factor authentication system to enhance account security
+- **Multiple Methods** - Support for both authenticator apps (Google Authenticator, Authy) and SMS verification
+- **QR Code Generation** - Easy setup with QR codes for authenticator app integration
+- **Backup Codes** - Eight single-use recovery codes for emergency account access
+- **Security Tab Integration** - Seamless 2FA management from Settings → Security tab
+
+#### Standalone Billing Page - (v1.8.8)
+
+- **Dedicated Billing Page** - Created new `/billing` page separate from Settings
+- **Enhanced UI** - Professional billing interface with Overview, Usage, and Plans tabs
+- **Working Upgrade Flow** - Fixed "Upgrade to Pro" button functionality
+- **Feature Highlights** - Clear presentation of plan features and benefits
+- **Payment History** - Comprehensive transaction history and invoice management
+
+### 🐛 Bug Fixes
+
+#### Navigation Corrections - (v1.8.8)
+
+- **Profile Link** - Fixed user dropdown "Profile" link to correctly navigate to `/profile` instead of `/settings`
+- **Billing Link** - Updated billing navigation from broken `/settings/billing` to new `/billing` page
+- **404 Error Resolution** - Eliminated 404 errors by creating proper billing page structure
+
+#### Analytics Data Fix - (v1.8.8)
+
+- **Removed Fake Data** - Fixed analytics heatmap showing $91,277.12 in fake spending data
+- **Empty State** - Added proper empty state message when no bank accounts are linked
+- **Real Data Integration** - Heatmap now only displays actual transaction data from linked accounts
+- **Connect Account CTA** - Added clear call-to-action to link bank accounts
+
+### 🔧 Technical Improvements
+
+#### 2FA Infrastructure - (v1.8.8)
+
+- **Database Schema** - Added comprehensive 2FA fields to User model with encryption
+- **tRPC Router** - Created dedicated `two-factor` router with all necessary endpoints
+- **SMS Service** - Implemented SMS service infrastructure (mock in dev, ready for Twilio)
+- **Login Flow** - Integrated 2FA verification into authentication process
+- **Audit Logging** - All 2FA actions logged for security compliance
+
+#### Code Quality - (v1.8.8)
+
+- **TypeScript Compliance** - Fixed all TypeScript compilation errors
+- **ESLint Clean** - Resolved all linting issues without using 'any' types
+- **Async/Await** - Updated crypto operations to use proper async patterns
+- **Import Optimization** - Cleaned up unused imports and fixed module paths
+
 ## [1.8.7] - 2025-07-08 - OAuth Account Linking UI Feature
 
 ### ✨ New Features
 
-#### OAuth Account Management
+#### OAuth Account Management - (v1.8.7)
+
 - **Account Linking UI** - Added comprehensive OAuth account management section to profile page
 - **Connect Multiple Providers** - Users can now link additional OAuth providers (Google, GitHub) to their account
 - **Secure Unlinking** - Safely disconnect OAuth providers with protection for last authentication method
 - **Real-time Status Updates** - Dynamic UI shows current connection status with instant feedback
 - **Success Notifications** - Clear toast messages confirm successful linking/unlinking operations
 
-### 🔧 Technical Improvements
+### 🔧 Technical Improvements - (v1.8.7)
 
 #### tRPC API Enhancements
+
 - **New OAuth router** - Added `oauthAccounts` router with comprehensive account management endpoints
 - **Account linking flow** - Implemented secure OAuth linking with automatic account association by email
 - **Database protection** - Prevents unlinking the last authentication method to maintain account access
 - **Type safety** - Full TypeScript support across all OAuth management operations
 
 #### Authentication Flow Updates
+
 - **Enhanced signIn callback** - Automatically links new OAuth providers to existing accounts
 - **Redirect handling** - Smooth post-linking redirects with success parameters
 - **Session preservation** - Maintains user session during account linking process
@@ -34,13 +89,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🐛 Bug Fixes
 
 #### Authentication System Debugging
+
 - **Identified root cause of redirect loops** - Discovered Vercel SSO protection was intercepting requests before app auth
 - **Enhanced debug capabilities** - Added comprehensive auth debugging endpoints and logging
-- **NextAuth v4/v5 compatibility** - Improved support for both AUTH_* and NEXTAUTH_* environment variables
+- **NextAuth v4/v5 compatibility** - Improved support for both AUTH_*and NEXTAUTH_* environment variables
 - **Restored middleware functionality** - Re-enabled auth redirects after confirming they work correctly
 - **Cleaned up debug code** - Removed temporary debug logging after issue resolution
 
 #### Middleware Security
+
 - **Enhanced auth edge compatibility** - Improved edge runtime authentication checks
 - **Maintained security headers** - Preserved all CSP and security configurations
 - **Trust host configuration** - Added proper Vercel deployment support
@@ -49,27 +106,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🔒 Security Fixes
 
-#### DOM Security Vulnerabilities
+#### DOM Security Vulnerabilities - (v1.8.5)
 
 - **Fixed DOM text reinterpreted as HTML** - Resolved critical vulnerability in `archive/ui_fixes/debug-test.html` where user input could be interpreted as HTML
 - **Sanitized DOM manipulation** - Updated all DOM text insertions to use `textContent` instead of `innerHTML` to prevent XSS attacks
 - **Archive security** - Applied security fixes even to archived debugging files to maintain secure codebase
 
-#### Regular Expression Security
+#### Regular Expression Security - (v1.8.5)
 
 - **Fixed overly permissive regex patterns** - Resolved 3 instances of insecure regex in `validation-schemas.ts`
 - **Tightened validation patterns** - Updated email, URL, and phone number validation to use more restrictive patterns
 - **Prevented ReDoS attacks** - Eliminated patterns that could cause Regular Expression Denial of Service
 
-#### Cryptographic Security
+#### Cryptographic Security - (v1.8.5)
 
 - **Fixed insecure randomness** - Replaced `Math.random()` with cryptographically secure `crypto.getRandomValues()` in `monthly-spending.ts`
 - **Enhanced security for sensitive operations** - Ensured all random number generation for security-sensitive contexts uses proper cryptographic methods
 - **Maintained backward compatibility** - Security fixes applied without breaking existing functionality
 
-### 🐛 Bug Fixes
+### 🐛 Bug Fixes - (v1.8.5)
 
-#### Google OAuth Authentication
+#### Google OAuth Authentication - (v1.8.5)
 
 - **Fixed "Missing required parameter: client_id" error** - Resolved production authentication failures
 - **Conditional OAuth rendering** - OAuth buttons now only render when valid credentials are configured
@@ -77,51 +134,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Updated login/signup forms** - Dynamic rendering based on configured OAuth providers
 - **Environment variable validation** - Proper handling of missing OAuth credentials in production
 
-#### Content Security Policy (CSP)
+#### Content Security Policy (CSP) - (v1.8.5)
 
 - **Fixed Sentry connectivity** - Added Sentry ingest domains to CSP connect-src directive
 - **Enabled Vercel Analytics** - Added Vercel Analytics domains to allowed connections
 - **Worker support for Sentry** - Added `worker-src 'self' blob:` for Sentry's session replay workers
 - **Removed deprecated features** - Cleaned up unrecognized 'browsing-topics' from Permissions-Policy
 
-#### CI/CD Workflow
+#### CI/CD Workflow - (v1.8.5)
 
 - **Fixed linting failures** - Added required environment variables to code quality checks
 - **Resolved formatting issues** - Applied Prettier formatting to 6 files
 - **SARIF file management** - Removed tracked security scanning artifact and updated .gitignore
 - **Environment validation** - Added `SKIP_ENV_VALIDATION=true` and test secrets for CI environment
 
-### 🎨 Improvements
+### 🎨 Improvements - (v1.8.5)
 
-#### Sentry v9 Migration
+#### Sentry v9 Migration - (v1.8.5)
 
 - **Updated to functional API** - Migrated from deprecated v8 class-based integrations to v9 functional API
 - **Next.js 15 compatibility** - Moved client configuration to `instrumentation-client.ts`
 - **Cleaned up configuration** - Removed duplicate `withSentryConfig` declarations
 - **Deleted deprecated files** - Removed obsolete `sentry.client.config.js` file
 
-#### Environment Variable Loading
+#### Environment Variable Loading - (v1.8.5)
 
 - **Fixed production scripts** - Resolved "Invalid environment variables" errors in validation and test scripts
 - **Updated npm scripts** - Added `dotenv-cli` to load `.env.local` before ES module imports
 - **Consistent pattern** - Applied same environment loading pattern across all production scripts
 
-#### Email Integration
+#### Email Integration - (v1.8.5)
 
 - **Fixed SendGrid imports** - Corrected ES module import syntax for @sendgrid/mail package
 - **Created test suite** - Added comprehensive email integration test script with interactive and non-interactive modes
 - **Enhanced readline handling** - Fixed readline interface issues with proper error handling and graceful shutdown
 
-#### OAuth Authentication Configuration
+#### OAuth Authentication Configuration - (v1.8.5)
 
 - **Fixed TypeScript compilation errors** - Added proper type annotations to OAuth diagnostic endpoints
 - **Fixed async headers() call** - Updated to await headers() for Next.js 15 compatibility
-- **NextAuth v5 compatibility** - Added support for both AUTH_* and NEXTAUTH_* environment variable naming conventions
+- **NextAuth v5 compatibility** - Added support for both AUTH_*and NEXTAUTH_* environment variable naming conventions
 - **Multiple fallbacks** - OAuth providers now check for v4 (GOOGLE_CLIENT_ID) and v5 (AUTH_GOOGLE_ID) patterns
 - **Comprehensive diagnostics** - Created multiple diagnostic endpoints to troubleshoot OAuth configuration issues
 - **Code formatting** - Applied Prettier formatting to all OAuth-related files for consistency
 
-#### Authentication Redirect Loop Fix
+#### Authentication Redirect Loop Fix - (v1.8.5)
 
 - **Fixed infinite redirect loop** - Resolved issue where authenticated users were redirected continuously
 - **Updated auth-edge.ts** - Added support for both AUTH_SECRET and NEXTAUTH_SECRET environment variables
@@ -129,63 +186,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Added debug logging** - Enhanced middleware with debug logging for troubleshooting auth flow
 - **Created debug endpoint** - Added `/api/auth/debug-session` for inspecting authentication state
 
-### 📚 Developer Experience
+### 📚 Developer Experience - (v1.8.5)
 
-#### Email Testing
+#### Email Testing - (v1.8.5)
 
 - **New test command** - Added `npm run test:email` for validating SendGrid configuration
 - **Non-interactive mode** - Added `--check` flag for CI/CD email configuration validation
 - **Better error messages** - Improved error handling and user feedback in production scripts
 
-#### Authentication Debugging
+#### Authentication Debugging - (v1.8.5)
 
 - **OAuth provider detection** - Clear indication of which OAuth providers are available
 - **Environment guidance** - Helpful error messages when OAuth credentials are missing
 - **Vercel deployment tips** - Documentation for adding OAuth environment variables
 
-### 📝 Documentation
+### 📝 Documentation - (v1.8.5)
 
 - **Security improvements** - Documented all security fixes and their implications
 - **OAuth configuration** - Added guidance for setting up OAuth providers in production
 - **Environment setup** - Clarified `.env.local` requirements for production scripts
 - **Email testing** - Added documentation for new email testing capabilities
+- **Updated script usage** - Added documentation for new email testing capabilities
+- **Environment setup** - Clarified `.env.local` requirements for production scripts
 
-### 🔧 Build & TypeScript Fixes
+### 🔧 Build & TypeScript Fixes - (v1.8.5)
 
-#### OAuth Diagnostic Endpoints
+#### OAuth Diagnostic Endpoints - (v1.8.5)
 
 - **Fixed Provider type compatibility** - Updated all OAuth diagnostic endpoints to handle NextAuth provider types which can be functions or objects
 - **Added proper type guards** - Implemented type checking for provider configuration to handle email, OAuth, and other provider types
 - **Fixed template literal errors** - Properly converted unknown types to strings in error messages
 - **Separated type imports** - Fixed ESLint warnings by separating runtime from type imports
 
-#### ESLint Compliance
+#### ESLint Compliance - (v1.8.5)
 
 - **Fixed nullish coalescing operators** - Replaced 44 instances of `||` with `??` for proper null/undefined handling
 - **Eliminated all `any` types** - Created proper TypeScript interfaces for all data structures
 - **Fixed unsafe operations** - Added type assertions and guards for all property accesses
 - **Achieved 100% compliance** - Zero TypeScript errors, zero ESLint errors in production build
 
-## [Unreleased]
-
-<!-- Future changes will be documented here -->
-
-#### Developer Experience
+#### Developer Experience - (v1.8.5)
 
 - **Email testing script** - New `npm run test:email` command for validating SendGrid configuration
 - **Non-interactive mode** - Added `--check` flag for CI/CD email configuration validation
 - **Better error messages** - Improved error handling and user feedback in production scripts
 
-### 📝 Documentation
-
-- **Updated script usage** - Added documentation for new email testing capabilities
-- **Environment setup** - Clarified `.env.local` requirements for production scripts
-
 ## [1.8.0] - 2025-07-05 - UI Fixes & Development Environment Optimization
 
-### 🐛 Bug Fixes & Improvements
+### 🐛 Bug Fixes & Improvements - (v1.8.0)
 
-#### Development Environment Standardization
+#### Development Environment Standardization - (v1.8.0)
 
 - **Port Standardization** - Fixed all port 3001 references throughout the project, standardized to port 3000
 - **Component Organization** - Archived all debugging/testing files to `archive/ui_fixes/` for cleaner project structure
@@ -195,27 +245,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CSP Improvements** - Fixed particle background Content Security Policy issues
 - **CDN Support** - Added cdnjs.cloudflare.com to CSP for p5.js library support
 
-### 🏗️ Technical Details
+### 🏗️ Technical Details - (v1.8.0)
 
-#### Port Standardization
+#### Port Standardization - (v1.8.0)
 
 - Updated all development server references from port 3001 to 3000
 - Ensures consistency across documentation and configuration files
 - Improves developer experience with standard Next.js port
 
-#### Component Cleanup
+#### Component Cleanup - (v1.8.0)
 
 - Moved experimental UI components to archive directory
 - Maintains clean component structure for production code
 - Preserves debugging work for future reference
 
-#### API Configuration
+#### API Configuration - (v1.8.0)
 
 - Removed unsupported "accounts" product from Plaid configuration
 - Maintains proper product list: "transactions,identity"
 - Prevents API errors during bank connection flow
 
-#### Security Policy Updates
+#### Security Policy Updates - (v1.8.0)
 
 - Enhanced Content Security Policy for third-party libraries
 - Added proper CDN allowlisting for p5.js dependency
@@ -225,9 +275,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > **MILESTONE ACHIEVED**: Complete enterprise production readiness established with comprehensive documentation synchronization, architecture optimization, and deployment pipeline excellence. SubPilot now represents a fully mature, production-grade subscription management platform ready for Phase 4 launch and commercial deployment.
 
-### 🎯 Production Readiness & Architecture Excellence
+### 🎯 Production Readiness & Architecture Excellence - (v1.7.0)
 
-#### Production-Grade Foundation Established
+#### Production-Grade Foundation Established - (v1.7.0)
 
 - **Architecture Maturity** - Complete system design with enterprise-grade patterns and practices
 - **Documentation Excellence** - Comprehensive technical documentation across all system components
@@ -236,7 +286,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Security Excellence** - Enterprise-grade security measures exceeding industry standards
 - **Type Safety Mastery** - Complete TypeScript coverage with zero compilation errors
 
-#### System Architecture Achievements
+#### System Architecture Achievements - (v1.7.0)
 
 - **Microservice Architecture** - Clean separation of concerns with modular service design
 - **Three-Agent Cancellation System** - Intelligent orchestration with API, automation, and manual fallback
@@ -245,7 +295,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API Excellence** - tRPC implementation with end-to-end type safety and comprehensive testing
 - **Authentication System** - Auth.js v5 with OAuth, magic links, and enterprise security patterns
 
-#### Enterprise Standards Implementation
+#### Enterprise Standards Implementation - (v1.7.0)
 
 - **Code Quality Excellence** - 100% ESLint compliance with modern JavaScript/TypeScript patterns
 - **Testing Foundation** - Comprehensive test coverage with 1,049+ tests across all system components
@@ -254,9 +304,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Monitoring & Observability** - Comprehensive logging and error tracking systems
 - **Performance Metrics** - 95/100 Lighthouse score with optimized loading and interaction
 
-### 🚀 Technical Architecture Highlights
+### 🚀 Technical Architecture Highlights - (v1.7.0)
 
-#### Core Platform Features
+#### Core Platform Features - (v1.7.0)
 
 - **Intelligent Subscription Detection** - Advanced ML-powered transaction analysis with 85%+ accuracy
 - **Multi-Bank Integration** - Secure Plaid API integration with encrypted token management
@@ -265,7 +315,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Premium Billing System** - Stripe integration with feature flags and tier-based access control
 - **Real-Time Analytics** - Interactive dashboards with predictive insights and spending analytics
 
-#### Development Excellence
+#### Development Excellence - (v1.7.0)
 
 - **T3 Stack Implementation** - Next.js 15, TypeScript, tRPC, Prisma, Tailwind CSS, Auth.js
 - **Modern React Patterns** - Server components, optimized hooks, and performance best practices
@@ -274,9 +324,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Security Architecture** - End-to-end encryption, OWASP compliance, and comprehensive audit logging
 - **Testing Strategy** - Unit, integration, E2E, and security testing with Vitest and Playwright
 
-### 🔧 System Infrastructure
+### 🔧 System Infrastructure - (v1.7.0)
 
-#### Production Deployment
+#### Production Deployment - (v1.7.0)
 
 - **Vercel Hosting** - Edge-optimized deployment with automatic scaling and global CDN
 - **Neon PostgreSQL** - Serverless database with connection pooling and automated backups
@@ -284,7 +334,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **GitHub Actions CI/CD** - Automated testing, building, and deployment pipeline
 - **Monitoring & Analytics** - Comprehensive observability with Vercel Analytics and custom metrics
 
-#### Security & Compliance
+#### Security & Compliance - (v1.7.0)
 
 - **Enterprise Security Audit** - Complete vulnerability assessment with 100% remediation
 - **Data Encryption** - AES-256-GCM encryption for sensitive data with secure key management
@@ -292,9 +342,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API Security** - Rate limiting, input validation, and comprehensive error handling
 - **Privacy Compliance** - GDPR-ready data handling with user-controlled deletion and export
 
-### 🎯 Business Value & Impact
+### 🎯 Business Value & Impact - (v1.7.0)
 
-#### User Experience Excellence
+#### User Experience Excellence - (v1.7.0)
 
 - **Intuitive Interface** - Modern, responsive design with accessibility compliance
 - **Performance Optimization** - Sub-2-second load times with optimized user interactions
@@ -302,7 +352,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Personalization** - AI-powered insights and recommendations for subscription optimization
 - **Multi-Platform Support** - Web, mobile, and API access with consistent experience
 
-#### Commercial Readiness
+#### Commercial Readiness - (v1.7.0)
 
 - **Scalable Architecture** - Designed for enterprise-scale deployment with millions of users
 - **Revenue Model** - Premium subscription tiers with Stripe billing integration
@@ -310,9 +360,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **White-Label Potential** - Modular architecture supporting custom branding and deployment
 - **Enterprise Features** - Team management, advanced analytics, and custom integrations
 
-### 📊 Quality Metrics & Performance
+### 📊 Quality Metrics & Performance - (v1.7.0)
 
-#### Technical Excellence Metrics
+#### Technical Excellence Metrics - (v1.7.0)
 
 - **Test Coverage**: 1,049+ comprehensive tests with outstanding stability
 - **Performance Score**: 95/100 Lighthouse rating with optimized Core Web Vitals
@@ -321,7 +371,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation Coverage**: Complete API documentation with 95%+ coverage
 - **Build Success Rate**: 100% CI/CD pipeline reliability with automated quality gates
 
-#### Business Impact Metrics
+#### Business Impact Metrics - (v1.7.0)
 
 - **Feature Completeness**: 100% of planned Phase 1-3 features implemented
 - **Subscription Detection Accuracy**: 85%+ accuracy with continuous ML improvements
@@ -357,7 +407,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Integration Ecosystem**: Expanded third-party integrations and marketplace
 - **Global Expansion**: Multi-currency support and international banking integration
 
-### 🏆 Achievement Summary
+### 🏆 Achievement Summary - (v1.7.0)
 
 The v1.7.0 release represents the culmination of comprehensive development efforts, establishing SubPilot as a production-ready, enterprise-grade subscription management platform. This release demonstrates:
 

@@ -214,8 +214,8 @@ export function ConnectedAccounts() {
             </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to disconnect your{' '}
-              {unlinkProvider && providers[unlinkProvider].name} account? You'll
-              no longer be able to sign in with{' '}
+              {unlinkProvider && providers[unlinkProvider].name} account?
+              You&apos;ll no longer be able to sign in with{' '}
               {unlinkProvider && providers[unlinkProvider].name}.
             </AlertDialogDescription>
           </AlertDialogHeader>

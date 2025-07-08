@@ -39,10 +39,10 @@
 
 SubPilot is an **enterprise-grade subscription management platform** that automatically detects, analyzes, and helps you optimize recurring payments through secure bank integration. Built on modern architecture principles with **zero-trust security**, **real-time AI assistance**, and **intelligent automation**.
 
-> **🚀 Version 1.8.7** - OAuth Account Linking UI Feature
-> **📈 Status**: Phase 4 Active - Commercial Launch Ready
+> **🚀 Version 1.8.8** - UI Fixes, Billing Page Restructure & Two-Factor Authentication
+> **📈 Status**: Phase 4 Active - Commercial Launch Ready with Enhanced Security
 > **🏗️ Architecture**: Enterprise microservices with intelligent orchestration
-> **🔒 Security**: 100% vulnerability-free with comprehensive audit compliance
+> **🔒 Security**: 100% vulnerability-free with 2FA and comprehensive audit compliance
 
 ### 🏢 Enterprise Features
 
@@ -461,13 +461,13 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) for 
   <h2>🚀 Ready to Transform Your Subscription Management?</h2>
 
   <p>
-    <a href="https://subpilot-app.vercel.app" target="_blank">
+    <a href="https://subpilot.app" target="_blank">
       <img src="https://img.shields.io/badge/🌟_Try_Live_Demo-Production_Ready-brightgreen?style=for-the-badge&logoColor=white" alt="Live Demo">
     </a>
   </p>
 
   <p>
-    <a href="https://subpilot-app.vercel.app">🔗 Live Demo</a> •
+    <a href="https://subpilot.app">🔗 Live Demo</a> •
     <a href="./docs">📚 Documentation</a> •
     <a href="https://github.com/doublegate/SubPilot-App/releases">📦 Releases</a> •
     <a href="./CONTRIBUTING.md">🤝 Contribute</a>

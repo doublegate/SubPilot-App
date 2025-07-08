@@ -3,7 +3,7 @@
  * This endpoint handles OAuth callbacks when the user is accessing via a different domain
  * than the OAuth callback URL (e.g., Vercel preview deployments)
  */
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
@@ -25,8 +25,10 @@ export async function GET(request: NextRequest) {
   // Try to extract the original URL from state
   if (state) {
     try {
-      const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
-      targetUrl = stateData.returnUrl || '';
+      const stateData = JSON.parse(Buffer.from(state, 'base64').toString()) as {
+        returnUrl?: string;
+      };
+      targetUrl = stateData.returnUrl ?? '';
     } catch {
       // State is not our custom format, ignore
     }
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
   }
 
   // If we have a target URL and it's a Vercel preview
-  if (targetUrl && targetUrl.includes('.vercel.app')) {
+  if (targetUrl.includes('.vercel.app')) {
     console.log(
       `[Cross-Origin Callback ${timestamp}] Redirecting to preview URL:`,
       targetUrl

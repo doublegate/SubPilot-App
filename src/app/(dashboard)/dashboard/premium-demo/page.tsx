@@ -250,7 +250,7 @@ export default function PremiumDemoPage() {
               Compare all available subscription tiers and their features
             </p>
             <Button className="w-full" asChild>
-              <Link href="/dashboard/settings/billing/upgrade">View Plans</Link>
+              <Link href="/billing?tab=upgrade">View Plans</Link>
             </Button>
           </CardContent>
         </Card>
@@ -267,7 +267,7 @@ export default function PremiumDemoPage() {
               Manage your subscription, payment methods, and billing history
             </p>
             <Button variant="outline" className="w-full" asChild>
-              <Link href="/dashboard/settings/billing">Billing Settings</Link>
+              <Link href="/billing">Billing Settings</Link>
             </Button>
           </CardContent>
         </Card>

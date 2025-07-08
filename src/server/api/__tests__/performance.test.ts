@@ -594,6 +594,12 @@ describe('API Performance Benchmarks', () => {
         failedLoginAttempts: 0,
         lockedUntil: null,
         isAdmin: false,
+        twoFactorEnabled: false,
+        twoFactorMethod: null,
+        twoFactorPhone: null,
+        twoFactorSecret: null,
+        twoFactorBackupCodes: null,
+        twoFactorVerifiedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

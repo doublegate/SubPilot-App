@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getAuthForEdge } from '@/server/auth-edge';
-import {
-  isTrustedOrigin,
-  getCurrentUrl,
-  isVercelDeployment,
-  getTrustedOrigins,
-} from '@/server/lib/auth-utils';
+import { isTrustedOrigin, isVercelDeployment } from '@/server/lib/auth-utils';
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

@@ -59,6 +59,12 @@ const createMockUser = (overrides: Partial<User> = {}): User => ({
   notificationPreferences: {},
   failedLoginAttempts: 0,
   lockedUntil: null,
+  twoFactorEnabled: false,
+  twoFactorMethod: null,
+  twoFactorPhone: null,
+  twoFactorSecret: null,
+  twoFactorBackupCodes: null,
+  twoFactorVerifiedAt: null,
   ...overrides,
 });
 

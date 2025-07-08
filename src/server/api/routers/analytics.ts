@@ -857,4 +857,95 @@ export const analyticsRouter = createTRPCRouter({
         input.groupBy
       );
     }),
+
+  /**
+   * Get daily spending data for heatmap visualization
+   */
+  getDailySpending: protectedProcedure
+    .input(
+      z.object({
+        year: z.number().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const year = input.year ?? new Date().getFullYear();
+      const startDate = new Date(year, 0, 1);
+      const endDate = new Date(year, 11, 31);
+
+      // Get all transactions for the year
+      const transactions = await ctx.db.transaction.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
+          // Only include negative amounts (spending)
+          amount: {
+            lt: 0,
+          },
+        },
+        include: {
+          subscription: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          date: 'asc',
+        },
+      });
+
+      // Group transactions by day
+      const dailySpendingMap = new Map<
+        string,
+        { amount: number; subscriptions: string[] }
+      >();
+
+      transactions.forEach(transaction => {
+        const date = new Date(transaction.date);
+        const day = date.getDate();
+        const month = date.getMonth();
+        const key = `${month}-${day}`;
+
+        const existing = dailySpendingMap.get(key) ?? {
+          amount: 0,
+          subscriptions: [],
+        };
+
+        // Add absolute value of amount (remove negative sign)
+        existing.amount += Math.abs(transaction.amount.toNumber());
+
+        // Add subscription name if it exists
+        if (transaction.subscription?.name) {
+          existing.subscriptions.push(transaction.subscription.name);
+        } else if (transaction.merchantName) {
+          existing.subscriptions.push(transaction.merchantName);
+        }
+
+        dailySpendingMap.set(key, existing);
+      });
+
+      // Convert to array format for heatmap
+      const dailySpending = [];
+      for (let month = 0; month < 12; month++) {
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let day = 1; day <= daysInMonth; day++) {
+          const key = `${month}-${day}`;
+          const data = dailySpendingMap.get(key);
+
+          if (data && data.amount > 0) {
+            dailySpending.push({
+              day,
+              month,
+              amount: data.amount,
+              subscriptions: [...new Set(data.subscriptions)], // Remove duplicates
+            });
+          }
+        }
+      }
+
+      return dailySpending;
+    }),
 });

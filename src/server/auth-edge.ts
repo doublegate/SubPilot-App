@@ -14,8 +14,8 @@ export async function getAuthForEdge(req: NextRequest) {
     if (isProduction) {
       // Check for database session cookie
       const sessionToken =
-        req.cookies.get('__Secure-authjs.session-token')?.value ||
-        req.cookies.get('authjs.session-token')?.value ||
+        req.cookies.get('__Secure-authjs.session-token')?.value ??
+        req.cookies.get('authjs.session-token')?.value ??
         req.cookies.get('__Host-authjs.session-token')?.value;
 
       if (sessionToken) {
@@ -59,7 +59,7 @@ export async function getAuthForEdge(req: NextRequest) {
         const forwardedUrl = new URL(currentUrl);
         url.protocol = forwardedUrl.protocol;
         url.host = forwardedUrl.host;
-        (tokenOptions as any).url = url.toString();
+        (tokenOptions as { url?: string }).url = url.toString();
       }
     }
 
@@ -71,7 +71,7 @@ export async function getAuthForEdge(req: NextRequest) {
           ? {
               user: {
                 id: token.sub ?? '',
-                email: (token.email ?? '') as string,
+                email: (token.email as string | undefined) ?? '',
               },
             }
           : null,

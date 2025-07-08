@@ -384,7 +384,9 @@ export const HeatmapChartEnhanced = React.memo(function HeatmapChartEnhanced({
                         </p>
                         <p className="text-xl font-bold">
                           {formatCurrency(
-                            data.reduce((sum, d) => sum + d.value, 0)
+                            data.length > 0
+                              ? data.reduce((sum, d) => sum + d.value, 0)
+                              : 0
                           )}
                         </p>
                       </div>

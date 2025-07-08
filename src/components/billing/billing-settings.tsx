@@ -255,9 +255,7 @@ export function BillingSettings() {
           )}
 
           {subscription?.plan?.name === 'free' && (
-            <Button
-              onClick={() => router.push('/dashboard/settings/billing/upgrade')}
-            >
+            <Button onClick={() => router.push('/billing?tab=upgrade')}>
               Upgrade to Pro
             </Button>
           )}

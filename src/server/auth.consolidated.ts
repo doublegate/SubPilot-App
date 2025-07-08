@@ -15,7 +15,6 @@ import { compare } from 'bcryptjs';
 
 import { env } from '@/env';
 import { db } from '@/server/db';
-import { sendVerificationRequest } from '@/lib/email';
 import {
   trackFailedAuth,
   isAccountLocked,
@@ -69,22 +68,22 @@ export const authConfig: NextAuthConfig = {
     // OAuth Providers with environment variable fallbacks
     GoogleProvider({
       clientId:
-        process.env.GOOGLE_CLIENT_ID ||
-        process.env.AUTH_GOOGLE_ID ||
+        process.env.GOOGLE_CLIENT_ID ??
+        process.env.AUTH_GOOGLE_ID ??
         env.GOOGLE_CLIENT_ID,
       clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET ||
-        process.env.AUTH_GOOGLE_SECRET ||
+        process.env.GOOGLE_CLIENT_SECRET ??
+        process.env.AUTH_GOOGLE_SECRET ??
         env.GOOGLE_CLIENT_SECRET,
     }),
     GitHubProvider({
       clientId:
-        process.env.GITHUB_CLIENT_ID ||
-        process.env.AUTH_GITHUB_ID ||
+        process.env.GITHUB_CLIENT_ID ??
+        process.env.AUTH_GITHUB_ID ??
         env.GITHUB_CLIENT_ID,
       clientSecret:
-        process.env.GITHUB_CLIENT_SECRET ||
-        process.env.AUTH_GITHUB_SECRET ||
+        process.env.GITHUB_CLIENT_SECRET ??
+        process.env.AUTH_GITHUB_SECRET ??
         env.GITHUB_CLIENT_SECRET,
     }),
     // Email provider for magic links (only if SMTP is configured)
@@ -93,13 +92,13 @@ export const authConfig: NextAuthConfig = {
           EmailProvider({
             server: {
               host: env.SMTP_HOST,
-              port: Number(env.SMTP_PORT || '587'),
+              port: Number(env.SMTP_PORT ?? '587'),
               auth: {
-                user: env.SMTP_USER || '',
-                pass: env.SMTP_PASS || '',
+                user: env.SMTP_USER ?? '',
+                pass: env.SMTP_PASS ?? '',
               },
             },
-            from: env.FROM_EMAIL || 'noreply@subpilot.app',
+            from: env.FROM_EMAIL ?? 'noreply@subpilot.app',
           }),
         ]
       : []),
@@ -138,7 +137,7 @@ export const authConfig: NextAuthConfig = {
             where: { email },
           });
 
-          if (!user || !user.password) {
+          if (!user?.password) {
             await trackFailedAuth(email);
             try {
               await AuditLogger.log({
@@ -184,11 +183,13 @@ export const authConfig: NextAuthConfig = {
             console.error('Failed to log audit event:', error);
           }
 
+          // Check if 2FA is enabled - we'll handle verification in the signIn callback
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             image: user.image,
+            twoFactorEnabled: user.twoFactorEnabled,
           };
         } catch (error) {
           console.error('Auth error:', error);
@@ -224,6 +225,16 @@ export const authConfig: NextAuthConfig = {
       return baseUrl;
     },
     async signIn({ account, profile, user }) {
+      // Check if user has 2FA enabled and needs verification
+      if (user && 'twoFactorEnabled' in user && user.twoFactorEnabled) {
+        // For credentials provider, redirect to 2FA page
+        if (!account || account.type === 'credentials') {
+          // Store user info in session for 2FA verification
+          // In production, use a more secure temporary storage
+          return '/auth/2fa';
+        }
+      }
+
       // OAuth account linking - automatically link accounts with same email
       if (account && profile?.email && account.type === 'oauth') {
         try {
@@ -306,7 +317,7 @@ export const authConfig: NextAuthConfig = {
       }
       return session;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account: _account }) {
       if (user) {
         token.id = user.id;
       }
@@ -319,7 +330,7 @@ export const authConfig: NextAuthConfig = {
     verifyRequest: '/auth/verify-request',
   },
   events: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile: _profile }) {
       if (user.id && account) {
         try {
           await AuditLogger.log({

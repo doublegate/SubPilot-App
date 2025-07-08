@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Card,
@@ -17,8 +20,15 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { TwoFactorSetup } from '@/components/settings/two-factor-setup';
+import { TwoFactorManage } from '@/components/settings/two-factor-manage';
+import { api } from '@/trpc/react';
 
 export default function SettingsPage() {
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+
+  // Get 2FA status
+  const { data: twoFactorStatus } = api.twoFactor.getStatus.useQuery();
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-8">
@@ -29,10 +39,9 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="notifications" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="advanced">Advanced</TabsTrigger>
         </TabsList>
 
@@ -158,15 +167,27 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <p className="font-medium">Status</p>
-                  <p className="text-sm text-muted-foreground">
-                    Two-factor authentication is currently disabled
-                  </p>
+              {twoFactorStatus?.enabled ? (
+                <TwoFactorManage
+                  method={twoFactorStatus.method}
+                  phone={twoFactorStatus.phone}
+                  onDisabled={() => {
+                    // Refresh the status
+                  }}
+                />
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <p className="font-medium">Status</p>
+                    <p className="text-sm text-muted-foreground">
+                      Two-factor authentication is currently disabled
+                    </p>
+                  </div>
+                  <Button onClick={() => setShowTwoFactorSetup(true)}>
+                    Enable 2FA
+                  </Button>
                 </div>
-                <Button>Enable 2FA</Button>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -193,33 +214,6 @@ export default function SettingsPage() {
               <Button variant="outline" className="w-full">
                 Sign out all other sessions
               </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="billing" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Plan</CardTitle>
-              <CardDescription>
-                You are currently on the free plan
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="rounded-lg border bg-gradient-to-r from-cyan-50/10 to-purple-50/10 p-4 dark:from-cyan-900/20 dark:to-purple-900/20">
-                  <h2 className="text-base font-medium">Free Plan</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Track up to 10 subscriptions
-                  </p>
-                  <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                    <li>• Basic subscription tracking</li>
-                    <li>• Email notifications</li>
-                    <li>• 1 bank account connection</li>
-                  </ul>
-                </div>
-                <Button className="w-full">Upgrade to Pro</Button>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -261,6 +255,14 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <TwoFactorSetup
+        open={showTwoFactorSetup}
+        onOpenChange={setShowTwoFactorSetup}
+        onSuccess={() => {
+          setShowTwoFactorSetup(false);
+        }}
+      />
     </div>
   );
 }
