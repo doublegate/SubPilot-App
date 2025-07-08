@@ -57,6 +57,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Async/Await** - Updated crypto operations to use proper async patterns
 - **Import Optimization** - Cleaned up unused imports and fixed module paths
 
+### 🔒 Security Improvements - (v1.8.8)
+
+- **Removed Exposed AUTH_SECRET** - Eliminated hardcoded AUTH_SECRET from documentation that was accidentally committed to Git history
+- **Documentation Cleanup** - Removed `auth.config.bak.ts` file containing sensitive configuration data
+- **Git History Protection** - Used BFG Repo-Cleaner to permanently remove sensitive data from all Git history
+- **Enhanced Security Practices** - Strengthened documentation to prevent future credential exposure
+
 ## [1.8.7] - 2025-07-08 - OAuth Account Linking UI Feature
 
 ### ✨ New Features
