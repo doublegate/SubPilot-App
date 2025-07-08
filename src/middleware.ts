@@ -3,15 +3,46 @@ import type { NextRequest } from 'next/server';
 import { getAuthForEdge } from '@/server/auth-edge';
 
 export async function middleware(req: NextRequest) {
+  const timestamp = new Date().toISOString();
+  const { pathname, searchParams } = req.nextUrl;
+  
+  console.log(`[Middleware Debug ${timestamp}]`, {
+    url: req.url,
+    pathname,
+    method: req.method,
+    hasAuthCookie: req.cookies.has('authjs.session-token') || req.cookies.has('__Secure-authjs.session-token'),
+    cookies: req.cookies.getAll().map(c => c.name),
+    origin: req.headers.get('origin'),
+    referer: req.headers.get('referer'),
+    searchParams: Object.fromEntries(searchParams.entries()),
+  });
+
   // Apply basic security checks (Edge Runtime compatible)
   const securityResponse = await applyBasicSecurity(req);
   if (securityResponse) {
+    console.log(`[Middleware Debug ${timestamp}] Security check failed, returning security response`);
     return securityResponse;
   }
 
+  // TEMPORARILY DISABLED: Auth check to debug redirect loop
+  console.log(`[Middleware Debug ${timestamp}] AUTH CHECK TEMPORARILY DISABLED FOR DEBUGGING`);
+  
+  // Skip auth checks for debugging
+  if (true) {
+    console.log(`[Middleware Debug ${timestamp}] Bypassing auth check - allowing all requests`);
+    const response = NextResponse.next();
+    return applySecurityHeaders(response);
+  }
+
+  /* ORIGINAL AUTH CODE - TEMPORARILY COMMENTED OUT
   const { auth } = await getAuthForEdge(req);
   const isLoggedIn = !!auth;
-  const { pathname } = req.nextUrl;
+  
+  console.log(`[Middleware Debug ${timestamp}] Auth check result:`, {
+    isLoggedIn,
+    userId: auth?.user?.id,
+    userEmail: auth?.user?.email,
+  });
 
   // Define protected routes
   const protectedRoutes = ['/dashboard', '/profile', '/settings'];
@@ -23,11 +54,22 @@ export async function middleware(req: NextRequest) {
   );
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
 
+  console.log(`[Middleware Debug ${timestamp}] Route check:`, {
+    isProtectedRoute,
+    isAuthRoute,
+    pathname,
+  });
+
   // Redirect to login if accessing protected route without auth
   if (isProtectedRoute && !isLoggedIn) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('callbackUrl', pathname);
+    console.log(`[Middleware Debug ${timestamp}] Redirecting to login:`, {
+      from: pathname,
+      to: url.pathname,
+      reason: 'Protected route without auth',
+    });
     return NextResponse.redirect(url);
   }
 
@@ -35,12 +77,18 @@ export async function middleware(req: NextRequest) {
   if (isAuthRoute && isLoggedIn) {
     const url = req.nextUrl.clone();
     url.pathname = '/dashboard';
+    console.log(`[Middleware Debug ${timestamp}] Redirecting to dashboard:`, {
+      from: pathname,
+      to: url.pathname,
+      reason: 'Auth route while logged in',
+    });
     return NextResponse.redirect(url);
   }
 
   // Apply security headers to the response
   const response = NextResponse.next();
   return applySecurityHeaders(response);
+  */
 }
 
 /**

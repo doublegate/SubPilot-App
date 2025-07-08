@@ -805,3 +805,17 @@ Critical Learning (2025-07-07):
 - Implementation: Updated auth-edge.ts and middleware.ts with fallback support and debug logging
 - Testing: Created /api/auth/debug-session endpoint for authentication state inspection
 ```
+
+### OAuth Authentication Debugging Pattern
+```
+Critical Learning (2025-07-07 20:16 EDT):
+- URL Configuration Mismatch: OAuth callbacks fail when NEXTAUTH_URL doesn't match actual deployment URL
+- Problem: Persistent redirect loops even after removing Vercel SSO protection
+- Debug Infrastructure: Temporarily disable middleware auth checks for troubleshooting
+- Comprehensive Logging: Add extensive debug logging to auth-edge.ts and middleware.ts
+- Debug Endpoint: Create /api/auth/debug-redirect-loop for real-time diagnostics
+- Environment Fix: Update AUTH_URL/NEXTAUTH_URL from production domain to Vercel app URL
+- Middleware Exclusion: Ensure /api/auth paths are properly excluded from middleware processing
+- Pattern: Always verify OAuth callback URLs match actual deployment URL
+- Implementation: Debug-first approach with temporary auth bypass for investigation
+```

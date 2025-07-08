@@ -39,7 +39,7 @@
 
 SubPilot is an **enterprise-grade subscription management platform** that automatically detects, analyzes, and helps you optimize recurring payments through secure bank integration. Built on modern architecture principles with **zero-trust security**, **real-time AI assistance**, and **intelligent automation**.
 
-> **🚀 Version 1.8.5** - Critical Security Fixes & OAuth Authentication Improvements
+> **🚀 Version 1.8.6** - Authentication Redirect Loop Fix & Debug Enhancements
 > **📈 Status**: Phase 4 Active - Commercial Launch Ready
 > **🏗️ Architecture**: Enterprise microservices with intelligent orchestration
 > **🔒 Security**: 100% vulnerability-free with comprehensive audit compliance

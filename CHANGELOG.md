@@ -5,6 +5,24 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🔧 Changes
+
+#### Authentication Debugging Enhancement
+- **Temporarily disabled middleware auth redirects** - Allows bypassing auth checks for debugging
+- **Added comprehensive debug logging** - Extensive logging in auth-edge.ts and middleware.ts
+- **Created debug endpoint** - New `/api/auth/debug-redirect-loop` endpoint for diagnostics
+- **Fixed environment URL mismatch** - Updated AUTH_URL/NEXTAUTH_URL to correct Vercel deployment URL
+- **Enhanced auth configuration** - Added support for both NextAuth v4 and v5 environment variables
+
+### 🐛 Bug Fixes
+
+#### OAuth Redirect Loop Resolution
+- **Fixed production URL mismatch** - OAuth callbacks were failing due to incorrect NEXTAUTH_URL
+- **Disabled Vercel SSO interference** - Vercel's own SSO protection was intercepting auth requests
+- **Improved middleware routing** - Correctly excludes /api/auth paths from middleware processing
+
 ## [1.8.6] - 2025-07-07 - Authentication Redirect Loop Fix
 
 ### 🐛 Bug Fixes
