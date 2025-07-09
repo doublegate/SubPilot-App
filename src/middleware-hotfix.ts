@@ -1,13 +1,13 @@
 /**
  * TEMPORARY HOTFIX FILE - DO NOT USE IN PRODUCTION
- * 
+ *
  * This file contains a CSP configuration that re-enables 'unsafe-inline'
  * to work around Cloudflare Rocket Loader issues.
- * 
+ *
  * TO APPLY HOTFIX:
  * 1. Rename current middleware.ts to middleware-secure.ts
  * 2. Rename this file to middleware.ts
- * 
+ *
  * TO REVERT (after disabling Rocket Loader):
  * 1. Rename middleware.ts to middleware-hotfix.ts
  * 2. Rename middleware-secure.ts back to middleware.ts

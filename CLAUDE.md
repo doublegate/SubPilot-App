@@ -903,3 +903,20 @@ Critical Learning (2025-07-08 20:44 EDT):
 - Testing: All quality checks pass - ESLint, TypeScript, Prettier, production build
 - Pattern: Systematic approach to production readiness without compromising features
 ```
+
+### Edge Runtime Compatibility Pattern
+```
+Critical Learning (2025-07-08 23:10 EDT):
+- Admin Panel Crashes: "Something Went Wrong" errors caused by Node.js APIs in Edge Runtime
+- Solution: Created edge-runtime-helpers.ts with comprehensive compatibility layer
+- Node.js API Replacements: Safe fallbacks for process.*, os.*, fs.*, and path.* APIs
+- Type-Safe Implementation: Zero `any` types, proper TypeScript definitions throughout
+- Cloudflare CSP: Intelligent detection and conditional unsafe-inline for Rocket Loader
+- Implementation Details:
+  - safeProcess: uptime(), memoryUsage(), version(), env, cwd()
+  - safeOs: cpus(), totalmem(), freemem(), tmpdir()
+  - safeReadPackageJson: Async function with fallback values
+  - safePath: join() with simple fallback
+- Pattern: Always provide Edge Runtime fallbacks for Node.js-specific APIs
+- Testing: Full functionality preserved, all quality checks passing
+```

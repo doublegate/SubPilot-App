@@ -150,7 +150,10 @@ async function applyBasicSecurity(
 /**
  * Apply security headers to response (Edge Runtime compatible)
  */
-function applySecurityHeaders(response: NextResponse, request?: NextRequest): NextResponse {
+function applySecurityHeaders(
+  response: NextResponse,
+  request?: NextRequest
+): NextResponse {
   // X-XSS-Protection is deprecated and can cause vulnerabilities
   // Modern browsers use CSP instead, so we don't set this header
 
@@ -172,24 +175,29 @@ function applySecurityHeaders(response: NextResponse, request?: NextRequest): Ne
   // Note: Next.js with App Router and Tailwind CSS requires 'unsafe-inline' for styles
   // For scripts, we remove 'unsafe-inline' in production but keep necessary domains
   const isDevelopment = process.env.NODE_ENV === 'development';
-  
+
   // Detect if we're behind Cloudflare by checking for CF headers
-  const isCloudflare = request && (
-    request.headers.get('cf-ray') !== null ||
-    request.headers.get('cf-connecting-ip') !== null
-  );
+  const isCloudflare =
+    request &&
+    (request.headers.get('cf-ray') !== null ||
+      request.headers.get('cf-connecting-ip') !== null);
 
   // Determine script-src based on environment and Cloudflare presence
   let scriptSrc;
   if (isDevelopment) {
-    scriptSrc = "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com";
+    scriptSrc =
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com";
   } else if (isCloudflare) {
     // Production with Cloudflare: Must allow unsafe-inline for Rocket Loader
-    console.warn('[CSP] Cloudflare detected - enabling unsafe-inline for Rocket Loader compatibility');
-    scriptSrc = "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com";
+    console.warn(
+      '[CSP] Cloudflare detected - enabling unsafe-inline for Rocket Loader compatibility'
+    );
+    scriptSrc =
+      "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com";
   } else {
     // Production without Cloudflare: Strict CSP
-    scriptSrc = "script-src 'self' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com";
+    scriptSrc =
+      "script-src 'self' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com";
   }
 
   const cspDirectives = [

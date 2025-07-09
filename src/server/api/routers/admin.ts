@@ -531,7 +531,8 @@ export const adminRouter = createTRPCRouter({
 
     return {
       environment: getEnvVar('PLAID_ENV') ?? 'sandbox',
-      isConnected: !!getEnvVar('PLAID_CLIENT_ID') && !!getEnvVar('PLAID_SECRET'),
+      isConnected:
+        !!getEnvVar('PLAID_CLIENT_ID') && !!getEnvVar('PLAID_SECRET'),
       lastChecked: new Date(),
       connectedItems,
       activeWebhooks,
@@ -595,7 +596,7 @@ export const adminRouter = createTRPCRouter({
     try {
       const { statSync } = await import('fs');
       const tempDir = safeOs.tmpdir();
-      const stats = statSync(tempDir) as { size: number };
+      const stats = statSync(tempDir) as unknown as { size: number };
       // This is a simplified calculation - in production you'd use a proper disk usage library
       diskUsage = Math.min(
         90,
@@ -950,7 +951,10 @@ export const adminRouter = createTRPCRouter({
     // These values could be stored in a settings table or environment variables
     return {
       require2FA: twoFactorPercentage > 80, // Auto-require if most users have it
-      sessionTimeout: parseInt(getEnvVar('SESSION_TIMEOUT_MINUTES') ?? '30', 10),
+      sessionTimeout: parseInt(
+        getEnvVar('SESSION_TIMEOUT_MINUTES') ?? '30',
+        10
+      ),
       maxLoginAttempts: parseInt(getEnvVar('MAX_LOGIN_ATTEMPTS') ?? '5', 10),
       enforcePasswordPolicy: getEnvVar('ENFORCE_PASSWORD_POLICY') !== 'false',
       passwordMinLength: parseInt(getEnvVar('PASSWORD_MIN_LENGTH') ?? '8', 10),
@@ -1260,10 +1264,15 @@ export const adminRouter = createTRPCRouter({
   getMigrationStatus: adminProcedure.query(async () => {
     // Get migration info from file system
     const { readdir } = await import('fs/promises');
-    const { join: pathJoin } = await import('path');
+    const pathModule = await import('path');
+    const pathJoin = (...paths: string[]) => pathModule.join(...paths);
 
     try {
-      const migrationsPath = pathJoin(safeProcess.cwd(), 'prisma', 'migrations');
+      const migrationsPath = pathJoin(
+        safeProcess.cwd(),
+        'prisma',
+        'migrations'
+      );
       const migrations = await readdir(migrationsPath);
 
       // Filter out non-migration directories
@@ -2136,20 +2145,6 @@ export const adminRouter = createTRPCRouter({
 });
 
 // Helper functions - formatUptime is imported from edge-runtime-helpers
-// Legacy formatUptime function for reference
-function formatUptimeLegacy(seconds: number): string {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-
-  if (days > 0) {
-    return `${days}d ${hours}h ${minutes}m`;
-  } else if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  } else {
-    return `${minutes}m`;
-  }
-}
 
 function formatBytes(bytes: number): string {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
