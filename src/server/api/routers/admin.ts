@@ -3,6 +3,13 @@ import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 import { TRPCError } from '@trpc/server';
 import { type Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import {
+  safeProcess,
+  safeOs,
+  safeReadPackageJson,
+  formatUptime as formatUptimeHelper,
+  getEnvVar,
+} from '@/server/lib/edge-runtime-helpers';
 
 // Type definitions
 interface ErrorLog {
@@ -523,8 +530,8 @@ export const adminRouter = createTRPCRouter({
     ]);
 
     return {
-      environment: process.env.PLAID_ENV ?? 'sandbox',
-      isConnected: !!process.env.PLAID_CLIENT_ID && !!process.env.PLAID_SECRET,
+      environment: getEnvVar('PLAID_ENV') ?? 'sandbox',
+      isConnected: !!getEnvVar('PLAID_CLIENT_ID') && !!getEnvVar('PLAID_SECRET'),
       lastChecked: new Date(),
       connectedItems,
       activeWebhooks,
@@ -553,43 +560,32 @@ export const adminRouter = createTRPCRouter({
 
   // System Information
   getSystemInfo: adminProcedure.query(async () => {
-    const uptime = process.uptime();
-    const memUsage = process.memoryUsage();
+    const uptime = safeProcess.uptime();
+    const memUsage = safeProcess.memoryUsage();
     const totalMem = memUsage.heapTotal;
     const usedMem = memUsage.heapUsed;
 
-    // Get package versions - using dynamic import to avoid require
-    let deps: Record<string, string> = {};
-    try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const packageJsonPath = path.join(process.cwd(), 'package.json');
-      const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
-      const packageJson = JSON.parse(packageJsonContent) as {
-        dependencies: Record<string, string>;
-      };
-      deps = packageJson.dependencies;
-    } catch (error) {
-      console.error('Failed to read package.json:', error);
-      // Provide fallback values
-      deps = {
-        next: 'unknown',
-        '@prisma/client': 'unknown',
-        typescript: 'unknown',
-      };
-    }
+    // Get package versions using Edge Runtime helper
+    const packageJson = await safeReadPackageJson();
+    const deps = packageJson.dependencies || {};
 
-    // Get CPU usage
-    const os = await import('os');
-    const cpus = os.cpus();
+    // Get CPU usage using safe helper
+    const cpus = safeOs.cpus();
     let totalIdle = 0;
     let totalTick = 0;
 
     for (const cpu of cpus) {
-      for (const type in cpu.times) {
-        totalTick += cpu.times[type as keyof typeof cpu.times];
+      const times = cpu.times as {
+        user: number;
+        nice: number;
+        sys: number;
+        idle: number;
+        irq: number;
+      };
+      for (const type in times) {
+        totalTick += times[type as keyof typeof times];
       }
-      totalIdle += cpu.times.idle;
+      totalIdle += times.idle;
     }
 
     const cpuUsage = Math.round(100 - ~~((100 * totalIdle) / totalTick));
@@ -598,8 +594,8 @@ export const adminRouter = createTRPCRouter({
     let diskUsage = 0;
     try {
       const { statSync } = await import('fs');
-      const tempDir = os.tmpdir();
-      const stats = statSync(tempDir);
+      const tempDir = safeOs.tmpdir();
+      const stats = statSync(tempDir) as { size: number };
       // This is a simplified calculation - in production you'd use a proper disk usage library
       diskUsage = Math.min(
         90,
@@ -611,9 +607,9 @@ export const adminRouter = createTRPCRouter({
     }
 
     return {
-      nodeVersion: process.version,
-      environment: process.env.NODE_ENV ?? 'development',
-      uptime: formatUptime(uptime),
+      nodeVersion: safeProcess.version(),
+      environment: getEnvVar('NODE_ENV') ?? 'development',
+      uptime: formatUptimeHelper(uptime),
       nextVersion: deps.next ?? 'unknown',
       prismaVersion: deps['@prisma/client'] ?? 'unknown',
       typescriptVersion: deps.typescript ?? 'unknown',
@@ -650,8 +646,8 @@ export const adminRouter = createTRPCRouter({
 
     return safeEnvVars.map(envVar => ({
       ...envVar,
-      value: envVar.masked ? undefined : (process.env[envVar.key] ?? 'Not set'),
-      source: process.env[envVar.key] ? 'Environment' : 'Default',
+      value: envVar.masked ? undefined : (getEnvVar(envVar.key) ?? 'Not set'),
+      source: getEnvVar(envVar.key) ? 'Environment' : 'Default',
     }));
   }),
 
@@ -954,14 +950,14 @@ export const adminRouter = createTRPCRouter({
     // These values could be stored in a settings table or environment variables
     return {
       require2FA: twoFactorPercentage > 80, // Auto-require if most users have it
-      sessionTimeout: parseInt(process.env.SESSION_TIMEOUT_MINUTES ?? '30', 10),
-      maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS ?? '5', 10),
-      enforcePasswordPolicy: process.env.ENFORCE_PASSWORD_POLICY !== 'false',
-      passwordMinLength: parseInt(process.env.PASSWORD_MIN_LENGTH ?? '8', 10),
-      passwordRequireNumbers: process.env.PASSWORD_REQUIRE_NUMBERS !== 'false',
-      passwordRequireSymbols: process.env.PASSWORD_REQUIRE_SYMBOLS !== 'false',
-      ipWhitelist: process.env.IP_WHITELIST?.split(',').filter(Boolean) ?? [],
-      ipBlacklist: process.env.IP_BLACKLIST?.split(',').filter(Boolean) ?? [],
+      sessionTimeout: parseInt(getEnvVar('SESSION_TIMEOUT_MINUTES') ?? '30', 10),
+      maxLoginAttempts: parseInt(getEnvVar('MAX_LOGIN_ATTEMPTS') ?? '5', 10),
+      enforcePasswordPolicy: getEnvVar('ENFORCE_PASSWORD_POLICY') !== 'false',
+      passwordMinLength: parseInt(getEnvVar('PASSWORD_MIN_LENGTH') ?? '8', 10),
+      passwordRequireNumbers: getEnvVar('PASSWORD_REQUIRE_NUMBERS') !== 'false',
+      passwordRequireSymbols: getEnvVar('PASSWORD_REQUIRE_SYMBOLS') !== 'false',
+      ipWhitelist: getEnvVar('IP_WHITELIST')?.split(',').filter(Boolean) ?? [],
+      ipBlacklist: getEnvVar('IP_BLACKLIST')?.split(',').filter(Boolean) ?? [],
     };
   }),
 
@@ -1084,7 +1080,7 @@ export const adminRouter = createTRPCRouter({
 
     // Estimate connection pool status based on activity
     const maxConnections = parseInt(
-      process.env.DATABASE_MAX_CONNECTIONS ?? '20',
+      getEnvVar('DATABASE_MAX_CONNECTIONS') ?? '20',
       10
     );
     const activeConnections = Math.min(recentActivityCount, maxConnections);
@@ -1108,7 +1104,7 @@ export const adminRouter = createTRPCRouter({
       active: activeConnections,
       idle: idleConnections,
       waiting: waitingConnections,
-      timeout: parseInt(process.env.DATABASE_TIMEOUT_SECONDS ?? '30', 10),
+      timeout: parseInt(getEnvVar('DATABASE_TIMEOUT_SECONDS') ?? '30', 10),
       health,
     };
   }),
@@ -1244,7 +1240,7 @@ export const adminRouter = createTRPCRouter({
         : `${estimatedSizeMB.toFixed(0)} MB`;
 
     // Backup schedule based on environment
-    const isProd = process.env.NODE_ENV === 'production';
+    const isProd = getEnvVar('NODE_ENV') === 'production';
     const backupInterval = isProd ? 6 : 24; // hours
     const lastBackup = new Date(Date.now() - backupInterval * 60 * 60 * 1000);
     const nextBackup = new Date(Date.now() + backupInterval * 60 * 60 * 1000);
@@ -1264,10 +1260,10 @@ export const adminRouter = createTRPCRouter({
   getMigrationStatus: adminProcedure.query(async () => {
     // Get migration info from file system
     const { readdir } = await import('fs/promises');
-    const path = await import('path');
+    const { join: pathJoin } = await import('path');
 
     try {
-      const migrationsPath = path.join(process.cwd(), 'prisma', 'migrations');
+      const migrationsPath = pathJoin(safeProcess.cwd(), 'prisma', 'migrations');
       const migrations = await readdir(migrationsPath);
 
       // Filter out non-migration directories
@@ -1365,9 +1361,9 @@ export const adminRouter = createTRPCRouter({
     const keys = [
       {
         name: 'Plaid',
-        key: process.env.PLAID_CLIENT_ID ? '••••••••' : 'Not configured',
+        key: getEnvVar('PLAID_CLIENT_ID') ? '••••••••' : 'Not configured',
         masked: true,
-        isActive: !!process.env.PLAID_CLIENT_ID,
+        isActive: !!getEnvVar('PLAID_CLIENT_ID'),
         lastUsed:
           lastPlaidUse?.timestamp ?? new Date(Date.now() - 60 * 60 * 1000),
         expiresAt: null,
@@ -1378,9 +1374,9 @@ export const adminRouter = createTRPCRouter({
       },
       {
         name: 'Stripe',
-        key: process.env.STRIPE_SECRET_KEY ? '••••••••' : 'Not configured',
+        key: getEnvVar('STRIPE_SECRET_KEY') ? '••••••••' : 'Not configured',
         masked: true,
-        isActive: !!process.env.STRIPE_SECRET_KEY,
+        isActive: !!getEnvVar('STRIPE_SECRET_KEY'),
         lastUsed:
           lastStripeUse?.createdAt ?? new Date(Date.now() - 2 * 60 * 60 * 1000),
         expiresAt: null,
@@ -1391,9 +1387,9 @@ export const adminRouter = createTRPCRouter({
       },
       {
         name: 'SendGrid',
-        key: process.env.SENDGRID_API_KEY ? '••••••••' : 'Not configured',
+        key: getEnvVar('SENDGRID_API_KEY') ? '••••••••' : 'Not configured',
         masked: true,
-        isActive: !!process.env.SENDGRID_API_KEY,
+        isActive: !!getEnvVar('SENDGRID_API_KEY'),
         lastUsed:
           lastEmailSent?.sentAt ?? new Date(Date.now() - 3 * 60 * 60 * 1000),
         expiresAt: null,
@@ -1404,9 +1400,9 @@ export const adminRouter = createTRPCRouter({
       },
       {
         name: 'OpenAI',
-        key: process.env.OPENAI_API_KEY ? '••••••••' : 'Not configured',
+        key: getEnvVar('OPENAI_API_KEY') ? '••••••••' : 'Not configured',
         masked: true,
-        isActive: !!process.env.OPENAI_API_KEY,
+        isActive: !!getEnvVar('OPENAI_API_KEY'),
         lastUsed:
           lastAIUse?.createdAt ?? new Date(Date.now() - 4 * 60 * 60 * 1000),
         expiresAt: null,
@@ -1422,7 +1418,7 @@ export const adminRouter = createTRPCRouter({
 
   getWebhooks: adminProcedure.query(async () => {
     // Get webhook configuration from environment
-    const baseUrl = process.env.NEXTAUTH_URL ?? 'https://app.subpilot.com';
+    const baseUrl = getEnvVar('NEXTAUTH_URL') ?? 'https://app.subpilot.com';
 
     return [
       {
@@ -1523,7 +1519,7 @@ export const adminRouter = createTRPCRouter({
       try {
         switch (input.service) {
           case 'plaid': {
-            if (!process.env.PLAID_CLIENT_ID || !process.env.PLAID_SECRET) {
+            if (!getEnvVar('PLAID_CLIENT_ID') || !getEnvVar('PLAID_SECRET')) {
               throw new Error('Plaid credentials not configured');
             }
             // Check if we can access Plaid client
@@ -1533,7 +1529,7 @@ export const adminRouter = createTRPCRouter({
             break;
           }
           case 'stripe': {
-            if (!process.env.STRIPE_SECRET_KEY) {
+            if (!getEnvVar('STRIPE_SECRET_KEY')) {
               throw new Error('Stripe credentials not configured');
             }
             const stripe = await import('@/server/lib/stripe');
@@ -1542,7 +1538,7 @@ export const adminRouter = createTRPCRouter({
             break;
           }
           case 'sendgrid': {
-            if (!process.env.SENDGRID_API_KEY) {
+            if (!getEnvVar('SENDGRID_API_KEY')) {
               throw new Error('SendGrid credentials not configured');
             }
             success = true;
@@ -1550,7 +1546,7 @@ export const adminRouter = createTRPCRouter({
             break;
           }
           case 'openai': {
-            if (!process.env.OPENAI_API_KEY) {
+            if (!getEnvVar('OPENAI_API_KEY')) {
               throw new Error('OpenAI credentials not configured');
             }
             const { openAIClient } = await import('@/server/lib/openai-client');
@@ -1627,12 +1623,9 @@ export const adminRouter = createTRPCRouter({
 
   // Monitoring
   getSystemMetrics: adminProcedure.query(async ({ ctx }) => {
-    // Get real system metrics
-    const os = await import('os');
-    const process = await import('process');
-
+    // Get real system metrics using Edge Runtime helpers
     // CPU usage calculation
-    const cpus = os.cpus();
+    const cpus = safeOs.cpus();
     let totalIdle = 0;
     let totalTick = 0;
 
@@ -1646,12 +1639,12 @@ export const adminRouter = createTRPCRouter({
     const cpuUsage = Math.round(100 - ~~((100 * totalIdle) / totalTick));
 
     // Memory usage
-    const totalMem = os.totalmem();
-    const freeMem = os.freemem();
+    const totalMem = safeOs.totalmem();
+    const freeMem = safeOs.freemem();
     const memoryUsage = Math.round(((totalMem - freeMem) / totalMem) * 100);
 
     // Process memory for more accurate app memory usage
-    const processMemory = process.memoryUsage();
+    const processMemory = safeProcess.memoryUsage();
     const heapUsage = Math.round(
       (processMemory.heapUsed / processMemory.heapTotal) * 100
     );
@@ -2142,8 +2135,9 @@ export const adminRouter = createTRPCRouter({
     }),
 });
 
-// Helper functions
-function formatUptime(seconds: number): string {
+// Helper functions - formatUptime is imported from edge-runtime-helpers
+// Legacy formatUptime function for reference
+function formatUptimeLegacy(seconds: number): string {
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
