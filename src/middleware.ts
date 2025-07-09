@@ -43,6 +43,7 @@ export async function middleware(req: NextRequest) {
 
   // Apply security headers to the response
   const response = NextResponse.next();
+
   return applySecurityHeaders(response);
 }
 
@@ -167,39 +168,77 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
     );
   }
 
-  // Content Security Policy
-  // Note: Next.js requires 'unsafe-inline' for styles and limited inline scripts
-  // In production, consider implementing nonce-based CSP for better security
+  // Content Security Policy configuration
+  // Note: Next.js with App Router and Tailwind CSS requires 'unsafe-inline' for styles
+  // For scripts, we remove 'unsafe-inline' in production but keep necessary domains
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
   const cspDirectives = [
     "default-src 'self'",
-    // In development, React needs 'unsafe-eval' for hot reloading
-    process.env.NODE_ENV === 'development'
-      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com"
-      : "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com",
+    // Script sources - production removes 'unsafe-inline' and 'unsafe-eval'
+    isDevelopment
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com"
+      : "script-src 'self' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://js.stripe.com https://checkout.stripe.com",
+    // Style sources - Next.js/Tailwind requires 'unsafe-inline' for CSS-in-JS
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    // Font sources
+    "font-src 'self' https://fonts.gstatic.com data:",
+    // Image sources
     "img-src 'self' data: https: blob:",
-    // Add Sentry domains and Vercel Analytics to connect-src
-    "connect-src 'self' https://api.plaid.com wss://ws-us3.pusher.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://vercel.live https://vitals.vercel-insights.com https://region1.google-analytics.com https://www.google-analytics.com",
-    "frame-src 'self' https://cdn.plaid.com",
+    // Connect sources - comprehensive list of all external services
+    "connect-src 'self' " +
+      'https://api.plaid.com ' +
+      'wss://ws-us3.pusher.com ' +
+      'https://*.ingest.sentry.io ' +
+      'https://*.ingest.us.sentry.io ' +
+      'https://vercel.live ' +
+      'https://vitals.vercel-insights.com ' +
+      'https://region1.google-analytics.com ' +
+      'https://www.google-analytics.com ' +
+      'https://api.stripe.com ' +
+      'https://r.stripe.com ' +
+      'https://api.sendgrid.com ' +
+      'https://cdn.plaid.com ' +
+      'wss://cdn.plaid.com ' +
+      'https://sentry.io ' +
+      'https://*.sentry.io ' +
+      'https://clerk.com ' +
+      'https://*.clerk.com ' +
+      'https://api.openai.com ' +
+      'https://static.cloudflareinsights.com ' +
+      'https://cloudflareinsights.com',
+    // Frame sources
+    "frame-src 'self' https://cdn.plaid.com https://js.stripe.com https://hooks.stripe.com",
+    // Object sources
     "object-src 'none'",
+    // Base URI
     "base-uri 'self'",
+    // Form action
     "form-action 'self'",
+    // Frame ancestors
     "frame-ancestors 'none'",
-    // Add worker-src directive to allow blob: workers for Sentry
+    // Worker sources for Sentry and service workers
     "worker-src 'self' blob:",
-    'upgrade-insecure-requests',
+    // Manifest source
+    "manifest-src 'self'",
+    // Media sources
+    "media-src 'self'",
   ];
+
+  // Only add upgrade-insecure-requests in production
+  if (process.env.NODE_ENV === 'production') {
+    cspDirectives.push('upgrade-insecure-requests');
+  }
 
   response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
 
-  // Referrer Policy - Use 'no-referrer' for maximum privacy
-  response.headers.set('Referrer-Policy', 'no-referrer');
+  // Referrer Policy - Use 'strict-origin-when-cross-origin' for better compatibility
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-  // Permissions Policy - Remove unrecognized browsing-topics feature
+  // Permissions Policy - Removed invalid browsing-topics
   response.headers.set(
     'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), payment=(self)'
+    'camera=(), microphone=(), geolocation=(), payment=(self), usb=(), magnetometer=(), gyroscope=(), accelerometer=()'
   );
 
   return response;

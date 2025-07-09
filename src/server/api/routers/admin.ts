@@ -278,6 +278,103 @@ export const adminRouter = createTRPCRouter({
       return user;
     }),
 
+  makeUserAdmin: adminProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const updatedUser = await ctx.db.user.update({
+        where: { id: input.userId },
+        data: { isAdmin: true },
+      });
+
+      // Log the admin role assignment
+      await ctx.db.auditLog.create({
+        data: {
+          userId: ctx.session.user.id,
+          action: 'user.admin_role_granted',
+          resource: input.userId,
+          result: 'success',
+          metadata: {
+            targetUserId: input.userId,
+            targetUserEmail: updatedUser.email,
+          },
+        },
+      });
+
+      return { success: true, user: updatedUser };
+    }),
+
+  removeAdminRole: adminProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Prevent removing your own admin role
+      if (input.userId === ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Cannot remove your own admin role',
+        });
+      }
+
+      const updatedUser = await ctx.db.user.update({
+        where: { id: input.userId },
+        data: { isAdmin: false },
+      });
+
+      // Log the admin role removal
+      await ctx.db.auditLog.create({
+        data: {
+          userId: ctx.session.user.id,
+          action: 'user.admin_role_revoked',
+          resource: input.userId,
+          result: 'success',
+          metadata: {
+            targetUserId: input.userId,
+            targetUserEmail: updatedUser.email,
+          },
+        },
+      });
+
+      return { success: true, user: updatedUser };
+    }),
+
+  getAdminUsers: adminProcedure.query(async ({ ctx }) => {
+    const adminUsers = await ctx.db.user.findMany({
+      where: { isAdmin: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isAdmin: true,
+        createdAt: true,
+        image: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return adminUsers;
+  }),
+
+  searchUsers: adminProcedure
+    .input(z.object({ query: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const users = await ctx.db.user.findMany({
+        where: {
+          OR: [
+            { email: { contains: input.query, mode: 'insensitive' } },
+            { name: { contains: input.query, mode: 'insensitive' } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          isAdmin: true,
+          image: true,
+        },
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+      });
+      return users;
+    }),
+
   lockUser: adminProcedure
     .input(
       z.object({
@@ -462,14 +559,25 @@ export const adminRouter = createTRPCRouter({
     const usedMem = memUsage.heapUsed;
 
     // Get package versions - using dynamic import to avoid require
-    const fs = await import('fs');
-    const path = await import('path');
-    const packageJsonPath = path.join(process.cwd(), 'package.json');
-    const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
-    const packageJson = JSON.parse(packageJsonContent) as {
-      dependencies: Record<string, string>;
-    };
-    const deps = packageJson.dependencies;
+    let deps: Record<string, string> = {};
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const packageJsonPath = path.join(process.cwd(), 'package.json');
+      const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
+      const packageJson = JSON.parse(packageJsonContent) as {
+        dependencies: Record<string, string>;
+      };
+      deps = packageJson.dependencies;
+    } catch (error) {
+      console.error('Failed to read package.json:', error);
+      // Provide fallback values
+      deps = {
+        next: 'unknown',
+        '@prisma/client': 'unknown',
+        typescript: 'unknown',
+      };
+    }
 
     // Get CPU usage
     const os = await import('os');
@@ -487,14 +595,20 @@ export const adminRouter = createTRPCRouter({
     const cpuUsage = Math.round(100 - ~~((100 * totalIdle) / totalTick));
 
     // Get disk usage (approximation based on temp directory)
-    const { statSync } = await import('fs');
-    const tempDir = os.tmpdir();
-    const stats = statSync(tempDir);
-    // This is a simplified calculation - in production you'd use a proper disk usage library
-    const diskUsage = Math.min(
-      90,
-      Math.round((stats.size / (1024 * 1024 * 1024)) * 10)
-    );
+    let diskUsage = 0;
+    try {
+      const { statSync } = await import('fs');
+      const tempDir = os.tmpdir();
+      const stats = statSync(tempDir);
+      // This is a simplified calculation - in production you'd use a proper disk usage library
+      diskUsage = Math.min(
+        90,
+        Math.round((stats.size / (1024 * 1024 * 1024)) * 10)
+      );
+    } catch (error) {
+      console.error('Failed to get disk usage:', error);
+      diskUsage = 50; // Default value
+    }
 
     return {
       nodeVersion: process.version,
@@ -1559,7 +1673,7 @@ export const adminRouter = createTRPCRouter({
     };
   }),
 
-  getApiMetrics: adminProcedure.query(async ({ ctx }) => {
+  getApiMetrics: adminProcedure.query(async ({ ctx: _ctx }) => {
     const requestsPerMinute = Math.round(Math.random() * 50 + 100);
     const totalRequests = Math.round(requestsPerMinute * 60 * 12); // 12 hours
 
@@ -1772,7 +1886,7 @@ export const adminRouter = createTRPCRouter({
   }),
 
   // Error Management
-  getErrorStats: adminProcedure.query(async ({ ctx }) => {
+  getErrorStats: adminProcedure.query(async ({ ctx: _ctx }) => {
     // In a real app, these would come from error tracking service
     const total = Math.round(Math.random() * 200 + 50);
     const unresolved = Math.round(total * 0.3);
