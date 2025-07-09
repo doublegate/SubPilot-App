@@ -1,3 +1,18 @@
+/**
+ * TEMPORARY HOTFIX FILE - DO NOT USE IN PRODUCTION
+ * 
+ * This file contains a CSP configuration that re-enables 'unsafe-inline'
+ * to work around Cloudflare Rocket Loader issues.
+ * 
+ * TO APPLY HOTFIX:
+ * 1. Rename current middleware.ts to middleware-secure.ts
+ * 2. Rename this file to middleware.ts
+ * 
+ * TO REVERT (after disabling Rocket Loader):
+ * 1. Rename middleware.ts to middleware-hotfix.ts
+ * 2. Rename middleware-secure.ts back to middleware.ts
+ */
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getAuthForEdge } from '@/server/auth-edge';
@@ -44,7 +59,7 @@ export async function middleware(req: NextRequest) {
   // Apply security headers to the response
   const response = NextResponse.next();
 
-  return applySecurityHeaders(response, req);
+  return applySecurityHeaders(response);
 }
 
 /**
@@ -149,11 +164,9 @@ async function applyBasicSecurity(
 
 /**
  * Apply security headers to response (Edge Runtime compatible)
+ * HOTFIX VERSION - Temporarily re-enables 'unsafe-inline' for Rocket Loader
  */
-function applySecurityHeaders(response: NextResponse, request?: NextRequest): NextResponse {
-  // X-XSS-Protection is deprecated and can cause vulnerabilities
-  // Modern browsers use CSP instead, so we don't set this header
-
+function applySecurityHeaders(response: NextResponse): NextResponse {
   // Prevent clickjacking
   response.headers.set('X-Frame-Options', 'DENY');
 
@@ -169,32 +182,11 @@ function applySecurityHeaders(response: NextResponse, request?: NextRequest): Ne
   }
 
   // Content Security Policy configuration
-  // Note: Next.js with App Router and Tailwind CSS requires 'unsafe-inline' for styles
-  // For scripts, we remove 'unsafe-inline' in production but keep necessary domains
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  
-  // Detect if we're behind Cloudflare by checking for CF headers
-  const isCloudflare = request && (
-    request.headers.get('cf-ray') !== null ||
-    request.headers.get('cf-connecting-ip') !== null
-  );
-
-  // Determine script-src based on environment and Cloudflare presence
-  let scriptSrc;
-  if (isDevelopment) {
-    scriptSrc = "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com";
-  } else if (isCloudflare) {
-    // Production with Cloudflare: Must allow unsafe-inline for Rocket Loader
-    console.warn('[CSP] Cloudflare detected - enabling unsafe-inline for Rocket Loader compatibility');
-    scriptSrc = "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com";
-  } else {
-    // Production without Cloudflare: Strict CSP
-    scriptSrc = "script-src 'self' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com";
-  }
-
+  // HOTFIX: Re-enabling 'unsafe-inline' temporarily for Cloudflare Rocket Loader
   const cspDirectives = [
     "default-src 'self'",
-    scriptSrc,
+    // HOTFIX: Added 'unsafe-inline' back to production to fix Rocket Loader
+    "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com",
     // Style sources - Next.js/Tailwind requires 'unsafe-inline' for CSS-in-JS
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     // Font sources
@@ -248,7 +240,7 @@ function applySecurityHeaders(response: NextResponse, request?: NextRequest): Ne
 
   response.headers.set('Content-Security-Policy', cspDirectives.join('; '));
 
-  // Referrer Policy - Use 'strict-origin-when-cross-origin' for better compatibility
+  // Referrer Policy
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   // Permissions Policy
