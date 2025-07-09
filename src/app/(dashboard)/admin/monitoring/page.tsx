@@ -76,7 +76,7 @@ async function MonitoringDashboard() {
     performanceMetrics,
   ] = await Promise.all([
     api.admin.getSystemMetrics(),
-    api.admin.getApiMetrics(),
+    api.admin.getApiMetrics({ minutes: 5 }), // Get metrics for last 5 minutes
     api.admin.getUserActivity(),
     api.admin.getErrorRates(),
     api.admin.getPerformanceMetrics(),

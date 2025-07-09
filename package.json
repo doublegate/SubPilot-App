@@ -41,7 +41,8 @@
     "test:production": "dotenv -e .env.local -- tsx scripts/test-production-integrations.ts",
     "test:email": "dotenv -e .env.local -- tsx scripts/test-email-integration.ts",
     "validate:production": "dotenv -e .env.local -- tsx scripts/validate-production-env.ts",
-    "link-github": "dotenv -e .env.local -- tsx scripts/link-github-account.ts"
+    "link-github": "dotenv -e .env.local -- tsx scripts/link-github-account.ts",
+    "test:monitoring": "dotenv -e .env.local -- tsx scripts/test-monitoring-data.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",

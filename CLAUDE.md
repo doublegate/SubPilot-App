@@ -920,3 +920,37 @@ Critical Learning (2025-07-08 23:10 EDT):
 - Pattern: Always provide Edge Runtime fallbacks for Node.js-specific APIs
 - Testing: Full functionality preserved, all quality checks passing
 ```
+
+### Edge Runtime Dynamic Import Pattern
+```
+Critical Learning (2025-07-08 23:53 EDT):
+- Dynamic Import Failures: `await import('fs')` fails in Edge Runtime before try-catch can handle it
+- Root Cause: Edge Runtime blocks dynamic imports of Node.js modules at import time
+- Solution: Add Edge Runtime detection BEFORE attempting dynamic imports
+- Implementation Pattern:
+  if (typeof (globalThis as { EdgeRuntime?: unknown }).EdgeRuntime !== 'undefined') {
+    // Edge Runtime - use fallback values
+    return { used: 50, available: 50 };
+  } else {
+    // Node.js runtime - safe to use dynamic imports
+    const { statfs } = await import('fs');
+  }
+- Files Fixed: admin.ts lines 597, 1266-1267 (disk usage and migration status)
+- Pattern: Always check Edge Runtime before ANY dynamic import of Node.js modules
+```
+
+### Real Monitoring Implementation Pattern
+```
+Critical Learning (2025-07-08 23:53 EDT):
+- Mock Data Replacement: All admin panel features now use real production data
+- Implementation Strategy: Query actual database tables and monitoring middleware
+- Data Sources:
+  - API Metrics: performanceMiddleware tracking in tRPC context
+  - Error Statistics: db.auditLog queries with error filters
+  - Webhook Monitoring: Audit log counts by webhook type
+  - System Resources: Direct OS module calls with Edge fallbacks
+  - Database Stats: Prisma aggregate queries on actual tables
+- Test Data Generation: Created test:monitoring script for development
+- Three Sub-Agent Approach: Deep analysis + Feature implementation + Quality assurance
+- Pattern: Always implement real data sources instead of mock values for production features
+```

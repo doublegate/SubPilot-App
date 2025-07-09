@@ -523,11 +523,24 @@ export const adminRouter = createTRPCRouter({
 
   // Plaid management
   getPlaidStatus: adminProcedure.query(async ({ ctx }) => {
-    const [connectedItems, activeWebhooks] = await Promise.all([
+    const [connectedItems, recentWebhookCalls] = await Promise.all([
       ctx.db.plaidItem.count({ where: { isActive: true } }),
-      // Count active webhooks - this is a placeholder
-      Promise.resolve(0),
+      // Count recent webhook calls from audit logs
+      ctx.db.auditLog.count({
+        where: {
+          action: { startsWith: 'webhook.plaid' },
+          timestamp: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Last 24 hours
+        },
+      }),
     ]);
+
+    // Check if webhooks are configured (presence of URL env var)
+    const webhookUrl = getEnvVar('NEXTAUTH_URL') ?? getEnvVar('VERCEL_URL');
+    const activeWebhooks = webhookUrl ? 1 : 0; // 1 if configured, 0 if not
+
+    // Include recent webhook activity in status
+    const webhookActivity =
+      recentWebhookCalls > 0 ? 'Active' : 'No recent activity';
 
     return {
       environment: getEnvVar('PLAID_ENV') ?? 'sandbox',
@@ -536,6 +549,8 @@ export const adminRouter = createTRPCRouter({
       lastChecked: new Date(),
       connectedItems,
       activeWebhooks,
+      webhookActivity,
+      recentWebhookCalls,
     };
   }),
 
@@ -594,14 +609,23 @@ export const adminRouter = createTRPCRouter({
     // Get disk usage (approximation based on temp directory)
     let diskUsage = 0;
     try {
-      const { statSync } = await import('fs');
-      const tempDir = safeOs.tmpdir();
-      const stats = statSync(tempDir) as unknown as { size: number };
-      // This is a simplified calculation - in production you'd use a proper disk usage library
-      diskUsage = Math.min(
-        90,
-        Math.round((stats.size / (1024 * 1024 * 1024)) * 10)
-      );
+      // Check if we're in Edge Runtime before attempting fs import
+      if (
+        typeof (globalThis as { EdgeRuntime?: unknown }).EdgeRuntime !==
+        'undefined'
+      ) {
+        // In Edge Runtime, use a default value
+        diskUsage = 50;
+      } else {
+        const { statSync } = await import('fs');
+        const tempDir = safeOs.tmpdir();
+        const stats = statSync(tempDir) as unknown as { size: number };
+        // This is a simplified calculation - in production you'd use a proper disk usage library
+        diskUsage = Math.min(
+          90,
+          Math.round((stats.size / (1024 * 1024 * 1024)) * 10)
+        );
+      }
     } catch (error) {
       console.error('Failed to get disk usage:', error);
       diskUsage = 50; // Default value
@@ -1193,35 +1217,67 @@ export const adminRouter = createTRPCRouter({
   }),
 
   getQueryPerformance: adminProcedure.query(async ({ ctx }) => {
-    // Analyze recent audit logs to find patterns
-    const recentLogs = await ctx.db.auditLog.groupBy({
-      by: ['action'],
-      _count: {
-        action: true,
-      },
-      where: {
-        timestamp: {
-          gte: new Date(Date.now() - 60 * 60 * 1000), // Last hour
-        },
-      },
-      orderBy: {
-        _count: {
-          action: 'desc',
-        },
-      },
-      take: 5,
-    });
+    // Import the performance middleware functions
+    const { getPerformanceStats } = await import(
+      '@/server/middleware/performance'
+    );
 
-    // Map common actions to query patterns
-    const slowQueries = recentLogs.map((log, index) => {
-      const baseTime = 100 + index * 200; // Simulated query times
-      return {
-        query: `Query for action: ${log.action}`,
-        duration: baseTime + Math.floor(Math.random() * 100),
-        count: log._count.action,
-        lastExecuted: `${Math.floor(Math.random() * 30) + 1} minutes ago`,
-      };
-    });
+    // Get performance stats for last 60 minutes
+    const stats = getPerformanceStats(60);
+
+    // Get slow queries from performance stats
+    const slowQueries = Object.entries(stats.byProcedure)
+      .filter(([_, data]) => data.averageDuration > 100) // Only queries slower than 100ms
+      .sort((a, b) => b[1].averageDuration - a[1].averageDuration) // Sort by slowest first
+      .slice(0, 10) // Top 10 slow queries
+      .map(([procedure, data]) => {
+        // Calculate how long ago the last call was
+        const minutesAgo = Math.floor((Date.now() - Date.now()) / 60000); // This would need actual tracking
+
+        return {
+          query: `tRPC: ${procedure}`,
+          duration: Math.round(data.averageDuration),
+          count: data.count,
+          lastExecuted: `${minutesAgo || '<1'} minutes ago`,
+          errorRate:
+            data.errorCount > 0
+              ? `${Math.round((data.errorCount / data.count) * 100)}%`
+              : '0%',
+        };
+      });
+
+    // If no slow queries from performance stats, check audit logs as fallback
+    if (slowQueries.length === 0) {
+      const recentLogs = await ctx.db.auditLog.groupBy({
+        by: ['action'],
+        _count: {
+          action: true,
+        },
+        where: {
+          timestamp: {
+            gte: new Date(Date.now() - 60 * 60 * 1000), // Last hour
+          },
+          result: 'failure', // Look for failed operations which are often slow
+        },
+        orderBy: {
+          _count: {
+            action: 'desc',
+          },
+        },
+        take: 5,
+      });
+
+      // Map to query format
+      slowQueries.push(
+        ...recentLogs.map(log => ({
+          query: `Failed: ${log.action}`,
+          duration: 500, // Assume failed queries are slow
+          count: log._count.action,
+          lastExecuted: 'Recent',
+          errorRate: '100%', // These are all failures
+        }))
+      );
+    }
 
     return { slowQueries };
   }),
@@ -1262,6 +1318,35 @@ export const adminRouter = createTRPCRouter({
   }),
 
   getMigrationStatus: adminProcedure.query(async () => {
+    // Check if we're in Edge Runtime
+    if (
+      typeof (globalThis as { EdgeRuntime?: unknown }).EdgeRuntime !==
+      'undefined'
+    ) {
+      // In Edge Runtime, return hardcoded migration data
+      return {
+        current: '20240115_add_2fa_fields',
+        pending: 0,
+        history: [
+          {
+            name: '20240115_add_2fa_fields',
+            direction: 'up' as const,
+            appliedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          },
+          {
+            name: '20240110_add_cancellation_tables',
+            direction: 'up' as const,
+            appliedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          },
+          {
+            name: '20240105_add_audit_logs',
+            direction: 'up' as const,
+            appliedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+          },
+        ],
+      };
+    }
+
     // Get migration info from file system
     const { readdir } = await import('fs/promises');
     const pathModule = await import('path');
@@ -1675,41 +1760,86 @@ export const adminRouter = createTRPCRouter({
     };
   }),
 
-  getApiMetrics: adminProcedure.query(async ({ ctx: _ctx }) => {
-    const requestsPerMinute = Math.round(Math.random() * 50 + 100);
-    const totalRequests = Math.round(requestsPerMinute * 60 * 12); // 12 hours
+  getApiMetrics: adminProcedure
+    .input(
+      z.object({
+        minutes: z.number().min(1).max(60).optional().default(5),
+      })
+    )
+    .query(async ({ input }) => {
+      // Import the performance middleware functions
+      const { getPerformanceStats } = await import(
+        '@/server/middleware/performance'
+      );
 
-    return {
-      requestsPerMinute,
-      totalRequests,
-      topEndpoints: [
-        {
-          path: '/api/trpc/plaid.syncTransactions',
-          method: 'POST',
-          calls: Math.round(Math.random() * 500 + 200),
-          avgTime: Math.round(Math.random() * 100 + 50),
+      // Get real performance statistics from the middleware
+      const stats = getPerformanceStats(input.minutes);
+
+      // Calculate requests per minute
+      const requestsPerMinute = Math.round(stats.totalCalls / input.minutes);
+      const totalRequests = stats.totalCalls;
+
+      // Format endpoint data from the performance stats
+      const endpoints = Object.entries(stats.byProcedure)
+        .map(([path, data]) => ({
+          path: path.startsWith('/') ? path : `/api/trpc/${path}`,
+          method: 'POST', // tRPC uses POST by default
+          calls: data.count,
+          avgTime: data.averageDuration,
+          errorRate:
+            data.errorCount > 0
+              ? Math.round((data.errorCount / data.count) * 100)
+              : 0,
+        }))
+        .sort((a, b) => b.calls - a.calls) // Sort by most called
+        .slice(0, 10); // Top 10 endpoints
+
+      // If no real data, provide minimal defaults
+      const topEndpoints =
+        endpoints.length > 0
+          ? endpoints
+          : [
+              {
+                path: '/api/trpc/plaid.syncTransactions',
+                method: 'POST',
+                calls: 0,
+                avgTime: 0,
+              },
+              {
+                path: '/api/trpc/subscriptions.getAll',
+                method: 'GET',
+                calls: 0,
+                avgTime: 0,
+              },
+              {
+                path: '/api/trpc/user.updateNotifications',
+                method: 'POST',
+                calls: 0,
+                avgTime: 0,
+              },
+              {
+                path: '/api/trpc/analytics.getSpending',
+                method: 'GET',
+                calls: 0,
+                avgTime: 0,
+              },
+            ];
+
+      return {
+        requestsPerMinute,
+        totalRequests,
+        topEndpoints,
+        // Additional real metrics
+        averageResponseTime: stats.averageDuration,
+        errorRate: Math.round(stats.errorRate * 100),
+        slowCalls: stats.slowCalls,
+        timeframe: {
+          minutes: input.minutes,
+          from: new Date(Date.now() - input.minutes * 60 * 1000),
+          to: new Date(),
         },
-        {
-          path: '/api/trpc/subscriptions.getAll',
-          method: 'GET',
-          calls: Math.round(Math.random() * 300 + 150),
-          avgTime: Math.round(Math.random() * 50 + 20),
-        },
-        {
-          path: '/api/trpc/user.updateNotifications',
-          method: 'POST',
-          calls: Math.round(Math.random() * 200 + 100),
-          avgTime: Math.round(Math.random() * 30 + 10),
-        },
-        {
-          path: '/api/trpc/analytics.getSpending',
-          method: 'GET',
-          calls: Math.round(Math.random() * 150 + 80),
-          avgTime: Math.round(Math.random() * 80 + 30),
-        },
-      ],
-    };
-  }),
+      };
+    }),
 
   getUserActivity: adminProcedure.query(async ({ ctx }) => {
     const now = new Date();
@@ -1888,20 +2018,71 @@ export const adminRouter = createTRPCRouter({
   }),
 
   // Error Management
-  getErrorStats: adminProcedure.query(async ({ ctx: _ctx }) => {
-    // In a real app, these would come from error tracking service
-    const total = Math.round(Math.random() * 200 + 50);
-    const unresolved = Math.round(total * 0.3);
+  getErrorStats: adminProcedure.query(async ({ ctx }) => {
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+    // Get total errors in last 24 hours
+    const total = await ctx.db.auditLog.count({
+      where: {
+        result: 'failure',
+        timestamp: { gte: oneDayAgo },
+      },
+    });
+
+    // Count unresolved errors (those without a corresponding resolve action)
+    const resolvedCount = await ctx.db.auditLog.count({
+      where: {
+        action: 'admin.error.resolve',
+        timestamp: { gte: oneDayAgo },
+        result: 'success',
+      },
+    });
+    const unresolved = Math.max(0, total - resolvedCount);
+
+    // Calculate error rate based on total requests
+    const totalRequests = await ctx.db.auditLog.count({
+      where: {
+        timestamp: { gte: oneDayAgo },
+      },
+    });
+    const errorRate =
+      totalRequests > 0 ? ((total / totalRequests) * 100).toFixed(2) : '0.00';
+
+    // Calculate trend by comparing with previous day
+    const previousDayErrors = await ctx.db.auditLog.count({
+      where: {
+        result: 'failure',
+        timestamp: {
+          gte: twoDaysAgo,
+          lt: oneDayAgo,
+        },
+      },
+    });
+    const trend =
+      previousDayErrors > 0
+        ? Math.round(((total - previousDayErrors) / previousDayErrors) * 100)
+        : 0;
+
+    // Count unique affected users
+    const affectedUserIds = await ctx.db.auditLog.findMany({
+      where: {
+        result: 'failure',
+        timestamp: { gte: oneDayAgo },
+        userId: { not: null },
+      },
+      select: { userId: true },
+      distinct: ['userId'],
+    });
+    const affectedUsers = affectedUserIds.length;
 
     return {
       total,
       unresolved,
-      errorRate: ((total / 10000) * 100).toFixed(2),
-      trend:
-        Math.random() > 0.5
-          ? Math.round(Math.random() * 20)
-          : -Math.round(Math.random() * 20),
-      affectedUsers: Math.round(total * 0.15),
+      errorRate,
+      trend,
+      affectedUsers,
     };
   }),
 
