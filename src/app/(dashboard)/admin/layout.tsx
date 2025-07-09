@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation';
 import { api } from '@/trpc/server';
 import { AdminSidebar } from './admin-sidebar';
 
+// Force Node.js runtime for admin pages to support Node.js APIs
+// This fixes Edge Runtime incompatibility issues with admin panel features
+export const runtime = 'nodejs';
+
 export default async function AdminLayout({
   children,
 }: {

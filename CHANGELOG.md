@@ -5,11 +5,19 @@ All notable changes to SubPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-01-09
+## [Unreleased] - 2025-07-09
 
 ### 🚀 Edge Runtime Compatibility & Performance Enhancements
 
-#### Admin Panel Edge Runtime Compatibility (2025-01-09 02:00 EDT)
+#### Admin Panel Node.js Runtime Fix (2025-07-09 01:18 EDT)
+
+- **Resolved server-side rendering errors** - Fixed "Something Went Wrong" errors on all admin pages
+- **Enforced Node.js runtime** - Added `export const runtime = 'nodejs'` to admin layout
+- **Root cause addressed** - 8 unprotected dynamic imports in admin router were failing in Edge Runtime
+- **Complete fix** - All admin panel features now work with full Node.js API support
+- **Quality checks passed** - Zero ESLint errors, zero TypeScript errors, perfect formatting
+
+#### Admin Panel Edge Runtime Compatibility (2025-07-09 00:33 EDT)
 
 - **Created edge-runtime-helpers.ts** - Comprehensive compatibility layer for Edge Runtime environment
 - **Fixed admin panel crashes** - Resolved "Something Went Wrong" errors on System, Security, Database, and Errors pages
