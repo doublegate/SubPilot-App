@@ -128,9 +128,8 @@ async function main() {
   try {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - seed files are TypeScript files that will be compiled to JS
-    const { seedCancellationProviders } = await import(
-      './seed-cancellation-providers.js'
-    );
+    const { seedCancellationProviders } =
+      await import('./seed-cancellation-providers.js');
     await seedCancellationProviders();
   } catch (error) {
     console.log('⚠️ Could not seed cancellation providers:', error);

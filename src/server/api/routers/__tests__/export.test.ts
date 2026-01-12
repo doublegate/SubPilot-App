@@ -104,9 +104,8 @@ describe('exportRouter', () => {
     });
 
     it('should handle CSV export service failure', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       vi.mocked(ExportService.generateCSV).mockRejectedValueOnce(
         new Error('Export failed')
       );
@@ -119,9 +118,8 @@ describe('exportRouter', () => {
     });
 
     it('should pass correct parameters to ExportService', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       const caller = exportRouter.createCaller(mockCtx);
 
       const inputData = {
@@ -160,9 +158,8 @@ describe('exportRouter', () => {
     });
 
     it('should handle JSON export service failure', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       vi.mocked(ExportService.generateJSON).mockRejectedValueOnce(
         new Error('JSON export failed')
       );
@@ -190,9 +187,8 @@ describe('exportRouter', () => {
     });
 
     it('should handle PDF export service failure', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       vi.mocked(ExportService.generatePDF).mockRejectedValueOnce(
         new Error('PDF generation failed')
       );
@@ -220,9 +216,8 @@ describe('exportRouter', () => {
     });
 
     it('should handle Excel export service failure', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       vi.mocked(ExportService.generateExcel).mockRejectedValueOnce(
         new Error('Excel generation failed')
       );
@@ -255,9 +250,8 @@ describe('exportRouter', () => {
     });
 
     it('should handle schedule export service failure', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       vi.mocked(ExportService.scheduleExport).mockRejectedValueOnce(
         new Error('Scheduling failed')
       );
@@ -273,9 +267,8 @@ describe('exportRouter', () => {
     });
 
     it('should pass correct parameters to scheduleExport', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       const caller = exportRouter.createCaller(mockCtx);
       const scheduleDate = new Date('2025-01-15');
 
@@ -311,9 +304,8 @@ describe('exportRouter', () => {
     });
 
     it('should get export history with custom limit', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       const caller = exportRouter.createCaller(mockCtx);
 
       await caller.getExportHistory({ limit: 25 });
@@ -325,9 +317,8 @@ describe('exportRouter', () => {
     });
 
     it('should handle export history service failure', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       vi.mocked(ExportService.getExportHistory).mockRejectedValueOnce(
         new Error('History fetch failed')
       );
@@ -364,9 +355,8 @@ describe('exportRouter', () => {
     });
 
     it('should handle partial failures in bulk export', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
 
       // Mock CSV to succeed but JSON to fail
       vi.mocked(ExportService.generateCSV).mockResolvedValueOnce(
@@ -386,9 +376,8 @@ describe('exportRouter', () => {
     });
 
     it('should call appropriate export methods for each format', async () => {
-      const { ExportService } = await import(
-        '@/server/services/export.service'
-      );
+      const { ExportService } =
+        await import('@/server/services/export.service');
       const caller = exportRouter.createCaller(mockCtx);
 
       await caller.bulkExport({

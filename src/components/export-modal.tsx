@@ -76,7 +76,12 @@ export function ExportModal({
   ].useMutation({
     onSuccess: data => {
       // Create download link
-      const blob = new Blob([data.content], { type: data.mimeType });
+      // Convert Buffer to Uint8Array if needed (Buffer is not a valid BlobPart)
+      const content =
+        typeof data.content === 'string'
+          ? data.content
+          : new Uint8Array(data.content);
+      const blob = new Blob([content], { type: data.mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

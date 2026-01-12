@@ -2,12 +2,19 @@
 # Stage 1: Dependencies - Install npm packages (cached unless package*.json changes)
 # Stage 2: Builder - Build the application
 # Stage 3: Runner - Final minimal production image
+#
+# Security: Using Node.js 22 LTS with latest Alpine packages for security patches
+# CVE fixes: curl, openssl updated to latest versions
+
+# Use Node.js 22 LTS (current LTS) for latest security patches
+ARG NODE_VERSION=22
 
 # Dependencies stage
-FROM node:20.18-alpine AS dependencies
+FROM node:${NODE_VERSION}-alpine AS dependencies
 
-# Install dependencies for building
-RUN apk add --no-cache libc6-compat
+# Update Alpine packages to get latest security patches for curl, openssl, etc.
+RUN apk upgrade --no-cache && \
+    apk add --no-cache libc6-compat
 
 WORKDIR /app
 
@@ -21,10 +28,11 @@ COPY prisma ./prisma/
 RUN npm ci
 
 # Build stage
-FROM node:20.18-alpine AS builder
+FROM node:${NODE_VERSION}-alpine AS builder
 
-# Install dependencies for building
-RUN apk add --no-cache libc6-compat
+# Update Alpine packages to get latest security patches
+RUN apk upgrade --no-cache && \
+    apk add --no-cache libc6-compat
 
 WORKDIR /app
 
@@ -67,12 +75,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build:ci
 
 # Production stage
-FROM node:20.18-alpine AS runner
+FROM node:${NODE_VERSION}-alpine AS runner
 
 WORKDIR /app
 
-# Install production dependencies
-RUN apk add --no-cache libc6-compat
+# Update Alpine packages and install production dependencies with latest security patches
+# This ensures curl, openssl, and other system libraries have CVE fixes applied
+RUN apk upgrade --no-cache && \
+    apk add --no-cache libc6-compat curl
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
@@ -87,9 +97,6 @@ COPY --from=builder /app/prisma ./prisma
 # Set environment to production
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Install curl for health checks (must be done as root)
-RUN apk add --no-cache curl
 
 # Change ownership
 RUN chown -R nextjs:nodejs /app

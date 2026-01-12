@@ -235,9 +235,8 @@ describe('systemMonitoringRouter', () => {
       // Mock multiple service failures
       mockDb.$queryRaw.mockRejectedValueOnce(new Error('DB failed'));
       const { checkJobQueueHealth } = await import('@/server/lib/job-queue');
-      const { checkJobProcessorHealth } = await import(
-        '@/server/services/job-processors'
-      );
+      const { checkJobProcessorHealth } =
+        await import('@/server/services/job-processors');
       vi.mocked(checkJobQueueHealth).mockResolvedValueOnce({
         healthy: false,
         status: 'unhealthy',
@@ -356,9 +355,8 @@ describe('systemMonitoringRouter', () => {
     });
 
     it('should handle workflow engine errors', async () => {
-      const { getWorkflowEngine } = await import(
-        '@/server/lib/workflow-engine'
-      );
+      const { getWorkflowEngine } =
+        await import('@/server/lib/workflow-engine');
       vi.mocked(getWorkflowEngine).mockImplementationOnce(() => {
         throw new Error('Workflow engine error');
       });
@@ -381,9 +379,8 @@ describe('systemMonitoringRouter', () => {
     });
 
     it('should fallback to getActiveConnections when getStats unavailable', async () => {
-      const { getRealtimeNotificationManager } = await import(
-        '@/server/lib/realtime-notifications'
-      );
+      const { getRealtimeNotificationManager } =
+        await import('@/server/lib/realtime-notifications');
       vi.mocked(getRealtimeNotificationManager).mockReturnValueOnce({
         getActiveConnections: vi.fn().mockReturnValue(25),
         // No getStats method
@@ -397,9 +394,8 @@ describe('systemMonitoringRouter', () => {
     });
 
     it('should handle realtime manager errors', async () => {
-      const { getRealtimeNotificationManager } = await import(
-        '@/server/lib/realtime-notifications'
-      );
+      const { getRealtimeNotificationManager } =
+        await import('@/server/lib/realtime-notifications');
       vi.mocked(getRealtimeNotificationManager).mockImplementationOnce(() => {
         throw new Error('Realtime manager error');
       });
@@ -430,9 +426,8 @@ describe('systemMonitoringRouter', () => {
     });
 
     it('should handle manager without getUserConnections method', async () => {
-      const { getRealtimeNotificationManager } = await import(
-        '@/server/lib/realtime-notifications'
-      );
+      const { getRealtimeNotificationManager } =
+        await import('@/server/lib/realtime-notifications');
       vi.mocked(getRealtimeNotificationManager).mockReturnValueOnce({
         // No getUserConnections or getUnreadNotifications methods
       } as any);
@@ -446,9 +441,8 @@ describe('systemMonitoringRouter', () => {
     });
 
     it('should handle errors', async () => {
-      const { getRealtimeNotificationManager } = await import(
-        '@/server/lib/realtime-notifications'
-      );
+      const { getRealtimeNotificationManager } =
+        await import('@/server/lib/realtime-notifications');
       vi.mocked(getRealtimeNotificationManager).mockImplementationOnce(() => {
         throw new Error('Manager error');
       });
@@ -862,9 +856,8 @@ describe('systemMonitoringRouter', () => {
       // Mock all services as unavailable
       mockDb.$queryRaw.mockRejectedValue(new Error('DB down'));
       const { checkJobQueueHealth } = await import('@/server/lib/job-queue');
-      const { checkJobProcessorHealth } = await import(
-        '@/server/services/job-processors'
-      );
+      const { checkJobProcessorHealth } =
+        await import('@/server/services/job-processors');
       vi.mocked(checkJobQueueHealth).mockResolvedValue({
         healthy: false,
         status: 'unhealthy',

@@ -261,9 +261,8 @@ export const authConfig: NextAuthConfig = {
 
           // Send welcome email
           try {
-            const { emailNotificationService } = await import(
-              '@/server/services/email.service'
-            );
+            const { emailNotificationService } =
+              await import('@/server/services/email.service');
             await emailNotificationService.sendWelcomeEmail({
               user: { id: user.id, email: user.email, name: user.name ?? null },
             });

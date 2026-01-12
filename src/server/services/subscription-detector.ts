@@ -591,9 +591,8 @@ export class SubscriptionDetector {
         }
       | undefined;
     try {
-      const { getCategorizationService } = await import(
-        './categorization.service'
-      );
+      const { getCategorizationService } =
+        await import('./categorization.service');
       categorizationService = getCategorizationService(this.db);
     } catch (error) {
       console.log(

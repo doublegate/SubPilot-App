@@ -4,11 +4,10 @@ import { TRPCError } from '@trpc/server';
 import { getStripe, STRIPE_WEBHOOK_EVENTS } from '../lib/stripe';
 
 // Extended Stripe interfaces for proper typing
-interface StripeSubscriptionWithPeriods
-  extends Omit<
-    Stripe.Subscription,
-    'canceled_at' | 'trial_start' | 'trial_end'
-  > {
+interface StripeSubscriptionWithPeriods extends Omit<
+  Stripe.Subscription,
+  'canceled_at' | 'trial_start' | 'trial_end'
+> {
   current_period_start: number;
   current_period_end: number;
   trial_start: number | null;

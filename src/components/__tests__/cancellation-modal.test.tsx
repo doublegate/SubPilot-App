@@ -265,8 +265,10 @@ describe('CancellationModal', () => {
     const mutationConfig = vi.mocked(api.cancellation.initiate.useMutation).mock
       .calls[0]?.[0];
     if (mutationConfig?.onSuccess) {
+      // tRPC v11 onSuccess has 4 arguments
       mutationConfig.onSuccess(
         { status: 'processing' } as any,
+        {} as any,
         {} as any,
         {} as any
       );
@@ -357,10 +359,11 @@ describe('CancellationModal', () => {
     const mutationConfig = vi.mocked(api.cancellation.initiate.useMutation).mock
       .calls[0]?.[0];
 
-    // Test error handling
+    // Test error handling (tRPC v11 onError has 4 arguments)
     if (mutationConfig?.onError) {
       mutationConfig.onError(
         { message: 'Network error' } as any,
+        {} as any,
         {} as any,
         {} as any
       );
@@ -431,10 +434,11 @@ describe('CancellationModal', () => {
     const mutationConfig = vi.mocked(api.cancellation.initiate.useMutation).mock
       .calls[0]?.[0];
 
-    // Test completed status
+    // Test completed status (tRPC v11 onSuccess has 4 arguments)
     if (mutationConfig?.onSuccess) {
       mutationConfig.onSuccess(
         { status: 'completed' } as any,
+        {} as any,
         {} as any,
         {} as any
       );
@@ -447,6 +451,7 @@ describe('CancellationModal', () => {
       mutationConfig.onSuccess(
         { status: 'processing' } as any,
         {} as any,
+        {} as any,
         {} as any
       );
       expect(toast).toHaveBeenCalledWith({
@@ -458,6 +463,7 @@ describe('CancellationModal', () => {
       // Test pending status
       mutationConfig.onSuccess(
         { status: 'pending' } as any,
+        {} as any,
         {} as any,
         {} as any
       );

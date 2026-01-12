@@ -164,9 +164,8 @@ describe('unifiedCancellationEnhancedRouter', () => {
         },
       };
 
-      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
-        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
-      );
+      const { UnifiedCancellationOrchestratorEnhancedService } =
+        await import('@/server/services/unified-cancellation-orchestrator-enhanced.service');
       const mockOrchestrator =
         new UnifiedCancellationOrchestratorEnhancedService(mockDb);
       (mockOrchestrator.initiateCancellation as any).mockResolvedValue(
@@ -215,9 +214,8 @@ describe('unifiedCancellationEnhancedRouter', () => {
         },
       };
 
-      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
-        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
-      );
+      const { UnifiedCancellationOrchestratorEnhancedService } =
+        await import('@/server/services/unified-cancellation-orchestrator-enhanced.service');
       const mockOrchestrator =
         new UnifiedCancellationOrchestratorEnhancedService(mockDb);
       (mockOrchestrator.getOrchestrationStatus as any).mockResolvedValue(
@@ -324,9 +322,8 @@ describe('unifiedCancellationEnhancedRouter', () => {
       );
       mockDb.cancellationLog.create.mockResolvedValue({} as any);
 
-      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
-        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
-      );
+      const { UnifiedCancellationOrchestratorEnhancedService } =
+        await import('@/server/services/unified-cancellation-orchestrator-enhanced.service');
       const mockOrchestrator =
         new UnifiedCancellationOrchestratorEnhancedService(mockDb);
       (mockOrchestrator.initiateCancellation as any).mockResolvedValue(
@@ -436,9 +433,8 @@ describe('unifiedCancellationEnhancedRouter', () => {
         ],
       };
 
-      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
-        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
-      );
+      const { UnifiedCancellationOrchestratorEnhancedService } =
+        await import('@/server/services/unified-cancellation-orchestrator-enhanced.service');
       const mockOrchestrator =
         new UnifiedCancellationOrchestratorEnhancedService(mockDb);
       (mockOrchestrator.getUnifiedAnalytics as any).mockResolvedValue(
@@ -489,9 +485,8 @@ describe('unifiedCancellationEnhancedRouter', () => {
         mockProvider as any
       );
 
-      const { UnifiedCancellationOrchestratorEnhancedService } = await import(
-        '@/server/services/unified-cancellation-orchestrator-enhanced.service'
-      );
+      const { UnifiedCancellationOrchestratorEnhancedService } =
+        await import('@/server/services/unified-cancellation-orchestrator-enhanced.service');
       const mockOrchestrator =
         new UnifiedCancellationOrchestratorEnhancedService(mockDb);
       (mockOrchestrator.assessProviderCapabilities as any).mockResolvedValue(

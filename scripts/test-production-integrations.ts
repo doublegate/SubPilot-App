@@ -156,9 +156,8 @@ class ProductionTester {
 
     try {
       // Import Plaid client dynamically
-      const { Configuration, PlaidApi, PlaidEnvironments } = await import(
-        'plaid'
-      );
+      const { Configuration, PlaidApi, PlaidEnvironments } =
+        await import('plaid');
 
       const configuration = new Configuration({
         basePath:

@@ -17,7 +17,7 @@ export function getStripe(): Stripe {
     }
 
     stripeInstance = new Stripe(env.STRIPE_SECRET_KEY ?? 'sk_test_dummy', {
-      apiVersion: '2025-05-28.basil',
+      apiVersion: '2025-08-27.basil',
       typescript: true,
       appInfo: {
         name: 'SubPilot',

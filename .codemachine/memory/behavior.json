@@ -1,0 +1,4 @@
+{
+  "action": "checkpoint",
+  "reason": "Action Required for 'SubPilot - Enterprise Subscription Management Platform': Clarify critical points like Plaid transaction history depth strategy, AI categorization cost management, cancellation provider coverage scope, 2FA enforcement policy, detection confidence thresholds, premium feature differentiation, monitoring data architecture, data retention compliance. See the full review at '.codemachine/artifacts/requirements/00_Specification_Review.md' and update your specs."
+}
