@@ -1,7 +1,62 @@
-import { EventEmitter } from 'events';
 import { getJobQueue } from './job-queue';
 import { safeEvaluator } from './safe-expression-evaluator';
 import { generateId } from '@/lib/utils';
+
+// Simple event emitter that works in all environments (Node.js, Edge Runtime, browser)
+type EventListener = (...args: unknown[]) => void;
+
+class SimpleEventEmitter {
+  private listeners = new Map<string, Set<EventListener>>();
+  private maxListeners = 10;
+
+  setMaxListeners(n: number): this {
+    this.maxListeners = n;
+    return this;
+  }
+
+  on(event: string, listener: EventListener): this {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
+    }
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners && eventListeners.size >= this.maxListeners) {
+      console.warn(
+        `MaxListenersExceededWarning: Possible memory leak detected. ${eventListeners.size} ${event} listeners added.`
+      );
+    }
+    eventListeners?.add(listener);
+    return this;
+  }
+
+  off(event: string, listener: EventListener): this {
+    this.listeners.get(event)?.delete(listener);
+    return this;
+  }
+
+  emit(event: string, ...args: unknown[]): boolean {
+    const eventListeners = this.listeners.get(event);
+    if (!eventListeners || eventListeners.size === 0) {
+      return false;
+    }
+    for (const listener of eventListeners) {
+      try {
+        listener(...args);
+      } catch (error) {
+        console.error(`Error in event listener for ${event}:`, error);
+      }
+    }
+    return true;
+  }
+
+  removeAllListeners(event?: string): this {
+    if (event) {
+      this.listeners.delete(event);
+    } else {
+      this.listeners.clear();
+    }
+    return this;
+  }
+}
 
 // Define workflow value types
 export type WorkflowValue =
@@ -60,7 +115,7 @@ export interface WorkflowStepExecution {
 }
 
 // Simple in-memory workflow engine
-class SimpleWorkflowEngine extends EventEmitter {
+class SimpleWorkflowEngine extends SimpleEventEmitter {
   private definitions = new Map<string, WorkflowDefinition>();
   private instances = new Map<string, WorkflowInstance>();
   private stepProcessors = new Map<
@@ -117,10 +172,10 @@ class SimpleWorkflowEngine extends EventEmitter {
 
     console.log(`[WorkflowEngine] Started workflow instance: ${instanceId}`);
 
-    // Start executing the workflow
-    setImmediate(() => {
+    // Start executing the workflow (use setTimeout for cross-platform compatibility)
+    setTimeout(() => {
       void this.executeWorkflow(instanceId);
-    });
+    }, 0);
 
     this.emit('workflow.started', { instanceId, definitionId, userId });
 
