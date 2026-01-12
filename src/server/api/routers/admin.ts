@@ -1688,9 +1688,8 @@ export const adminRouter = createTRPCRouter({
                 !!getEnvVar('PLAID_CLIENT_ID') && !!getEnvVar('PLAID_SECRET');
               message = 'Plaid credentials configured';
             } else {
-              const { isPlaidConfigured } = await import(
-                '@/server/plaid-client'
-              );
+              const { isPlaidConfigured } =
+                await import('@/server/plaid-client');
               success = isPlaidConfigured();
               message = 'Plaid connection verified';
             }
@@ -1736,9 +1735,8 @@ export const adminRouter = createTRPCRouter({
               success = true;
               message = 'OpenAI credentials configured';
             } else {
-              const { openAIClient } = await import(
-                '@/server/lib/openai-client'
-              );
+              const { openAIClient } =
+                await import('@/server/lib/openai-client');
               success = !!openAIClient;
               message = 'OpenAI connection verified';
             }

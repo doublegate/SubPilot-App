@@ -9,11 +9,10 @@ import { db } from '@/server/db';
 import type Stripe from 'stripe';
 
 // Extended Stripe interfaces for proper typing
-interface StripeSubscriptionWithPeriods
-  extends Omit<
-    Stripe.Subscription,
-    'canceled_at' | 'trial_start' | 'trial_end'
-  > {
+interface StripeSubscriptionWithPeriods extends Omit<
+  Stripe.Subscription,
+  'canceled_at' | 'trial_start' | 'trial_end'
+> {
   current_period_start: number;
   current_period_end: number;
   trial_start: number | null;

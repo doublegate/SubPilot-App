@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { getJobQueue } from './job-queue';
-import { Parser, type Value } from 'expr-eval';
+import { safeEvaluator } from './safe-expression-evaluator';
 import { generateId } from '@/lib/utils';
 
 // Define workflow value types
@@ -140,7 +140,7 @@ class SimpleWorkflowEngine extends EventEmitter {
   async cancelWorkflow(instanceId: string): Promise<boolean> {
     const instance = this.instances.get(instanceId);
 
-    if (!instance || instance.status !== 'running') {
+    if (instance?.status !== 'running') {
       return false;
     }
 
@@ -160,7 +160,7 @@ class SimpleWorkflowEngine extends EventEmitter {
   private async executeWorkflow(instanceId: string): Promise<void> {
     const instance = this.instances.get(instanceId);
 
-    if (!instance || instance.status !== 'running') {
+    if (instance?.status !== 'running') {
       return;
     }
 
@@ -454,57 +454,20 @@ class SimpleWorkflowEngine extends EventEmitter {
   }
 
   /**
-   * Convert WorkflowValue to simple types for expr-eval
-   */
-  private convertToSimpleValues(
-    variables: Record<string, WorkflowValue>
-  ): Value {
-    const result: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(variables)) {
-      result[key] = this.simplifyValue(value);
-    }
-    return result as Value;
-  }
-
-  private simplifyValue(value: WorkflowValue): unknown {
-    if (
-      value === null ||
-      value === undefined ||
-      typeof value === 'string' ||
-      typeof value === 'number' ||
-      typeof value === 'boolean'
-    ) {
-      return value;
-    }
-    if (Array.isArray(value)) {
-      return value.map(v => this.simplifyValue(v));
-    }
-    if (typeof value === 'object') {
-      const result: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(value)) {
-        result[k] = this.simplifyValue(v);
-      }
-      return result;
-    }
-    return value;
-  }
-
-  /**
-   * Simple condition evaluation
+   * Simple condition evaluation using safe expression evaluator
+   * This evaluator prevents prototype pollution and code injection
    */
   private evaluateCondition(
     expression: string,
     variables: Record<string, WorkflowValue>
   ): boolean {
     try {
-      // Use safe expression parser instead of eval
-      const parser = new Parser();
-
-      // Parse the expression and evaluate with variables
-      // Convert WorkflowValue to basic types for expr-eval
-      const simpleVariables = this.convertToSimpleValues(variables);
-      const expr = parser.parse(expression);
-      const result = expr.evaluate(simpleVariables) as unknown;
+      // Use the safe expression evaluator that prevents prototype pollution
+      // and only allows simple arithmetic and comparison operations
+      const result = safeEvaluator.evaluate(
+        expression,
+        variables as Record<string, unknown>
+      );
 
       return Boolean(result);
     } catch (error) {

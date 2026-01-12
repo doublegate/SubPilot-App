@@ -167,7 +167,7 @@ export class AccountService {
       },
     });
 
-    if (!inviterMembership || inviterMembership.status !== 'active') {
+    if (inviterMembership?.status !== 'active') {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'Access denied',
@@ -271,7 +271,7 @@ export class AccountService {
       },
     });
 
-    if (!membership || membership.status !== 'invited') {
+    if (membership?.status !== 'invited') {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: 'Invitation not found',
@@ -323,7 +323,7 @@ export class AccountService {
       },
     });
 
-    if (!removerMembership || removerMembership.status !== 'active') {
+    if (removerMembership?.status !== 'active') {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'Access denied',
@@ -417,7 +417,7 @@ export class AccountService {
       },
     });
 
-    if (!updaterMembership || updaterMembership.role !== 'owner') {
+    if (updaterMembership?.role !== 'owner') {
       throw new TRPCError({
         code: 'FORBIDDEN',
         message: 'Only owners can change member roles',

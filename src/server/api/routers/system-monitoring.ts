@@ -41,8 +41,8 @@ export const systemMonitoringRouter = createTRPCRouter({
   systemStatus: protectedProcedure.query(async ({ ctx }) => {
     const checks = await Promise.allSettled([
       checkDatabaseHealth(ctx.db),
-      checkJobQueueHealth(),
-      checkJobProcessorHealth(),
+      Promise.resolve(checkJobQueueHealth()),
+      Promise.resolve(checkJobProcessorHealth()),
       checkWorkflowEngineHealth(),
       checkRealtimeHealth(),
     ]);

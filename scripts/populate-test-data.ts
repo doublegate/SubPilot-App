@@ -145,9 +145,8 @@ async function populateTestData() {
     // Run subscription detection
     console.log('\n🔍 Running subscription detection...\n');
 
-    const { SubscriptionDetector } = await import(
-      '../src/server/services/subscription-detector.js'
-    );
+    const { SubscriptionDetector } =
+      await import('../src/server/services/subscription-detector.js');
     const detector = new SubscriptionDetector(prisma);
 
     const detectionResults = await detector.detectUserSubscriptions(user.id);

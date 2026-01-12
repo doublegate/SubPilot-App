@@ -235,7 +235,7 @@ export const authRouter = createTRPCRouter({
         where: { id: ctx.session.user.id },
       });
 
-      if (!user || user.email !== input.confirmationEmail) {
+      if (user?.email !== input.confirmationEmail) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Email confirmation does not match',

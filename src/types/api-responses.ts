@@ -137,8 +137,9 @@ export type BatchResponse<T> = {
   [K in keyof T]: ApiResponse<T[K]>;
 };
 
-export interface BulkOperationResponse<T>
-  extends SuccessResponse<BulkOperationResult<T>> {
+export interface BulkOperationResponse<T> extends SuccessResponse<
+  BulkOperationResult<T>
+> {
   data: BulkOperationResult<T>;
 }
 

@@ -541,7 +541,8 @@ export function CancellationMonitoringDashboard() {
                         {systemHealth?.detailed?.uptimeMetrics
                           ?.plannedMaintenance
                           ? new Date(
-                              systemHealth.detailed.uptimeMetrics.plannedMaintenance
+                              systemHealth.detailed.uptimeMetrics
+                                .plannedMaintenance
                             ).toLocaleString()
                           : 'None scheduled'}
                       </span>

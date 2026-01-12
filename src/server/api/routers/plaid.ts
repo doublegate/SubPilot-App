@@ -329,9 +329,8 @@ export const plaidRouter = createTRPCRouter({
 
             // Run subscription detection on initial transactions
             try {
-              const { SubscriptionDetector } = await import(
-                '@/server/services/subscription-detector'
-              );
+              const { SubscriptionDetector } =
+                await import('@/server/services/subscription-detector');
               const detector = new SubscriptionDetector(ctx.db);
 
               const results = await detector.detectUserSubscriptions(
@@ -723,9 +722,8 @@ export const plaidRouter = createTRPCRouter({
       // Run subscription detection algorithm on new transactions
       if (totalNewTransactions > 0) {
         try {
-          const { SubscriptionDetector } = await import(
-            '@/server/services/subscription-detector'
-          );
+          const { SubscriptionDetector } =
+            await import('@/server/services/subscription-detector');
           const detector = new SubscriptionDetector(ctx.db);
 
           const results = await detector.detectUserSubscriptions(

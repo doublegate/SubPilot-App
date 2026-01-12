@@ -93,7 +93,7 @@ class MockJobQueue {
     if (options.delay && options.delay > 0) {
       setTimeout(() => {
         const delayedJob = this.jobs.get(jobId);
-        if (delayedJob && delayedJob.status === 'delayed') {
+        if (delayedJob?.status === 'delayed') {
           delayedJob.status = 'pending';
         }
       }, options.delay);

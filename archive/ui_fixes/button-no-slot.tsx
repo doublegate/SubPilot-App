@@ -34,7 +34,8 @@ const buttonVariants = cva(
 );
 
 export interface ButtonNoSlotProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {}
 
 const ButtonNoSlot = React.forwardRef<HTMLButtonElement, ButtonNoSlotProps>(

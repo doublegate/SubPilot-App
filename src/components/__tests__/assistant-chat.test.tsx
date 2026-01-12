@@ -413,9 +413,10 @@ describe('AssistantChat', () => {
     const mockMutation = vi.fn();
     vi.mocked(api.assistant.startConversation.useMutation).mockImplementation(
       options => {
-        // Simulate error
+        // Simulate error (tRPC v11 onError has 4 arguments)
         options?.onError?.(
           { message: 'Network error' } as any,
+          {} as any,
           {} as any,
           {} as any
         );
