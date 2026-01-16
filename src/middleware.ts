@@ -195,9 +195,10 @@ function applySecurityHeaders(
     scriptSrc =
       "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com";
   } else {
-    // Production without Cloudflare: Strict CSP
+    // Production without Cloudflare: Next.js 15+ requires 'unsafe-inline' for hydration scripts
+    // See: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
     scriptSrc =
-      "script-src 'self' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com";
+      "script-src 'self' 'unsafe-inline' https://vercel.live https://cdn.plaid.com https://plaid.com https://va.vercel-scripts.com https://cdnjs.cloudflare.com https://static.cloudflareinsights.com https://ajax.cloudflare.com https://js.stripe.com https://checkout.stripe.com";
   }
 
   const cspDirectives = [
